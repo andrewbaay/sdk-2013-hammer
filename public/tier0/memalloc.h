@@ -108,7 +108,7 @@ public:
 
 	virtual void DumpBlockStats( void * ) = 0;
 
-#if defined( _MEMTEST )	
+#if defined( _MEMTEST )
 	virtual void SetStatsExtraInfo( const char *pMapName, const char *pComment ) = 0;
 #endif
 
@@ -119,7 +119,7 @@ public:
 	// handles storing allocation info for coroutines
 	virtual uint32 GetDebugInfoSize() = 0;
 	virtual void SaveDebugInfo( void *pvDebugInfo ) = 0;
-	virtual void RestoreDebugInfo( const void *pvDebugInfo ) = 0;	
+	virtual void RestoreDebugInfo( const void *pvDebugInfo ) = 0;
 	virtual void InitDebugInfo( void *pvDebugInfo, const char *pchRootFileName, int nLine ) = 0;
 
 	// Replacement for ::GlobalMemoryStatus which accounts for unused memory in our system
@@ -138,23 +138,23 @@ MEM_INTERFACE IMemAlloc *g_pMemAlloc;
 #define MEMALLOC_REGION 0
 #endif
 inline void *MemAlloc_Alloc( size_t nSize )
-{ 
+{
 	return g_pMemAlloc->RegionAlloc( MEMALLOC_REGION, nSize );
 }
 
 inline void *MemAlloc_Alloc( size_t nSize, const char *pFileName, int nLine )
-{ 
+{
 	return g_pMemAlloc->RegionAlloc( MEMALLOC_REGION, nSize, pFileName, nLine );
 }
 #else
 #undef MEMALLOC_REGION
 inline void *MemAlloc_Alloc( size_t nSize )
-{ 
+{
 	return g_pMemAlloc->Alloc( nSize );
 }
 
 inline void *MemAlloc_Alloc( size_t nSize, const char *pFileName, int nLine )
-{ 
+{
 	return g_pMemAlloc->Alloc( nSize, pFileName, nLine );
 }
 #endif
@@ -363,11 +363,11 @@ inline size_t MemAlloc_GetSizeAligned( void *pMemBlock )
 class CMemAllocAttributeAlloction
 {
 public:
-	CMemAllocAttributeAlloction( const char *pszFile, int line ) 
+	CMemAllocAttributeAlloction( const char *pszFile, int line )
 	{
 		MemAlloc_PushAllocDbgInfo( pszFile, line );
 	}
-	
+
 	~CMemAllocAttributeAlloction()
 	{
 		MemAlloc_PopAllocDbgInfo();
@@ -382,7 +382,7 @@ public:
 
 	#pragma warning(disable:4290)
 	#pragma warning(push)
-	#include <typeinfo.h>
+	#include <typeinfo>
 
 	// MEM_DEBUG_CLASSNAME is opt-in.
 	// Note: typeid().name() is not threadsafe, so if the project needs to access it in multiple threads
@@ -406,7 +406,7 @@ public:
 #else
 	#define MEM_ALLOC_CREDIT_CLASS()
 	#define MEM_ALLOC_CLASSNAME(type) NULL
-	#define MEM_ALLOC_CREDIT_FUNCTION() 
+	#define MEM_ALLOC_CREDIT_FUNCTION()
 #endif
 
 //-----------------------------------------------------------------------------
