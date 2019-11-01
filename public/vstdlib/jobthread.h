@@ -2,28 +2,28 @@
 //
 // Purpose:	A utility for a discrete job-oriented worker thread.
 //
-//			The class CThreadPool is both the job queue, and the 
-//			worker thread. Except when the main thread attempts to 
-//			synchronously execute a job, most of the inter-thread locking 
-//			on the queue. 
+//			The class CThreadPool is both the job queue, and the
+//			worker thread. Except when the main thread attempts to
+//			synchronously execute a job, most of the inter-thread locking
+//			on the queue.
 //
-//			The queue threading model uses a manual reset event for optimal 
-//			throughput. Adding to the queue is guarded by a semaphore that 
-//			will block the inserting thread if the queue has overflown. 
-//			This prevents the worker thread from being starved out even if 
+//			The queue threading model uses a manual reset event for optimal
+//			throughput. Adding to the queue is guarded by a semaphore that
+//			will block the inserting thread if the queue has overflown.
+//			This prevents the worker thread from being starved out even if
 //			not running at a higher priority than the master thread.
 //
-//			The thread function waits for jobs, services jobs, and manages 
-//			communication between the worker and master threads. The nature 
+//			The thread function waits for jobs, services jobs, and manages
+//			communication between the worker and master threads. The nature
 //			of the work is opaque to the Executer.
 //
-//			CJob instances actually do the work. The base class 
-//			calls virtual methods for job primitives, so derivations don't 
-//			need to worry about threading models. All of the variants of 
-//			job and OS can be expressed in this hierarchy. Instances of 
-//			CJob are the items placed in the queue, and by 
-//			overriding the job primitives they are the manner by which 
-//			users of the Executer control the state of the job. 
+//			CJob instances actually do the work. The base class
+//			calls virtual methods for job primitives, so derivations don't
+//			need to worry about threading models. All of the variants of
+//			job and OS can be expressed in this hierarchy. Instances of
+//			CJob are the items placed in the queue, and by
+//			overriding the job primitives they are the manner by which
+//			users of the Executer control the state of the job.
 //
 //=============================================================================
 
@@ -45,6 +45,10 @@
 #undef GetJob
 #endif
 
+#ifdef Yield  // windows.h print function collisions
+#undef Yield
+#endif
+
 #ifdef VSTDLIB_DLL_EXPORT
 #define JOB_INTERFACE	DLL_EXPORT
 #define JOB_OVERLOAD	DLL_GLOBAL_EXPORT
@@ -60,13 +64,13 @@
 #endif
 
 //-----------------------------------------------------------------------------
-// 
+//
 //-----------------------------------------------------------------------------
 
 class CJob;
 
 //-----------------------------------------------------------------------------
-// 
+//
 //-----------------------------------------------------------------------------
 enum JobStatusEnum_t
 {
@@ -95,7 +99,7 @@ enum JobPriority_t
 	JP_HIGH
 };
 
-#define TP_MAX_POOL_THREADS	64
+#define TP_MAX_POOL_THREADS	64U
 struct ThreadPoolStartParams_t
 {
 	ThreadPoolStartParams_t( bool bIOThreads = false, unsigned nThreads = -1, int* pAffinities = nullptr, ThreeState_t fDistribute = TRS_NONE, unsigned nStackSize = -1, int iThreadPriority = SHRT_MIN )
@@ -214,7 +218,7 @@ public:
 	virtual void Reserved1() = 0;
 
 	//-----------------------------------------------------
-	// Add an arbitrary call to the queue (master thread) 
+	// Add an arbitrary call to the queue (master thread)
 	//
 	// Avert thy eyes! Imagine rather:
 	//
@@ -238,7 +242,7 @@ public:
 			AddFunctorInternal( CreateFunctor( pfnProxied, std::forward<Args>( args )... ), &pJob );
 
 		return pJob;
-		}
+	}
 
 	//-------------------------------------
 
@@ -255,7 +259,7 @@ public:
 			AddFunctorInternal( CreateFunctor( pObject, pfnProxied, std::forward<Args>( args )... ), &pJob );
 
 		return pJob;
-		}
+	}
 
 	//-------------------------------------
 
@@ -272,7 +276,7 @@ public:
 			AddFunctorInternal( CreateFunctor( pObject, pfnProxied, std::forward<Args>( args )... ), &pJob );
 
 		return pJob;
-		}
+	}
 
 	//-------------------------------------
 
@@ -289,7 +293,7 @@ public:
 			AddFunctorInternal( CreateRefCountingFunctor( pObject, pfnProxied, std::forward<Args>( args )... ), &pJob );
 
 		return pJob;
-		}
+	}
 
 	//-------------------------------------
 
@@ -306,7 +310,7 @@ public:
 			AddFunctorInternal( CreateRefCountingFunctor( pObject, pfnProxied, std::forward<Args>( args )... ), &pJob );
 
 		return pJob;
-		}
+	}
 
 	//-----------------------------------------------------------------------------
 
@@ -316,7 +320,7 @@ public:
 		CJob* pJob;
 		AddFunctorInternal( CreateFunctor( pfnProxied, std::forward<Args>( args )... ), &pJob, nullptr, JF_QUEUE );
 		return pJob;
-		}
+	}
 
 	//-------------------------------------
 
@@ -326,7 +330,7 @@ public:
 		CJob *pJob;
 		AddFunctorInternal( CreateFunctor( pObject, pfnProxied, std::forward<Args>( args )... ), &pJob, nullptr, JF_QUEUE );
 		return pJob;
-		}
+	}
 
 	//-------------------------------------
 
@@ -336,7 +340,7 @@ public:
 		CJob *pJob;
 		AddFunctorInternal( CreateFunctor( pObject, pfnProxied, std::forward<Args>( args )... ), &pJob, nullptr, JF_QUEUE );
 		return pJob;
-		}
+	}
 
 	//-------------------------------------
 
@@ -346,7 +350,7 @@ public:
 		CJob* pJob;
 		AddFunctorInternal( CreateRefCountingFunctor( pObject, pfnProxied, std::forward<Args>( args )... ), &pJob, nullptr, JF_QUEUE );
 		return pJob;
-		}
+	}
 
 	//-------------------------------------
 
@@ -438,7 +442,7 @@ public:
 	/// to warn you that it should only be used in unusual situations.  Otherwise, the
 	/// job manager really should manage the status for you, and you should not manhandle it.
 	void SlamStatus(JobStatus_t s) { m_status = s; }
-	
+
 	//-----------------------------------------------------
 	// Try to acquire ownership (to satisfy). If you take the lock, you must either execute or abort.
 	//-----------------------------------------------------
@@ -846,7 +850,7 @@ private:
 	const char*					m_szDescription;
 };
 
-template <typename ITEM_TYPE> 
+template <typename ITEM_TYPE>
 inline void ParallelProcess( const char* pszDescription, ITEM_TYPE* pItems, unsigned nItems, void ( *pfnProcess )( ITEM_TYPE& ), void ( *pfnBegin )() = nullptr, void ( *pfnEnd )() = nullptr, int nMaxParallel = INT_MAX )
 {
 	CParallelProcessor<ITEM_TYPE, CFuncJobItemProcessor<ITEM_TYPE>> processor( pszDescription );
@@ -855,7 +859,7 @@ inline void ParallelProcess( const char* pszDescription, ITEM_TYPE* pItems, unsi
 
 }
 
-template <typename ITEM_TYPE, typename OBJECT_TYPE, typename FUNCTION_CLASS > 
+template <typename ITEM_TYPE, typename OBJECT_TYPE, typename FUNCTION_CLASS >
 inline void ParallelProcess( const char* pszDescription, ITEM_TYPE* pItems, unsigned nItems, OBJECT_TYPE* pObject, void ( FUNCTION_CLASS::* pfnProcess )( ITEM_TYPE& ), void ( FUNCTION_CLASS::* pfnBegin )() = nullptr, void ( FUNCTION_CLASS::* pfnEnd )() = nullptr, int nMaxParallel = INT_MAX )
 {
 	CParallelProcessor<ITEM_TYPE, CMemberFuncJobItemProcessor<ITEM_TYPE, OBJECT_TYPE, FUNCTION_CLASS>> processor( pszDescription );
@@ -864,7 +868,7 @@ inline void ParallelProcess( const char* pszDescription, ITEM_TYPE* pItems, unsi
 }
 
 // Parallel Process that lets you specify threadpool
-template <typename ITEM_TYPE> 
+template <typename ITEM_TYPE>
 inline void ParallelProcess( const char* pszDescription, IThreadPool* pPool, ITEM_TYPE* pItems, unsigned nItems, void ( *pfnProcess )( ITEM_TYPE& ), void ( *pfnBegin )() = nullptr, void ( *pfnEnd )() = nullptr, int nMaxParallel = INT_MAX )
 {
 	CParallelProcessor<ITEM_TYPE, CFuncJobItemProcessor<ITEM_TYPE>> processor( pszDescription );
@@ -951,7 +955,7 @@ inline void ParallelLoopProcess( const char* szDescription, long lBegin, unsigne
 
 }
 
-template < typename OBJECT_TYPE, typename FUNCTION_CLASS > 
+template < typename OBJECT_TYPE, typename FUNCTION_CLASS >
 inline void ParallelLoopProcess( const char* szDescription, long lBegin, unsigned nItems, OBJECT_TYPE* pObject, void ( FUNCTION_CLASS::* pfnProcess )( long const& ), void ( FUNCTION_CLASS::* pfnBegin )() = nullptr, void ( FUNCTION_CLASS::* pfnEnd )() = nullptr, int nMaxParallel = INT_MAX )
 {
 	CParallelLoopProcessor<CMemberFuncJobItemProcessor<long const, OBJECT_TYPE, FUNCTION_CLASS>> processor( szDescription );

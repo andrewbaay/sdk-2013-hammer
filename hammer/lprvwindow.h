@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -10,21 +10,17 @@
 #pragma once
 #endif
 
-#include "UtlVector.h"
-
-
 class CLightingPreviewResultsWindow : public CWnd
 {
 public:
 	CLightingPreviewResultsWindow();
-	virtual ~CLightingPreviewResultsWindow();
+	~CLightingPreviewResultsWindow();
 
-	void Create(CWnd *pParentWnd );
+	void Create( CWnd* pParentWnd );
 
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CLightingPreviewResultsWindow)
 	//}}AFX_VIRTUAL
-
 
 protected:
 

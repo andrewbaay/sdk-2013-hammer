@@ -62,7 +62,7 @@ public:
 	// Add a virtual destructor to silence the clang warning.
 	// This is harmless but not important since the only derived class
 	// doesn't have a destructor.
-	virtual ~CFunctor() {}
+	virtual ~CFunctor() = default;
 
 	virtual void operator()() = 0;
 
@@ -71,9 +71,9 @@ public:
 
 
 //-----------------------------------------------------------------------------
-// When calling through a functor, care needs to be taken to not pass objects that might go away. 
+// When calling through a functor, care needs to be taken to not pass objects that might go away.
 // Since this code determines the type to store in the functor based on the actual arguments,
-// this is achieved by changing the point of call. 
+// this is achieved by changing the point of call.
 //
 // See also CUtlEnvelope
 //-----------------------------------------------------------------------------
@@ -146,8 +146,8 @@ class CFunctorI : public FUNCTOR_BASE
 {
 public:
 	CFunctorI( FUNC_TYPE pfnProxied, Args&&... args ) : m_pfnProxied( pfnProxied ), m_params( std::forward<Args>( args )... ) {}
-	~CFunctorI() {}
-	void operator()() override { apply(); }
+	~CFunctorI() = default;
+	void operator()() override { apply( std::make_index_sequence<sizeof...( Args )>() ); }
 
 private:
 	template<size_t... S>
@@ -156,11 +156,6 @@ private:
 		m_pfnProxied( std::get<S>( m_params )... );
 	}
 
-	FORCEINLINE void apply()
-	{
-		apply( std::make_index_sequence<sizeof...( Args )>() );
-	}
-	
 	FUNC_TYPE m_pfnProxied;
 	std::tuple<std::decay_t<Args>...> m_params;
 };
@@ -170,19 +165,14 @@ class CMemberFunctorI : public FUNCTOR_BASE
 {
 public:
 	CMemberFunctorI( OBJECT_TYPE_PTR pObject, FUNCTION_TYPE pfnProxied, Args&&... args ) : m_Proxy( pObject, pfnProxied ), m_params( std::forward<Args>( args )... ) {}
-	~CMemberFunctorI() {}
-	void operator()() override { apply(); }
+	~CMemberFunctorI() = default;
+	void operator()() override { apply( std::make_index_sequence<sizeof...( Args )>() ); }
 
 private:
 	template<size_t... S>
 	FORCEINLINE void apply( std::index_sequence<S...> )
 	{
 		m_Proxy( std::get<S>( m_params )... );
-	}
-
-	FORCEINLINE void apply()
-	{
-		apply( std::make_index_sequence<sizeof...( Args )>() );
 	}
 
 	class CMemberFuncProxy
@@ -198,11 +188,11 @@ private:
 			MEM_POLICY::OnRelease( m_pObject );
 		}
 
-		void operator()( const Args&... args )
+		void operator()( const std::decay_t<Args>&... args )
 		{
 			Assert( m_pObject != nullptr );
 			( ( *m_pObject ).*m_pfnProxied )( args... );
-	}
+		}
 
 		FUNCTION_TYPE m_pfnProxied;
 		OBJECT_TYPE_PTR m_pObject;
@@ -330,7 +320,7 @@ public:
 	{
 		m_pAllocator = pAllocator;
 	}
-	
+
 	template <typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
 	inline auto CreateFunctor( FUNCTION_RETTYPE (*pfnProxied)( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
 	{
@@ -383,7 +373,7 @@ public:
 
 private:
 	CAllocator* m_pAllocator;
-	
+
 };
 
 //-----------------------------------------------------------------------------
