@@ -619,7 +619,7 @@ void CLightingPreviewThread::CalculateForLightTask( int nLineMask, int nLineMatc
 						m_pRtEnv->Trace4Rays( myray, Four_Zeros, ReplicateX4( 1.0e9 ), &r_rslt );
 
 						fltx4 mask = _mm_castsi128_ps( _mm_andnot_si128(
-							_mm_cmplt_epi32( _mm_load_si128( reinterpret_cast<__m128i*>( &r_rslt.HitIds ) ), _mm_setzero_si128() ),
+							_mm_cmplt_epi32( _mm_load_si128( reinterpret_cast<__m128i*>( r_rslt.HitIds ) ), _mm_setzero_si128() ),
 							_mm_castps_si128( _mm_cmplt_ps( r_rslt.HitDistance, len ) ) ) );
 						l_add.x = AndNotSIMD( mask, l_add.x );
 						l_add.y = AndNotSIMD( mask, l_add.y );
