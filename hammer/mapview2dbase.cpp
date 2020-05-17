@@ -32,6 +32,7 @@
 #include "vgui_controls/EditablePanel.h"
 #include "camera.h"
 #include "material.h"
+#include <vgui/IInput.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -49,6 +50,12 @@ IMPLEMENT_DYNCREATE(CMapView2DBase, CView)
 
 class CMapView2DBasePanel : public vgui::EditablePanel
 {
+	void SetCursor(vgui::HCursor cursor) OVERRIDE
+	{
+		EditablePanel::SetCursor(cursor);
+		vgui::input()->SetCursorOveride(cursor);
+	}
+
 public:
 	CMapView2DBasePanel( CMapView2DBase *pMapView, const char *panelName ) :
 		vgui::EditablePanel( NULL, panelName )
