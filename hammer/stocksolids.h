@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -29,12 +29,12 @@ class StockSolid
 		void GetFieldRange(int iIndex, int *piRangeLower, int *piRangeUpper);
 		void SetOrigin(const Vector &o);
 		void SetCenterOffset(const Vector &ofs);
-		
+
 		virtual void SetFromBox(BoundBox * pBox) {}
 
 		virtual void CreateMapSolid(CMapSolid *pSolid, TextureAlignment_t eAlignment) = 0;
 
-		~StockSolid();
+		virtual ~StockSolid();
 
 	protected:
 		StockSolid(int nFields);

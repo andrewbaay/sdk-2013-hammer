@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -18,6 +18,7 @@ class CMapDisp;
 class IEditDispSubdivMesh
 {
 public:
+	virtual ~IEditDispSubdivMesh() = default;
 
 	virtual void Init( void ) = 0;
 	virtual void Shutdown( void ) = 0;

@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -24,7 +24,7 @@ enum
 class KeyValues;
 
 // command:
-typedef struct
+typedef struct CCOMMAND
 {
 	BOOL bEnable;				// Run this command?
 
