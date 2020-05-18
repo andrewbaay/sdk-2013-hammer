@@ -1,2 +1,1 @@
-devtools\bin\vpc.exe +hammer /mksln hammer.sln
-pause
+@devtools\bin\vpc.exe +hammer /slngroups groups.vdf /mksln hammer.sln

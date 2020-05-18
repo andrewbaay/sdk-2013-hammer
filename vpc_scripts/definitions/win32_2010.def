@@ -678,7 +678,7 @@
 			"type"	"bool"
 		}
 						
-		"$OmitDefaultLibraryName"
+		"$OmitDefaultLibName"
 		{
 			"type"		"bool"
 			"legacy"	"$OmitDefaultLibraryNames"
@@ -1198,6 +1198,7 @@
 			{
 				"Default"														"Default"
 				"Use Link Time Code Generation (/ltcg)"							"UseLinkTimeCodeGeneration"
+				"Use Fast Link Time Code Generation (/ltcg:incremental)"		"UseFastLinkTimeCodeGeneration"
 				"Profile Guided Optimization - Instrument (/ltcg:pginstrument)"	"PGInstrument"
 				"Profile Guided Optimization - Optimize (/ltcg:pgoptimize)"		"PGOptimization"
 				"Profile Guided Optimization - Update (/ltcg:pgupdate)"			"PGUpdate"
