@@ -26,7 +26,7 @@ struct ExportDXFInfo_s;
 #define CREATE_FROM_PLANES_CLIPPING		0x0002
 #define CREATE_ALREADY_HAS_POINTS 0x0004
 
-#define MAPSOLID_MAX_FACES				256         // Maximum number of faces a solid can have.
+#define MAPSOLID_MAX_FACES				512         // Maximum number of faces a solid can have.
 
 
 enum HL1_SolidType_t
@@ -101,6 +101,7 @@ public:
 	void SetTexture( LPCTSTR pszTex, int iFace = -1 );
 	LPCTSTR GetTexture( int iFace = -1 );
 	bool HasDisp( void );
+	virtual bool IsSolid( ) { return true; }
 
 	//
 	// Half-Life 1 solid types.
@@ -152,7 +153,7 @@ protected:
 	void GenerateNewFaceIDs(CMapWorld *pWorld);
 
 	void PickRandomColor();
-	color32 GetLineColor();
+	color32 GetLineColor( CRender2D *pRender );
 
 	//
 	// Implements CMapAtom transformation functions.

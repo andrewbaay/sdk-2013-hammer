@@ -127,7 +127,7 @@ CMapView2DBase::CMapView2DBase(void)
 
 	m_pCamera->SetOrthographic( 0.25f, -99999, 99999 );
 
-	m_pRender = new CRender2D;
+	m_pRender = new CRender2D();
 
 	m_pRender->SetView( this );
 
@@ -1107,19 +1107,36 @@ bool CMapView2DBase::HitTest( const Vector2D &vPoint, const Vector& mins, const 
 //			bMakeFirst -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-int CMapView2DBase::ObjectsAt( const Vector2D &vPoint, HitInfo_t *pHitData, int nMaxObjects )
+int CMapView2DBase::ObjectsAt( const Vector2D &vPoint, HitInfo_t *pHitData, int nMaxObjects, unsigned int nFlags )
 {
 	CMapDoc *pDoc = GetMapDoc();
 	CMapWorld *pWorld = pDoc->GetMapWorld();
 
+	return ObjectsAt( pWorld, vPoint, pHitData, nMaxObjects, nFlags );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : point - Point in client coordinates.
+//			bMakeFirst - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+int CMapView2DBase::ObjectsAt( CMapWorld *pWorld, const Vector2D &vPoint, HitInfo_t *pHitData, int nMaxObjects, unsigned int nFlags )
+{
 	int nIndex = 0;
 
 	const CMapObjectList *pChildren = pWorld->GetChildren();
 	FOR_EACH_OBJ( *pChildren, pos )
 	{
 		CMapClass *pChild = pChildren->Element(pos);
+		CMapWorld *pWorldChild = dynamic_cast< CMapWorld * >( pChild );
 
-		if ( IsLogical() )
+		if ( pWorldChild )
+		{
+			nIndex += ObjectsAt( pWorldChild, vPoint, &pHitData[ nIndex ], nMaxObjects - nIndex );
+		}
+		else if ( IsLogical() )
 		{
 			if ( pChild->HitTestLogical( static_cast<CMapViewLogical*>(this), vPoint, pHitData[nIndex] ) )
 			{

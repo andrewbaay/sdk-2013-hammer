@@ -180,7 +180,7 @@ static CommandNames_t s_CommandNames[] =
     COM(ID_VIEW_3DTEXTURED),
     COM(ID_VIEW_3DTEXTURED_SHADED),
 
-    // IDR_MAPDOC 
+    // IDR_MAPDOC
     COM(ID_CREATEOBJECT),
     COM(ID_EDIT_APPLYTEXTURE),
     COM(ID_EDIT_CLEARSELECTION),
@@ -222,9 +222,6 @@ static CommandNames_t s_CommandNames[] =
     COM(ID_TOOLS_OVERLAY),
     COM(ID_TOOLS_PATH),
     COM(ID_TOOLS_POINTER),
-    COM(ID_TOOLS_QUICKHIDE_OBJECTS),
-    COM(ID_TOOLS_QUICKHIDE_OBJECTS_UNSEL),
-    COM(ID_TOOLS_QUICKHIDE_UNHIDE),
     COM(ID_TOOLS_SNAP_SELECTED_TO_GRID_INDIVIDUALLY),
     COM(ID_TOOLS_SNAPSELECTEDTOGRID),
     COM(ID_TOOLS_SOUND_BROWSER),
@@ -233,6 +230,10 @@ static CommandNames_t s_CommandNames[] =
     COM(ID_TOOLS_TOGGLETEXLOCK),
     COM(ID_TOOLS_TRANSFORM),
     COM(ID_TOOLS_UNGROUP),
+    COM(ID_VIEW_QUICKHIDE),
+    COM(ID_VIEW_QUICKHIDEUNSELECTED),
+    COM(ID_VIEW_QUICKHIDEVISGROUP),
+    COM(ID_VIEW_QUICKUNHIDE),
     COM(ID_VIEW3D_BRIGHTER),
     COM(ID_VIEW3D_DARKER),
     COM(ID_VIEW_AUTOSIZE4),
@@ -264,7 +265,7 @@ const char *GetStrForCommandID(int ID)
             return t.pKeyName;
     }
 
-    return nullptr; 
+    return nullptr;
 }
 
 KeyBinds::KeyBinds(): m_pKvKeybinds(nullptr)

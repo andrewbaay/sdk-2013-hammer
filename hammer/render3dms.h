@@ -15,6 +15,7 @@
 #include "utlpriorityqueue.h"
 #include "mapclass.h"
 #include "lpreview_thread.h"
+#include "shaderapi/ishaderapi.h"
 
 //
 // Size of the buffer used for picking. See glSelectBuffer for documention on
@@ -33,6 +34,8 @@ class CCamera;
 class CCullTreeNode;
 class CMapClass;
 class CMapDoc;
+class CMapFace;
+class CMapInstance;
 class CMapWorld;
 class IMaterial;
 class IMaterialVar;
@@ -47,6 +50,9 @@ struct TranslucentObjects_t
 {
 	float		depth;
 	CMapAtom*	object;
+
+	bool			m_bInstanceSelected;
+	TInstanceState	m_InstanceState;
 };
 
 enum RenderState_t
@@ -86,6 +92,7 @@ static inline bool RenderingModeIsTextured(EditorRenderMode_t mode)
 struct PickInfo_t
 {
 	bool bPicking;							// Whether we are rendering in pick mode or not.
+	unsigned int m_nFlags;					// flags
 
 	float fX;								// Leftmost coordinate of pick rectangle, passed in by caller.
 	float fY;								// Topmost coordinate of pick rectangle, passed in by caller.
@@ -148,6 +155,9 @@ public:
 	void StartRenderFrame(void);
 	void EndRenderFrame(void);
 
+	virtual	void						PushInstanceData( CMapInstance *pInstanceClass, Vector &InstanceOrigin, QAngle &InstanceAngles );
+	virtual	void						PopInstanceData( void );
+
 	void ResetFocus();
 
 	// Picking functions.
@@ -158,7 +168,7 @@ public:
 	void RenderEnable(RenderState_t eRenderState, bool bEnable);
 
 	void RenderCrossHair();
-	void RenderWireframeBox(const Vector &Mins, const Vector &Maxs, unsigned char chRed, unsigned char chGreen, unsigned char chBlue);
+	virtual void RenderWireframeBox(const Vector &Mins, const Vector &Maxs, unsigned char chRed, unsigned char chGreen, unsigned char chBlue);
 	void RenderBox(const Vector &Mins, const Vector &Maxs, unsigned char chRed, unsigned char chGreen, unsigned char chBlue, SelectionState_t eBoxSelectionState);
 	void RenderArrow(Vector const &vStartPt, Vector const &vEndPt, unsigned char chRed, unsigned char chGreen, unsigned char chBlue);
 	void RenderCone(Vector const &vBasePt, Vector const &vTipPt, float fRadius, int nSlices,
@@ -167,9 +177,10 @@ public:
 							  unsigned char chRed, unsigned char chGreen, unsigned char chBlue );
 	void RenderWireframeSphere(Vector const &vCenter, float flRadius, int nTheta, int nPhi,
 							            unsigned char chRed, unsigned char chGreen, unsigned char chBlue );
+	void RenderInstanceMapClass( CMapInstance *pInstanceClass, CMapClass *pMapClass, Vector &InstanceOrigin, QAngle &InstanceAngles );
 
 
-	int ObjectsAt(float x, float y, float fWidth, float fHeight, HitInfo_t *pObjects, int nMaxObjects);
+	int ObjectsAt( float x, float y, float fWidth, float fHeight, HitInfo_t *pObjects, int nMaxObjects, unsigned nFlags = 0 );
 
 	void DebugHook1(void *pData = NULL);
 	void DebugHook2(void *pData = NULL);
@@ -186,21 +197,25 @@ public:
 
 protected:
 
+	inline void DispatchRender3D(CMapClass *pMapClass);
+
 	// Rendering functions.
 	void RenderMapClass(CMapClass *pMapClass);
+	void RenderInstanceMapClass_r(CMapClass *pMapClass);
 	void RenderNode(CCullTreeNode *pNode, bool bForce);
 	void RenderOverlayElements(void);
 	void RenderTool(void);
-	void RenderTree(void);
+	void RenderTree( CMapWorld *pWorld );
     void RenderPointsAndPortals(void);
 	void RenderWorldAxes();
+	void RenderTranslucentObjects( void );
 
 	// Utility functions.
 	void Preload(CMapClass *pParent);
 	Visibility_t IsBoxVisible(Vector const &BoxMins, Vector const &BoxMaxs);
 
 	// Frustum methods
-	void ComputeFrustumRenderGeometry(CCamera* pCamera);
+	void ComputeFrustumRenderGeometry(CCamera * pCamera);
 	void RenderFrustum();
 
 	float m_fFrameRate;					// Framerate in frames per second, calculated once per second.
@@ -226,6 +241,7 @@ protected:
 
 	bool m_bDroppedCamera;				// Whether we have dropped the camera for debugging.
 	bool m_DeferRendering;				// Used when we want to sort lovely opaque objects
+	bool m_TranslucentSortRendering;	// Used when we want to sort translucent objects
 	CCamera *m_pDropCamera;				// Dropped camera to use for debugging.
 
 	CUtlPriorityQueue<TranslucentObjects_t> m_TranslucentRenderObjects;		// List of objects to render after all the other objects.
@@ -233,8 +249,6 @@ protected:
 	IMaterial* m_pVertexColor[2];		// for selecting actual textures
 
 	bool m_bLightingPreview;
-
-	friend class CMapInstance;
 
 	// for debugging... render the view frustum
 #ifdef _DEBUG

@@ -29,7 +29,7 @@ public:
 	//{{AFX_DATA(COPTTextures)
 	enum { IDD = IDD_OPTIONS_TEXTURES };
 	CSliderCtrl	m_cBrightness;
-	CListBox    m_MaterialExclude;
+	CListBox    m_MaterialExcludeList;
 	//}}AFX_DATA
 
 	//=========================================================================
@@ -62,6 +62,7 @@ protected:
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnMaterialExcludeAdd( void );
 	afx_msg void OnMaterialExcludeRemove( void );
+	afx_msg void OnMaterialExcludeListSel( void );
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

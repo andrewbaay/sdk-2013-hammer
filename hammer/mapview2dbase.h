@@ -38,7 +38,8 @@ public:
 	void UpdateClientView();
 	void ToolScrollToPoint(const Vector2D &ptClient);
 	void UpdateStatusBar();
-	int  ObjectsAt(const Vector2D &vPoint, HitInfo_t *pObjects, int nMaxObjects);
+	int  ObjectsAt( const Vector2D &vPoint, HitInfo_t *pObjects, int nMaxObjects, unsigned int nFlags = 0 );
+	int  ObjectsAt( CMapWorld *pWorld, const Vector2D &vPoint, HitInfo_t *pObjects, int nMaxObjects, unsigned int nFlags = 0 );
 	void GetCenterPoint(Vector& pt);
 	void OnContextMenu(UINT nFlags, const Vector2D &vPoint);
 	

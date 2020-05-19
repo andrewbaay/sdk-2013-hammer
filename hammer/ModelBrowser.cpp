@@ -80,6 +80,9 @@ CModelBrowser::CModelBrowser(CWnd* pParent /*=NULL*/)
 {
 	m_pPicker = new CMDLPicker( NULL );
 	m_pStatusLine = new vgui::TextEntry( NULL, "StatusLine" );
+
+	m_pButtonOK = new vgui::Button( NULL, "OpenButton", "OK" );
+	m_pButtonCancel = new vgui::Button( NULL, "CancelButton", "Cancel" );
 }
 
 CModelBrowser::~CModelBrowser()
@@ -241,8 +244,13 @@ BOOL CModelBrowser::OnInitDialog()
 	m_pPicker->SetParent( pMainPanel );
 	m_pPicker->AddActionSignalTarget( pMainPanel );
 
-	m_pButtonOK = new vgui::Button( pMainPanel, "OpenButton", "OK", pMainPanel, "OK" );
-	m_pButtonCancel = new vgui::Button( pMainPanel, "CancelButton", "Cancel", pMainPanel, "Cancel" );
+	m_pButtonOK->SetParent( pMainPanel );
+	m_pButtonOK->AddActionSignalTarget( pMainPanel );
+	m_pButtonOK->SetCommand( "OK" );
+
+	m_pButtonCancel->SetParent( pMainPanel );
+	m_pButtonCancel->AddActionSignalTarget( pMainPanel );
+	m_pButtonCancel->SetCommand( "Cancel" );
 
 	m_pStatusLine->SetParent( pMainPanel );
 	m_pStatusLine->SetEditable( false );
@@ -262,4 +270,33 @@ void CModelBrowser::OnDestroy()
 	g_Textures.RebindDefaultCubeMap();
 
 	CDialog::OnDestroy();
+}
+
+void CModelBrowser::Show()
+{
+	if (m_pPicker)
+	{
+		m_pPicker->SetVisible( true );
+	}
+	if (m_pStatusLine)
+		m_pStatusLine->SetVisible( true );
+	if (m_pButtonOK)
+		m_pButtonOK->SetVisible( true );
+	if (m_pButtonCancel)
+		m_pButtonCancel->SetVisible( true );
+
+}
+void CModelBrowser::Hide()
+{
+	if (m_pPicker)
+		m_pPicker->SetVisible( false );
+
+	if (m_pStatusLine)
+		m_pStatusLine->SetVisible( false );
+
+	if (m_pButtonOK)
+		m_pButtonOK->SetVisible( false );
+
+	if (m_pButtonCancel)
+		m_pButtonCancel->SetVisible( false );
 }

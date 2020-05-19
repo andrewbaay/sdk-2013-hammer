@@ -26,7 +26,7 @@ public:
 	~COP_Groups();
 
 	virtual bool SaveData(void);
-	virtual void UpdateData(int Mode, PVOID pData);
+	virtual void UpdateData( int Mode, PVOID pData, bool bCanEdit );
 
 	void SetMultiEdit(bool b);
 	void UpdateGroupList(void);
@@ -37,6 +37,7 @@ public:
 	//{{AFX_DATA(COP_Groups)
 	enum { IDD = IDD_OBJPAGE_GROUPS };
 	CGroupList m_cGroups;
+	CButton	m_EditGroupsControl;
 	//}}AFX_DATA
 
 	// ClassWizard generate virtual function overrides

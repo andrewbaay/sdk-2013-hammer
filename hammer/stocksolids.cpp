@@ -17,7 +17,7 @@
 
 #pragma warning(disable:4244)
 
-Vector pmPoints[64];
+//Vector pmPoints[64];
 
 StockSolid::StockSolid(int nFields)
 {

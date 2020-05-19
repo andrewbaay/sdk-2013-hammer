@@ -38,7 +38,7 @@ struct GroupListPair
 	bool	  bExpanded;
 };
 
-class CGroupList : private CTreeCtrl
+class CGroupList : public CTreeCtrl
 {
 public:
 

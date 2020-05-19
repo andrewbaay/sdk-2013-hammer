@@ -111,6 +111,8 @@ protected:
 	unsigned short		m_iMaterialTool;
 	CFaceSmoothingDlg	m_FaceSmoothDlg;
 
+	void SetReadOnly( bool bIsReadOnly );
+
 	//=========================================================================
 	//
 	// Texture Browser/Update 

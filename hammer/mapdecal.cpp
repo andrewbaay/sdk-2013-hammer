@@ -128,6 +128,8 @@ void CMapDecal::CalcBounds(BOOL bFullUpdate)
 	{
 		m_CullBox.UpdateBounds(Mins, Maxs);
 	}
+
+	m_BoundingBox = m_CullBox;
 }
 
 

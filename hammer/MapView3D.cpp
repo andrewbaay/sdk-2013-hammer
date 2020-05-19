@@ -126,6 +126,9 @@ CMapView3D::CMapView3D(void)
 	m_ptLastMouseMovement.y = 0;
 
 	m_nLastRaytracedBitmapRenderTimeStamp = -1;
+
+	m_bCameraPosChanged = false;
+	m_bClippingChanged = false;
 }
 
 
@@ -549,6 +552,7 @@ void CMapView3D::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
             Options.view3d.iBackPlane = fBack;
         }
         m_bUpdateView = true;
+		m_bClippingChanged = true;
     }
     else if (CloseEnough(m_Keyboard.GetKeyScale(LOGICAL_KEY_BACKPLANE_DECR), 0.5f))
     {
@@ -564,6 +568,7 @@ void CMapView3D::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
             Options.view3d.iBackPlane = fBack;
         }
         m_bUpdateView = true;
+		m_bClippingChanged = true;
     }
 
 	switch (nChar)
@@ -865,7 +870,7 @@ void CMapView3D::OnInitialUpdate(void)
 	//
 	// Create and initialize the renderer.
 	//
-	m_pRender = new CRender3D;
+	m_pRender = new CRender3D();
 
 	CMapDoc *pDoc = GetMapDoc();
 	if (pDoc == NULL)
@@ -919,7 +924,15 @@ void CMapView3D::OnInitialUpdate(void)
 	// Set up the frustum. We set the vertical FOV to zero because the renderer
 	// only uses the horizontal FOV.
 	//
-	m_pCamera->SetPerspective( Options.view3d.fFOV, CAMERA_FRONT_PLANE_DISTANCE, Options.view3d.iBackPlane);
+	if ( Options.general.bRadiusCulling )
+	{
+		// Hack!  Don't use frustum culling when doing radial distance culling (slam the distance to 10K)
+		m_pCamera->SetPerspective( Options.view3d.fFOV, CAMERA_FRONT_PLANE_DISTANCE, 10000);
+	}
+	else
+	{
+		m_pCamera->SetPerspective( Options.view3d.fFOV, CAMERA_FRONT_PLANE_DISTANCE, Options.view3d.iBackPlane);
+	}
 
 	//
 	// Set the distance at which studio models become bounding boxes.
@@ -1188,7 +1201,7 @@ void CMapView3D::UpdateView(int nFlags)
 //			ulFace - Index of face in object that was hit.
 // Output : Returns a pointer to the CMapClass object at the coordinates, NULL if none.
 //-----------------------------------------------------------------------------
-CMapClass *CMapView3D::NearestObjectAt(const Vector2D &vPoint, ULONG &ulFace)
+CMapClass *CMapView3D::NearestObjectAt( const Vector2D &vPoint, ULONG &ulFace, unsigned int nFlags, VMatrix *pLocalMatrix )
 {
 	ulFace = 0;
 	if (m_pRender == NULL)
@@ -1198,7 +1211,7 @@ CMapClass *CMapView3D::NearestObjectAt(const Vector2D &vPoint, ULONG &ulFace)
 
 	HitInfo_t Hits;
 
-	if (m_pRender->ObjectsAt( vPoint.x, vPoint.y, 1, 1, &Hits, 1) != 0)
+	if (m_pRender->ObjectsAt( vPoint.x, vPoint.y, 1, 1, &Hits, 1, nFlags ) != 0)
 	{
 		//
 		// If they clicked on a solid, the index of the face they clicked on is stored
@@ -1206,6 +1219,10 @@ CMapClass *CMapView3D::NearestObjectAt(const Vector2D &vPoint, ULONG &ulFace)
 		//
 		CMapAtom *pObject = (CMapAtom *)Hits.pObject;
 		CMapSolid *pSolid = dynamic_cast<CMapSolid *>(pObject);
+		if ( pLocalMatrix != NULL )
+		{
+			*pLocalMatrix = Hits.m_LocalMatrix;
+		}
 		if (pSolid != NULL)
 		{
 			ulFace = Hits.uData;
@@ -1271,11 +1288,11 @@ bool CMapView3D::HitTest( const Vector2D &vPoint, const Vector& mins, const Vect
 //			nMaxObjects - Size of the array pointed to by pObjects.
 // Output : Returns the number of objects in the given region.
 //-----------------------------------------------------------------------------
-int CMapView3D::ObjectsAt(const Vector2D &vPoint, HitInfo_t *pObjects, int nMaxObjects)
+int CMapView3D::ObjectsAt( const Vector2D &vPoint, HitInfo_t *pObjects, int nMaxObjects, unsigned int nFlags )
 {
 	if (m_pRender != NULL)
 	{
-		return m_pRender->ObjectsAt(vPoint.x, vPoint.y, 1, 1, pObjects, nMaxObjects);
+		return m_pRender->ObjectsAt( vPoint.x, vPoint.y, 1, 1, pObjects, nMaxObjects, nFlags );
 	}
 
 	return 0;
@@ -1338,10 +1355,14 @@ void CMapView3D::ProcessInput(void)
 		return; // dont process input
 	}
 
-
 	ProcessKeys( fElapsedTime );
 
 	ProcessMouse();
+
+	if ( Options.general.bRadiusCulling )
+	{
+		ProcessCulling();
+	}
 }
 
 
@@ -1465,18 +1486,21 @@ void CMapView3D::ProcessMovementKeys(float fElapsedTime)
 	{
 		m_pCamera->MoveForward(m_fForwardSpeed * fElapsedTime);
 		m_bUpdateView = true;
+		m_bCameraPosChanged = true;
 	}
 
 	if (m_fStrafeSpeed != 0)
 	{
 		m_pCamera->MoveRight(m_fStrafeSpeed * fElapsedTime);
 		m_bUpdateView = true;
+		m_bCameraPosChanged = true;
 	}
 
 	if (m_fVerticalSpeed != 0)
 	{
 		m_pCamera->MoveUp(m_fVerticalSpeed * fElapsedTime);
 		m_bUpdateView = true;
+		m_bCameraPosChanged = true;
 	}
 }
 
@@ -1491,6 +1515,20 @@ void CMapView3D::ProcessKeys(float fElapsedTime)
 	m_Keyboard.ClearImpulseFlags();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CMapView3D::ProcessCulling( void )
+{
+	if ( m_bCameraPosChanged || m_bClippingChanged )
+	{
+		CMapDoc *pDoc = GetMapDoc();
+		pDoc->UpdateVisibilityAll();
+
+		m_bClippingChanged = false;
+		m_bCameraPosChanged = false;
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -1533,6 +1571,8 @@ bool CMapView3D::ControlCamera(const CPoint &point)
 		}
 
 		MoveRight(MouseLookDelta.cx * 2);
+
+		m_bCameraPosChanged = true;
 	}
 	//
 	// If mouse looking, left-right movement controls yaw, and up-down
@@ -1653,6 +1693,7 @@ BOOL CMapView3D::OnMouseWheel(UINT nFlags, short zDelta, CPoint point)
 	// when "center 2D views on camera" is enabled.
 	//
 	m_bUpdateView = true;
+	m_bCameraPosChanged = true;
 
 	UpdateCameraVariables();
 
@@ -1979,4 +2020,15 @@ void CMapView3D::SetCursor( vgui::HCursor hCursor )
 }
 
 
+LRESULT CMapView3D::WindowProc( UINT message, WPARAM wParam, LPARAM lParam )
+{
+	switch ( message )
+	{
+	case WM_KILLFOCUS:
+		m_Keyboard.ClearKeyStates();
+//		Msg( mwStatus, "debug: lost focus, clearing key states\n");
+		break;
+	}
 
+	return CView::WindowProc( message, wParam, lParam ) ;
+}

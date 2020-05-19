@@ -16,6 +16,8 @@
 #include "materialsystem/IMaterialSystem.h"
 #include "TextureSystem.h"
 #include "hammer.h"
+#include "Options.h"
+
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -173,11 +175,12 @@ void CMapLightCone::BuildCone(void)
 	//SolveQuadratic(fOffsetDist, 0, m_fQuadraticAttn, m_fLinearAttn, -m_fConstantAttn);
 
 	float fZoneDist[NUM_LIGHTCONE_ZONES];
+	memset( fZoneDist, 0, sizeof( fZoneDist ) );
 	fZoneDist[0] = 0;
 	SolveQuadratic(fZoneDist[1], 0.25 * fScaleFactor, m_fQuadraticAttn, m_fLinearAttn, m_fConstantAttn);
 	SolveQuadratic(fZoneDist[2], fScaleFactor, m_fQuadraticAttn, m_fLinearAttn, m_fConstantAttn);
 	SolveQuadratic(fZoneDist[3], 4 * fScaleFactor, m_fQuadraticAttn, m_fLinearAttn, m_fConstantAttn);
-	SolveQuadratic(fZoneDist[4], 10 * fScaleFactor, m_fQuadraticAttn, m_fLinearAttn, m_fConstantAttn);
+	SolveQuadratic(fZoneDist[4], Options.view3d.fLightConeLength * fScaleFactor, m_fQuadraticAttn, m_fLinearAttn, m_fConstantAttn);
 
 	//
 	// there's no cone if it's greater then 90 degrees

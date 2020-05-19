@@ -312,7 +312,7 @@ int DetailObjects::SelectGroup( const DetailObject_t& detail, float alpha )
 	}
 
 	// Pick a number, any number...
-	float r = rand() / (float)RAND_MAX;
+	float r = rand() / (float)VALVE_RAND_MAX;
 
 	// When dist == 0, we *always* want start.
 	// When dist == 1, we *always* want end
@@ -327,7 +327,7 @@ int DetailObjects::SelectGroup( const DetailObject_t& detail, float alpha )
 int DetailObjects::SelectDetail( DetailObjectGroup_t const& group )
 {
 	// Pick a number, any number...
-	float r = rand() / (float)RAND_MAX;
+	float r = rand() / (float)VALVE_RAND_MAX;
 
 	// Look through the list of models + pick the one associated with this number
 	for ( int i = 0; i < group.m_Models.Count(); ++i )
@@ -400,7 +400,7 @@ void DetailObjects::PlaceDetail( DetailModel_t const& model, const Vector& pt, c
 		float probability = (cosAngle - model.m_MaxCosAngle) /
 			(model.m_MinCosAngle - model.m_MaxCosAngle);
 
-		float t = rand() / (float)RAND_MAX;
+		float t = rand() / (float)VALVE_RAND_MAX;
 		if (t > probability)
 			return;
 	}
@@ -410,7 +410,7 @@ void DetailObjects::PlaceDetail( DetailModel_t const& model, const Vector& pt, c
 	if (model.m_Flags & MODELFLAG_UPRIGHT)
 	{
 		// If it's upright, we just select a random yaw
-		angles.Init( 0, 360.0f * rand() / (float)RAND_MAX, 0.0f );
+		angles.Init( 0, 360.0f * rand() / (float)VALVE_RAND_MAX, 0.0f );
 	}
 	else
 	{
@@ -434,7 +434,7 @@ void DetailObjects::PlaceDetail( DetailModel_t const& model, const Vector& pt, c
 		matrix.SetBasisVectors( xaxis, yaxis, zaxis );
 		matrix.SetTranslation( vec3_origin );
 
-		float rotAngle = 360.0f * rand() / (float)RAND_MAX;
+		float rotAngle = 360.0f * rand() / (float)VALVE_RAND_MAX;
 		VMatrix rot = SetupMatrixAxisRot( Vector( 0, 0, 1 ), rotAngle );
 		matrix = matrix * rot;
 
@@ -506,11 +506,11 @@ void DetailObjects::EmitDetailObjectsOnFace( CMapFace *pMapFace, DetailObject_t&
 		int numSamples = clamp( area * detail.m_Density * 0.000001, 0, MAX_DETAIL_SPRITES_PER_FACE );
 
 		// For each possible sample, attempt to randomly place a detail object there
-		for (int i = 0; i < numSamples; ++i )
+		for (int j = 0; j < numSamples; ++j )
 		{
 			// Create a random sample location...
-			float u = rand() / (float)RAND_MAX;
-			float v = rand() / (float)RAND_MAX;
+			float u = rand() / (float)VALVE_RAND_MAX;
+			float v = rand() / (float)VALVE_RAND_MAX;
 
 			// Make sure the u,v coordinate stay within the triangle boundaries (ie they NOT in the far half of the parallelogram)
 			if (v > 1.0f - u)
@@ -595,8 +595,8 @@ void DetailObjects::EmitDetailObjectsOnDisplacementFace( CMapFace *pMapFace,
 	for (int i = 0; i < numSamples; ++i )
 	{
 		// Create a random sample...
-		float u = rand() / (float)RAND_MAX;
-		float v = rand() / (float)RAND_MAX;
+		float u = rand() / (float)VALVE_RAND_MAX;
+		float v = rand() / (float)VALVE_RAND_MAX;
 
 		// Compute alpha
 		float alpha;

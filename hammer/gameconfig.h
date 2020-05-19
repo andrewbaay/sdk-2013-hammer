@@ -64,7 +64,6 @@ public:
 	char szBSPDir[128];
 	char m_szModDir[128];
 	char m_szPrefabDir[128];
-	char m_szInstanceDir[260];
 	CUtlVector<MatExlcusions_s> m_MaterialExclusions;
 
 	CStringArray GDFiles;

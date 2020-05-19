@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -61,16 +61,16 @@ public:
 
 
 // --------------------------------------------------------------------------- //
-// 
+//
 // --------------------------------------------------------------------------- //
 
 CBSPLightingThread::CBSPLightingThread()
 {
 	InitializeCriticalSection( &m_CS );
-	
+
 	m_hThread = 0;
 	m_ThreadID = 0;
-	
+
 	m_ThreadCmd = THREADCMD_NONE;
 	m_ThreadState = STATE_IDLE;
 }
@@ -85,17 +85,12 @@ CBSPLightingThread::~CBSPLightingThread()
 
 		// Tell the thread to exit.
 		SetThreadCmd( THREADCMD_EXIT );
-		
-		DWORD dwCode;
-		while( 1 )
-		{
-			if( GetExitCodeThread( m_hThread, &dwCode ) && dwCode == 0 )
-				break;
 
-			Sleep( 10 );
-		}
+		// Wait for the thread to exit.
+		WaitForSingleObject( m_hThread, INFINITE );
 
 		CloseHandle( m_hThread );
+		m_hThread = nullptr;
 	}
 
 	DeleteCriticalSection( &m_CS );
@@ -134,8 +129,8 @@ void CBSPLightingThread::Interrupt()
 	if( GetThreadState() == STATE_LIGHTING )
 	{
 		m_pVRadDLL->Interrupt();
-		
-		while( GetThreadState() == STATE_LIGHTING )		
+
+		while( GetThreadState() == STATE_LIGHTING )
 			Sleep( 10 );
 	}
 }

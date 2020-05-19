@@ -64,6 +64,8 @@ public:
 
 	void GetMorphBounds(Vector &mins, Vector &maxs, bool bReset);
 
+	void SnapSelectedToGrid( int nGridSpacing );
+
 	// Toggle mode - vertex & edge, vertex, edge.
 	void ToggleMode();
 

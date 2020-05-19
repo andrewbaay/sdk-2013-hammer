@@ -15,7 +15,7 @@
 
 class CMapAnimator;
 class CRender2D;
-
+class CManifest;
 
 enum LogicalConnection_t
 {
@@ -27,9 +27,13 @@ int CompareEntityNames(const char *szName1, const char *szName2);
 
 #define ENTITY_FLAG_IS_LIGHT 1
 #define ENTITY_FLAG_SHOW_IN_LPREVIEW2 2
+#define ENTITY_FLAG_IS_INSTANCE			4
+
 
 class CMapEntity : public CMapClass, public CEditGameClass
 {
+	friend CManifest;
+
 public:
 
 	DECLARE_MAPCLASS(CMapEntity,CMapClass);
@@ -131,11 +135,6 @@ public:
 	inline void SetClass(GDclass *pClass) { CEditGameClass::SetClass(pClass); } // Works around a namespace issue.
 	virtual void SetClass(LPCTSTR pszClassname, bool bLoading = false);
 	virtual void AlignOnPlane( Vector& pos, PLANE *plane, alignType_e align );
-	virtual void GetCullBox( Vector&mins, Vector&maxs );
-	virtual void GetRender2DBox( Vector&mins, Vector&maxs );
-
-	virtual void GetBoundsCenter( Vector &vecCenter );
-	virtual void GetBoundsSize( Vector &vecSize );
 
 	//
 	// Hit testing/selection.
@@ -170,7 +169,7 @@ public:
 
 	void NotifyChildKeyChanged(CMapClass *pChild, const char *szKey, const char *szValue);
 
-	virtual CMapEntity *FindChildByKeyValue( LPCSTR key, LPCSTR value );
+	virtual CMapEntity *FindChildByKeyValue( LPCSTR key, LPCSTR value, bool *bIsInInstance = NULL, VMatrix *InstanceMatrix = NULL );
 
 	virtual CMapClass *Copy(bool bUpdateDependencies);
 	virtual CMapClass *CopyFrom(CMapClass *pFrom, bool bUpdateDependencies);
@@ -212,15 +211,14 @@ public:
 	//
 	// CMapAtom implementation.
 	//
-	virtual void GetRenderColor(unsigned char &red, unsigned char &green, unsigned char &blue);
-	virtual color32 GetRenderColor(void);
+	virtual void GetRenderColor( CRender2D *pRender, unsigned char &red, unsigned char &green, unsigned char &blue);
+	virtual color32 GetRenderColor( CRender2D *pRender );
 
 // 	char const* GetKeyValue( char *symbol )
 // 	{
 // 		return m_KeyValues.GetValue(symbol );
 // 	}
 
-	void SetInstance( bool instance ) { m_bIsInstance = instance; }
 private:
 
 	void EnsureUniqueNodeID(CMapWorld *pWorld);
@@ -257,8 +255,6 @@ private:
 	CMapEntity *m_pMoveParent;			// for entity movement hierarchy
 	CMapAnimator *m_pAnimatorChild;
 	Vector2D m_vecLogicalPosition;	// Position in logical space
-
-	bool m_bIsInstance;
 
 	DECLARE_REFERENCED_CLASS( CMapEntity );
 };

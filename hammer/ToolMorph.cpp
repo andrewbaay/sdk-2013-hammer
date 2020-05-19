@@ -29,7 +29,7 @@
 #include "camera.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
-#include <tier0/memdbgon.h>
+#include "tier0/memdbgon.h"
 
 
 //-----------------------------------------------------------------------------
@@ -1946,6 +1946,59 @@ bool Morph3D::OnLMouseUp3D(CMapView3D *pView, UINT nFlags, const Vector2D &vPoin
 	ReleaseCapture();
 
 	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Snap the selected handles to the grid
+// Input  :
+//-----------------------------------------------------------------------------
+void Morph3D::SnapSelectedToGrid( int nGridSpacing )
+{
+	CUtlVector<MORPHHANDLE> vecHandles;
+
+	if ( GetSelectedHandleCount() != 0 )
+	{
+		// Remember selected verts
+		vecHandles.AddVectorToTail( m_SelectedHandles );
+	}
+	else
+	{
+		// None selected.  Do nothing
+		return;
+	}
+
+	FOR_EACH_VEC( vecHandles, i )
+	{
+		// Set as sole-selection
+		SelectHandle( &vecHandles[i], scSelect | scClear );
+
+		// Get current position
+		Vector vCurPos;
+		SSHANDLEINFO hi;
+		vecHandles[i].pStrucSolid->GetHandleInfo(&hi, vecHandles[i].ssh);
+		vCurPos = hi.pos;
+
+		// Get snapped position
+		Vector vSnappedPos( rint(vCurPos[0] / nGridSpacing) * nGridSpacing,
+							rint(vCurPos[1] / nGridSpacing) * nGridSpacing,
+							rint(vCurPos[2] / nGridSpacing) * nGridSpacing );
+
+		// Get delta to move original position into snapped position
+		Vector vDelta = vSnappedPos - vCurPos;
+
+		// Move!
+		MoveSelectedHandles( vDelta );
+	}
+
+	// Re-select all the handles
+	SelectHandle( NULL, scClear );
+	FOR_EACH_VEC( vecHandles, i )
+	{
+		SelectHandle( &vecHandles[i], scSelect );
+	}
+
+	FinishTranslation( true );
+	m_pDocument->SetModifiedFlag();
 }
 
 

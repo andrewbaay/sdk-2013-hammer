@@ -56,4 +56,7 @@ public:
 	vgui::Button	*m_pButtonCancel;
 	vgui::TextEntry	*m_pStatusLine;
 
+	void Show();
+	void Hide();
+	
 };

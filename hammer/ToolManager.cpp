@@ -128,7 +128,7 @@ void CToolManager::AddTool(CBaseTool *pTool)
 	if ( GetToolForID( pTool->GetToolID() ) )
 	{
 		Assert( !pTool );
-		Msg("CToolManager::AddTool: Tool %i already registered.\n");
+		Msg("CToolManager::AddTool: Tool %i already registered.\n", pTool->GetToolID());
 		return;
 	}
 

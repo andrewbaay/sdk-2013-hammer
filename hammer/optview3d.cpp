@@ -75,6 +75,7 @@ void COPTView3D::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_ANIMATE_MODELS, Options.view3d.bAnimateModels);
 	DDX_Check(pDX, IDC_REVERSE_SELECTION, Options.view3d.bReverseSelection);
 	DDX_Text(pDX, IDC_FOV, Options.view3d.fFOV);
+	DDX_Text(pDX, IDC_LIGHT_CONE_LENGTH, Options.view3d.fLightConeLength);
 	
 	DDV_FOVRange(pDX, Options.view3d.fFOV);
 	//}}AFX_DATA_MAP
@@ -197,7 +198,7 @@ void COPTView3D::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
 		if (pMainWnd != NULL)
 		{
 			Options.view3d.iBackPlane = m_cBackPlane.GetPos();
-			pMainWnd->UpdateAllDocViews(MAPVIEW_UPDATE_ONLY_3D | MAPVIEW_OPTIONS_CHANGED | MAPVIEW_RENDER_NOW );
+			pMainWnd->UpdateAllDocViews( MAPVIEW_OPTIONS_CHANGED | MAPVIEW_RENDER_NOW );
 		}
 	}
 	//

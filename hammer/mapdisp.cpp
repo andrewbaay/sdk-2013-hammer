@@ -80,6 +80,9 @@ CMapDisp::~CMapDisp()
 	m_aBuildableVerts.Purge();
 	m_aBuildableIndices.Purge();
 	m_aForcedBuildableIndices.Purge();
+
+	m_aRemoveVerts.Purge();
+	m_aRemoveIndices.Purge();
 }
 
 
@@ -1517,6 +1520,37 @@ void CMapDisp::UpdateBuildable( void )
 	}
 }
 
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CMapDisp::UpdateTriRemove( void )
+{
+	// Create the remove render list.
+	m_aRemoveVerts.RemoveAll();
+	m_aRemoveIndices.RemoveAll();
+
+	int nTriCount = GetTriCount();
+	for ( int iTri = 0; iTri < nTriCount; ++iTri )
+	{
+		if ( IsTriRemove( iTri ) )
+		{
+			unsigned short triIndices[3];
+			unsigned short newTriIndices[3];
+			GetTriIndices( iTri, triIndices[0], triIndices[1], triIndices[2] );
+
+			newTriIndices[0] = m_aRemoveVerts.AddToTail( m_CoreDispInfo.GetDispVert( triIndices[0] ) );
+			newTriIndices[1] = m_aRemoveVerts.AddToTail( m_CoreDispInfo.GetDispVert( triIndices[1] ) );
+			newTriIndices[2] = m_aRemoveVerts.AddToTail( m_CoreDispInfo.GetDispVert( triIndices[2] ) );
+
+			m_aRemoveIndices.AddToTail( newTriIndices[0] );
+			m_aRemoveIndices.AddToTail( newTriIndices[1] );
+			m_aRemoveIndices.AddToTail( newTriIndices[2] );
+		}
+	}
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
@@ -2021,6 +2055,14 @@ void CMapDisp::Render3D( CRender3D *pRender, bool bIsSelected, SelectionState_t 
 		RenderBuildableSurface( pRender, bIsSelected, faceSelectionState );
 	}
 
+	// Note: the rendermode == textured is so that this only gets rendered
+	//       once per frame.
+	bool bDispRemoveMode = CMapDoc::GetActiveMapDoc()->IsDispDrawRemove();
+	if ( bDispRemoveMode && RenderingModeIsTextured( renderMode ))
+	{
+		RenderRemoveSurface( pRender, bIsSelected, faceSelectionState );
+	}
+
 	bool bDispRemovedVertMode = CMapDoc::GetActiveMapDoc()->IsDispDrawRemovedVerts();
 	if ( bDispRemovedVertMode && RenderingModeIsTextured( renderMode ) )
 	{
@@ -2100,10 +2142,19 @@ void CMapDisp::RenderSurface( CRender3D *pRender, bool bIsSelected, SelectionSta
 	}
 
 	unsigned short *pIndex = m_CoreDispInfo.GetRenderIndexList();
-	for ( int i = 0; i < numIndices; ++i )
+	int nTriCount = numIndices / 3;
+	for ( int nTri = 0; nTri < nTriCount; ++nTri )
 	{
-		meshBuilder.Index( pIndex[i] );
-		meshBuilder.AdvanceIndex();
+		if ( !IsTriRemove( nTri ) )
+		{
+			int nIndex = nTri * 3;
+			meshBuilder.Index( pIndex[nIndex] );
+			meshBuilder.AdvanceIndex();
+			meshBuilder.Index( pIndex[nIndex+1] );
+			meshBuilder.AdvanceIndex();
+			meshBuilder.Index( pIndex[nIndex+2] );
+			meshBuilder.AdvanceIndex();
+		}
 	}
 
 	meshBuilder.End();
@@ -2305,6 +2356,61 @@ void CMapDisp::RenderBuildableSurface( CRender3D *pRender, bool bIsSelected, Sel
 		}
 
 		unsigned short *pIndex = m_aForcedBuildableIndices.Base();
+		for ( int i = 0; i < nIndexCount; ++i )
+		{
+			meshBuilder.Index( pIndex[i] );
+			meshBuilder.AdvanceIndex();
+		}
+
+		meshBuilder.End();
+		pMesh->Draw();
+
+		pRender->PopRenderMode();
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Render the displacement surface removed faces.
+//-----------------------------------------------------------------------------
+void CMapDisp::RenderRemoveSurface( CRender3D *pRender, bool bIsSelected, SelectionState_t faceSelectionState )
+{
+	// Remove Faces
+	for ( int iPass = 0; iPass < 2; ++iPass )
+	{
+		Color color;
+		if ( iPass == 0 )
+		{
+			pRender->PushRenderMode( RENDER_MODE_TRANSLUCENT_FLAT );
+			color.SetColor( 0, 0, 255, 64 );
+			CalcColor( pRender, false, faceSelectionState, color );
+		}
+		else
+		{
+			pRender->PushRenderMode( RENDER_MODE_WIREFRAME );
+			color.SetColor( 0, 0, 255, 255 );
+			CalcColor( pRender, false, faceSelectionState, color );
+		}
+
+		int nVertCount = m_aRemoveVerts.Count();
+		int nIndexCount = m_aRemoveIndices.Count();
+
+		CMeshBuilder meshBuilder;
+		CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
+		IMesh *pMesh = pRenderContext->GetDynamicMesh();
+		meshBuilder.Begin( pMesh, MATERIAL_TRIANGLES, nVertCount, nIndexCount );
+
+		CoreDispVert_t **ppVerts = m_aRemoveVerts.Base();
+		for (int i = 0; i < nVertCount; ++i )
+		{
+			CoreDispVert_t *pVert = ppVerts[i];
+
+			meshBuilder.Position3fv( pVert->m_Vert.Base() );
+			meshBuilder.Color4ub( color[0], color[1], color[2], color[3] );
+			meshBuilder.Normal3fv( pVert->m_Normal.Base() );
+			meshBuilder.AdvanceVertex();
+		}
+
+		unsigned short *pIndex = m_aRemoveIndices.Base();
 		for ( int i = 0; i < nIndexCount; ++i )
 		{
 			meshBuilder.Index( pIndex[i] );
@@ -4046,7 +4152,7 @@ bool CMapDisp::HasGridMask( void )
 //-----------------------------------------------------------------------------
 // Purpose: Do the slow thing first and optimize later??
 //-----------------------------------------------------------------------------
-int CMapDisp::CollideWithDispTri( const Vector &rayStart, const Vector &rayEnd, float &flFraction )
+int CMapDisp::CollideWithDispTri( const Vector &rayStart, const Vector &rayEnd, float &flFraction, bool OneSided )
 {
 	int iTriangle = -1;
 	flFraction = 1.0f;
@@ -4064,7 +4170,7 @@ int CMapDisp::CollideWithDispTri( const Vector &rayStart, const Vector &rayEnd, 
 		Ray_t ray;
 		ray.Init( rayStart, rayEnd, Vector( 0.0f, 0.0f, 0.0f ), Vector ( 0.0f, 0.0f, 0.0f ) );
 
-		float flFrac = IntersectRayWithTriangle( ray, vec1, vec2, vec3, false );
+		float flFrac = IntersectRayWithTriangle( ray, vec1, vec2, vec3, OneSided );
 		if ( flFrac == -1.0f )
 			continue;
 

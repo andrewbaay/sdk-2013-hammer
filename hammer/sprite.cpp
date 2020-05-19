@@ -414,10 +414,9 @@ void CSpriteModel::DrawSprite3D( CRender3D *pRender, unsigned char color[3]  )
 	Vector ViewRight;
 	Vector ViewForward;
 
-	CCamera *pCamera = pRender->GetCamera();
-	pCamera->GetViewUp(ViewUp);
-	pCamera->GetViewRight(ViewRight);
-	pCamera->GetViewForward(ViewForward);
+	pRender->GetViewUp( ViewUp );
+	pRender->GetViewRight( ViewRight );
+	pRender->GetViewForward( ViewForward );
 
 	GetSpriteAxes(m_Angles, GetType(), spritez, spritex, spritey, ViewUp, ViewRight, ViewForward);
 

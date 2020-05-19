@@ -71,7 +71,7 @@ class COP_Output : public CObjectPage, public CFilteredComboBox::ICallbacks
 		COP_Output(void);
 		~COP_Output(void);
 
-		virtual void UpdateData(int Mode, PVOID pData);
+		virtual void UpdateData( int Mode, PVOID pData, bool bCanEdit );
 		void SetSelectedConnection(CEntityConnection *pConnection);
 		bool ShouldShowHiddenTargets();
 
@@ -121,7 +121,6 @@ class COP_Output : public CObjectPage, public CFilteredComboBox::ICallbacks
 		CEntityConnectionList	m_EditList;				// List of selected connections being edited
 
 		void UpdateEntityList();						// Generates m_EntityList from m_pObjectList
-
 
 	protected:
 
@@ -176,6 +175,9 @@ class COP_Output : public CObjectPage, public CFilteredComboBox::ICallbacks
 		CAutoSelComboBox	m_ComboInput;
 		CButton				m_CheckBoxFireOnce;
 		CButton				m_ctlShowHiddenTargetsAsBroken;
+		CButton				m_AddControl;
+		CButton				m_PasteControl;
+		CButton				m_DeleteControl;
 
 		CString	m_strOutput;
 		CString	m_strTarget;

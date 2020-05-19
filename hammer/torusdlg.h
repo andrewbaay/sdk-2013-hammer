@@ -31,8 +31,6 @@ public:
 	float GetTorusCrossSectionRadius() const;
 
 	BOOL bInitialized;
-	float fOuterPoints[ARC_MAX_POINTS][2];
-	float fInnerPoints[ARC_MAX_POINTS][2];
 	Vector bmins, bmaxs;
 
 // Dialog Data

@@ -52,6 +52,10 @@ enum DrawType_t
 };
 
 
+#define FLAG_OBJECTS_AT_RESOLVE_INSTANCES	0x0000001
+#define FLAG_OBJECTS_AT_ONLY_SOLIDS			0x0000002
+
+
 class CMapView
 {
 public:
@@ -77,6 +81,7 @@ public:
 
 	// get axis we look along
 	virtual const Vector &GetViewAxis();
+	void SetCamera(const Vector &vecPos, const Vector &vecLookAt);
 	CCamera *GetCamera() { return m_pCamera; }
 
 	// convert client view space to map world coordinates
@@ -84,7 +89,7 @@ public:
 	virtual void WorldToClient(Vector2D &ptClient, const Vector &vWorld) = 0;
 	virtual void ClientToWorld(Vector &vWorld, const Vector2D &vClient ) = 0;
 	virtual void BuildRay( const Vector2D &ptClient, Vector& vStart, Vector& vEnd );
-	virtual int  ObjectsAt(const Vector2D &ptClient, HitInfo_t *pObjects, int nMaxObjects) = 0;
+	virtual int  ObjectsAt( const Vector2D &ptClient, HitInfo_t *pObjects, int nMaxObjects, unsigned int nFlags = 0 ) = 0;
 	virtual bool HitTest( const Vector2D &ptClient, const Vector& mins, const Vector& maxs ) = 0;
 	virtual void GetBestTransformPlane( Vector &horzAxis, Vector &vertAxis, Vector &thirdAxis) = 0;
 

@@ -16,6 +16,7 @@
 #include "MapDoc.h"
 #include "MapDoc.h"
 #include "MapEntity.h"
+#include "MapInstance.h"
 #include "MapWorld.h"
 #include "filesystem_tools.h"
 #include "TextureSystem.h"
@@ -70,11 +71,6 @@ void CGameConfig::SetActiveGame(CGameConfig *pGame)
 		g_MAX_MAP_COORD = 4096;
 		g_MIN_MAP_COORD = -4096;
 	}
-
-	// Moved out of here for single config running, since we set the active
-	// game BEFORE initializing the file system and the texture system now.
-	//FileSystem_SetGame(g_pGameConfig->m_szModDir);
-	//g_Textures.SetActiveConfig(g_pGameConfig);
 }
 
 
@@ -99,7 +95,6 @@ CGameConfig::CGameConfig(void)
 	memset(m_szGameExeDir, 0, sizeof(m_szGameExeDir));
 	memset(szBSPDir, 0, sizeof(szBSPDir));
 	memset(m_szModDir, 0, sizeof(m_szModDir));
-	memset(m_szInstanceDir, 0, sizeof(m_szInstanceDir));
 	strcpy(m_szCordonTexture, "BLACK");
 
 	m_szSteamDir[0] = '\0';
@@ -281,7 +276,6 @@ void CGameConfig::CopyFrom(CGameConfig *pConfig)
 	strcpy(m_szGameExeDir, pConfig->m_szGameExeDir);
 	strcpy(szBSPDir, pConfig->szBSPDir);
 	strcpy(m_szModDir, pConfig->m_szModDir);
-	strcpy(m_szInstanceDir, pConfig->m_szInstanceDir);
 
 	pConfig->m_MaterialExclusions.CopyArray( m_MaterialExclusions.Base(), m_MaterialExclusions.Count() );
 }
@@ -438,15 +432,10 @@ void CGameConfig::ParseGameInfo()
 		V_strcpy_safe(m_szSteamAppID, pKey->GetString("SteamAppId", ""));
 	}
 
-	const char* instancePath = pkv->GetString( "InstancePath", nullptr );
-	if ( instancePath )
+	const char *InstancePath = pkv->GetString( "InstancePath", NULL );
+	if ( InstancePath )
 	{
-		if ( !V_IsAbsolutePath( instancePath ) )
-		{
-			g_pFullFileSystem->RelativePathToFullPath_safe( instancePath, "GAME", m_szInstanceDir );
-		}
-		else
-			V_strcpy_safe( m_szInstanceDir, instancePath );
+		CMapInstance::SetInstancePath( InstancePath );
 	}
 
 	char szAppDir[MAX_PATH];

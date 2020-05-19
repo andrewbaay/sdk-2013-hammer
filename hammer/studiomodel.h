@@ -127,7 +127,7 @@ private:
 	MDLHandle_t				m_MDLHandle;
 	mstudiomodel_t			*m_pModel;
 
-	matrix3x4_t*			SetUpBones ( bool bUpdatePose );
+	void					SetUpBones ( bool bUpdatePose, matrix3x4_t*	pBoneToWorld );
 	void					SetupModel ( int bodypart );
 
 	void					LoadStudioRender( void );

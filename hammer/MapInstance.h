@@ -1,78 +1,104 @@
-﻿#ifndef MAPINSTANCE_H
-#define MAPINSTANCE_H
+//========= Copyright Valve Corporation, All rights reserved. ============//
+//
+// Purpose: 
+//
+// $NoKeywords: $
+//=============================================================================//
 
+#ifndef MAPINSTANCE_H
+#define MAPINSTANCE_H
 #pragma once
 
+
 #include "MapHelper.h"
-#include "utlstring.h"
+#include "MapDoc.h"
 
-class CHelperInfo;
 
+class CRender3D;
+class CManifestMap;
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
 class CMapInstance : public CMapHelper
 {
-public:
-	DECLARE_MAPCLASS( CMapInstance, CMapHelper )
+	public:
+		DECLARE_MAPCLASS(CMapInstance, CMapHelper)
 
-	static CMapClass* Create( CHelperInfo* pHelperInfo, CMapEntity* pParent );
-	CMapInstance();
-	CMapInstance( CMapEntity* pParent );
-	~CMapInstance() override;
+		//
+		// Factory for building from a list of string parameters.
+		//
+		static CMapClass	*Create( CHelperInfo *pInfo, CMapEntity *pParent );
+		static void			SetInstancePath( const char *pszInstancePath );
+		static const char	*GetInstancePath( void ) { return m_InstancePath; }
+		static bool			DeterminePath( const char *pszBaseFileName, const char *pszInstanceFileName, char *pszOutFileName );
 
-	size_t GetSize() override { return sizeof(*this); }
+		//
+		// Construction/destruction:
+		//
+		CMapInstance( void );
+		CMapInstance( const char *pszBaseFileName, const char *pszInstanceFileName );
+		~CMapInstance(void);
 
-	CMapClass* Copy( bool bUpdateDependencies ) override;
-	CMapClass* CopyFrom( CMapClass* pFrom, bool bUpdateDependencies ) override;
+		GDIV_TYPE	GetFieldType( const char *pszValue );
 
-	void UpdateDependencies( CMapWorld* pWorld, CMapClass* pObject ) override;
-	void SetParent( CMapAtom* pParent ) override;
-	SelectionState_t SetSelectionState( SelectionState_t eSelectionState ) override;
+		virtual void FindTargetNames( CUtlVector< const char * > &Names );
+		virtual void ReplaceTargetname( const char *szOldName, const char *szNewName );
 
-	void SetOrigin( Vector& pfOrigin ) override;
-	void SetCullBoxFromFaceList( CMapFaceList* pFaces ) override;
-	void CalcBounds( BOOL bFullUpdate ) override;
-	void GetCullBox( Vector& mins, Vector& maxs ) override;
-	bool GetCullBoxChild(Vector& mins, Vector& maxs) override;
-	void GetRender2DBox( Vector& mins, Vector& maxs ) override;
-	bool GetRender2DBoxChild( Vector& mins, Vector& maxs ) override;
-	void GetBoundsCenter( Vector& vecCenter ) override;
-	bool GetBoundsCenterChild( Vector& vecCenter ) override;
-	void GetBoundsSize( Vector& vecSize ) override;
-	bool GetBoundsSizeChild( Vector& vecSize ) override;
-	void DoTransform( const VMatrix& matrix ) override;
-	bool PostloadVisGroups(bool bIsLoading) override;
+		virtual bool OnApply( void );
+		virtual void CalcBounds(BOOL bFullUpdate = FALSE);
+		virtual void UpdateChild(CMapClass *pChild);
+		virtual CMapEntity *FindChildByKeyValue( const char* key, const char* value, bool *bIsInInstance = NULL, VMatrix *InstanceMatrix = NULL );
+		virtual void InstanceMoved( void );
 
-	bool HitTest2D( CMapView2D* pView, const Vector2D& point, HitInfo_t& HitData ) override;
-	bool IsCulledByCordon( const Vector& vecMins, const Vector& vecMaxs ) override;
-	bool IsInsideBox( Vector const& Mins, Vector const& Maxs ) const override;
-	bool IsIntersectingBox( const Vector& vecMins, const Vector& vecMaxs ) const override;
+		virtual CMapClass *Copy(bool bUpdateDependencies);
+		virtual CMapClass *CopyFrom(CMapClass *pFrom, bool bUpdateDependencies);
 
-	bool IsVisualElement() override { return true; }
-	void OnParentKeyChanged( const char* key, const char* value ) override;
-	void Render2D( CRender2D* pRender ) override;
-	void Render3D( CRender3D* pRender ) override;
-	bool RenderPreload( CRender3D* pRender, bool bNewContext ) override;
-	void AddShadowingTriangles( CUtlVector<Vector>& tri_list ) override;
+		void Initialize(void);
+		void SetManifest( CManifestMap *pManifestMap );
 
-	[[nodiscard]] bool Collapse( bool bRecursive, InstanceCollapseData_t& collapseData );
-private:
-	void LoadVMF( CMapClass* pParent = nullptr );
-	bool LoadVMFInternal( const char* pVMFPath );
-	void Render2DChildren( CRender2D* pRender, CMapClass* pEnt );
-	void Render3DChildren( CRender3D* pRender, CUtlVector<CMapClass*>& deferred, CMapClass* pEnt, bool ignoreFrameCount );
-	void Render3DChildrenDeferred( CRender3D* pRender, CMapClass* pEnt, bool ignoreFrameCount );
-	void AddShadowingTrianglesChildren( CUtlVector<Vector>& tri_list, CMapClass* pEnt );
-	template <BoundBox CMapClass::* type>
-	void GetBounds( Vector& mins, Vector& maxs ) const;
-	static void FixAngles( QAngle& angle );
-	void DecompressMatrix( Vector& origin, QAngle& angle ) const;
-	void ConstructMatrix( const Vector& origin, const QAngle& angle );
-	template <size_t N>
-	static bool DeterminePath( const char* pszBaseFileName, const char* pszInstanceFileName, char( &pszOutFileName )[N] );
+		void Render2D(CRender2D *pRender);
+		void Render3D(CRender3D *pRender);
 
-	CMapWorld* m_pTemplate;
-	CUtlString m_strCurrentVMF;
-	CUtlString m_strPreviousVMF;
-	VMatrix m_matTransform;
+		void SwitchTo( void );
+
+		// Called by entity code to render sprites
+		void RenderLogicalAt(CRender2D *pRender, const Vector2D &vecMins, const Vector2D &vecMaxs );
+
+		void GetAngles(QAngle &Angles);
+
+		int SerializeRMF(std::fstream &File, BOOL bRMF);
+		int SerializeMAP(std::fstream &File, BOOL bRMF);
+
+		bool ShouldRenderLast(void);
+
+		bool IsVisualElement(void) { return(true); }
+		
+		virtual bool	IsEditable( void );
+				bool	IsInstanceVisible( void );
+		
+		const char		*GetDescription( void ) { return( "Instance" ); }
+		CMapDoc			*GetInstancedMap( void ) { return m_pInstancedMap; }
+		CManifestMap	*GetManifestMap( void ) { return m_pManifestMap; }
+		bool			IsInstance( void ) { return ( m_pManifestMap == NULL ); }
+		void			UpdateInstanceMap( void );
+
+		void OnParentKeyChanged(const char* szKey, const char* szValue);
+
+	protected:
+
+		//
+		// Implements CMapAtom transformation functions.
+		//
+		void DoTransform(const VMatrix &matrix);
+		
+		QAngle			m_Angles;
+
+		char			m_FileName[ MAX_PATH ];
+		CMapDoc			*m_pInstancedMap;
+		CManifestMap	*m_pManifestMap;
+
+		static char		m_InstancePath[ MAX_PATH ];
 };
 
 #endif // MAPINSTANCE_H

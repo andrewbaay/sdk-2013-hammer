@@ -158,6 +158,7 @@ void CMapAlignedBox::CalcBounds(BOOL bFullUpdate)
 	m_Render2DBox.UpdateBounds(AbsMins, AbsMaxs);
 
 	m_CullBox = m_Render2DBox;
+	m_BoundingBox = m_Render2DBox;
 }
 
 

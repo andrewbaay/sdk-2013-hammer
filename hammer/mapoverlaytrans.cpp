@@ -102,6 +102,7 @@ void CMapOverlayTransition::CalcBounds( BOOL bFullUpdate )
 
 		m_Render2DBox.UpdateBounds( vecMins, vecMaxs );
 		m_CullBox = m_Render2DBox;
+		m_BoundingBox = m_CullBox;
 	}
 }
 

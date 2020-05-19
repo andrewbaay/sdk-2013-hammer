@@ -113,6 +113,7 @@ class CMapStudioModel : public CMapHelper
 		float m_flFadeScale;				// Multiplied by distance to camera before calculating fade.
 		float m_flFadeMinDist;				// The distance/pixels at which this model is fully visible.
 		float m_flFadeMaxDist;				// The distance/pixels at which this model is fully invisible.
+		int m_iSolid;						// The collision setting of this model: 0 = not solid, 2 = bounding box, 6 = vphysics
 
 		//
 		// Data that is common to all studio models.

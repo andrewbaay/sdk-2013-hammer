@@ -20,8 +20,6 @@ public:
 // Attributes
 public:
 	// pipes:
-	HANDLE hChildStdoutRd; 
-	HANDLE hProcess;
 	char *pEditBuf;
 	UINT uBufLen;
 
@@ -31,7 +29,7 @@ public:
 // Operations
 public:
 	int Execute(LPCTSTR pszCmd, LPCTSTR pszCmdLine);
-	int Execute(LPCTSTR pszCmd, ...);
+	int Execute(PRINTF_FORMAT_STRING LPCTSTR pszCmd, ...);
 
 	void Clear();
 	void Append(CString str);

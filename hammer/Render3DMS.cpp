@@ -33,8 +33,9 @@
 #include "lpreview_thread.h"
 #include "mainfrm.h"
 #include "mathlib/halton.h"
+#include "Manifest.h"
 #include "materialsystem/imaterialvar.h"
-
+#include "MapInstance.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -159,7 +160,8 @@ float CRender3D::LightPlane(Vector& Normal)
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-CRender3D::CRender3D(void)
+CRender3D::CRender3D(void) :
+	CRender()
 {
 	memset(&m_WinData, 0, sizeof(m_WinData));
 
@@ -168,6 +170,7 @@ CRender3D::CRender3D(void)
 	m_pDropCamera = new CCamera;
 	m_bDroppedCamera = false;
 	m_DeferRendering = false;
+	m_TranslucentSortRendering = false;
 
 	m_fFrameRate = 0;
 	m_nFramesThisSample = 0;
@@ -217,12 +220,20 @@ CRender3D::~CRender3D(void)
 //-----------------------------------------------------------------------------
 void CRender3D::BeginRenderHitTarget(CMapAtom *pObject, unsigned int uHandle)
 {
-	if (m_Pick.bPicking)
+	if ( m_Pick.bPicking == false )
 	{
-		CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
-		pRenderContext->PushSelectionName((unsigned int)pObject);
-		pRenderContext->PushSelectionName(uHandle);
+		return;
 	}
+
+	if ( ( m_Pick.m_nFlags & FLAG_OBJECTS_AT_RESOLVE_INSTANCES ) == 0 && m_bInstanceRendering && !GetInstanceClass()->IsEditable() )
+	{
+		pObject = m_CurrentInstanceState.m_pTopInstanceClass; // GetInstanceClass();
+		uHandle = 0;
+	}
+
+	CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
+	pRenderContext->PushSelectionName((unsigned int)pObject);
+	pRenderContext->PushSelectionName(uHandle);
 }
 
 
@@ -252,6 +263,7 @@ void CRender3D::EndRenderHitTarget(void)
 				m_Pick.Hits[m_Pick.nNumHits].pObject = (CMapClass *)m_Pick.uSelectionBuffer[3];
 				m_Pick.Hits[m_Pick.nNumHits].uData = m_Pick.uSelectionBuffer[4];
 				m_Pick.Hits[m_Pick.nNumHits].nDepth = m_Pick.uSelectionBuffer[1];
+				m_Pick.Hits[m_Pick.nNumHits].m_LocalMatrix = m_LocalMatrix.Head();
 				m_Pick.nNumHits++;
 			}
 		}
@@ -271,6 +283,17 @@ void CRender3D::AddTranslucentDeferredRendering( CMapPoint *pMapPoint )
 	pMapPoint->GetOrigin(center);
 
 	TranslucentObjects_t entry;
+	if ( m_bInstanceRendering )
+	{
+		center += GetInstanceOrigin();
+		entry.m_InstanceState = m_CurrentInstanceState;
+		entry.m_bInstanceSelected = ( m_InstanceSelectionDepth != 0 );
+	}
+	else
+	{
+		entry.m_InstanceState.m_pInstanceClass = NULL;
+	}
+
 	entry.object = pMapPoint;
 	entry.depth = center.Dot( direction );
 
@@ -357,24 +380,23 @@ void CRender3D::RenderFrustum( )
 	IMesh* pMesh = pRenderContext->GetDynamicMesh();
 
 	int numIndices = sizeof(indices) / sizeof(int);
-	CMeshBuilder meshBuilder;
-	meshBuilder.Begin( pMesh, MATERIAL_LINES, 8, numIndices );
+	CMeshBuilder meshBuilder3D;
+	meshBuilder3D.Begin( pMesh, MATERIAL_LINES, 8, numIndices );
 
-	int i;
-	for ( i = 0; i < 8; ++i )
+	for ( int i = 0; i < 8; ++i )
 	{
-		meshBuilder.Position3fv( m_FrustumRenderPoint[i].Base() );
-		meshBuilder.Color4ub( 255, 255, 255, 255 );
-		meshBuilder.AdvanceVertex();
+		meshBuilder3D.Position3fv( m_FrustumRenderPoint[i].Base() );
+		meshBuilder3D.Color4ub( 255, 255, 255, 255 );
+		meshBuilder3D.AdvanceVertex();
 	}
 
-	for ( i = 0; i < numIndices; ++i )
+	for ( int i = 0; i < numIndices; ++i )
 	{
-		meshBuilder.Index( indices[i] );
-		meshBuilder.AdvanceIndex();
+		meshBuilder3D.Index( indices[i] );
+		meshBuilder3D.AdvanceIndex();
 	}
 
-	meshBuilder.End();
+	meshBuilder3D.End();
 	pMesh->Draw();
 
 	PopRenderMode();
@@ -570,7 +592,7 @@ bool CRender3D::IsPicking(void)
 // Output : Returns the number of object pointers placed in the buffer pointed to
 //			by 'pObjects'.
 //-----------------------------------------------------------------------------
-int CRender3D::ObjectsAt(float x, float y, float fWidth, float fHeight, HitInfo_t *pObjects, int nMaxObjects)
+int CRender3D::ObjectsAt( float x, float y, float fWidth, float fHeight, HitInfo_t *pObjects, int nMaxObjects, unsigned int nFlags )
 {
 	int width, height;
 
@@ -593,6 +615,7 @@ int CRender3D::ObjectsAt(float x, float y, float fWidth, float fHeight, HitInfo_
 		m_Pick.uLastZ = 0;
 	}
 
+	m_Pick.m_nFlags = nFlags;
 	m_Pick.bPicking = true;
 
 	EditorRenderMode_t eOldMode = GetDefaultRenderMode();
@@ -704,9 +727,8 @@ void CRender3D::StartRenderFrame(void)
 		//
 		// Clear the frame buffer and Z buffer.
 		//
-
 		pRenderContext->ClearColor3ub( 0,0,0 );
-		pRenderContext->ClearBuffers( true, true );
+		pRenderContext->ClearBuffers( true, true, true );
 	}
 
 	//
@@ -1435,6 +1457,26 @@ void CRender3D::EndRenderFrame(void)
 }
 
 
+void CRender3D::PushInstanceData( CMapInstance *pInstanceClass, Vector &InstanceOrigin, QAngle &InstanceAngles )
+{
+	__super::PushInstanceData( pInstanceClass, InstanceOrigin, InstanceAngles );
+
+	if ( m_bInstanceRendering )
+	{
+		CMapFace::PushFaceQueue();
+	}
+}
+
+void CRender3D::PopInstanceData( void )
+{
+	if ( m_bInstanceRendering )
+	{
+		CMapFace::PopFaceQueue();
+	}
+
+	__super::PopInstanceData();
+}
+
 //-----------------------------------------------------------------------------
 // Renders the world axes
 //-----------------------------------------------------------------------------
@@ -1443,39 +1485,111 @@ void CRender3D::RenderWorldAxes()
 	// Render the world axes.
 	PushRenderMode( RENDER_MODE_WIREFRAME );
 
-	CMeshBuilder meshBuilder;
+	CMeshBuilder meshBuilder3D;
 	CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
 	IMesh* pMesh = pRenderContext->GetDynamicMesh( );
-	meshBuilder.Begin( pMesh, MATERIAL_LINES, 3 );
+	meshBuilder3D.Begin( pMesh, MATERIAL_LINES, 3 );
 
-	meshBuilder.Color3ub(255, 0, 0);
-	meshBuilder.Position3f(0, 0, 0);
-	meshBuilder.AdvanceVertex();
+	meshBuilder3D.Color3ub(255, 0, 0);
+	meshBuilder3D.Position3f(0, 0, 0);
+	meshBuilder3D.AdvanceVertex();
 
-	meshBuilder.Color3ub(255, 0, 0);
-	meshBuilder.Position3f(100, 0, 0);
-	meshBuilder.AdvanceVertex();
+	meshBuilder3D.Color3ub(255, 0, 0);
+	meshBuilder3D.Position3f(100, 0, 0);
+	meshBuilder3D.AdvanceVertex();
 
-	meshBuilder.Color3ub(0, 255, 0);
-	meshBuilder.Position3f(0, 0, 0);
-	meshBuilder.AdvanceVertex();
+	meshBuilder3D.Color3ub(0, 255, 0);
+	meshBuilder3D.Position3f(0, 0, 0);
+	meshBuilder3D.AdvanceVertex();
 
-	meshBuilder.Color3ub(0, 255, 0);
-	meshBuilder.Position3f(0, 100, 0);
-	meshBuilder.AdvanceVertex();
+	meshBuilder3D.Color3ub(0, 255, 0);
+	meshBuilder3D.Position3f(0, 100, 0);
+	meshBuilder3D.AdvanceVertex();
 
-	meshBuilder.Color3ub(0, 0, 255);
-	meshBuilder.Position3f(0, 0, 0);
-	meshBuilder.AdvanceVertex();
+	meshBuilder3D.Color3ub(0, 0, 255);
+	meshBuilder3D.Position3f(0, 0, 0);
+	meshBuilder3D.AdvanceVertex();
 
-	meshBuilder.Color3ub(0, 0, 255);
-	meshBuilder.Position3f(0, 0, 100);
-	meshBuilder.AdvanceVertex();
+	meshBuilder3D.Color3ub(0, 0, 255);
+	meshBuilder3D.Position3f(0, 0, 100);
+	meshBuilder3D.AdvanceVertex();
 
-	meshBuilder.End();
+	meshBuilder3D.End();
 	pMesh->Draw();
 
 	PopRenderMode();
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this will handle all translucent rendering, including local transforms for instance items
+// Input  : none
+// Output : none
+//-----------------------------------------------------------------------------
+void CRender3D::RenderTranslucentObjects( void )
+{
+	CMatRenderContextPtr	pRenderContext( MaterialSystemInterface() );
+	bool					bAddedTransform = false;
+	CMapInstance			*pInstanceClass = NULL;
+	TInstanceState			SaveInstanceState = m_CurrentInstanceState;
+
+	m_bInstanceRendering = false;
+
+	// render translucent objects after all opaque objects
+	while ( m_TranslucentRenderObjects.Count() > 0 )
+	{
+		TranslucentObjects_t current = m_TranslucentRenderObjects.ElementAtHead();
+		m_TranslucentRenderObjects.RemoveAtHead();
+
+		if ( current.m_InstanceState.m_pInstanceClass )
+		{
+			if ( pInstanceClass != current.m_InstanceState.m_pInstanceClass || !m_bInstanceRendering || current.m_InstanceState.m_InstanceMatrix != m_CurrentInstanceState.m_InstanceMatrix  )
+			{
+				if ( bAddedTransform )
+				{
+					EndLocalTransfrom();
+				}
+				bAddedTransform = true;
+				BeginLocalTransfrom( current.m_InstanceState.m_InstanceRenderMatrix, false );
+				m_CurrentInstanceState = current.m_InstanceState;
+				pInstanceClass = m_CurrentInstanceState.m_pInstanceClass;
+				m_bInstanceRendering = true;
+
+				if ( pInstanceClass->IsEditable() )
+				{
+					SetInstanceRendering( INSTANCE_STATE_OFF );
+				}
+				else
+				{
+					SetInstanceRendering( current.m_bInstanceSelected ? INSTANCE_STACE_SELECTED : INSTANCE_STATE_ON );
+				}
+			}
+		}
+		else
+		{
+			if ( m_bInstanceRendering )
+			{
+				if ( bAddedTransform )
+				{
+					EndLocalTransfrom();
+					bAddedTransform = false;
+				}
+
+				SetInstanceRendering( INSTANCE_STATE_OFF );
+				m_bInstanceRendering = false;
+			}
+		}
+
+		current.object->Render3D( this );
+	}
+
+	m_bInstanceRendering = false;
+	if ( bAddedTransform )
+	{
+		EndLocalTransfrom();
+	}
+
+	m_CurrentInstanceState = SaveInstanceState;
 }
 
 
@@ -1485,6 +1599,9 @@ void CRender3D::RenderWorldAxes()
 void CRender3D::Render(void)
 {
 	CMapDoc *pDoc = m_pView->GetMapDoc();
+	CMapWorld	*pMapWorld = pDoc->GetMapWorld();
+	CManifest	*pManifest = pDoc->GetManifest();
+
 	bool view_changed = false;
 
 	CCamera *pCamera = GetCamera();
@@ -1530,6 +1647,8 @@ void CRender3D::Render(void)
 		m_DeferRendering = true;
 	}
 
+	m_TranslucentSortRendering = true;
+
  	if (IsInLightingPreview())
  	{
  		// Lighting preview?
@@ -1543,19 +1662,27 @@ void CRender3D::Render(void)
 	//
 	// Render the world using octree culling.
 	//
+
+	PrepareInstanceStencil();
+
+	if ( pManifest )
+	{
+ 		pMapWorld = pManifest->GetManifestWorld();
+	}
+
 	if (g_bUseCullTree)
 	{
-		RenderTree();
+		RenderTree( pMapWorld );
 	}
 	//
 	// Render the world without octree culling.
 	//
 	else
 	{
-		RenderMapClass(pDoc->GetMapWorld());
+		RenderMapClass( pMapWorld );
 	}
 
-	if ( !IsPicking() && m_DeferRendering )
+	if ( m_DeferRendering )
 	{
 		m_DeferRendering = false;
 
@@ -1564,14 +1691,11 @@ void CRender3D::Render(void)
 		CMapFace::RenderOpaqueFaces(this);
 	}
 
-	// render translucent objects after all opaque objects
-	while ( m_TranslucentRenderObjects.Count() > 0 )
-	{
-		TranslucentObjects_t current = m_TranslucentRenderObjects.ElementAtHead();
-		m_TranslucentRenderObjects.RemoveAtHead();
-		current.object->Render3D( this );
-	}
+	RenderTranslucentObjects();
 
+	DrawInstanceStencil();
+
+	m_TranslucentSortRendering = false;
 	pDoc->RenderDocument( this );
 
 	RenderTool();
@@ -1762,10 +1886,10 @@ void CRender3D::RenderBox(const Vector &Mins, const Vector &Maxs,
 			//
 			bool wireframe = (eRenderModeThisPass == RENDER_MODE_WIREFRAME);
 
-			CMeshBuilder meshBuilder;
+			CMeshBuilder meshBuilder3D;
 			CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
 			IMesh* pMesh = pRenderContext->GetDynamicMesh();
-			meshBuilder.DrawQuad( pMesh, FacePoints[nP1].Base(), FacePoints[nP2].Base(),
+			meshBuilder3D.DrawQuad( pMesh, FacePoints[nP1].Base(), FacePoints[nP2].Base(),
 								  FacePoints[nP3].Base(), FacePoints[nP4].Base(), color, wireframe );
 		}
 
@@ -1929,10 +2053,10 @@ void CRender3D::RenderSphere(Vector const &vCenter, float flRadius, int nTheta, 
 	CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
 	pRenderContext->Bind( m_pVertexColor[0] );
 
-	CMeshBuilder meshBuilder;
+	CMeshBuilder meshBuilder3D;
 	IMesh* pMesh = pRenderContext->GetDynamicMesh();
 
-	meshBuilder.Begin( pMesh, MATERIAL_TRIANGLE_STRIP, nTriangles, nIndices );
+	meshBuilder3D.Begin( pMesh, MATERIAL_TRIANGLE_STRIP, nTriangles, nIndices );
 
 	//
 	// Build the index buffer.
@@ -1963,9 +2087,9 @@ void CRender3D::RenderSphere(Vector const &vCenter, float flRadius, int nTheta, 
 
 			vecPos += vCenter;
 
-			meshBuilder.Position3f( vecPos.x, vecPos.y, vecPos.z );
-			meshBuilder.Color3ub( red, green, blue );
-			meshBuilder.AdvanceVertex();
+			meshBuilder3D.Position3f( vecPos.x, vecPos.y, vecPos.z );
+			meshBuilder3D.Color3ub( red, green, blue );
+			meshBuilder3D.AdvanceVertex();
 		}
 	}
 
@@ -1979,11 +2103,11 @@ void CRender3D::RenderSphere(Vector const &vCenter, float flRadius, int nTheta, 
 		{
 			idx = nTheta * i + j;
 
-			meshBuilder.Index( idx + nTheta );
-			meshBuilder.AdvanceIndex();
+			meshBuilder3D.Index( idx + nTheta );
+			meshBuilder3D.AdvanceIndex();
 
-			meshBuilder.Index( idx );
-			meshBuilder.AdvanceIndex();
+			meshBuilder3D.Index( idx );
+			meshBuilder3D.AdvanceIndex();
 		}
 
 		//
@@ -1992,15 +2116,15 @@ void CRender3D::RenderSphere(Vector const &vCenter, float flRadius, int nTheta, 
 		//
 		if ( i < nPhi - 2 )
 		{
-			meshBuilder.Index( idx );
-			meshBuilder.AdvanceIndex();
+			meshBuilder3D.Index( idx );
+			meshBuilder3D.AdvanceIndex();
 
-			meshBuilder.Index( idx + nTheta + 1 );
-			meshBuilder.AdvanceIndex();
+			meshBuilder3D.Index( idx + nTheta + 1 );
+			meshBuilder3D.AdvanceIndex();
 		}
 	}
 
-	meshBuilder.End();
+	meshBuilder3D.End();
 	pMesh->Draw();
 
 	PopRenderMode();
@@ -2021,51 +2145,49 @@ void CRender3D::RenderWireframeSphere(Vector const &vCenter, float flRadius, int
 	int nVertices = nPhi * nTheta;
 	int nIndices = ( nTheta - 1 ) * 4 * ( nPhi - 1 );
 
-	CMeshBuilder meshBuilder;
+	CMeshBuilder meshBuilder3D;
 	CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
 	IMesh* pMesh = pRenderContext->GetDynamicMesh();
 
-	meshBuilder.Begin( pMesh, MATERIAL_LINES, nVertices, nIndices );
+	meshBuilder3D.Begin( pMesh, MATERIAL_LINES, nVertices, nIndices );
 
-	int i, j;
-	for ( i = 0; i < nPhi; ++i )
+	for ( int i = 0; i < nPhi; ++i )
 	{
-		for ( j = 0; j < nTheta; ++j )
+		for ( int j = 0; j < nTheta; ++j )
 		{
 			float u = j / ( float )( nTheta - 1 );
 			float v = i / ( float )( nPhi - 1 );
 			float theta = 2.0f * M_PI * u;
 			float phi = M_PI * v;
-
-			meshBuilder.Position3f( vCenter.x + ( flRadius * sin(phi) * cos(theta) ),
+			meshBuilder3D.Position3f( vCenter.x + ( flRadius * sin(phi) * cos(theta) ),
 				                    vCenter.y + ( flRadius * sin(phi) * sin(theta) ),
 									vCenter.z + ( flRadius * cos(phi) ) );
-			meshBuilder.Color3ub( chRed, chGreen, chBlue );
-			meshBuilder.AdvanceVertex();
+			meshBuilder3D.Color3ub( chRed, chGreen, chBlue );
+			meshBuilder3D.AdvanceVertex();
 		}
 	}
 
-	for ( i = 0; i < nPhi - 1; ++i )
+	for ( int i = 0; i < nPhi - 1; ++i )
 	{
-		for ( j = 0; j < nTheta - 1; ++j )
+		for ( int j = 0; j < nTheta - 1; ++j )
 		{
 			int idx = nTheta * i + j;
 
-			meshBuilder.Index( idx );
-			meshBuilder.AdvanceIndex();
+			meshBuilder3D.Index( idx );
+			meshBuilder3D.AdvanceIndex();
 
-			meshBuilder.Index( idx + nTheta );
-			meshBuilder.AdvanceIndex();
+			meshBuilder3D.Index( idx + nTheta );
+			meshBuilder3D.AdvanceIndex();
 
-			meshBuilder.Index( idx );
-			meshBuilder.AdvanceIndex();
+			meshBuilder3D.Index( idx );
+			meshBuilder3D.AdvanceIndex();
 
-			meshBuilder.Index( idx + 1 );
-			meshBuilder.AdvanceIndex();
+			meshBuilder3D.Index( idx + 1 );
+			meshBuilder3D.AdvanceIndex();
 		}
 	}
 
-	meshBuilder.End();
+	meshBuilder3D.End();
 	pMesh->Draw();
 
 	PopRenderMode();
@@ -2085,19 +2207,19 @@ void CRender3D::RenderPointsAndPortals(void)
 
 		int nPFPoints = pDoc->m_PFPoints.Count();
 		Vector* pPFPoints = pDoc->m_PFPoints.Base();
-		CMeshBuilder meshBuilder;
+		CMeshBuilder meshBuilder3D;
 		CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
 		IMesh* pMesh = pRenderContext->GetDynamicMesh( );
-		meshBuilder.Begin( pMesh, MATERIAL_LINE_STRIP, nPFPoints - 1 );
+		meshBuilder3D.Begin( pMesh, MATERIAL_LINE_STRIP, nPFPoints - 1 );
 
 		for (int i = 0; i < nPFPoints; i++)
 		{
-			meshBuilder.Position3f(pPFPoints[i][0], pPFPoints[i][1], pPFPoints[i][2]);
-			meshBuilder.Color3ub(255, 0, 0);
-			meshBuilder.AdvanceVertex();
+			meshBuilder3D.Position3f(pPFPoints[i][0], pPFPoints[i][1], pPFPoints[i][2]);
+			meshBuilder3D.Color3ub(255, 0, 0);
+			meshBuilder3D.AdvanceVertex();
 		}
 
-		meshBuilder.End();
+		meshBuilder3D.End();
 		pMesh->Draw();
 		PopRenderMode();
 	}
@@ -2129,8 +2251,8 @@ void CRender3D::RenderPointsAndPortals(void)
 			{
 				quadLimit = nMaxIndices / 6;
 			}
-			CMeshBuilder meshBuilder;
-			meshBuilder.Begin( pMesh, MATERIAL_QUADS, quadLimit );
+			CMeshBuilder meshBuilder3D;
+			meshBuilder3D.Begin( pMesh, MATERIAL_QUADS, quadLimit );
 
 			const float edgeWidth = 2.0f;
 			for (; portalIndex < pDoc->m_pPortalFile->vertCount.Count(); portalIndex++)
@@ -2151,27 +2273,27 @@ void CRender3D::RenderPointsAndPortals(void)
 					int v1 = baseVert + ((j+1) % vertCount);
 					// compute the direction in the plane of the face to extrude the edge toward the
 					// face interior, use that to make a wide line with a quad
-					Vector e0 = pDoc->m_pPortalFile->verts[v1] - pDoc->m_pPortalFile->verts[v0];
+					e0 = pDoc->m_pPortalFile->verts[v1] - pDoc->m_pPortalFile->verts[v0];
 					Vector dir = CrossProduct( e0, normal );
 					VectorNormalize(dir);
 					dir *= edgeWidth;
-					meshBuilder.Position3fv( pDoc->m_pPortalFile->verts[v0].Base() );
-					meshBuilder.Color3ub(0, 0, 255);
-					meshBuilder.AdvanceVertex();
-					meshBuilder.Position3fv( pDoc->m_pPortalFile->verts[v1].Base() );
-					meshBuilder.Color3ub(0, 0, 255);
-					meshBuilder.AdvanceVertex();
-					meshBuilder.Position3fv( (pDoc->m_pPortalFile->verts[v1] + dir).Base() );
-					meshBuilder.Color3ub(0, 0, 255);
-					meshBuilder.AdvanceVertex();
-					meshBuilder.Position3fv( (pDoc->m_pPortalFile->verts[v0] + dir).Base() );
-					meshBuilder.Color3ub(0, 0, 255);
-					meshBuilder.AdvanceVertex();
+					meshBuilder3D.Position3fv( pDoc->m_pPortalFile->verts[v0].Base() );
+					meshBuilder3D.Color3ub(0, 0, 255);
+					meshBuilder3D.AdvanceVertex();
+					meshBuilder3D.Position3fv( pDoc->m_pPortalFile->verts[v1].Base() );
+					meshBuilder3D.Color3ub(0, 0, 255);
+					meshBuilder3D.AdvanceVertex();
+					meshBuilder3D.Position3fv( (pDoc->m_pPortalFile->verts[v1] + dir).Base() );
+					meshBuilder3D.Color3ub(0, 0, 255);
+					meshBuilder3D.AdvanceVertex();
+					meshBuilder3D.Position3fv( (pDoc->m_pPortalFile->verts[v0] + dir).Base() );
+					meshBuilder3D.Color3ub(0, 0, 255);
+					meshBuilder3D.AdvanceVertex();
 				}
 				baseVert += vertCount;
 			}
 
-			meshBuilder.End();
+			meshBuilder3D.End();
 			pMesh->Draw();
 			totalQuads -= quadOut;
 		}
@@ -2232,6 +2354,15 @@ void CRender3D::RenderMapClass(CMapClass *pMapClass)
 				should_appear &= pMapClass->ShouldAppearInLightingPreview();
 //				should_appear &= pMapClass->ShouldAppearInRaytracedLightingPreview();
 
+			if ( should_appear == true && m_Pick.bPicking == true && ( m_Pick.m_nFlags & FLAG_OBJECTS_AT_ONLY_SOLIDS ) != 0 )
+			{
+				if ( pMapClass->IsSolid() == false )
+				{
+					should_appear = false;
+				}
+			}
+
+
 			if ( should_appear )
 			{
 				//
@@ -2276,6 +2407,123 @@ void CRender3D::RenderMapClass(CMapClass *pMapClass)
 		// Consider this object as handled for this frame.
 		//
 		pMapClass->SetRenderFrame(m_nFrameCount);
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will render an instance map at the specific offset and rotation
+// Input  : pInstanceClass - the map class of the func_instance
+//			pMapClass - the map class of the world spawn of the instance
+//			InstanceOrigin - the translation offset
+//			InstanceAngles - the axis rotation
+// Output : none
+//-----------------------------------------------------------------------------
+void CRender3D::RenderInstanceMapClass( CMapInstance *pInstanceClass, CMapClass *pMapClass, Vector &InstanceOrigin, QAngle &InstanceAngles )
+{
+	if ( !pInstanceClass->IsInstanceVisible() )
+	{
+		return;
+	}
+
+	PushInstanceData( pInstanceClass, InstanceOrigin, InstanceAngles );
+
+	m_nInstanceCount++;
+
+	RenderInstanceMapClass_r( pMapClass );
+
+	if ( m_DeferRendering )
+	{
+		CMapFace::RenderOpaqueFaces(this);
+	}
+
+	if ( m_TranslucentSortRendering == false )
+	{	// translucent objects will do their own transforms
+		RenderTranslucentObjects();
+	}
+
+	PopInstanceData();
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will recursively render an instance and all of its children
+// Input  : pObject - the object to be rendered
+// Output : none
+//-----------------------------------------------------------------------------
+void CRender3D::RenderInstanceMapClass_r(CMapClass *pMapClass)
+{
+	Assert(pMapClass != NULL);
+
+	if ( ( pMapClass != NULL ) && ( pMapClass->GetRenderFrame() != m_nInstanceCount ) )
+	{
+		if (pMapClass->IsVisible())
+		{
+			//
+			// Render this object's culling box if it is enabled.
+			//
+			if (g_bRenderCullBoxes)
+			{
+				Vector vecMins, vecMaxs, vecExpandedMins, vecExpandedMaxs;
+				pMapClass->GetCullBox( vecMins, vecMaxs );
+				TransformInstanceAABB( vecMins, vecMaxs, vecExpandedMins, vecExpandedMaxs );
+
+				RenderWireframeBox( vecExpandedMins, vecExpandedMaxs, 255, 0, 0 );
+			}
+
+			bool should_appear=true;
+			if (m_eCurrentRenderMode == RENDER_MODE_LIGHT_PREVIEW2)
+				should_appear &= pMapClass->ShouldAppearInLightingPreview();
+
+			if (m_eCurrentRenderMode == RENDER_MODE_LIGHT_PREVIEW_RAYTRACED)
+				should_appear &= pMapClass->ShouldAppearInLightingPreview();
+			//				should_appear &= pMapClass->ShouldAppearInRaytracedLightingPreview();
+
+			if ( should_appear )
+			{
+				//
+				// If we should render this object after all the other objects,
+				// just add it to a list of objects to render last. Otherwise, render it now.
+				//
+				if (!pMapClass->ShouldRenderLast())
+				{
+					pMapClass->Render3D(this);
+				}
+				else
+				{
+					if (
+						(m_eCurrentRenderMode != RENDER_MODE_LIGHT_PREVIEW2) &&
+						(m_eCurrentRenderMode != RENDER_MODE_LIGHT_PREVIEW_RAYTRACED) )
+					{
+						AddTranslucentDeferredRendering( pMapClass );
+					}
+				}
+			}
+			//
+			// Render this object's children.
+			//
+			const CMapObjectList *pChildren = pMapClass->GetChildren();
+
+			FOR_EACH_OBJ( *pChildren, pos )
+			{
+				Vector vecMins, vecMaxs, vecExpandedMins, vecExpandedMaxs;
+
+				CMapClass *pChild = pChildren->Element( pos );
+
+				pChild->GetCullBox( vecMins, vecMaxs );
+				TransformInstanceAABB( vecMins, vecMaxs, vecExpandedMins, vecExpandedMaxs );
+
+				if (IsBoxVisible( vecExpandedMins, vecExpandedMaxs ) != VIS_NONE )
+				{
+					RenderInstanceMapClass_r( pChild );
+				}
+			}
+		}
+
+		//
+		// Consider this object as handled for this instance frame.
+		//
+		pMapClass->SetRenderFrame( m_nInstanceCount );
 	}
 }
 
@@ -2450,9 +2698,8 @@ void CRender3D::RenderTool(void)
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CRender3D::RenderTree(void)
+void CRender3D::RenderTree( CMapWorld *pWorld )
 {
-	CMapWorld *pWorld = m_pView->GetMapDoc()->GetMapWorld();
 	if (pWorld == NULL)
 	{
 		return;

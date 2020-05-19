@@ -67,6 +67,7 @@ BEGIN_MESSAGE_MAP(CSoundBrowser, CDialog)
 	ON_LBN_DBLCLK(IDC_SOUND_LIST, OnDblclkSoundList)
 	ON_BN_CLICKED(IDC_PREVIEW, OnPreview)
 	ON_BN_CLICKED(IDC_AUTOPLAY, OnAutoplay)
+	ON_BN_CLICKED(IDC_STOPSOUND, OnBnClickedStopsound)
 	ON_BN_CLICKED(IDC_REFRESH_SOUNDS, OnRefreshSounds)
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_OPEN_SOURCE, OnOpenSource)
@@ -121,7 +122,7 @@ void CSoundBrowser::OnClose(void)
 void CSoundBrowser::Shutdown()
 {
 	SaveValues();
-	PlaySound( NULL, NULL, SND_FILENAME );
+	PlaySound( NULL, NULL, SND_FILENAME | SND_NODEFAULT); 
 
 	// save current filter string
 	int i;
@@ -367,4 +368,9 @@ void CSoundBrowser::OnOpenSource()
 	{
 		g_Sounds.OpenSource( GetSoundType(), m_nSelectedSoundIndex );
 	}
+}
+
+void CSoundBrowser::OnBnClickedStopsound()
+{
+	g_Sounds.StopSound(); 
 }

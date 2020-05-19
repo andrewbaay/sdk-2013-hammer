@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -90,7 +90,7 @@ protected:
 
 private:
 
-	void MarkSelectedEntities();
+	CMapDoc* MarkSelectedEntities();
 
 	friend BOOL AddEntityToList(CMapEntity *pEntity, CEntityReportDlg *pDlg);
 };

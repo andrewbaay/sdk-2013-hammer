@@ -130,6 +130,8 @@ void CMapSphere::CalcBounds(BOOL bFullUpdate)
 	Vector mins = m_Origin - Vector(m_flRadius, m_flRadius, m_flRadius);
 	Vector maxs = m_Origin + Vector(m_flRadius, m_flRadius, m_flRadius);
 	m_CullBox.UpdateBounds(mins, maxs);
+
+	m_BoundingBox.ResetBounds(); // we don't want to use the bounds of the sphere for our bounding box
 }
 
 

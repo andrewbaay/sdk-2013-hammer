@@ -126,6 +126,7 @@ void CMapPlayerHullHandle::CalcBounds(BOOL bFullUpdate)
 
 	m_Render2DBox.UpdateBounds(Mins, Maxs);
 	m_CullBox = m_Render2DBox;
+	m_BoundingBox = m_CullBox;
 }
 
 

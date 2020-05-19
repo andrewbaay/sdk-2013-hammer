@@ -62,6 +62,7 @@ protected:
 	afx_msg void OnDblclkSoundList();
 	afx_msg void OnPreview();
 	afx_msg void OnAutoplay();
+	afx_msg void OnBnClickedStopsound();
 	afx_msg void OnRefreshSounds();
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnOpenSource();

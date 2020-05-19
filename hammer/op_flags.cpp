@@ -55,8 +55,10 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // COP_Flags message handlers
 
-void COP_Flags::UpdateData(int Mode, PVOID pData)
+void COP_Flags::UpdateData( int Mode, PVOID pData, bool bCanEdit )
 {
+	__super::UpdateData( Mode, pData, bCanEdit );
+
 	if(!IsWindow(m_hWnd) || !pData)
 	{
 		return;
@@ -74,6 +76,8 @@ void COP_Flags::UpdateData(int Mode, PVOID pData)
 		MergeForClass(pObj);
 	}
     CreateCheckList();
+
+	m_CheckList.EnableWindow( m_bCanEdit ? TRUE : FALSE );
 }
 
 

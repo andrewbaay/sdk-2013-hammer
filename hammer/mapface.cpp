@@ -1799,77 +1799,6 @@ bool CMapFace::ShouldRenderLast()
 	return m_pTexture->GetMaterial()->IsTranslucent() || (m_uchAlpha != 255) ;
 }
 
-
-//-----------------------------------------------------------------------------
-// Record rendered opaque faces so we can sort later....
-//-----------------------------------------------------------------------------
-struct MapFaceRender_t
-{
-	bool m_RenderSelected;
-	EditorRenderMode_t m_RenderMode;
-	IEditorTexture* m_pTexture;
-	CMapFace* m_pMapFace;
-	SelectionState_t m_FaceSelectionState;
-};
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  : mode -
-//-----------------------------------------------------------------------------
-static int SortVal(EditorRenderMode_t mode)
-{
-	if (mode == RENDER_MODE_WIREFRAME)
-		return 2;
-	if (mode == RENDER_MODE_SELECTION_OVERLAY)
-		return 1;
-	return 0;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  : s1 -
-//			s2 -
-// Output :
-//-----------------------------------------------------------------------------
-static bool OpaqueFacesLessFunc( const MapFaceRender_t &s1, const MapFaceRender_t &s2 )
-{
-	// Render texture first, overlay second, wireframe 3rd
-	int nSort1 = SortVal(s1.m_RenderMode);
-	int nSort2 = SortVal(s2.m_RenderMode);
-	if (nSort1 < nSort2)
-		return true;
-	if (nSort1 > nSort2)
-		return false;
-	return s1.m_pTexture < s2.m_pTexture;
-}
-
-
-static CUtlRBTree<MapFaceRender_t, int> g_OpaqueFaces(0, 0, OpaqueFacesLessFunc);
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  : pMapFace -
-//			pTexture -
-//			renderMode -
-//			selected -
-//			faceSelectionState -
-//-----------------------------------------------------------------------------
-static void AddFaceToQueue( CMapFace* pMapFace, IEditorTexture* pTexture,
-	EditorRenderMode_t renderMode, bool selected, SelectionState_t faceSelectionState )
-{
-	MapFaceRender_t newEntry;
-	newEntry.m_RenderMode = renderMode;
-	newEntry.m_pTexture = pTexture;
-	newEntry.m_RenderSelected = selected;
-	newEntry.m_pMapFace = pMapFace;
-	newEntry.m_FaceSelectionState = faceSelectionState;
-	g_OpaqueFaces.Insert( newEntry );
-}
-
-
 //-----------------------------------------------------------------------------
 // render texture axes
 //-----------------------------------------------------------------------------
@@ -2004,6 +1933,18 @@ void CMapFace::AddFaceVertices( CMeshBuilder &meshBuilder, CRender3D* pRender, b
 		meshBuilder.AdvanceVertex();
 	}
 }
+
+
+struct MapFaceRender_t
+{
+	bool m_RenderSelected;
+	EditorRenderMode_t m_RenderMode;
+	IEditorTexture* m_pTexture;
+	CMapFace* m_pMapFace;
+	SelectionState_t m_FaceSelectionState;
+};
+
+typedef CUtlRBTree<MapFaceRender_t, int>	FaceQueue_t;
 
 
 //-----------------------------------------------------------------------------
@@ -2220,19 +2161,113 @@ void CMapFace::RenderFace3D( CRender3D* pRender, EditorRenderMode_t renderMode, 
 
 
 //-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : mode - 
+//-----------------------------------------------------------------------------
+static int SortVal(EditorRenderMode_t mode)
+{
+	if (mode == RENDER_MODE_WIREFRAME)
+		return 2;
+	if ( mode == RENDER_MODE_SELECTION_OVERLAY )
+		return 1;
+	return 0;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : s1 - 
+//			s2 - 
+// Output : 
+//-----------------------------------------------------------------------------
+static bool OpaqueFacesLessFunc( const MapFaceRender_t &s1, const MapFaceRender_t &s2 )
+{
+	// Render texture first, overlay second, wireframe 3rd
+	int nSort1 = SortVal(s1.m_RenderMode);
+	int nSort2 = SortVal(s2.m_RenderMode);
+	if (nSort1 < nSort2)
+		return true;
+	if (nSort1 > nSort2)
+		return false;
+
+	return s1.m_pTexture < s2.m_pTexture;
+}
+
+
+static FaceQueue_t g_OpaqueFaces(0, 0, OpaqueFacesLessFunc);
+static CUtlVector< FaceQueue_t * >	g_OpaqueInstanceFaces;
+static FaceQueue_t *g_CurrentOpaqueFaces = &g_OpaqueFaces;
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will add the face to the sorted current queue
+// Input  : pMapFace - the face to be added
+//			pTexture - the texture of the face
+//			renderMode - what type of rendering mode
+//			selected - if it is selected or not ( selected appears on top )
+//			faceSelectionState - if the face is individual selected
+//-----------------------------------------------------------------------------
+void CMapFace::AddFaceToQueue( CMapFace* pMapFace, IEditorTexture* pTexture, EditorRenderMode_t renderMode, bool selected, SelectionState_t faceSelectionState )
+{
+	MapFaceRender_t newEntry;
+	newEntry.m_RenderMode = renderMode;
+	newEntry.m_pTexture = pTexture;
+	newEntry.m_RenderSelected = selected;
+	newEntry.m_pMapFace = pMapFace;
+	newEntry.m_FaceSelectionState = faceSelectionState;
+	g_CurrentOpaqueFaces->Insert( newEntry );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will add a new face queue to the top of the list and 
+//			make it active
+//-----------------------------------------------------------------------------
+void CMapFace::PushFaceQueue( void )
+{
+	g_OpaqueInstanceFaces.AddToHead( new FaceQueue_t( 0, 0, OpaqueFacesLessFunc ) );
+
+	g_CurrentOpaqueFaces = g_OpaqueInstanceFaces.Head();
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will pop the top face queue off the list
+//-----------------------------------------------------------------------------
+void CMapFace::PopFaceQueue( void )
+{
+	Assert( g_OpaqueInstanceFaces.Count() > 0 );
+
+	FaceQueue_t *pHead = g_OpaqueInstanceFaces.Head();
+
+	g_OpaqueInstanceFaces.Remove( 0 );
+	delete pHead;
+
+	if ( g_OpaqueInstanceFaces.Count() )
+	{
+		g_CurrentOpaqueFaces = g_OpaqueInstanceFaces.Head();
+	}
+	else
+	{
+		g_CurrentOpaqueFaces = &g_OpaqueFaces;
+	}
+}
+
+
+//-----------------------------------------------------------------------------
 // renders queued up opaque faces, sorted by material
 //-----------------------------------------------------------------------------
 void CMapFace::RenderOpaqueFaces( CRender3D* pRender )
 {
-	MapFaceRender_t **ppMapFaces = (MapFaceRender_t**)_alloca( g_OpaqueFaces.Count() * sizeof( MapFaceRender_t* ) );
+	MapFaceRender_t **ppMapFaces = (MapFaceRender_t**)_alloca( g_CurrentOpaqueFaces->Count() * sizeof( MapFaceRender_t* ) );
 	int nFaceCount = 0;
 
 	int nLastRenderMode = RENDER_MODE_NONE;
 	IEditorTexture *pLastTexture = NULL;
 
-	for ( int i = g_OpaqueFaces.FirstInorder(); i != g_OpaqueFaces.InvalidIndex(); i = g_OpaqueFaces.NextInorder(i) )
+	for ( int i = g_CurrentOpaqueFaces->FirstInorder(); i != g_CurrentOpaqueFaces->InvalidIndex(); i = g_CurrentOpaqueFaces->NextInorder(i) )
 	{
-		MapFaceRender_t& mapFace = g_OpaqueFaces[i];
+		MapFaceRender_t& mapFace = ( *g_CurrentOpaqueFaces)[i];
 
 		if ( ( mapFace.m_RenderMode != nLastRenderMode ) || ( mapFace.m_pTexture != pLastTexture ) )
 		{
@@ -2247,8 +2282,7 @@ void CMapFace::RenderOpaqueFaces( CRender3D* pRender )
 				pRender->BindTexture( mapFace.m_pTexture );
 			}
 
-			mapFace.m_pMapFace->RenderFace3D( pRender, mapFace.m_RenderMode,
-				mapFace.m_RenderSelected, mapFace.m_FaceSelectionState );
+			mapFace.m_pMapFace->RenderFace3D( pRender, mapFace.m_RenderMode, mapFace.m_RenderSelected, mapFace.m_FaceSelectionState );
 		}
 		else
 		{
@@ -2260,7 +2294,7 @@ void CMapFace::RenderOpaqueFaces( CRender3D* pRender )
 
 	RenderFaces( pRender, nFaceCount, ppMapFaces );
 
-	g_OpaqueFaces.RemoveAll();
+	g_CurrentOpaqueFaces->RemoveAll();
 }
 
 void CMapFace::SetParent(CMapAtom* pParent)

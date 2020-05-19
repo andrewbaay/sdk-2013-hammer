@@ -65,6 +65,9 @@ COP_Groups::~COP_Groups()
 void COP_Groups::DoDataExchange(CDataExchange* pDX)
 {
 	CObjectPage::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(COP_Model)
+	DDX_Control(pDX, IDC_EDITGROUPS, m_EditGroupsControl);
+	//}}AFX_DATA_MAP
 }
 
 
@@ -126,8 +129,10 @@ bool COP_Groups::SaveData(void)
 // Input  : Mode - 
 //			pData - 
 //-----------------------------------------------------------------------------
-void COP_Groups::UpdateData(int Mode, void *pData)
+void COP_Groups::UpdateData( int Mode, void *pData, bool bCanEdit )
 {
+	__super::UpdateData( Mode, pData, bCanEdit );
+
 	if ( !IsWindow(m_hWnd) )
 	{
 		return;
@@ -182,6 +187,9 @@ void COP_Groups::UpdateData(int Mode, void *pData)
 			m_cGroups.SetCheck(pVisGroup, s_checkState[i]);
 		}
 	}
+
+	m_cGroups.EnableWindow( ( m_bCanEdit ? TRUE : FALSE ) );
+	m_EditGroupsControl.EnableWindow( ( m_bCanEdit ? TRUE : FALSE ) );
 }
 
 

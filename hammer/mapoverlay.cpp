@@ -1586,6 +1586,7 @@ void CMapOverlay::CalcBounds( BOOL bFullUpdate )
 
 	// Update the bounds.
 	m_CullBox.UpdateBounds( vecMins, vecMaxs );
+	m_BoundingBox = m_CullBox;
 	m_Render2DBox.UpdateBounds( vecMins, vecMaxs );
 }
 
@@ -2693,7 +2694,6 @@ ChunkFileResult_t CMapOverlay::SaveDataToVMF( CChunkFile *pFile, CSaveInfo *pSav
 	}
 
 	// Basis data.
-	Vector vecTmp;
 	if ( eResult == ChunkFile_Ok )
 	{
 		eResult = pFile->WriteKeyValueVector3( "BasisOrigin", m_Basis.m_vecOrigin );

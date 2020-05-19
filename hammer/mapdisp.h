@@ -126,6 +126,7 @@ public:
 
 	void UpdateWalkable( void );
 	void UpdateBuildable( void );
+    void UpdateTriRemove( void );
 
 	void CreateShoreOverlays( CMapFace *pFace, Shoreline_t *pShoreline );
 
@@ -214,7 +215,11 @@ public:
 	inline bool IsTriTag( int iTri, unsigned short nTag )											  { return m_CoreDispInfo.IsTriTag( iTri, nTag ); }
 	inline bool IsTriWalkable( int iTri )															  { return m_CoreDispInfo.IsTriWalkable( iTri ); }
 	inline bool IsTriBuildable( int iTri )															  { return m_CoreDispInfo.IsTriBuildable( iTri ); }
-	int CollideWithDispTri( const Vector &rayStart, const Vector &rayEnd, float &flFraction );
+
+	// this is gone in m_CoreDispInfo.
+    inline bool IsTriRemove( int iTri )                                                               { return false; } //m_CoreDispInfo.IsTriRemove( iTri ); }
+
+	int CollideWithDispTri( const Vector &rayStart, const Vector &rayEnd, float &flFraction, bool OneSided = false );
 
 	//=========================================================================
 	//
@@ -340,6 +345,8 @@ private:
 	CUtlVector<CoreDispVert_t*>		m_aBuildableVerts;
 	CUtlVector<unsigned short>		m_aBuildableIndices;
 	CUtlVector<unsigned short>		m_aForcedBuildableIndices;
+    CUtlVector<CoreDispVert_t*>     m_aRemoveVerts;
+    CUtlVector<unsigned short>      m_aRemoveIndices;
 
 	// Painting Data.
 	struct PaintCanvas_t
@@ -406,6 +413,7 @@ private:
 	void RenderSurface( CRender3D *pRender, bool bIsSelected, SelectionState_t faceSelectionState );
 	void RenderOverlaySurface( CRender3D *pRender, bool bIsSelected, SelectionState_t faceSelectionState );
 	void RenderWalkableSurface( CRender3D *pRender, bool bIsSelected, SelectionState_t faceSelectionState );
+    void RenderRemoveSurface( CRender3D *pRender, bool bIsSelected, SelectionState_t faceSelectionState );
 	void RenderBuildableSurface( CRender3D *pRender, bool bIsSelected, SelectionState_t faceSelectionState );
 	void RenderWireframeSurface( CRender3D *pRender, bool bIsSelected, SelectionState_t faceSelectionState );
 

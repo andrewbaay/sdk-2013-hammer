@@ -431,8 +431,8 @@ StudioModel::~StudioModel(void)
 	}
 	delete m_pStudioHdr;
 
-	delete m_pPosePos;
-	delete m_pPoseAng;
+	delete []m_pPosePos;
+	delete []m_pPoseAng;
 }
 
 
@@ -469,20 +469,7 @@ void StudioModel::AdvanceFrame( float dt )
 	}
 }
 
-void CalcPose(
-	const CStudioHdr *pStudioHdr,
-	CIKContext *pIKContext,
-	Vector pos[],
-	Quaternion q[],
-	int sequence,
-	float cycle,
-	const float poseParameter[],
-	int boneMask,
-	float flWeight = 1.0f,
-	float flTime = 0.0f
-);
-
-matrix3x4_t *StudioModel::SetUpBones ( bool bUpdatePose )
+void StudioModel::SetUpBones( bool bUpdatePose, matrix3x4_t *pBoneToWorld )
 {
 	CStudioHdr *pStudioHdr = GetStudioHdr();
 
@@ -508,42 +495,31 @@ matrix3x4_t *StudioModel::SetUpBones ( bool bUpdatePose )
 	cameraTransform[1][3] = m_origin[1];
 	cameraTransform[2][3] = m_origin[2];
 
-	//matrix3x4_t *pBoneToWorld = g_pStudioRender->LockBoneMatrices( pStudioHdr->numbones() );
-	matrix3x4_t *pBoneToWorld = (matrix3x4_t*)malloc( pStudioHdr->numbones() * sizeof( matrix3x4_t ) );
-	if ( pBoneToWorld )
+	for (int i = 0; i < pStudioHdr->numbones(); i++)
 	{
-		for (int i = 0; i < pStudioHdr->numbones(); i++)
 		{
-			{
-				CBoneAccessor boneAccessor( pBoneToWorld );
-				if ( CalcProceduralBone( pStudioHdr, i, boneAccessor ))
-					continue;
-			}
+			CBoneAccessor boneAccessor( pBoneToWorld );
+			if ( CalcProceduralBone( pStudioHdr, i, boneAccessor ))
+				continue;
+		}
 
-			matrix3x4_t	bonematrix;
+		matrix3x4_t	bonematrix;
 
-			QuaternionMatrix( m_pPoseAng[i], bonematrix );
+		QuaternionMatrix( m_pPoseAng[i], bonematrix );
 
-			bonematrix[0][3] = m_pPosePos[i][0];
-			bonematrix[1][3] = m_pPosePos[i][1];
-			bonematrix[2][3] = m_pPosePos[i][2];
+		bonematrix[0][3] = m_pPosePos[i][0];
+		bonematrix[1][3] = m_pPosePos[i][1];
+		bonematrix[2][3] = m_pPosePos[i][2];
 
-			if (pbones[i].parent == -1)
-			{
-				ConcatTransforms( cameraTransform, bonematrix, pBoneToWorld[ i ] );
-			}
-			else
-			{
-				ConcatTransforms ( pBoneToWorld[ pbones[i].parent ], bonematrix, pBoneToWorld[ i ] );
-			}
+		if (pbones[i].parent == -1)
+		{
+			ConcatTransforms( cameraTransform, bonematrix, pBoneToWorld[ i ] );
+		}
+		else
+		{
+			ConcatTransforms ( pBoneToWorld[ pbones[i].parent ], bonematrix, pBoneToWorld[ i ] );
 		}
 	}
-	else
-	{
-		AssertMsg( 0, "Hammer can crash! g_pStudioRender->LockBoneMatrices returned null." );
-	}
-	//g_pStudioRender->UnlockBoneMatrices();
-	return pBoneToWorld;
 }
 
 /*
@@ -590,6 +566,8 @@ void StudioModel::DrawModel3D( CRender3D *pRender, float flAlpha, bool bWirefram
 	if (pStudioHdr->numbodyparts == 0)
 		return;
 
+	CMatRenderContextPtr pRenderContext( g_pMaterialSystem );
+
 	DrawModelInfo_t info;
 	info.m_pStudioHdr = pStudioHdr;
 	info.m_pHardwareData = GetHardwareData();
@@ -608,7 +586,8 @@ void StudioModel::DrawModel3D( CRender3D *pRender, float flAlpha, bool bWirefram
 		Vector orgOrigin = m_origin;
 		QAngle orgAngles = m_angles;
 
-		VMatrix matrix; pRender->GetLocalTranform(matrix);
+		VMatrix matrix; 
+		pRender->GetLocalTranform(matrix);
 
 		// baseclass rotates the origin
 		matrix.V3Mul( orgOrigin, m_origin );
@@ -620,25 +599,18 @@ void StudioModel::DrawModel3D( CRender3D *pRender, float flAlpha, bool bWirefram
 		QAngle newAngles;
 		MatrixAngles(fMatrixNew, m_angles);
 
-		matrix3x4_t *pBoneToWorld = SetUpBones( false );
-		pRender->DrawModel( &info, pBoneToWorld, m_origin, flAlpha, bWireframe );
-		free( pBoneToWorld );
+		matrix3x4_t boneToWorld[MAXSTUDIOBONES];
+		SetUpBones( false, boneToWorld );
+		pRender->DrawModel( &info, boneToWorld, m_origin, flAlpha, bWireframe );
 
 		m_origin = orgOrigin;
 		m_angles = orgAngles;
 	}
 	else
 	{
-		matrix3x4_t *pBoneToWorld = SetUpBones( true );
-		if ( !pBoneToWorld )
-		{
-			AssertMsg( 0, "Hammer would crash now! pBoneToWorld was null." );
-			const VMatrix& mViewMatrix = SetupMatrixOrgAngles( m_origin, m_angles );
-			pRender->DrawCollisionModel( m_MDLHandle, mViewMatrix );
-			return;
-		}
-		pRender->DrawModel( &info, pBoneToWorld, m_origin, flAlpha, bWireframe );
-		free( pBoneToWorld );
+		matrix3x4_t boneToWorld[MAXSTUDIOBONES];
+		SetUpBones( true, boneToWorld );
+		pRender->DrawModel( &info, boneToWorld, m_origin, flAlpha, bWireframe );
 
 		if ( Options.general.bShowCollisionModels )
 		{
@@ -698,9 +670,9 @@ void StudioModel::DrawModel2D( CRender2D *pRender, float flAlpha, bool bWireFram
 	}
 	else
 	{
-		matrix3x4_t *pBoneToWorld = SetUpBones( false );
-		pRender->DrawModel( &info, pBoneToWorld, m_origin, flAlpha, bWireFrame );
-		free( pBoneToWorld );
+		matrix3x4_t boneToWorld[MAXSTUDIOBONES];
+		SetUpBones( false, boneToWorld );
+		pRender->DrawModel( &info, boneToWorld, m_origin, flAlpha, bWireFrame );
 	}
 
 

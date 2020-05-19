@@ -452,7 +452,7 @@ void CMapCheckDlg::OnFixall()
 	{
 		if (m_Errors.GetSel(i) > 0)
 		{
-			MapError *pError = (MapError *)m_Errors.GetItemDataPtr(i);
+			pError = (MapError *)m_Errors.GetItemDataPtr(i);
 			if ((pError) && (pError->Fix == NeedsFix))
 			{
 				// Find and fix every error of the same type.

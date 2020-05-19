@@ -48,7 +48,7 @@ class CToolEntityMessageWnd : public CWnd
 		//{{AFX_MSG_MAP(CToolEntityMessageWnd)
 		afx_msg void OnCreateObject();
 		//}}AFX_MSG
-	
+
 		DECLARE_MESSAGE_MAP()
 
 	private:
@@ -104,7 +104,7 @@ void CToolEntityMessageWnd::PreMenu2D(CToolEntity *pToolEntity, CMapView2D *pVie
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CToolEntityMessageWnd::OnCreateObject()
 {
@@ -113,14 +113,14 @@ void CToolEntityMessageWnd::OnCreateObject()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CToolEntity::CToolEntity(void)
 {
 	SetEmpty();
 
 	m_vecPos.Init();
-	
+
 	if (s_hcurEntity == NULL)
 	{
 		s_hcurEntity = LoadCursor(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDC_ENTITY));
@@ -129,17 +129,17 @@ CToolEntity::CToolEntity(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CToolEntity::~CToolEntity(void)
 {
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pt - 
-//			BOOL - 
-// Output : 
+// Purpose:
+// Input  : pt -
+//			BOOL -
+// Output :
 //-----------------------------------------------------------------------------
 int CToolEntity::HitTest(CMapView *pView, const Vector2D &ptClient, bool bTestHandles)
 {
@@ -147,8 +147,8 @@ int CToolEntity::HitTest(CMapView *pView, const Vector2D &ptClient, bool bTestHa
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : bSave - 
+// Purpose:
+// Input  : bSave -
 //-----------------------------------------------------------------------------
 void CToolEntity::FinishTranslation(bool bSave)
 {
@@ -163,10 +163,10 @@ void CToolEntity::FinishTranslation(bool bSave)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pt - 
-//			uFlags - 
-//			size - 
+// Purpose:
+// Input  : pt -
+//			uFlags -
+//			size -
 // Output : Returns true if the translation delta was nonzero.
 //-----------------------------------------------------------------------------
 bool CToolEntity::UpdateTranslation( const Vector &vUpdate, UINT uFlags)
@@ -182,18 +182,18 @@ bool CToolEntity::UpdateTranslation( const Vector &vUpdate, UINT uFlags)
 		ProjectOnTranslationPlane( m_vecPos + m_vTranslation, m_vTranslation, uFlags );
 		m_vTranslation -= m_vecPos;
 	}
-	
+
 	return true;
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pRender - 
+// Purpose:
+// Input  : pRender -
 //-----------------------------------------------------------------------------
 void CToolEntity::RenderTool2D(CRender2D *pRender)
 {
 	Vector v = m_vecPos;
-	
+
 	if ( IsTranslating() )
 	{
 		TranslatePoint( v );
@@ -202,7 +202,7 @@ void CToolEntity::RenderTool2D(CRender2D *pRender)
 	{
 		return;
 	}
-	
+
 	pRender->SetDrawColor( 35, 255, 75 );
 
 	//
@@ -220,10 +220,10 @@ void CToolEntity::RenderTool2D(CRender2D *pRender)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pView - 
-//			point - 
-// Output : 
+// Purpose:
+// Input  : pView -
+//			point -
+// Output :
 //-----------------------------------------------------------------------------
 bool CToolEntity::OnContextMenu2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoint)
 {
@@ -268,11 +268,11 @@ bool CToolEntity::OnContextMenu2D(CMapView2D *pView, UINT nFlags, const Vector2D
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pView - 
-//			nChar - 
-//			nRepCnt - 
-//			nFlags - 
+// Purpose:
+// Input  : *pView -
+//			nChar -
+//			nRepCnt -
+//			nFlags -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CToolEntity::OnKeyDown2D(CMapView2D *pView, UINT nChar, UINT nRepCnt, UINT nFlags)
@@ -300,10 +300,10 @@ bool CToolEntity::OnKeyDown2D(CMapView2D *pView, UINT nChar, UINT nRepCnt, UINT 
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pView - 
-//			nFlags - 
-//			point - 
+// Purpose:
+// Input  : pView -
+//			nFlags -
+//			point -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CToolEntity::OnLMouseDown2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoint)
@@ -327,7 +327,7 @@ bool CToolEntity::OnLMouseDown2D(CMapView2D *pView, UINT nFlags, const Vector2D 
 		//
 		if ( uConstraints & constrainSnap )
 			m_pDocument->Snap(vecWorld, uConstraints);
-		
+
 		// create new one, keep old third axis
 		m_vecPos[pView->axHorz] = vecWorld[pView->axHorz];
 		m_vecPos[pView->axVert] = vecWorld[pView->axVert];
@@ -338,7 +338,7 @@ bool CToolEntity::OnLMouseDown2D(CMapView2D *pView, UINT nFlags, const Vector2D 
 	return true;
 }
 
-// set temp transformation plane 
+// set temp transformation plane
 
 void CToolEntity::StartTranslation( CMapView *pView, const Vector2D &vPoint )
 {
@@ -357,7 +357,7 @@ void CToolEntity::StartTranslation( CMapView *pView, const Vector2D &vPoint )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 // Input  : Pre CWnd::OnLButtonUp.
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
@@ -382,13 +382,13 @@ bool CToolEntity::OnLMouseUp2D(CMapView2D *pView, UINT nFlags, const Vector2D &v
 bool CToolEntity::OnMouseMove2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoint)
 {
 	Tool3D::OnMouseMove2D(pView, nFlags, vPoint);
-	
+
 	vgui::HCursor hCursor = vgui::dc_arrow;
 
 	unsigned int uConstraints = GetConstraints( nFlags );
 
 	// Convert to world coords.
-	
+
 	Vector vecWorld;
 	pView->ClientToWorld(vecWorld, vPoint);
 
@@ -491,17 +491,17 @@ void CToolEntity::OnEscape(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pView - 
-//			nFlags - 
-//			point - 
+// Purpose:
+// Input  : *pView -
+//			nFlags -
+//			point -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CToolEntity::OnLMouseDown3D(CMapView3D *pView, UINT nFlags, const Vector2D &vPoint)
 {
 	ULONG ulFace;
-	CMapClass *pObject = pView->NearestObjectAt( vPoint, ulFace);
-
+	VMatrix LocalMatrix, LocalMatrixNeg;
+	CMapClass *pObject = pView->NearestObjectAt( vPoint, ulFace, FLAG_OBJECTS_AT_RESOLVE_INSTANCES, &LocalMatrix );
 	Tool3D::OnLMouseDown3D(pView, nFlags, vPoint);
 
 	if (pObject != NULL)
@@ -513,37 +513,45 @@ bool CToolEntity::OnLMouseDown3D(CMapView3D *pView, UINT nFlags, const Vector2D 
 			return true;
 		}
 
+		LocalMatrix.InverseTR( LocalMatrixNeg );
+
 		// Build a ray to trace against the face that they clicked on to
 		// find the point of intersection.
-		
+
 		Vector Start,End;
 		pView->GetCamera()->BuildRay( vPoint, Start, End);
 
 		Vector HitPos, HitNormal;
 		CMapFace *pFace = pSolid->GetFace(ulFace);
-		if (pFace->TraceLine(HitPos, HitNormal, Start, End))
+		Vector vFinalStart, vFinalEnd;
+		LocalMatrixNeg.V3Mul( Start, vFinalStart );
+		LocalMatrixNeg.V3Mul( End, vFinalEnd );
+		if (pFace->TraceLine( HitPos, HitNormal, vFinalStart, vFinalEnd))
 		{
+			Vector vFinalHitPos, vFinalHitNormal;
+			LocalMatrix.V3Mul( HitPos, vFinalHitPos );
+			vFinalHitNormal = LocalMatrix.ApplyRotation( HitNormal );
 			CMapClass *pNewObject = NULL;
-		
+
 			if (GetMainWnd()->m_ObjectBar.IsEntityToolCreatingPrefab())
 			{
 				//
 				// Prefab creation.
 				//
-				unsigned int uConstraints = GetConstraints( nFlags);
-				m_pDocument->Snap(HitPos,uConstraints);
+				unsigned int uConstraints = GetConstraints( nFlags );
+				m_pDocument->Snap(vFinalHitPos,uConstraints);
 
 				GetHistory()->MarkUndoPosition(m_pDocument->GetSelection()->GetList(), "New Prefab");
 
 				// Get prefab object
-				CMapClass *pPrefabObject = GetMainWnd()->m_ObjectBar.BuildPrefabObjectAtPoint(HitPos);
+				CMapClass *pPrefabObject = GetMainWnd()->m_ObjectBar.BuildPrefabObjectAtPoint(vFinalHitPos);
 
 				//
 				// Add prefab to the world.
 				//
 				CMapWorld *pWorld = m_pDocument->GetMapWorld();
 				m_pDocument->ExpandObjectKeywords(pPrefabObject, pWorld);
-				
+
 				pNewObject = pPrefabObject;
 			}
 			else if (GetMainWnd()->m_ObjectBar.IsEntityToolCreatingEntity())
@@ -552,18 +560,25 @@ bool CToolEntity::OnLMouseDown3D(CMapView3D *pView, UINT nFlags, const Vector2D 
 				// Entity creation.
 				//
 				GetHistory()->MarkUndoPosition(m_pDocument->GetSelection()->GetList(), "New Entity");
-				
+
 				CMapEntity *pEntity = new CMapEntity;
 				pEntity->SetPlaceholder(TRUE);
-				pEntity->SetOrigin(HitPos);
+				pEntity->SetOrigin(vFinalHitPos);
 				pEntity->SetClass(CObjectBar::GetDefaultEntityClass());
-				
+
+				VPlane	BeforeTransform( pFace->plane.normal, pFace->plane.dist ), AfterTransform;
+				LocalMatrix.TransformPlane( BeforeTransform, AfterTransform );
+
+				PLANE	NewPlane;
+
+				NewPlane.dist = AfterTransform.m_Dist;
+				NewPlane.normal = AfterTransform.m_Normal;
 				// Align the entity on the plane properly
-				pEntity->AlignOnPlane(HitPos, &pFace->plane, (HitNormal.z > 0.0f) ? CMapEntity::ALIGN_BOTTOM : CMapEntity::ALIGN_TOP);
+				pEntity->AlignOnPlane(vFinalHitPos, &NewPlane, (vFinalHitNormal.z > 0.0f) ? CMapEntity::ALIGN_BOTTOM : CMapEntity::ALIGN_TOP);
 
 				pNewObject = pEntity;
 			}
-			
+
 			if ( pNewObject )
 			{
 				if ( GetMainWnd()->m_ObjectBar.UseRandomYawOnEntityPlacement() )
@@ -572,14 +587,14 @@ bool CToolEntity::OnLMouseDown3D(CMapView3D *pView, UINT nFlags, const Vector2D 
 					VMatrix vmRotate, vmT1, vmT2;
 					Vector vOrigin;
 					QAngle angRandom( 0, RandomInt( -180, 180 ), 0 );
-					
+
 					pNewObject->GetOrigin( vOrigin );
-					
+
 					// Setup a matrix that translates them to the origin, rotates it, then translates back.
 					MatrixFromAngles( angRandom, vmRotate );
 					MatrixBuildTranslation( vmT1, -vOrigin );
 					MatrixBuildTranslation( vmT2, vOrigin );
-					
+
 					// Transform the object.
 					pNewObject->Transform( vmT2 * vmRotate * vmT1 );
 				}
@@ -615,7 +630,7 @@ void CToolEntity::RenderTool3D(CRender3D *pRender)
 	{
 		return;
 	}
-	
+
 	//
 	// Setup the renderer.
 	//
@@ -664,7 +679,7 @@ void CToolEntity::CreateMapObject(CMapView2D *pView)
 	// Handle prefab creation.
 	//
 	if (GetMainWnd()->m_ObjectBar.IsEntityToolCreatingPrefab())
-	{			
+	{
 		GetHistory()->MarkUndoPosition(m_pDocument->GetSelection()->GetList(), "New Prefab");
 
 		CMapClass *pPrefabObject = GetMainWnd()->m_ObjectBar.BuildPrefabObjectAtPoint(m_vecPos);
@@ -689,17 +704,17 @@ void CToolEntity::CreateMapObject(CMapView2D *pView)
 	else if (GetMainWnd()->m_ObjectBar.IsEntityToolCreatingEntity())
 	{
 		GetHistory()->MarkUndoPosition(m_pDocument->GetSelection()->GetList(), "New Entity");
-		
+
 		CMapEntity *pEntity = new CMapEntity;
-		
+
 		pEntity->SetPlaceholder(TRUE);
 		pEntity->SetOrigin(m_vecPos);
 		pEntity->SetClass(CObjectBar::GetDefaultEntityClass());
 
 		m_pDocument->AddObjectToWorld(pEntity);
-		
+
 		pobj = pEntity;
-		
+
 		GetHistory()->KeepNew(pEntity);
 	}
 

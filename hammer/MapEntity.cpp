@@ -193,7 +193,6 @@ CMapEntity::CMapEntity(void) : flags(0)
 	m_pMoveParent = NULL;
 	m_pAnimatorChild = NULL;
 	m_vecLogicalPosition.Init( COORD_NOTINIT, COORD_NOTINIT );
-	m_bIsInstance = false;
 	CalculateTypeFlags();
 }
 
@@ -379,15 +378,15 @@ void CMapEntity::AddHelpersForClass(GDclass *pClass, bool bLoading)
 		//
 		// Add all the helpers that this class declares in the FGD.
 		//
-		GDclass *pClass = GetClass();
+		GDclass *pClassLocal = GetClass();
 
 		//
 		// For every helper in the class definition...
 		//
-		int nHelperCount = pClass->GetHelperCount();
+		int nHelperCount = pClassLocal->GetHelperCount();
 		for (int i = 0; i < nHelperCount; i++)
 		{
-			CHelperInfo *pHelperInfo = pClass->GetHelper(i);
+			CHelperInfo *pHelperInfo = pClassLocal->GetHelper(i);
 
 			//
 			// Create the helper and attach it to this entity.
@@ -408,10 +407,10 @@ void CMapEntity::AddHelpersForClass(GDclass *pClass, bool bLoading)
 		//
 		// FIXME: make this totally data driven like the helper factory, or better
 		//		  yet, like the LINK_ENTITY_TO_CLASS stuff in the game DLL
-		int nVarCount = pClass->GetVariableCount();
+		int nVarCount = pClassLocal->GetVariableCount();
 		for (int i = 0; i < nVarCount; i++)
 		{
-			GDinputvariable *pVar = pClass->GetVariableAt(i);
+			GDinputvariable *pVar = pClassLocal->GetVariableAt(i);
 			GDIV_TYPE eType = pVar->GetType();
 
 			CHelperInfo HelperInfo;
@@ -608,7 +607,7 @@ const char* CMapEntity::GetDescription(void)
 	}
 	else
 	{
-		strcpy(szBuf, GetClassName());
+		V_strcpy_safe( szBuf, GetClassName() );
 	}
 
 	return(szBuf);
@@ -618,7 +617,7 @@ const char* CMapEntity::GetDescription(void)
 //-----------------------------------------------------------------------------
 // Purpose: Returns the color that this entity should use for rendering.
 //-----------------------------------------------------------------------------
-void CMapEntity::GetRenderColor(unsigned char &red, unsigned char &green, unsigned char &blue)
+void CMapEntity::GetRenderColor( CRender2D *pRender, unsigned char &red, unsigned char &green, unsigned char &blue )
 {
 	if (IsSelected())
 	{
@@ -650,11 +649,11 @@ void CMapEntity::GetRenderColor(unsigned char &red, unsigned char &green, unsign
 //-----------------------------------------------------------------------------
 // Purpose: Returns the color that this entity should use for rendering.
 //-----------------------------------------------------------------------------
-color32 CMapEntity::GetRenderColor(void)
+color32 CMapEntity::GetRenderColor( CRender2D *pRender )
 {
 	color32 clr;
 
-	GetRenderColor(clr.r, clr.g, clr.b);
+	GetRenderColor( pRender, clr.r, clr.g, clr.b );
 	return clr;
 }
 
@@ -683,12 +682,8 @@ ChunkFileResult_t CMapEntity::LoadVMF(CChunkFile *pFile)
 	CChunkHandlerMap Handlers;
 	Handlers.AddHandler("solid", LoadSolidCallback, this);
 	Handlers.AddHandler("editor", LoadEditorCallback, this);
-	if ( !m_bIsInstance )
-	{
-		Handlers.AddHandler("hidden", LoadHiddenCallback, this);
-		Handlers.AddHandler("connections", LoadConnectionsCallback, this);
-	}
-
+	Handlers.AddHandler("hidden", LoadHiddenCallback, this);
+	Handlers.AddHandler("connections", LoadConnectionsCallback, this);
 	pFile->PushHandlers(&Handlers);
 	ChunkFileResult_t eResult = pFile->ReadChunk(LoadKeyCallback, this);
 	pFile->PopHandlers();
@@ -1014,6 +1009,7 @@ static CClassNameFlagsMatcher s_ClassFlagsTable[]={
 	{ "light", ENTITY_FLAG_IS_LIGHT },
 	{ "light_spot", ENTITY_FLAG_IS_LIGHT },
 	{ "prop_static", ENTITY_FLAG_SHOW_IN_LPREVIEW2 },
+	{ "func_instance", ENTITY_FLAG_IS_INSTANCE },
 };
 
 
@@ -1140,7 +1136,7 @@ void CMapEntity::PostloadWorld(CMapWorld *pWorld)
 	//
 	if (IsPlaceholder() && (!IsClass() || GetClass()->VarForName("origin") == NULL))
 	{
-		const char *pszValue = m_KeyValues.GetValue("origin", &nIndex);
+		pszValue = m_KeyValues.GetValue("origin", &nIndex);
 		if (pszValue != NULL)
 		{
 			RemoveKey(nIndex);
@@ -1285,7 +1281,7 @@ void CMapEntity::SetKeyValue(LPCSTR pszKey, LPCSTR pszValue)
 	const char *pszOld = GetKeyValue(pszKey);
 	if (pszOld != NULL)
 	{
-		strcpy(szOldValue, pszOld);
+		V_strcpy_safe(szOldValue, pszOld);
 	}
 	else
 	{
@@ -1596,7 +1592,7 @@ void CMapEntity::OnNotifyDependent(CMapClass *pObject, Notify_Dependent_t eNotif
 //			value -
 // Output : Returns a pointer to the entity found.
 //-----------------------------------------------------------------------------
-CMapEntity *CMapEntity::FindChildByKeyValue( LPCSTR key, LPCSTR value )
+CMapEntity *CMapEntity::FindChildByKeyValue( LPCSTR key, LPCSTR value, bool *bIsInInstance, VMatrix *InstanceMatrix )
 {
 	if ((key == NULL) || (value == NULL))
 	{
@@ -1611,7 +1607,7 @@ CMapEntity *CMapEntity::FindChildByKeyValue( LPCSTR key, LPCSTR value )
 		return this;
 	}
 
-	return CMapClass::FindChildByKeyValue( key, value );
+	return CMapClass::FindChildByKeyValue( key, value, bIsInInstance, InstanceMatrix );
 }
 
 
@@ -1879,45 +1875,6 @@ void CMapEntity::AlignOnPlane( Vector& pos, PLANE *plane, alignType_e align )
 	SignalChanged();
 }
 
-void CMapEntity::GetCullBox( Vector& mins, Vector& maxs )
-{
-	FOR_EACH_OBJ( m_Children, i )
-	{
-		if ( m_Children[i]->GetCullBoxChild( mins, maxs ) )
-			return;
-	}
-	CMapClass::GetCullBox( mins, maxs );
-}
-
-void CMapEntity::GetRender2DBox( Vector& mins, Vector& maxs )
-{
-	FOR_EACH_OBJ( m_Children, i )
-	{
-		if ( m_Children[i]->GetRender2DBoxChild( mins, maxs ) )
-			return;
-	}
-	CMapClass::GetCullBox( mins, maxs );
-}
-
-void CMapEntity::GetBoundsCenter( Vector& vecCenter )
-{
-	FOR_EACH_OBJ( m_Children, i )
-	{
-		if ( m_Children[i]->GetBoundsCenterChild( vecCenter ) )
-			return;
-	}
-	CMapClass::GetBoundsCenter( vecCenter );
-}
-
-void CMapEntity::GetBoundsSize( Vector& vecCenter )
-{
-	FOR_EACH_OBJ( m_Children, i )
-	{
-		if ( m_Children[i]->GetBoundsSizeChild( vecCenter ) )
-			return;
-	}
-	CMapClass::GetBoundsSize( vecCenter );
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: Looks for an input with a given name in the entity list. ALL entities
@@ -1997,12 +1954,20 @@ void CMapEntity::Render2D(CRender2D *pRender)
 
 	Vector vecMins, vecMaxs;
 	GetRender2DBox(vecMins, vecMaxs);
+	if ( pRender->GetInstanceRendering() )
+	{
+		Vector vecExpandedMins, vecExpandedMaxs;
+
+		pRender->TransformInstanceAABB( vecMins, vecMaxs, vecExpandedMins, vecExpandedMaxs );
+		vecMins = vecExpandedMins;
+		vecMaxs = vecExpandedMaxs;
+	}
 
 	Vector2D pt, pt2;
 	pView->WorldToClient(pt, vecMins);
 	pView->WorldToClient(pt2, vecMaxs);
 
-	color32 rgbColor = GetRenderColor();
+	color32 rgbColor = GetRenderColor( pRender );
 
 	pRender->SetDrawColor( rgbColor.r, rgbColor.g, rgbColor.b );
 
@@ -2144,7 +2109,7 @@ void CMapEntity::RenderLogical( CRender2D *pRender )
 	vecInnerMaxs.y -= LOGICAL_BOX_INNER_OFFSET;
 
 	// Get the entity render color
-	color32 rgbColor = GetRenderColor();
+	color32 rgbColor = GetRenderColor( pRender );
 	color32	rgbHighlight = { ( byte )( 7 * rgbColor.r / 8 ), ( byte )( 7 * rgbColor.g / 8 ), ( byte )( 7 * rgbColor.b / 8 ), 255 };
 	color32 rgbLowlight = { ( byte )( 5 * rgbColor.r / 8 ), ( byte )( 5 * rgbColor.g / 8 ), ( byte )( 5 * rgbColor.b / 8 ), 255 };
 	color32 rgbEdgeColor = { ( byte )( 3 * rgbColor.r / 8 ), ( byte )( 3 * rgbColor.g / 8 ), ( byte )( 3 * rgbColor.b / 8 ), 255 };

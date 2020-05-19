@@ -838,9 +838,7 @@ void ScaleBitmap(CSize sizeSrc, CSize sizeDest, char *src, char *dest)
 			srclinep = src + (srcline * sizeSrc.cx);
 			destlinep = dest + (destline * sizeDest.cx);
 
-			int i;
-
-			for( i = 0; i < sizeDest.cx; i++ )
+			for( int j = 0; j < sizeDest.cx; j++ )
 			{
 				*destlinep = *srclinep;
 

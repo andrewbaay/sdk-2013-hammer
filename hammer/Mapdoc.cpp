@@ -26,6 +26,7 @@
 #include "MapEntity.h"
 #include "MapGroup.h"
 #include "MapInfoDlg.h"
+#include "MapInstance.h"
 #include "MapSolid.h"
 #include "MapView2D.h"
 #include "MapViewLogical.h"
@@ -43,7 +44,8 @@
 #include "RunMap.h"
 #include "RunMapExpertDlg.h"
 #include "SaveInfo.h"
-#include "MapInstance.h"
+#include "Manifest.h"
+#include "ManifestDialog.h"
 
 #include "ToolManager.h"
 #include "ToolCamera.h"
@@ -63,6 +65,8 @@
 #include "StockSolids.h"
 #include "ToolMorph.h"
 #include "ToolBlock.h"
+#include "p4lib/ip4.h"
+#include "mapdoc.h"
 
 #include "utlbuffer.h"
 
@@ -251,35 +255,87 @@ BEGIN_MESSAGE_MAP(CMapDoc, CDocument)
 	ON_COMMAND(ID_LOGICALOBJECT_LAYOUTGEOMETRIC, OnLogicalobjectLayoutgeometric)
 	ON_COMMAND(ID_LOGICALOBJECT_LAYOUTDEFAULT, OnLogicalobjectLayoutdefault)
 	ON_COMMAND(ID_LOGICALOBJECT_LAYOUTLOGICAL, OnLogicalobjectLayoutlogical)
-    ON_COMMAND_EX(ID_TOOLS_QUICKHIDE_OBJECTS, OnViewQuickHide)
-    ON_UPDATE_COMMAND_UI(ID_TOOLS_QUICKHIDE_OBJECTS, OnUpdateToggleQuickHide)
-    ON_COMMAND_EX(ID_TOOLS_QUICKHIDE_OBJECTS_UNSEL, OnViewQuickHide)
-    ON_UPDATE_COMMAND_UI(ID_TOOLS_QUICKHIDE_OBJECTS_UNSEL, OnUpdateToggleQuickHideUnsel)
-    ON_COMMAND(ID_TOOLS_QUICKHIDE_UNHIDE, OnViewQuickHideUnhide)
-    ON_UPDATE_COMMAND_UI(ID_TOOLS_QUICKHIDE_UNHIDE, OnUpdateToggleQuickHideUnhide)
-    ON_COMMAND(ID_TOOLS_QUICKHIDE_CONVERT, OnViewQuickHideConvert)
-
+	ON_COMMAND(ID_TOOLS_INSTANCES_HIDE, OnToolsInstancesHide)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_INSTANCES_HIDE, OnUpdateToolsInstancesHide)
+	ON_COMMAND(ID_TOOLS_INSTANCES_SHOWTINTED, OnToolsInstancesShowTinted)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_INSTANCES_SHOWTINTED, OnUpdateToolsInstancesShowTinted)
+	ON_COMMAND(ID_TOOLS_INSTANCES_SHOWNORMAL, OnToolsInstancesShowNormal)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_INSTANCES_SHOWNORMAL, OnUpdateToolsInstancesShowNormal)
+	ON_COMMAND(ID_INSTANCES_HIDEALL, OnInstancesHideAll)
+	ON_COMMAND(ID_INSTANCES_SHOWALL, OnInstancesShowAll)
 	//}}AFX_MSG_MAP
+	ON_COMMAND(ID_INSTANCING_CREATEMANIFEST, &CMapDoc::OnInstancingCreatemanifest)
+	ON_UPDATE_COMMAND_UI(ID_INSTANCING_CREATEMANIFEST, &CMapDoc::OnUpdateInstancingCreatemanifest)
+	ON_COMMAND(ID_VERSIONCONTROL_CHECKINALL, &CMapDoc::OnInstancingCheckinAll)
+	ON_UPDATE_COMMAND_UI(ID_VERSIONCONTROL_CHECKINALL, &CMapDoc::OnUpdateInstancingCheckinAll)
+	ON_COMMAND(ID_VERSIONCONTROL_CHECKOUTMANIFEST, &CMapDoc::OnInstancingCheckOutManifest)
+	ON_UPDATE_COMMAND_UI(ID_VERSIONCONTROL_CHECKOUTMANIFEST, &CMapDoc::OnUpdateInstancingCheckOutManifest)
+	ON_COMMAND(ID_VERSIONCONTROL_ADDMANIFEST, &CMapDoc::OnInstancingAddManifest)
+	ON_UPDATE_COMMAND_UI(ID_VERSIONCONTROL_ADDMANIFEST, &CMapDoc::OnUpdateInstancingAddManifest)
+	ON_COMMAND(ID_INSTANCES_COLLAPSEALL, &CMapDoc::OnInstancesCollapseAll)
+	ON_COMMAND(ID_INSTANCES_COLLAPSESELECTION, &CMapDoc::OnInstancesCollapseSelection)
+	ON_COMMAND( ID_VIEW_QUICKHIDE, OnQuickHide_HideObjects )
+	ON_UPDATE_COMMAND_UI(ID_VIEW_QUICKHIDE, OnUpdateEditSelection)
+	ON_COMMAND( ID_VIEW_QUICKHIDEUNSELECTED, OnQuickHide_HideUnselectedObjects )
+	ON_UPDATE_COMMAND_UI(ID_VIEW_QUICKHIDEUNSELECTED, OnUpdateEditSelection)
+	ON_COMMAND( ID_VIEW_QUICKUNHIDE, OnQuickHide_Unhide )
+	ON_UPDATE_COMMAND_UI(ID_VIEW_QUICKUNHIDE, OnQuickHide_UpdateUnHide)
+	ON_COMMAND( ID_TOGGLE_RADIUSCULLING, OnRadiusCulling )
+	ON_UPDATE_COMMAND_UI(ID_TOGGLE_RADIUSCULLING, OnUpdateRadiusCulling )
+	ON_COMMAND( ID_VIEW_QUICKHIDEVISGROUP, OnQuickHide_CreateVisGroupFromHidden )
+	ON_UPDATE_COMMAND_UI(ID_VIEW_QUICKHIDEVISGROUP, OnQuickHide_UpdateCreateVisGroupFromHidden)
 	END_MESSAGE_MAP()
 
 
 static CUtlVector<CMapDoc*> s_ActiveDocs;
 CMapDoc *CMapDoc::m_pMapDoc = NULL;
+CManifest	*CMapDoc::m_pManifest = NULL;
+int			CMapDoc::m_nInLevelLoad = 0;
 static CProgressDlg *pProgDlg;
 
 //
 // Clipboard. Global to all documents to allow copying from one document and
 // pasting in another.
 //
-struct Clipboard_t
+
+class CHammerClipboard : public IHammerClipboard
 {
+public:
+	CHammerClipboard(){}
+
+public:
+	virtual void Destroy() { delete this; }
+
+public:
 	CMapObjectList Objects;
 	CMapWorld *pSourceWorld;
 	BoundBox Bounds;
 	Vector vecOriginalCenter;
 };
 
-static Clipboard_t s_Clipboard;
+
+IHammerClipboard * IHammerClipboard::CreateInstance()
+{
+	return new CHammerClipboard;
+}
+
+// Get the global Hammer clipboard
+CHammerClipboard * GetHammerClipboard()
+{
+	static class CGlobalHammerClipboard :
+	public CHammerClipboard
+	{
+		virtual void Destroy() { Assert( 0 ); }
+	}
+	s_Clipboard;
+	return &s_Clipboard;
+}
+
+// Convert a clipboard interface
+CHammerClipboard * GetHammerClipboard( IHammerClipboard *pInterface )
+{
+	return static_cast< CHammerClipboard * >( pInterface );
+}
 
 
 struct BatchReplaceTextures_t
@@ -348,6 +404,7 @@ CMapDoc::CMapDoc(void)
 {
 	m_nLogicalPositionCount = 0;
 
+	m_bHasInitialUpdate = false;
 	m_bLoading = false;
 	m_pWorld = NULL;
 
@@ -367,6 +424,9 @@ CMapDoc::CMapDoc(void)
 	m_pSelection = new CSelection;
 	m_pSelection->Init( this );
 
+	m_VisGroups = new CUtlVector<CVisGroup *>();
+	m_RootVisGroups = new CUtlVector<CVisGroup *>();
+
 	// init tool manager
     m_pToolManager = new CToolManager;
 	m_pToolManager->Init( this );
@@ -379,6 +439,10 @@ CMapDoc::CMapDoc(void)
 	m_bShowLogicalGrid = false;
 	m_nGridSpacing = Options.view2d.iDefaultGrid;
 	m_bShow3DGrid = false;
+
+	m_tShowInstance = INSTANCES_SHOW_TINTED;
+
+	m_nExternalReferenceCount = 0;
 
 	m_nDocVersion = 0;
 
@@ -420,7 +484,9 @@ CMapDoc::CMapDoc(void)
 	m_vCordonMins = Vector(-1024,-1024,-1024);
 	m_vCordonMaxs = Vector( 1024,1024,1024);
 
-	m_tShowInstance = ShowInstance_t::INSTANCES_SHOW_TINTED;
+	m_bIsEditable = true;
+	m_pManifestOwner = NULL;
+	m_bCollapsingInstances = false;
 }
 
 
@@ -446,8 +512,25 @@ CMapDoc::~CMapDoc(void)
 	delete m_pUndo;
 	delete m_pRedo;
 
-	delete m_pSelection;
 	delete m_pToolManager;
+
+	if ( m_VisGroups )
+	{
+		delete m_VisGroups;
+		m_VisGroups = NULL;
+	}
+
+	if ( m_RootVisGroups )
+	{
+		delete m_RootVisGroups;
+		m_RootVisGroups = NULL;
+	}
+
+	if ( m_pManifestOwner == NULL && m_pSelection )
+	{
+		delete m_pSelection;
+		m_pSelection = NULL;
+	}
 
 	OnDisableLightPreview();
 }
@@ -1073,19 +1156,6 @@ bool CMapDoc::FindEntitiesByNameOrClassName(CMapEntityList &Found, const char *p
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Callback for forcing an object's visibility to true or false.
-// Input  : pObject - Object whose visiblity to set.
-//			bVisible - true to make visible, false to make invisible.
-// Output : Returns TRUE to continue enumerating.
-//-----------------------------------------------------------------------------
-BOOL CMapDoc::ForceVisibilityCallback(CMapClass *pObject, bool bVisible)
-{
-	pObject->SetVisible(bVisible);
-	return(TRUE);
-}
-
-
-//-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
 int CMapDoc::GetDocumentCount(void)
@@ -1306,8 +1376,7 @@ void CMapDoc::Initialize(void)
 {
 	Assert(!m_pWorld);
 
-	m_pWorld = new CMapWorld;
-	m_pWorld->SetOwningDoc( this );
+	m_pWorld = new CMapWorld( this );
 	m_pWorld->CullTree_Build();
 }
 
@@ -1372,24 +1441,29 @@ bool CMapDoc::HandleLoadError(CChunkFile *pFile, const char *szChunkName, CMapDo
 // Input  : pszFileName - Full path of file to load.
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool CMapDoc::LoadVMF(const char *pszFileName)
+bool CMapDoc::LoadVMF( const char *pszFileName, int LoadFlags )
 {
+	bool			CreateProgressDlg = m_nInLevelLoad == 0;
+
+	m_nInLevelLoad++;
+
 	//
 	// Create a new world to hold the loaded objects.
 	//
 	if (m_pWorld == NULL)
 	{
-		m_pWorld = new CMapWorld;
-		m_pWorld->SetOwningDoc( this );
+		m_pWorld = new CMapWorld( this );
 	}
 
-	m_pWorld->SetVMFPath( pszFileName );
-
 	// Show our progress dialog.
-	pProgDlg = new CProgressDlg;
-	pProgDlg->Create();
-	pProgDlg->SetRange(0,18000);
-	pProgDlg->SetStep(1000);
+	if ( CreateProgressDlg )
+	{
+		pProgDlg = new CProgressDlg;
+		pProgDlg->Create();
+
+		pProgDlg->SetRange(0,18000);
+		pProgDlg->SetStep(1000);
+	}
 
 	// Set the progress dialog title
 	CString caption;
@@ -1433,7 +1507,10 @@ bool CMapDoc::LoadVMF(const char *pszFileName)
 
 		File.PushHandlers(&Handlers);
 
-		SetActiveMapDoc( this );
+		if ( ( LoadFlags & VMF_LOAD_ACTIVATE ) )
+		{
+			SetActiveMapDoc( this );
+		}
 		m_bLoading = true;
 
 		//
@@ -1461,7 +1538,8 @@ bool CMapDoc::LoadVMF(const char *pszFileName)
 	if (eResult == ChunkFile_Ok)
 	{
 		pProgDlg->SetWindowText( "Postload Processing..." );
-		Postload();
+		Postload( pszFileName );
+
 		pProgDlg->StepIt();
 		m_bLoading = false;
 	}
@@ -1473,16 +1551,20 @@ bool CMapDoc::LoadVMF(const char *pszFileName)
 	if ( bLocked )
 		VisGroups_LockUpdates( false );
 
-	if (pProgDlg)
+	if ( pProgDlg && CreateProgressDlg )
 	{
 		pProgDlg->DestroyWindow();
 		delete pProgDlg;
 		pProgDlg = NULL;
 	}
 
-	// force rendering even if application is not active
-	UpdateAllViews( MAPVIEW_UPDATE_OBJECTS );
-	APP()->SetForceRenderNextFrame();
+	if ( ( LoadFlags & VMF_LOAD_ACTIVATE ) )
+	{	// force rendering even if application is not active
+		UpdateAllViews( MAPVIEW_UPDATE_OBJECTS );
+		APP()->SetForceRenderNextFrame();
+	}
+
+	m_nInLevelLoad--;
 
 	return(eResult == ChunkFile_Ok);
 }
@@ -1635,16 +1717,25 @@ ChunkFileResult_t CMapDoc::LoadWorldCallback(CChunkFile *pFile, CMapDoc *pDoc)
 //-----------------------------------------------------------------------------
 // Purpose: Called after loading a map file.
 //-----------------------------------------------------------------------------
-void CMapDoc::Postload(void)
+void CMapDoc::Postload(const char *pszFileName)
 {
+	if ( *pszFileName )
+	{	// this path needs to be set early so that instances may properly find their base path
+		SetPathName( pszFileName, FALSE );
+	}
+
 	//
 	// Report any noncritical loading errors here.
 	//
 	if (CMapSolid::GetBadSolidCount() > 0)
 	{
-		char szError[80];
-		sprintf(szError, "For your information, %d solid(s) were not loaded due to errors in the file.", CMapSolid::GetBadSolidCount());
-		GetMainWnd()->MessageBox(szError, "Warning", MB_ICONINFORMATION);
+		char szError[ 1024 ];
+
+		V_sprintf_safe( szError, "For your information, %d solid(s) were not loaded due to errors in the file. Would you like to Re-Save your map with the invalid solids removed?", CMapSolid::GetBadSolidCount() );
+		if ( GetMainWnd()->MessageBox(szError, "Warning", MB_YESNO | MB_ICONQUESTION) == IDYES )
+		{
+			OnFileSave();
+		}
 	}
 
 	//
@@ -1653,27 +1744,39 @@ void CMapDoc::Postload(void)
 	//
 	CountGUIDs();
 	m_pWorld->PostloadWorld();
-	pProgDlg->StepIt();
-	pProgDlg->SetStep(1000);
+	if ( pProgDlg )
+	{
+		pProgDlg->StepIt();
+		pProgDlg->SetStep(1000);
 
-	pProgDlg->SetWindowText( "Assigning to groups..." );
+		pProgDlg->SetWindowText( "Assigning to groups..." );
+	}
 	AssignToGroups();
 	AssignToVisGroups();
-	pProgDlg->StepIt();
+	if ( pProgDlg )
+	{
+		pProgDlg->StepIt();
 
-	pProgDlg->SetWindowText( "Postprocessing VisGroups..." );
+		pProgDlg->SetWindowText( "Postprocessing VisGroups..." );
+	}
 	m_pWorld->PostloadVisGroups();
-	pProgDlg->StepIt();
+	if ( pProgDlg )
+	{
+		pProgDlg->StepIt();
 
-	// Do this after AssignToVisGroups, because deleting objects causes empty visgroups to be purged,
-	// and until AssignToVisGroups is called all the visgroups are empty!
-	pProgDlg->SetWindowText( "Updating Visibility..." );
+		// Do this after AssignToVisGroups, because deleting objects causes empty visgroups to be purged,
+		// and until AssignToVisGroups is called all the visgroups are empty!
+		pProgDlg->SetWindowText( "Updating Visibility..." );
+	}
 	RemoveEmptyGroups();
 	UpdateVisibilityAll();
-	pProgDlg->StepIt();
+	if ( pProgDlg )
+	{
+		pProgDlg->StepIt();
 
-	// update displacement neighbors
-	pProgDlg->SetWindowText( "Updating Displacements..." );
+		// update displacement neighbors
+		pProgDlg->SetWindowText( "Updating Displacements..." );
+	}
 	IWorldEditDispMgr *pDispMgr = GetActiveWorldEditDispManager();
 	if( pDispMgr )
 	{
@@ -1688,12 +1791,15 @@ void CMapDoc::Postload(void)
 			}
 		}
 	}
-	pProgDlg->StepIt();
+	if ( pProgDlg )
+	{
+		pProgDlg->StepIt();
 
 	//
 	// Do batch search and replace of textures from trans.txt if it exists.
 	//
-	pProgDlg->SetWindowText( "Updating Texture Names..." );
+		pProgDlg->SetWindowText( "Updating Texture Names..." );
+	}
 	char translationFilename[MAX_PATH];
 	Q_snprintf( translationFilename, sizeof( translationFilename ), "materials/trans.txt" );
 	FileHandle_t searchReplaceFP = g_pFileSystem->Open( translationFilename, "r" );
@@ -1702,18 +1808,503 @@ void CMapDoc::Postload(void)
 		BatchReplaceTextures( searchReplaceFP );
 		g_pFileSystem->Close( searchReplaceFP );
 	}
-	pProgDlg->StepIt();
-	pProgDlg->SetWindowText( "Building Cull Tree..." );
+	if ( pProgDlg )
+	{
+		pProgDlg->StepIt();
+		pProgDlg->SetWindowText( "Building Cull Tree..." );
+	}
 	m_pWorld->CullTree_Build();
-	pProgDlg->StepIt();
+	if ( pProgDlg )
+	{
+		pProgDlg->StepIt();
 
-	// We disabled building detail objects above to prevent it from generating them extra times.
-	// Now generate the ones that need to be generated.
-	pProgDlg->SetWindowText( "Building Detail Objects..." );
+		// We disabled building detail objects above to prevent it from generating them extra times.
+		// Now generate the ones that need to be generated.
+		pProgDlg->SetWindowText( "Building Detail Objects..." );
+	}
 	DetailObjects::EnableBuildDetailObjects( true );
 	BuildAllDetailObjects();
 
+	if ( pProgDlg )
+	{
 	pProgDlg->SetWindowText( "Finished Loading!" );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will hook up the manifest document to this map document
+// Input  : pManifest - the manifest document
+//-----------------------------------------------------------------------------
+void CMapDoc::SetManifest( CManifest *pManifest )
+{
+	m_pManifest = pManifest;
+	m_pManifestOwner = pManifest;
+
+	if ( m_pSelection )
+	{
+		delete m_pSelection;
+	}
+
+	m_pSelection = pManifest->GetSelection();
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this routine will check to see if all objects are editable within
+//			the selection.  If one is not editable, the entire selection is not
+//			editable.
+// Output : the editable state of the selection
+//-----------------------------------------------------------------------------
+bool CMapDoc::IsSelectionEditable( void )
+{
+	bool bResult = true;
+
+	int nCount = m_pSelection->GetCount();
+	for( int i = 0; i < nCount; i++ )
+	{
+		CMapClass *pObj = m_pSelection->GetList()->Element( i );
+		if ( !pObj->IsEditable() )
+		{
+			bResult = false;
+			break;
+		}
+	}
+
+	return bResult;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this routine will take a single map document and turn it into a
+//			manifest document containing just this one map document.
+// Output : true if the conversion worked
+//-----------------------------------------------------------------------------
+bool CMapDoc::CreateNewManifest( void )
+{
+	if ( IsModified() )
+	{
+		OnFileSave();
+	}
+
+	if ( IsModified() )
+	{
+		AfxMessageBox( "Manifest was NOT created as map was not able to be saved!", MB_OK );
+		return false;
+	}
+
+	CManifest	*pManifest = dynamic_cast< CManifest * >( APP()->pManifestDocTemplate->OpenDocumentFile( NULL ) );
+	if(Options.general.bLoadwinpos && Options.general.bIndependentwin)
+	{
+		::GetMainWnd()->LoadWindowStates();
+	}
+
+	if ( pManifest->AddExistingMap( GetPathName(), false ) )
+	{
+		OnCloseDocument();
+		pManifest->SetActiveMapDoc( pManifest );
+		pManifest->ActivateMapDoc( pManifest );
+		ToolManager()->SetTool(	TOOL_POINTER );
+		GetMainWnd()->GlobalNotify( WM_MAPDOC_CHANGED );
+		pManifest->UpdateAllViews( MAPVIEW_UPDATE_SELECTION | MAPVIEW_UPDATE_TOOL | MAPVIEW_RENDER_NOW );
+		AfxMessageBox( "Manifest was successfully created and has automatically been saved.", MB_OK );
+	}
+	else
+	{
+		pManifest->OnCloseDocument();
+		AfxMessageBox( "Manifest was NOT created!", MB_OK );
+		return false;
+	}
+
+	return true;
+}
+
+
+int CMapDoc::GetClipboardCount( void )
+{
+	return GetHammerClipboard()->Objects.Count();
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this does a special paste for manifest maps
+// Input  : pDestWorld
+//			vecOffset
+//			vecRotate
+// 			pParent
+//			bMakeEntityNamesUnique
+//			pszEntityNamePrefix
+//-----------------------------------------------------------------------------
+void CMapDoc::ManifestPaste( CMapWorld *pDestWorld, Vector vecOffset, QAngle vecRotate, CMapClass *pParent, bool bMakeEntityNamesUnique, const char *pszEntityNamePrefix )
+{
+	Paste( GetHammerClipboard()->Objects, GetHammerClipboard()->pSourceWorld, pDestWorld, vecOffset, vecRotate, pParent, bMakeEntityNamesUnique, pszEntityNamePrefix );
+	GetHammerClipboard()->Objects.RemoveAll();
+	SetModifiedFlag( true );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this handles the routing of letting instances know their map may have been updated
+// Input  : pInstanceMapDoc - the map that was updated
+//-----------------------------------------------------------------------------
+void CMapDoc::UpdateInstanceMap( CMapDoc *pInstanceMapDoc )
+{
+	bool		bUpdated = false;
+
+	if ( m_bCollapsingInstances )
+	{
+		return;
+	}
+
+	const CMapObjectList *pChildren = m_pWorld->GetChildren();
+	FOR_EACH_OBJ( *pChildren, pos )
+	{
+		CMapClass	*pChild = pChildren->Element( pos );
+		CMapEntity	*pEntity = dynamic_cast< CMapEntity * >( pChild );
+
+		if ( pEntity && stricmp( pEntity->GetClassName(), "func_instance" ) == 0 )
+		{
+			CMapInstance	*pMapInstance = pEntity->GetChildOfType<CMapInstance>();
+			if ( pMapInstance )
+			{
+				if ( pMapInstance->GetInstancedMap() == pInstanceMapDoc )
+				{
+					pMapInstance->UpdateInstanceMap();
+					bUpdated = true;
+				}
+			}
+		}
+	}
+
+	if ( bUpdated )
+	{
+		APP()->pMapDocTemplate->UpdateInstanceMap( this );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: This function will collapse instances into the map ( and any children instances )
+//-----------------------------------------------------------------------------
+void CMapDoc::CollapseInstances( bool bOnlySelected )
+{
+	int		InstanceCount = 0;
+
+	if ( AfxMessageBox( "Collapsing does not perform all of the operations that the BSP process does for instancing.  There may be some issues or differences between results.  Are you sure you want to do this?", MB_YESNO | MB_ICONQUESTION ) == IDNO )
+	{
+		return;
+	}
+
+	m_bCollapsingInstances = true;
+
+	const CMapObjectList *pChildren = m_pWorld->GetChildren();
+	FOR_EACH_OBJ( *pChildren, pos )
+	{
+		CMapClass	*pChild = pChildren->Element( pos );
+		CMapEntity	*pEntity = dynamic_cast< CMapEntity * >( pChild );
+
+		if ( pEntity && stricmp( pEntity->GetClassName(), "func_instance" ) == 0 && ( !bOnlySelected || pEntity->GetSelectionState() != SELECT_NONE ) )
+		{
+			CMapInstance	*pMapInstance = pEntity->GetChildOfType<CMapInstance>();
+			if ( pMapInstance )
+			{
+				if ( pMapInstance->GetInstancedMap() )
+				{
+					char	temp[ 256 ];
+					Vector	origin;
+					QAngle	angles;
+
+					pMapInstance->GetInstancedMap()->OnEditSelectall();
+					pMapInstance->GetInstancedMap()->Copy();
+					pMapInstance->GetInstancedMap()->OnEditClearselection();
+					SetActiveMapDoc( this ); // just in case the last instance copy forces the map to close, we need to make ourselves active again
+
+					InstanceCount++;
+					sprintf( temp, "AutoInstance%d-", InstanceCount );
+
+					pEntity->GetOrigin( origin );
+					pEntity->GetAngles( angles );
+
+					PasteInstance( GetHammerClipboard()->Objects, pMapInstance->GetInstancedMap()->GetMapWorld(), GetMapWorld(), origin, angles, NULL, true, temp );
+					Update();
+				}
+
+				DeleteObject( pEntity );
+				m_UpdateList.RemoveAll();
+				SetActiveMapDoc( this ); // just in case the last instance copy forces the map to close, we need to make ourselves active again
+
+				pos = -1;		// start over so that we find any instances within instances
+			}
+		}
+	}
+
+	m_bCollapsingInstances = false;
+	APP()->pMapDocTemplate->UpdateInstanceMap( this );
+	APP()->pManifestDocTemplate->UpdateInstanceMap( this );
+
+	SetModifiedFlag( true );
+	UpdateAllViews( MAPVIEW_UPDATE_SELECTION | MAPVIEW_UPDATE_TOOL | MAPVIEW_RENDER_NOW );
+
+	char temp[ 256 ];
+	sprintf( temp, "A total of %d instances were collapsed into the main map.", InstanceCount );
+
+	AfxMessageBox( temp, MB_OK | MB_ICONEXCLAMATION );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will allow you to iterate through a string looking for $variables
+// Input  : Text - the string to search through
+//			StartPos - the starting index in the string
+// Output : Result - returns the $variable if it exists
+//			returns the string index after the variable if one is found, otherwise -1 if not found
+//-----------------------------------------------------------------------------
+int FindInstanceParm( char *Text, int StartPos, CString &Result )
+{
+	char	*found;
+
+	found = strchr( Text + StartPos, '$' );
+	if ( found == NULL )
+	{
+		return -1;
+	}
+
+	StartPos = found - Text;
+
+	// Grab the $
+	Result += Text[ StartPos ];
+	StartPos++;
+
+	while( Text[ StartPos ] )
+	{
+		if ( V_isalnum ( Text[ StartPos ] ) == 0 && Text[ StartPos ] != '_' )
+		{
+			break;
+		}
+
+		Result += Text[ StartPos ];
+		StartPos++;
+	}
+
+	return StartPos;
+}
+
+
+void CMapDoc::PopulateInstanceParms_r( CMapEntity *pEntity, const CMapObjectList *pChildren, CUtlVector< CString > &ParmList )
+{
+	FOR_EACH_OBJ( *pChildren, pos )
+	{
+		CMapClass *pChild = pChildren->Element( pos );
+		CMapEntity *pInstanceEntity = dynamic_cast< CMapEntity * >( pChild );
+
+		if ( pInstanceEntity && pInstanceEntity != pEntity )
+		{
+			for ( int i = pInstanceEntity->GetFirstKeyValue(); i != pInstanceEntity->GetInvalidKeyValue(); i = pInstanceEntity->GetNextKeyValue( i ) )
+			{
+				LPCTSTR	pValue = pInstanceEntity->GetKeyValue( i );
+
+				int			StartPos = 0;
+				CString		Result;
+
+				while( ( StartPos = FindInstanceParm( (char * )pValue, StartPos, Result ) ) != -1 )
+				{
+					if ( ParmList.Find( Result ) == -1 )
+					{
+						ParmList.AddToTail( Result );
+					}
+				}
+			}
+
+			int nCount = pInstanceEntity->Connections_GetCount();
+			for ( int j = 0; j < nCount; ++j )
+			{
+				CEntityConnection *pConn = pInstanceEntity->Connections_Get( j );
+
+				const char *pValue = pConn->GetTargetName();
+
+				int			StartPos = 0;
+				CString		Result;
+
+				while( ( StartPos = FindInstanceParm( (char * )pValue, StartPos, Result ) ) != -1 )
+				{
+					if ( ParmList.Find( Result ) == -1 )
+					{
+						ParmList.AddToTail( Result );
+					}
+				}
+			}
+		}
+
+		if ( pInstanceEntity != pEntity )
+		{
+			PopulateInstanceParms_r( pEntity, pChild->GetChildren(), ParmList );
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will iterate through all entities of the current map looking for $variables.
+//			any ones that are found will be populated as Parm key values.
+// Input  : pEntity - the entity to populate
+//-----------------------------------------------------------------------------
+void CMapDoc::PopulateInstanceParms( CMapEntity *pEntity )
+{
+	CUtlVector< CString > ParmList;
+
+	PopulateInstanceParms_r( pEntity, m_pWorld->GetChildren(), ParmList );
+
+	for( int i = 0; i < ParmList.Count(); i++ )
+	{
+		bool	bFound = false;
+		for ( int j = pEntity->GetFirstKeyValue(); j != pEntity->GetInvalidKeyValue(); j = pEntity->GetNextKeyValue( j ) )
+		{
+			LPCTSTR	pValue = pEntity->GetKeyValue( j );
+			if ( strnicmp( pValue, ParmList[ i ], strlen( ParmList[ i ] ) ) == 0 )
+			{
+				bFound = true;
+				break;
+			}
+		}
+
+		if ( bFound == false )
+		{
+			int j = 1;
+			while( 1 )
+			{
+				char tempKey[ 128 ];
+
+				sprintf( tempKey, "parm%d", j );
+				if ( pEntity->GetKeyValue( tempKey ) == NULL )
+				{
+					char	tempValue[ MAX_KEYVALUE_LEN ];
+
+					sprintf( tempValue, "%s string", (const char*)ParmList[ i ] );
+					pEntity->SetKeyValue( tempKey, tempValue );
+					break;
+				}
+
+				j++;
+			}
+		}
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will look through the instance for a func_instance_parms.  If one is
+//			found, then it will populate the replace fields with the parm fields.
+// Input  : pEntity - the func_instance
+//-----------------------------------------------------------------------------
+void CMapDoc::PopulateInstance( CMapEntity *pEntity )
+{
+	CMapInstance	*pMapInstance = pEntity->GetChildOfType<CMapInstance>();
+
+	if ( pMapInstance == NULL || pMapInstance->GetInstancedMap() == NULL )
+	{
+		return;
+	}
+
+	CMapEntityList entityList;
+
+	pMapInstance->GetInstancedMap()->FindEntitiesByClassName( entityList, "func_instance_parms", false );
+
+	if ( entityList.Count() != 1 )
+	{
+		return;
+	}
+
+	CMapEntity *pInstanceParmsEntity = entityList.Element( 0 );
+
+	for ( int i = pInstanceParmsEntity->GetFirstKeyValue(); i != pInstanceParmsEntity->GetInvalidKeyValue(); i = pInstanceParmsEntity->GetNextKeyValue( i ) )
+	{
+		LPCTSTR	pKey = pInstanceParmsEntity->GetKey( i );
+		LPCTSTR	pValue = pInstanceParmsEntity->GetKeyValue( i );
+
+		if ( strnicmp( pKey, "parm", strlen( "parm" ) ) == 0 )
+		{
+			const char *pos = strchr( pValue, ' ' );
+			if ( pos == NULL )
+			{
+				continue;
+			}
+
+			int		len = pos - pValue;
+			bool	bFound = false;
+
+			for ( int j = pEntity->GetFirstKeyValue(); j != pEntity->GetInvalidKeyValue(); j = pEntity->GetNextKeyValue( j ) )
+			{
+				LPCTSTR	pInstanceKey = pEntity->GetKey( j );
+				LPCTSTR	pInstanceValue = pEntity->GetKeyValue( j );
+				if ( strnicmp( pInstanceKey, "replace", strlen( "replace" ) ) == 0 &&
+					 strnicmp( pInstanceValue, pValue, len ) == 0 )
+				{
+					bFound = true;
+					break;
+				}
+			}
+
+			if ( bFound == false )
+			{
+				int j = 1;
+				while( 1 )
+				{
+					char tempKey[ MAX_KEYVALUE_LEN ];
+
+					sprintf( tempKey, "replace%02d", j );
+					if ( pEntity->GetKeyValue( tempKey ) == NULL )
+					{
+						char	tempValue[ MAX_KEYVALUE_LEN ];
+
+						strcpy( tempValue, pValue );
+						strcpy( &tempValue[ len ], " ???" );
+
+						pEntity->SetKeyValue( tempKey, tempValue );
+						break;
+					}
+
+					j++;
+				}
+			}
+		}
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will notify all children that their owning instance has been moved.
+//			currently not used.
+//-----------------------------------------------------------------------------
+void CMapDoc::InstanceMoved( void )
+{
+#if 0
+	const CMapObjectList *pChildren = m_pWorld->GetChildren();
+
+	FOR_EACH_OBJ( *pChildren, pos )
+	{
+		CMapClass *pChild = pChildren->Element( pos );
+
+		pChild->InstanceMoved();
+	}
+#endif
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will return the current primary map document of the
+//			manifest.  Generally this is the map layer that is editable where all
+//			entity / brush operations will take place.
+// Output : the primary map document
+//-----------------------------------------------------------------------------
+CMapWorld *CMapDoc::GetCurrentWorld( void )
+{
+	if ( m_pManifest )
+	{
+		return m_pManifest->GetActiveMapDoc()->m_pWorld;
+	}
+	else
+	{
+		return m_pWorld;
+	}
 }
 
 
@@ -1804,7 +2395,44 @@ void CMapDoc::Dump(CDumpContext& dc) const
 //-----------------------------------------------------------------------------
 void CMapDoc::DeleteContents(void)
 {
-	DeleteCurrentMap();
+	m_NotifyList.RemoveAll();
+
+	//
+	// Don't leave pointers to deleted worlds lying around!
+	//
+	if (GetHammerClipboard()->pSourceWorld == m_pWorld)
+	{
+		GetHammerClipboard()->pSourceWorld = NULL;
+	}
+
+	if ( m_VisGroups )
+	{
+		m_VisGroups->PurgeAndDeleteElements();
+//		delete m_VisGroups;
+//		m_VisGroups = NULL;
+	}
+
+	if ( m_RootVisGroups )
+	{
+		m_RootVisGroups->RemoveAll();
+//		delete m_RootVisGroups;
+//		m_RootVisGroups = NULL;
+	}
+
+	if ( m_pManifestOwner == NULL && m_pSelection )
+	{
+		m_pSelection->RemoveAll();
+//		delete m_pSelection;
+//		m_pSelection = NULL;
+	}
+
+	if ( m_pWorld )
+	{
+		delete m_pWorld;
+		m_pWorld = NULL;
+	}
+
+	GetMainWnd()->m_pFaceEditSheet->ClearFaceListByMapDoc( this );
 
 	CDocument::DeleteContents();
 
@@ -1815,26 +2443,6 @@ void CMapDoc::DeleteContents(void)
 	}
 }
 
-void CMapDoc::DeleteCurrentMap()
-{
-	//
-	// Don't leave pointers to deleted worlds lying around!
-	//
-	if (s_Clipboard.pSourceWorld == m_pWorld)
-	{
-		s_Clipboard.pSourceWorld = NULL;
-	}
-
-	m_VisGroups.PurgeAndDeleteElements();
-	m_RootVisGroups.RemoveAll();
-	m_pSelection->RemoveAll();
-
-	delete m_pWorld;
-	m_pWorld = NULL;
-
-	GetMainWnd()->m_pFaceEditSheet->ClearFaceListByMapDoc( this );
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -1843,10 +2451,10 @@ void CMapDoc::DeleteCurrentMap()
 //-----------------------------------------------------------------------------
 CVisGroup *CMapDoc::VisGroups_GroupForID(DWORD id)
 {
-	int nCount = m_VisGroups.Count();
+	int nCount = m_VisGroups->Count();
 	for (int i = 0; i < nCount; i++)
 	{
-		CVisGroup *pGroup = m_VisGroups.Element(i);
+		CVisGroup *pGroup = m_VisGroups->Element(i);
 		if (pGroup->GetID() == id)
 		{
 			return(pGroup);
@@ -1857,10 +2465,10 @@ CVisGroup *CMapDoc::VisGroups_GroupForID(DWORD id)
 
 CVisGroup *CMapDoc::VisGroups_GroupForName( const char *pszName, bool bIsAuto )
 {
-	int nCount = m_VisGroups.Count();
+	int nCount = m_VisGroups->Count();
 	for ( int i = 0; i < nCount; i++ )
 	{
-		CVisGroup *pGroup = m_VisGroups.Element(i);
+		CVisGroup *pGroup = m_VisGroups->Element(i);
 		if ( !Q_stricmp( pGroup->GetName(), pszName ) && ( pGroup->IsAutoVisGroup() == bIsAuto )  )
 		{
 			return pGroup;
@@ -2023,10 +2631,10 @@ void CMapDoc::VisGroups_SetParent(CVisGroup *pVisGroup, CVisGroup *pNewParent)
 		}
 		else
 		{
-			int nIndex = m_RootVisGroups.Find(pVisGroup);
+			int nIndex = m_RootVisGroups->Find(pVisGroup);
 			if (nIndex != -1)
 			{
-				 m_RootVisGroups.Remove(nIndex);
+				 m_RootVisGroups->Remove(nIndex);
 			}
 		}
 
@@ -2036,7 +2644,7 @@ void CMapDoc::VisGroups_SetParent(CVisGroup *pVisGroup, CVisGroup *pNewParent)
 		}
 		else
 		{
-			m_RootVisGroups.AddToTail(pVisGroup);
+			m_RootVisGroups->AddToTail(pVisGroup);
 		}
 
 		pVisGroup->SetParent(pNewParent);
@@ -2294,6 +2902,19 @@ BOOL CMapDoc::OnOpenDocument(LPCTSTR lpszPathName)
 //-----------------------------------------------------------------------------
 void CMapDoc::OnCloseDocument(void)
 {
+	if ( m_nExternalReferenceCount > 0 )
+	{	// this is an instance, so hide the window
+		ShowWindow( false );
+
+		if ( IsModified() )
+		{
+			DeleteContents();
+			OnOpenDocument( m_strPathName );
+		}
+
+		return;
+	}
+
 	//
 	// Deactivate the current tool now because doing it later can cause side-effects.
 	//
@@ -2307,7 +2928,7 @@ void CMapDoc::OnCloseDocument(void)
 	// up properly.
 	//
 	SetActiveMapDoc(this);
-	DeleteContents();
+
 	CDocument::OnCloseDocument();
 }
 
@@ -2685,7 +3306,7 @@ static BOOL SelectInLogicalBox( CMapClass *pObject, SelectLogicalBoxInfo_t *pInf
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CMapDoc::SelectRegion(BoundBox *pBox, bool bInsideOnly)
+void CMapDoc::SelectRegion( BoundBox *pBox, bool bInsideOnly, bool ResetSelection )
 {
 	SelectBoxInfo_t info;
 	info.pDoc = this;
@@ -2693,7 +3314,10 @@ void CMapDoc::SelectRegion(BoundBox *pBox, bool bInsideOnly)
 	info.bInside = bInsideOnly;
 	info.eSelectMode = m_pSelection->GetMode();
 
-	SelectObject(NULL, scSaveChanges);
+	if ( ResetSelection )
+	{
+		SelectObject(NULL, scSaveChanges);
+	}
 
 	m_pWorld->EnumChildren(SelectInBox, &info);
 }
@@ -2747,52 +3371,55 @@ void CMapDoc::UpdateStatusbar(void)
 	}
 
 	CString str;
-	int nCount = m_pSelection->GetCount();
-	switch (nCount)
+	if ( m_pSelection )
 	{
-		case 0:
+		int nCount = m_pSelection->GetCount();
+		switch (nCount)
 		{
-			str = "no selection.";
-			break;
-		}
-
-		case 1:
-		{
-			CMapClass *pobj = m_pSelection->GetList()->Element(0);
-			str = pobj->GetDescription();
-
-			// Look for the 3D view so we can also add the distance to the object.
-			POSITION p = GetFirstViewPosition();
-			while (p)
+			case 0:
 			{
-				CMapView3D *pView = dynamic_cast<CMapView3D*>(GetNextView(p));
-				if (pView)
-				{
-					// Get the position of the 3D camera.
-					Vector vViewPoint( 0, 0, 0 );
-					CCamera *pCam = pView->GetCamera();
-					pCam->GetViewPoint(vViewPoint);
-
-					// Get the position of the object.
-					Vector vObjOrigin;
-					pobj->GetOrigin( vObjOrigin );
-					float flDist = vViewPoint.DistTo( vObjOrigin );
-
-					// Add the distance to the status bar string.
-					char strDist[512];
-					V_snprintf( strDist, sizeof( strDist ), "   [dist: %.1f]", flDist );
-					str += strDist;
-					break;
-				}
+				str = "no selection.";
+				break;
 			}
 
-			break;
-		}
+			case 1:
+			{
+				CMapClass *pobj = m_pSelection->GetList()->Element(0);
+				str = pobj->GetDescription();
 
-		default:
-		{
-			str.Format("%d objects selected.", nCount);
-			break;
+				// Look for the 3D view so we can also add the distance to the object.
+				POSITION p = GetFirstViewPosition();
+				while (p)
+				{
+					CMapView3D *pView = dynamic_cast<CMapView3D*>(GetNextView(p));
+					if (pView)
+					{
+						// Get the position of the 3D camera.
+						Vector vViewPoint( 0, 0, 0 );
+						CCamera *pCam = pView->GetCamera();
+						pCam->GetViewPoint(vViewPoint);
+
+						// Get the position of the object.
+						Vector vObjOrigin;
+						pobj->GetOrigin( vObjOrigin );
+						float flDist = vViewPoint.DistTo( vObjOrigin );
+
+						// Add the distance to the status bar string.
+						char strDist[512];
+						V_snprintf( strDist, sizeof( strDist ), "   [dist: %.1f]", flDist );
+						str += strDist;
+						break;
+					}
+				}
+
+				break;
+			}
+
+			default:
+			{
+				str.Format("%d objects selected.", nCount);
+				break;
+			}
 		}
 	}
 
@@ -2855,6 +3482,7 @@ void CMapDoc::SetActiveMapDoc(CMapDoc *pDoc)
 	}
 
 	m_pMapDoc = pDoc;
+	m_pManifest = dynamic_cast< CManifest * >( m_pMapDoc );
 
 	//
 	// Set the new document in the shell.
@@ -2869,12 +3497,16 @@ void CMapDoc::SetActiveMapDoc(CMapDoc *pDoc)
 		// attach document selection to property box
 		GetMainWnd()->pObjectProperties->SetObjectList( m_pMapDoc->GetSelection()->GetList() );
 
-		CHistory::SetHistory(m_pMapDoc->GetDocHistory());
+		if ( m_pManifest && m_pManifest->GetPrimaryMap() )
+		{
+			CHistory::SetHistory( m_pManifest->GetPrimaryMap()->m_Map->GetDocHistory() );
+		}
+		else
+		{
+			CHistory::SetHistory(m_pMapDoc->GetDocHistory());
+		}
 		m_pMapDoc->SetUndoActive(GetMainWnd()->IsUndoActive() == TRUE);
 		m_pMapDoc->UpdateAllViews( MAPVIEW_UPDATE_OBJECTS );
-		extern void SetInstanceBoxChecked( UINT nID, CMainFrame* pFrm );
-		SetInstanceBoxChecked( m_pMapDoc->m_tShowInstance == ShowInstance_t::INSTANCES_HIDE ? ID_INSTANCE_VIS_HIDE
-			: m_pMapDoc->m_tShowInstance == ShowInstance_t::INSTANCES_SHOW_TINTED ? ID_INSTANCE_VIS_TINTED : ID_INSTANCE_VIS_NORMAL, GetMainWnd() );
 	}
 	else
 	{
@@ -2917,6 +3549,22 @@ void CMapDoc::SetActiveMapDoc(CMapDoc *pDoc)
 	{
 		bFirst = false;
 		GetMainWnd()->GlobalNotify(WM_GAME_CHANGED);
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this will activate and bring to front the supplied map document
+// Input  : pDoc - the document to activate
+// Output : none
+//-----------------------------------------------------------------------------
+void CMapDoc::ActivateMapDoc( CMapDoc *pDoc )
+{
+	POSITION posView = pDoc->GetFirstViewPosition( );
+	if( posView )
+	{
+		CView* pView = pDoc->GetNextView( posView );
+		((CMDIChildWnd*) pView->GetParentFrame( ))->MDIActivate( );
 	}
 }
 
@@ -3021,29 +3669,7 @@ void CMapDoc::DeleteObjectList(CMapObjectList &List)
 //-----------------------------------------------------------------------------
 void CMapDoc::OnEditDelete(void)
 {
-	if (m_pToolManager->GetActiveToolID() == TOOL_MORPH)
-	{
-		// Can't delete stuff while morphing.
-		return;
-	}
-
-	if ( m_pSelection->IsEmpty() )
-	{
-		return;
-	}
-
-	const CMapObjectList *pSelList = m_pSelection->GetList();
-
-	GetHistory()->MarkUndoPosition(pSelList, "Delete");
-
-	// Delete objects in selection.
-	while ( !m_pSelection->IsEmpty() )
-	{
-		CMapClass *pobj = pSelList->Element(0);
-		DeleteObject(pobj);
-	}
-
-	SetModifiedFlag();
+	Delete();
 }
 
 
@@ -3131,7 +3757,15 @@ static BOOL ApplyTextureToSolid(CMapSolid *pSolid, LPCTSTR pszTexture)
 //-----------------------------------------------------------------------------
 void CMapDoc::OnUpdateEditApplytexture(CCmdUI* pCmdUI)
 {
-	pCmdUI->Enable( ( m_pToolManager->GetActiveToolID() != TOOL_FACEEDIT_MATERIAL ) && !GetMainWnd()->IsShellSessionActive() );
+	if ( IsSelectionEditable() == false )
+	{
+		pCmdUI->Enable( FALSE );
+
+	}
+	else
+	{
+		pCmdUI->Enable( ( m_pToolManager->GetActiveToolID() != TOOL_FACEEDIT_MATERIAL ) && !GetMainWnd()->IsShellSessionActive() );
+	}
 }
 
 
@@ -3592,54 +4226,12 @@ void CMapDoc::OnToolsSubtractselection(void)
 //-----------------------------------------------------------------------------
 void CMapDoc::OnEditCopy(void)
 {
-	if ( m_pSelection->IsEmpty() )
+	if ( !m_pSelection->IsCopyable() )
 	{
 		return;
 	}
 
-	BeginWaitCursor();
-
-	// Delete the contents of the clipboard.
-	s_Clipboard.Objects.RemoveAll();
-
-	m_pSelection->GetBoundsCenter(s_Clipboard.vecOriginalCenter);
-	m_pSelection->GetBounds(s_Clipboard.Bounds.bmins, s_Clipboard.Bounds.bmaxs);
-
-	GetHistory()->Pause();
-
-	s_Clipboard.pSourceWorld = m_pWorld;
-
-	// Copy the selected objects to the clipboard.
-	const CMapObjectList *pSelList = m_pSelection->GetList();
-
-	for (int i = 0; i < pSelList->Count()	; i++)
-	{
-		CMapClass *pobj = pSelList->Element(i);
-		CMapClass *pNewobj = pobj->Copy(false);
-
-		//
-		// Prune the object from the world tree without calling RemoveObjectFromWorld.
-		// This prevents CopyChildrenFrom from updating the culling tree.
-		//
-		//pNewobj->SetObjParent(NULL);
-
-		//
-		// Copy all the children from the original object into the copied object.
-		//
-		pNewobj->CopyChildrenFrom(pobj, false);
-
-		//
-		// Remove the copied object from the world.
-		//
-		RemoveObjectFromWorld(pNewobj, true);
-		pNewobj->RemoveAllVisGroups();
-
-		s_Clipboard.Objects.AddToTail(pNewobj);
-	}
-
-	GetHistory()->Resume();
-
-	EndWaitCursor();
+	Copy();
 }
 
 
@@ -3702,8 +4294,12 @@ void CMapDoc::GetBestPastePoint(Vector &vecPasteOrigin)
 			{
 				HitInfo_t Hits;
 
-				if ( p3DView->ObjectsAt( vPoint, &Hits, 1 ) )
+				if ( p3DView->ObjectsAt( vPoint, &Hits, 1, FLAG_OBJECTS_AT_RESOLVE_INSTANCES ) )
 				{
+					VMatrix LocalMatrixNeg;
+
+					Hits.m_LocalMatrix.InverseTR( LocalMatrixNeg );
+
 					// If they clicked on a solid, the index of the face they clicked on is stored
 					// in array index [1].
 					CMapClass *pObject = Hits.pObject;
@@ -3716,13 +4312,16 @@ void CMapDoc::GetBestPastePoint(Vector &vecPasteOrigin)
 					bool bOk = false;
 
 					p3DView->GetCamera()->BuildRay( vPoint, start, end);
+					Vector vFinalStart, vFinalEnd;
+					LocalMatrixNeg.V3Mul( start, vFinalStart );
+					LocalMatrixNeg.V3Mul( end, vFinalEnd );
 
 					if (pSolid != NULL)
 					{
 						// Build a ray to trace against the face that they clicked on to
 						// find the point of intersection.
 						CMapFace *pFace = pSolid->GetFace(Hits.uData);
-						bOk = pFace->TraceLine(HitPos, HitNormal, start, end);
+						bOk = pFace->TraceLine(HitPos, HitNormal, vFinalStart, vFinalEnd);
 					}
 					else if ( pObject != NULL )
 					{
@@ -3732,9 +4331,9 @@ void CMapDoc::GetBestPastePoint(Vector &vecPasteOrigin)
 
 						if ( dist > 0 )
 						{
-							delta = end-start;
+							delta = vFinalEnd-vFinalStart;
 							VectorNormalize( delta );
-							HitPos = start + dist * delta;
+							HitPos = vFinalStart + dist * delta;
 							HitNormal = GetNormalFromFace( face );
 							bOk = true;
 						}
@@ -3742,22 +4341,26 @@ void CMapDoc::GetBestPastePoint(Vector &vecPasteOrigin)
 
 					if ( bOk )
 					{
-						mins = s_Clipboard.Bounds.bmins;
-						maxs = s_Clipboard.Bounds.bmaxs;
-						delta = HitPos - (mins+maxs)/2;
+						Vector vFinalHitPos, vFinalHitNormal;
+						Hits.m_LocalMatrix.V3Mul( HitPos, vFinalHitPos );
+						vFinalHitNormal = Hits.m_LocalMatrix.ApplyRotation( HitNormal );
+
+						mins = GetHammerClipboard()->Bounds.bmins;
+						maxs = GetHammerClipboard()->Bounds.bmaxs;
+						delta = vFinalHitPos - (mins+maxs)/2;
 						mins += delta;
 						maxs += delta;
-						start = HitPos;
-						end = HitPos + HitNormal*4096;
+						start = vFinalHitPos;
+						end = vFinalHitPos + vFinalHitNormal*4096;
 						dist = IntersectionLineAABBox( mins, maxs, start, end, face );
 
 						if ( dist > 0 )
 						{
-							vecPasteOrigin = HitPos + HitNormal * dist;
+							vecPasteOrigin = vFinalHitPos + vFinalHitNormal * dist;
 						}
 						else
 						{
-							vecPasteOrigin = HitPos;
+							vecPasteOrigin = vFinalHitPos;
 						}
 					}
 				}
@@ -3779,10 +4382,89 @@ void CMapDoc::GetBestPastePoint(Vector &vecPasteOrigin)
 		Snap(vecPasteOrigin);
 
 		// Offset the center relative to the grid the same as it was originally.
-		Vector vecSnappedOriginalCenter = s_Clipboard.vecOriginalCenter;
+		Vector vecSnappedOriginalCenter = GetHammerClipboard()->vecOriginalCenter;
 		Snap(vecSnappedOriginalCenter);
-		vecPasteOrigin += s_Clipboard.vecOriginalCenter - vecSnappedOriginalCenter;
+		vecPasteOrigin += GetHammerClipboard()->vecOriginalCenter - vecSnappedOriginalCenter;
 	}
+}
+
+
+void CMapDoc::Paste( IHammerClipboard *pClipboard, CMapWorld *pDestWorld, Vector vecOffset, QAngle vecRotate, CMapClass *pParent, bool bMakeEntityNamesUnique, const char *pszEntityNamePrefix )
+{
+	CHammerClipboard *pSrc = GetHammerClipboard( pClipboard );
+
+	Paste( pSrc->Objects, pSrc->pSourceWorld, pDestWorld, vecOffset, vecRotate, pParent, bMakeEntityNamesUnique, pszEntityNamePrefix );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: This function will peform a 'cut' operation on the selected entities.
+//-----------------------------------------------------------------------------
+void CMapDoc::Cut( IHammerClipboard *pClipboard )
+{
+	Copy( pClipboard );
+	Delete();
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: This function will perform a 'copy' operation on the selected entities.
+//-----------------------------------------------------------------------------
+void CMapDoc::Copy( IHammerClipboard *pClipboard )
+{
+	if ( m_pSelection->IsEmpty() )
+	{
+		return;
+	}
+
+	if ( pClipboard == NULL )
+	{
+		pClipboard = GetHammerClipboard();
+	}
+
+	BeginWaitCursor();
+
+	// Delete the contents of the clipboard.
+	GetHammerClipboard( pClipboard )->Objects.RemoveAll();
+
+	m_pSelection->GetBoundsCenter(GetHammerClipboard( pClipboard )->vecOriginalCenter);
+	m_pSelection->GetBounds(GetHammerClipboard( pClipboard )->Bounds.bmins, GetHammerClipboard( pClipboard )->Bounds.bmaxs);
+
+	GetHistory()->Pause();
+
+	GetHammerClipboard( pClipboard )->pSourceWorld = m_pWorld;
+
+	// Copy the selected objects to the clipboard.
+	const CMapObjectList *pSelList = m_pSelection->GetList();
+
+	for (int i = 0; i < pSelList->Count()	; i++)
+	{
+		CMapClass *pobj = pSelList->Element(i);
+		CMapClass *pNewobj = pobj->Copy(false);
+
+		//
+		// Prune the object from the world tree without calling RemoveObjectFromWorld.
+		// This prevents CopyChildrenFrom from updating the culling tree.
+		//
+		//pNewobj->SetObjParent(NULL);
+
+		//
+		// Copy all the children from the original object into the copied object.
+		//
+		pNewobj->CopyChildrenFrom(pobj, false);
+
+		//
+		// Remove the copied object from the world.
+		//
+		RemoveObjectFromWorld(pNewobj, true);
+		pNewobj->RemoveAllVisGroups();
+
+		GetHammerClipboard( pClipboard )->Objects.AddToTail(pNewobj);
+	}
+
+	GetHistory()->Resume();
+
+	EndWaitCursor();
 }
 
 
@@ -3805,6 +4487,11 @@ void CMapDoc::Paste(CMapObjectList &Objects, CMapWorld *pSourceWorld, CMapWorld 
 
 	bool bLocked = VisGroups_LockUpdates( true );
 
+	if ( GetManifest() && pSourceWorld != pDestWorld )
+	{
+		bMakeEntityNamesUnique = true;
+	}
+
 	FOR_EACH_OBJ( Objects, pos )
 	{
 		CMapClass *pOriginal = Objects.Element(pos);
@@ -3821,7 +4508,7 @@ void CMapDoc::Paste(CMapObjectList &Objects, CMapWorld *pSourceWorld, CMapWorld 
 		//
 
 		// Stick the objects into a temporary world object for renaming the entities.
-		CMapWorld temp;
+		CMapWorld temp( this );
 
 		FOR_EACH_OBJ( PasteList, pos )
 		{
@@ -3907,6 +4594,167 @@ void CMapDoc::Paste(CMapObjectList &Objects, CMapWorld *pSourceWorld, CMapWorld 
 
 
 //-----------------------------------------------------------------------------
+// Purpose:
+// Input  : Objects -
+//			pSourceWorld -
+//			pDestWorld -
+//			vecOffset -
+//			vecRotate -
+//			pParent -
+//-----------------------------------------------------------------------------
+void CMapDoc::PasteInstance(CMapObjectList &Objects, CMapWorld *pSourceWorld, CMapWorld *pDestWorld, Vector vecOffset, QAngle vecRotate, CMapClass *pParent, bool bMakeEntityNamesUnique, const char *pszEntityNamePrefix)
+{
+	QAngle	vecRotateFix;
+
+	vecRotateFix.x = vecRotate[ PITCH ];
+	vecRotateFix.y = vecRotate[ ROLL ];
+	vecRotateFix.z = vecRotate[ YAW ];
+
+	//
+	// Copy the objects in the clipboard and build a list of objects to paste
+	// into the world.
+	//
+	CMapObjectList PasteList;
+
+	bool bLocked = VisGroups_LockUpdates( true );
+
+	if ( GetManifest() && pSourceWorld != pDestWorld )
+	{
+		bMakeEntityNamesUnique = true;
+	}
+
+	FOR_EACH_OBJ( Objects, pos )
+	{
+		CMapClass *pOriginal = Objects.Element(pos);
+		CMapClass *pCopy = pOriginal->Copy(false);
+
+		pCopy->CopyChildrenFrom(pOriginal, false);
+		PasteList.AddToTail(pCopy);
+	}
+
+	if ( bMakeEntityNamesUnique || ( pszEntityNamePrefix && ( pszEntityNamePrefix[0] != '\0' ) ) )
+	{
+		//
+		// Make all the pasted objects with names have new, unique names within the destination world.
+		//
+
+		// Stick the objects into a temporary world object for renaming the entities.
+		CMapWorld temp( this );
+
+		FOR_EACH_OBJ( PasteList, pos )
+		{
+			CMapClass *pObject = PasteList.Element( pos );
+			temp.AddChild( pObject );
+		}
+
+		RenameEntities( &temp, pDestWorld, bMakeEntityNamesUnique, pszEntityNamePrefix );
+
+		// So they don't get deleted when temp goes out of scope.
+		temp.RemoveAllChildren();
+	}
+
+	//
+	// Notification happens in two-passes. The first pass lets objects generate new unique
+	// IDs in the destination world, the second pass lets objects fixup references to other
+	// objects in the clipboard.
+	//
+
+	Assert( Objects.Count() == PasteList.Count() );
+
+	FOR_EACH_OBJ( Objects, pos )
+	{
+		CMapClass *pOriginal = Objects.Element(pos);
+		CMapClass *pCopy = PasteList.Element(pos);
+
+		pOriginal->OnPrePaste(pCopy, pSourceWorld, pDestWorld, Objects, PasteList);
+	}
+
+	//
+	// Add the objects to the world.
+	//
+
+	FOR_EACH_OBJ( PasteList, pos )
+	{
+		CMapClass *pCopy = PasteList.Element(pos);
+
+		if (vecRotateFix != vec3_angle)
+		{
+			pCopy->TransRotate( vec3_origin, vecRotateFix );
+		}
+
+		if (vecOffset != vec3_origin)
+		{
+			pCopy->TransMove(vecOffset);
+		}
+
+		AddObjectToWorld(pCopy, pParent);
+	}
+
+	//
+	// Do the second pass of notification. The second pass of notification lets objects
+	// fixup references to other objects that were pasted. We don't do it in the loop above
+	// because then not all the pasted objects would be in the world yet.
+	//
+	Assert( Objects.Count() == PasteList.Count() );
+
+	FOR_EACH_OBJ( Objects, pos )
+	{
+		CMapClass *pOriginal = Objects.Element(pos);
+		CMapClass *pCopy = PasteList.Element(pos);
+
+		pOriginal->OnPaste(pCopy, pSourceWorld, pDestWorld, Objects, PasteList);
+
+		//
+		// Semi-HACK: If we aren't pasting into a group, keep the new object in the Undo stack.
+		// Otherwise, we'll keep the group in OnEditPasteSpecial.
+		//
+		if ((pParent == NULL) || (pParent == pDestWorld))
+		{
+			GetHistory()->KeepNew(pCopy);
+			SelectObject(pCopy, scSelect);
+		}
+	}
+
+	if ( bLocked )
+	{
+		VisGroups_LockUpdates( false );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: This function will perform a 'delete' operation on the selected entities.
+//-----------------------------------------------------------------------------
+void CMapDoc::Delete( void )
+{
+	if (m_pToolManager->GetActiveToolID() == TOOL_MORPH)
+	{
+		// Can't delete stuff while morphing.
+		return;
+	}
+
+	if ( m_pSelection->IsEmpty() || !m_pSelection->IsCopyable() )
+	{
+		return;
+	}
+
+	const CMapObjectList *pSelList = m_pSelection->GetList();
+
+	GetHistory()->MarkUndoPosition(pSelList, "Delete");
+
+	// Delete objects in selection.
+	while ( !m_pSelection->IsEmpty() )
+	{
+		CMapClass *pobj = pSelList->Element(0);
+
+		DeleteObject(pobj);
+	}
+
+	SetModifiedFlag();
+}
+
+
+//-----------------------------------------------------------------------------
 // Purpose: Pastes the clipboard contents into the active world.
 //-----------------------------------------------------------------------------
 void CMapDoc::OnEditPaste(void)
@@ -3922,13 +4770,13 @@ void CMapDoc::OnEditPaste(void)
 	//
 	Vector vecPasteOffset;
 	GetBestPastePoint(vecPasteOffset);
-	vecPasteOffset -= s_Clipboard.vecOriginalCenter;
+	vecPasteOffset -= GetHammerClipboard()->vecOriginalCenter;
 
 	//
 	// Paste the objects into the active world.
 	//
 	CMapWorld *pWorld = GetActiveWorld();
-	Paste(s_Clipboard.Objects, s_Clipboard.pSourceWorld, pWorld, vecPasteOffset, QAngle(0, 0, 0), NULL, false, NULL);
+	Paste(GetHammerClipboard()->Objects, GetHammerClipboard()->pSourceWorld, pWorld, vecPasteOffset, QAngle(0, 0, 0), NULL, false, NULL);
 
 	m_pToolManager->SetTool(TOOL_POINTER);
 
@@ -3936,15 +4784,32 @@ void CMapDoc::OnEditPaste(void)
 	EndWaitCursor();
 }
 
+//-----------------------------------------------------------------------------
+// Disable the unhide option when the quickhide list is empty.
+//-----------------------------------------------------------------------------
+void CMapDoc::OnQuickHide_UpdateUnHide(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable( m_QuickHideGroup.Count() > 0 );
+}
+
+//-----------------------------------------------------------------------------
+// Disable the Create VisGroup menu option when QuickHide is empty.
+//-----------------------------------------------------------------------------
+void CMapDoc::OnQuickHide_UpdateCreateVisGroupFromHidden(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable( m_QuickHideGroup.Count() > 0 );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Manages the state of the Copy menu item.
 //-----------------------------------------------------------------------------
 void CMapDoc::OnUpdateEditSelection(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(( m_pSelection->GetCount() != 0) &&
-					(m_pToolManager->GetActiveToolID() != TOOL_FACEEDIT_MATERIAL) &&
-					!GetMainWnd()->IsShellSessionActive());
+	bool bMorphSnap = m_pToolManager->GetActiveToolID() == TOOL_MORPH && pCmdUI->m_nID == ID_TOOLS_SNAPSELECTEDTOGRID;
+	bool bStandardCommand = ( m_pSelection->GetCount() != 0 ) && m_pSelection->IsCopyable() &&
+							  ( m_pToolManager->GetActiveToolID() != TOOL_FACEEDIT_MATERIAL ) &&
+							  !GetMainWnd()->IsShellSessionActive();
+	pCmdUI->Enable( bMorphSnap || bStandardCommand );
 }
 
 
@@ -3953,7 +4818,7 @@ void CMapDoc::OnUpdateEditSelection(CCmdUI *pCmdUI)
 //-----------------------------------------------------------------------------
 void CMapDoc::OnUpdateEditPaste(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable( s_Clipboard.Objects.Count() &&
+	pCmdUI->Enable( GetHammerClipboard()->Objects.Count() &&
 		            ( m_pToolManager->GetActiveToolID() != TOOL_FACEEDIT_MATERIAL ) &&
 					!GetMainWnd()->IsShellSessionActive() );
 }
@@ -3965,8 +4830,12 @@ void CMapDoc::OnUpdateEditPaste(CCmdUI *pCmdUI)
 //-----------------------------------------------------------------------------
 void CMapDoc::OnEditCut(void)
 {
-	OnEditCopy();
-	OnEditDelete();
+	if ( !m_pSelection->IsCopyable() )
+	{
+		return;
+	}
+
+	Cut( GetHammerClipboard() );
 }
 
 
@@ -4221,7 +5090,7 @@ void CMapDoc::OnFileSaveAs(void)
 			strcpy(szBaseDir, m_pGame->szMapDir);
 		}
 
-		char *pszFilter = "Valve Map Files (*.vmf)|*.vmf||";
+		const char *pszFilter = m_pManifest ? "Valve Manifest Map Files (*.vmm)|*.vmm||" : "Valve Map Files (*.vmf)|*.vmf||";
 
 		CFileDialog dlg(FALSE, NULL, str, OFN_LONGNAMES | OFN_NOCHANGEDIR |	OFN_HIDEREADONLY, pszFilter);
 		dlg.m_ofn.lpstrInitialDir = szBaseDir;
@@ -4235,12 +5104,20 @@ void CMapDoc::OnFileSaveAs(void)
 		str = dlg.GetPathName();
 
 		// Make sure we've got a .vmt extension, or else compile tools won't work.
-		CString wantedExtension = ".vmf";
+		CString wantedExtension = m_pManifest ? ".vmm" : ".vmf";
 
-		CString extension = str.Right( 4 );
-		extension.MakeLower();
-		if ( extension != wantedExtension )
+		int pos = str.ReverseFind( '.' );
+		if ( pos != -1 )
+		{
+			CString extension = str.Right( str.GetLength() - pos );
+			extension.MakeLower();
+			if ( extension != wantedExtension )
+				str = str.Left( pos ) + wantedExtension;
+		}
+		else
+		{	// no extension
 			str += wantedExtension;
+		}
 
 		//
 		// Save the default directory for next time.
@@ -4607,7 +5484,7 @@ void CMapDoc::OnFileRunmap(void)
 	if ((dlg.m_iQBSP) && (m_pGame->szBSP[0] != '\0'))
 	{
 		strcpy(cmd.szRun, "$bsp_exe");
-		sprintf(cmd.szParms, "-game $gamedir %s$path\\$file", dlg.m_iQBSP == 2 ? "-onlyents " : "");
+		sprintf(cmd.szParms, "-game $gamedir %s$path\\$file.$ext", dlg.m_iQBSP == 2 ? "-onlyents " : "");
 
 		cmds.Add(cmd);
 
@@ -5338,7 +6215,7 @@ void CMapDoc::OnToolsHollow(void)
 		CMapClass *pChild = pObject->GetFirstDescendent(pos2);
 		while (pChild != NULL)
 		{
-			CMapSolid *pSolid = dynamic_cast <CMapSolid *> (pChild);
+			pSolid = dynamic_cast <CMapSolid *> (pChild);
 			if (pSolid != NULL)
 			{
 				SelectedSolids.AddToTail(pSolid);
@@ -5458,7 +6335,7 @@ void CMapDoc::OnToolsHollow(void)
 //-----------------------------------------------------------------------------
 void CMapDoc::OnEditPastespecial(void)
 {
-	CPasteSpecialDlg dlg(GetMainWnd(), &s_Clipboard.Bounds);
+	CPasteSpecialDlg dlg(GetMainWnd(), &GetHammerClipboard()->Bounds);
 	if (dlg.DoModal() == IDCANCEL)
 	{
 		return;
@@ -5479,7 +6356,7 @@ void CMapDoc::OnEditPastespecial(void)
 	if (!dlg.m_bCenterOriginal)
 	{
 		GetBestPastePoint(vecPasteOffset);
-		vecPasteOffset -= s_Clipboard.vecOriginalCenter;
+		vecPasteOffset -= GetHammerClipboard()->vecOriginalCenter;
 	}
 	else
 	{
@@ -5518,7 +6395,7 @@ void CMapDoc::OnEditPastespecial(void)
 		//
 		// Paste the objects with the current offset and rotation.
 		//
-		Paste(s_Clipboard.Objects, s_Clipboard.pSourceWorld, pWorld, vecPasteOffset, vecPasteAngles, pParent, bMakeNamesUnique, pszPrefix );
+		Paste(GetHammerClipboard()->Objects, GetHammerClipboard()->pSourceWorld, pWorld, vecPasteOffset, vecPasteAngles, pParent, bMakeNamesUnique, pszPrefix );
 
 		//
 		// Increment the paste offset.
@@ -5556,7 +6433,7 @@ void CMapDoc::OnEditPastespecial(void)
 //-----------------------------------------------------------------------------
 void CMapDoc::OnUpdateEditPastespecial(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable((s_Clipboard.Objects.Count() != 0) && !GetMainWnd()->IsShellSessionActive());
+	pCmdUI->Enable((GetHammerClipboard()->Objects.Count() != 0) && !GetMainWnd()->IsShellSessionActive());
 }
 
 
@@ -5801,6 +6678,7 @@ void CMapDoc::RenameEntities( CMapClass *pRoot, CMapWorld *pWorld, bool bMakeUni
 	CUtlVector<const char*>  oldNames;
 	char szName[MAX_PATH];
 
+	pRoot->FindTargetNames( oldNames );
 	// find all names we have to replace
 	if ( GetName( pRoot, szName ) )
 	{
@@ -5813,6 +6691,7 @@ void CMapDoc::RenameEntities( CMapClass *pRoot, CMapWorld *pWorld, bool bMakeUni
 	CMapClass *pChild = pRoot->GetFirstDescendent( pos );
 	while ( pChild != NULL )
 	{
+		pChild->FindTargetNames( oldNames );
 		if ( GetName(pChild, szName ) )
 		{
 			if ( !FindName( &oldNames, szName) )
@@ -6184,6 +7063,7 @@ bool CMapDoc::GetChildrenToHide(CMapClass *pObject, bool bSelected, CMapObjectLi
 		{
 			if (pChild->IsVisible())
 			{
+				pEntity = dynamic_cast<CMapEntity *>(pChild);
 				if (pGroup || (pEntity && pEntity->IsSolidClass()))
 				{
 					// This child is a group or a solid entity -- check all its children.
@@ -6319,102 +7199,6 @@ void CMapDoc::OnShowNoDrawBrushes(void)
 	Options.general.bShowNoDrawBrushes = !Options.general.bShowNoDrawBrushes;
 	UpdateAllViews( MAPVIEW_UPDATE_TOOL );
 }
-
-BOOL CMapDoc::OnViewQuickHide(UINT nID)
-{
-    bool bSelected = (nID == ID_TOOLS_QUICKHIDE_OBJECTS);
-
-    if (m_pSelection->IsEmpty())
-    {
-        return TRUE;
-    }
-
-    if (bSelected)
-    {
-        m_QuickHideObjects.AddVectorToTail(*m_pSelection->GetList());
-    }
-    else
-    {
-        GetChildrenToHide(m_pWorld, false, m_QuickHideObjects);
-    }
-
-    for (int i = 0; i < m_QuickHideObjects.Count(); i++)
-        m_QuickHideObjects[i]->SetVisible(false);
-
-    if (bSelected)
-        m_pSelection->SelectObject(nullptr, scClear);
-
-    UpdateAllViews(MAPVIEW_UPDATE_OBJECTS);
-
-    return TRUE;
-}
-
-void CMapDoc::OnViewQuickHideUnhide()
-{
-    if (m_QuickHideObjects.IsEmpty())
-        return;
-
-    FOR_EACH_VEC_BACK(m_QuickHideObjects, i)
-    {
-        m_QuickHideObjects[i]->SetVisible(true);
-        m_QuickHideObjects.Remove(i);
-    }
-
-    UpdateAllViews(MAPVIEW_UPDATE_OBJECTS);
-}
-
-void CMapDoc::OnViewQuickHideConvert()
-{
-    int nOriginalCount = m_QuickHideObjects.Count();
-    for (int pos = nOriginalCount - 1; pos >= 0; pos--)
-    {
-        CMapClass *pObject = m_QuickHideObjects.Element(pos);
-        if (!VisGroups_ObjectCanBelongToVisGroup(pObject))
-        {
-            pObject->SetVisible(true);
-            m_QuickHideObjects.Remove(pos);
-        }
-    }
-    int nFinalCount = m_QuickHideObjects.Count();
-
-    //
-    // If no eligible selected objects were found, exit.
-    //
-    if (!nFinalCount)
-    {
-        CString str;
-        str.Format("There are no eligible objects. The only objects\n"
-                   "that can be put in a Visible Group are objects that are not\n"
-                   "part of an entity.");
-
-        AfxMessageBox(str);
-        return;
-    }
-
-    if (nFinalCount < nOriginalCount)
-    {
-        AfxMessageBox("Some objects could not put in the new Visible Group because\n"
-                      "they are part of an entity.");
-    }
-
-    ShowNewVisGroupsDialog(m_QuickHideObjects, false);
-}
-
-void CMapDoc::OnUpdateToggleQuickHide(CCmdUI* pCmdUI)
-{
-    pCmdUI->Enable(!m_pSelection->IsEmpty() && !GetMainWnd()->IsShellSessionActive());
-}
-
-void CMapDoc::OnUpdateToggleQuickHideUnhide(CCmdUI* pCmdUI)
-{
-    pCmdUI->Enable(m_QuickHideObjects.Count() > 0 && !GetMainWnd()->IsShellSessionActive());
-}
-
-void CMapDoc::OnUpdateToggleQuickHideUnsel(CCmdUI* pCmdUI)
-{
-    pCmdUI->Enable(!m_pSelection->IsEmpty() && !GetMainWnd()->IsShellSessionActive());
-}
-
 
 void CMapDoc::OnUpdateShowNoDrawBrushes(CCmdUI *pCmdUI)
 {
@@ -6576,7 +7360,7 @@ void CMapDoc::OnToolsCreateprefab(void)
 	// Create a prefab world to contain the selected items. Add the selected
 	// items to the new world.
 	//
-	CMapWorld *pNewWorld = new CMapWorld;
+	CMapWorld *pNewWorld = new CMapWorld( NULL );
 	pNewWorld->SetTemporary(TRUE);
 	const CMapObjectList *pSelList = m_pSelection->GetList();
 	for (int i = 0; i < pSelList->Count(); i++)
@@ -7104,6 +7888,11 @@ void CMapDoc::OnEditReplacetex(void)
 //-----------------------------------------------------------------------------
 void CMapDoc::OnToolsSnapselectedtogrid(void)
 {
+	if ( m_pToolManager->GetActiveToolID() == TOOL_MORPH )
+	{
+		Morph3D *pMorphTool = assert_cast< Morph3D* >( m_pToolManager->GetActiveTool() );
+		pMorphTool->SnapSelectedToGrid( m_nGridSpacing );
+	}
 	if (m_pSelection->IsEmpty())
 		return;
 
@@ -8287,7 +9076,14 @@ void CMapDoc::AddToAutoVisGroup( CMapClass *pObject )
 		FOR_EACH_OBJ( *pChildren, pos )
 		{
 			AddToAutoVisGroup(pChildren->Element(pos));
+			AddToFGDAutoVisGroups( pChildren->Element( pos ) );
 		}
+	}
+
+	// See if this Object type exists in FGD AutoVisGroups
+	if ( pGD->m_FGDAutoVisGroups.Count() > 0 && !( pObject->IsGroup() ) )
+	{
+		AddToFGDAutoVisGroups( pObject );
 	}
 }
 
@@ -8505,8 +9301,7 @@ void CMapDoc::RenderPreloadObject(CMapClass *pObject)
 //-----------------------------------------------------------------------------
 CMapWorld *CMapDoc::CordonCreateWorld()
 {
-	CMapWorld *pWorld = new CMapWorld;
-	pWorld->SetOwningDoc( this );
+	CMapWorld *pWorld = new CMapWorld( NULL );
 
 	GetHistory()->Pause();
 
@@ -8726,6 +9521,12 @@ bool CMapDoc::SaveVMF(const char *pszFileName, int saveFlags )
 			{
 				eResult = CordonSaveVMF(&File, &SaveInfo);
 			}
+
+			// We use this to flag VMFs checked-in to P4 with QuickHide active
+			if ( eResult == ChunkFile_Ok )
+			{
+				eResult = QuickHide_SaveVMF( &File, &SaveInfo );
+			}
 		}
 
 		File.Close();
@@ -8745,7 +9546,7 @@ bool CMapDoc::SaveVMF(const char *pszFileName, int saveFlags )
 	}
 
 	EndWaitCursor();
-	return(true);
+	return( eResult == ChunkFile_Ok );
 }
 
 //-----------------------------------------------------------------------------
@@ -8790,7 +9591,7 @@ ChunkFileResult_t CMapDoc::SaveVersionInfoVMF(CChunkFile *pFile, bool bIsAutoSav
 		if ( eResult == ChunkFile_Ok )
 		{
 			char szOriginalName[MAX_PATH];
-			strcpy(szOriginalName, GetPathName());
+			V_strcpy_safe( szOriginalName, GetPathName() );
 			if ( strlen( szOriginalName ) == 0 )
 			{
 				strcpy(szOriginalName, g_pGameConfig->szMapDir);
@@ -8868,6 +9669,41 @@ CString *CMapDoc::AutosavedFrom()
 	return &m_strAutosavedFrom;
 }
 
+
+//-----------------------------------------------------------------------------
+// Purpose: this function adds an external reference count to a map
+//-----------------------------------------------------------------------------
+void CMapDoc::AddReference( void )
+{
+	m_nExternalReferenceCount++;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function removes an external reference count from a map.  If it is hidden
+//			and modified, the document will be made visible.
+//-----------------------------------------------------------------------------
+void CMapDoc::RemoveReference( void )
+{
+	m_nExternalReferenceCount--;
+
+	if ( m_nExternalReferenceCount <= 0 )
+	{
+		if ( !IsVisible() )
+		{
+			if ( IsModified() )
+			{
+				ShowWindow( true );
+			}
+			else
+			{
+				OnCloseDocument();
+			}
+		}
+	}
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose:
 // Input  : bActive -
@@ -8879,12 +9715,32 @@ void CMapDoc::SetUndoActive(bool bActive)
 }
 
 
+bool CMapDoc::IsCulledBy3DCameraDistance( CMapClass *pObject, UpdateVisibilityData_t *pData )
+{
+	if ( pObject->IsWorld() || pObject->IsGroup() )
+		return false;
+
+	if ( pObject->IsSelected() )
+		return false;
+
+	Vector objectPos;
+	pObject->GetOrigin( objectPos );
+
+	float flDistance = ( pData->vecRadiusCullCenter - objectPos ).LengthSqr();
+
+	if ( flDistance >= pData->flRadiusCullDistSq )
+		return true;
+
+	return false;
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Returns the hidden/shown state of the given object based on the current
 //			settings including selection mode, visgroups, and cordon bounds.
 // Input  : pObject -
 //-----------------------------------------------------------------------------
-bool CMapDoc::ShouldObjectBeVisible(CMapClass *pObject)
+bool CMapDoc::ShouldObjectBeVisible(CMapClass *pObject, UpdateVisibilityData_t *pData)
 {
 #if defined(_DEBUG) && 0
 	CMapEntity	*pEntity = dynamic_cast<CMapEntity *>(pObject);
@@ -8898,6 +9754,19 @@ bool CMapDoc::ShouldObjectBeVisible(CMapClass *pObject)
 		}
 	}
 #endif
+
+	if ( QuickHide_IsObjectHidden( pObject ) )
+	{
+		return false;
+	}
+
+	if ( pData->bRadiusCullingEnabled )
+	{
+		if ( IsCulledBy3DCameraDistance( pObject, pData ) )
+		{
+			return false;
+		}
+	}
 
 	//
 	// If hide entities is enabled and the object is an entity, hide the object.
@@ -8928,17 +9797,11 @@ bool CMapDoc::ShouldObjectBeVisible(CMapClass *pObject)
 	}
 
     //
-    // If the object was quickhidden, hide it
-    //
-    if (m_QuickHideObjects.Find(pObject) != m_QuickHideObjects.InvalidIndex())
-        return false;
-
-	//
 	// If the cordon tool is active and the object is not within the cordon bounds,
 	// hide the object. The exception to this is some helpers, which only hide if their
 	// parent entity is culled by the cordon.
 	//
-	if ( m_bIsCordoning )
+	if ( m_bIsCordoning && !IsManifest() )
 	{
 		if (pObject->IsCulledByCordon(m_vCordonMins, m_vCordonMaxs))
 		{
@@ -9012,25 +9875,60 @@ void CMapDoc::Update(void)
 // Input  : pObject -
 //			pDoc -
 //-----------------------------------------------------------------------------
-BOOL CMapDoc::UpdateVisibilityCallback(CMapClass *pObject, CMapDoc *pDoc)
+BOOL CMapDoc::UpdateVisibilityCallback(CMapClass *pObject, UpdateVisibilityData_t *pData )
 {
 	Assert(!pObject->IsTemporary());
 
-	bool bVisible = pDoc->ShouldObjectBeVisible(pObject);
+	bool bVisible = pData->pDoc->ShouldObjectBeVisible(pObject, pData);
 	pObject->SetVisible(bVisible);
 	if (bVisible)
 	{
 		//
 		// If this is an entity and it is visible, recurse into any children.
 		//
-		if ((dynamic_cast<CMapEntity *>(pObject)) != NULL)
+		if (dynamic_cast<CMapEntity *>(pObject) != NULL || dynamic_cast<CMapWorld*>(pObject) != NULL)
 		{
-			pObject->EnumChildren(UpdateVisibilityCallback, pDoc);
+			pObject->EnumChildren(UpdateVisibilityCallback, pData);
 		}
 	}
 
 	return(TRUE);
 }
+
+
+void CMapDoc::InitUpdateVisibilityData( UpdateVisibilityData_t &data )
+{
+	memset( &data, 0, sizeof( data ) );
+
+	data.pDoc = this;
+	data.bRadiusCullingEnabled = ( Options.general.bRadiusCulling == TRUE );
+
+	if ( data.bRadiusCullingEnabled )
+	{
+		POSITION viewpos = GetFirstViewPosition();
+		while ( viewpos )
+		{
+			CMapView3D *pView = dynamic_cast<CMapView3D*>( GetNextView( viewpos ) );
+			if ( pView )
+			{
+				CCamera *pCamera = pView->GetCamera();
+				if ( pCamera )
+				{
+					pCamera->GetViewPoint( data.vecRadiusCullCenter );
+
+					data.flRadiusCullDistSq = pCamera->GetFarClip();
+					data.flRadiusCullDistSq *= data.flRadiusCullDistSq;
+
+					return;
+				}
+			}
+		}
+
+		// Can't use radius culling without a 3D view.
+		data.bRadiusCullingEnabled = false;
+	}
+};
+
 
 
 //-----------------------------------------------------------------------------
@@ -9039,10 +9937,13 @@ BOOL CMapDoc::UpdateVisibilityCallback(CMapClass *pObject, CMapDoc *pDoc)
 //-----------------------------------------------------------------------------
 void CMapDoc::UpdateVisibility(CMapClass *pObject)
 {
-	UpdateVisibilityCallback(pObject, this);
+	UpdateVisibilityData_t data;
+	InitUpdateVisibilityData( data );
+
+	UpdateVisibilityCallback(pObject, &data);
 	if (pObject->IsGroup())
 	{
-		pObject->EnumChildrenRecurseGroupsOnly(UpdateVisibilityCallback, this);
+		pObject->EnumChildrenRecurseGroupsOnly(UpdateVisibilityCallback, &data);
 	}
 }
 
@@ -9052,11 +9953,14 @@ void CMapDoc::UpdateVisibility(CMapClass *pObject)
 //-----------------------------------------------------------------------------
 void CMapDoc::UpdateVisibilityAll(void)
 {
+	UpdateVisibilityData_t data;
+	InitUpdateVisibilityData( data );
+
 	//
 	// Two stage recursion: first we recurse groups only, then from the callback we recurse
 	// solid children of entities.
 	//
-	m_pWorld->EnumChildrenRecurseGroupsOnly(UpdateVisibilityCallback, this);
+	m_pWorld->EnumChildrenRecurseGroupsOnly(UpdateVisibilityCallback, &data);
 	m_pSelection->RemoveInvisibles();
 
 	CMainFrame *pwndMain = GetMainWnd();
@@ -9114,11 +10018,11 @@ CVisGroup *CMapDoc::VisGroups_AddGroup(CVisGroup *pGroup)
 {
 	Assert( pGroup != NULL );
 
-	m_VisGroups.AddToTail(pGroup);
+	m_VisGroups->AddToTail(pGroup);
 
 	if (!pGroup->GetParent())
 	{
-		m_RootVisGroups.AddToTail(pGroup);
+		m_RootVisGroups->AddToTail(pGroup);
 	}
 
 	return pGroup;
@@ -9137,7 +10041,7 @@ bool CMapDoc::VisGroups_CanMoveUp(CVisGroup *pGroup)
 	}
 	else
 	{
-		return (m_RootVisGroups.Find(pGroup) > 0);
+		return (m_RootVisGroups->Find(pGroup) > 0);
 	}
 }
 
@@ -9154,8 +10058,8 @@ bool CMapDoc::VisGroups_CanMoveDown(CVisGroup *pGroup)
 	}
 	else
 	{
-		int nIndex = m_RootVisGroups.Find(pGroup);
-		return (nIndex >= 0) && (nIndex < m_RootVisGroups.Count() - 1);
+		int nIndex = m_RootVisGroups->Find(pGroup);
+		return (nIndex >= 0) && (nIndex < m_RootVisGroups->Count() - 1);
 	}
 }
 
@@ -9183,7 +10087,7 @@ BOOL CMapDoc::VisGroups_CheckForGroupCallback(CMapClass *pObject, CVisGroup *pGr
 //-----------------------------------------------------------------------------
 int CMapDoc::VisGroups_GetCount(void)
 {
-	return(m_VisGroups.Count());
+	return(m_VisGroups->Count());
 }
 
 
@@ -9192,7 +10096,7 @@ int CMapDoc::VisGroups_GetCount(void)
 //-----------------------------------------------------------------------------
 CVisGroup *CMapDoc::VisGroups_GetVisGroup(int nIndex)
 {
-	return(m_VisGroups.Element(nIndex));
+	return(m_VisGroups->Element(nIndex));
 }
 
 
@@ -9201,7 +10105,10 @@ CVisGroup *CMapDoc::VisGroups_GetVisGroup(int nIndex)
 //-----------------------------------------------------------------------------
 int CMapDoc::VisGroups_GetRootCount(void)
 {
-	return(m_RootVisGroups.Count());
+	if ( m_RootVisGroups )
+		return( m_RootVisGroups->Count() );
+
+	return 0;
 }
 
 
@@ -9210,7 +10117,7 @@ int CMapDoc::VisGroups_GetRootCount(void)
 //-----------------------------------------------------------------------------
 CVisGroup *CMapDoc::VisGroups_GetRootVisGroup(int nIndex)
 {
-	return(m_RootVisGroups.Element(nIndex));
+	return(m_RootVisGroups->Element(nIndex));
 }
 
 
@@ -9227,11 +10134,11 @@ void CMapDoc::VisGroups_MoveUp(CVisGroup *pGroup)
 	}
 	else
 	{
-		int nIndex = m_RootVisGroups.Find(pGroup);
+		int nIndex = m_RootVisGroups->Find(pGroup);
 		if (nIndex > 0)
 		{
-			m_RootVisGroups.Remove(nIndex);
-			m_RootVisGroups.InsertBefore(nIndex - 1, pGroup);
+			m_RootVisGroups->Remove(nIndex);
+			m_RootVisGroups->InsertBefore(nIndex - 1, pGroup);
 		}
 	}
 }
@@ -9250,11 +10157,11 @@ void CMapDoc::VisGroups_MoveDown(CVisGroup *pGroup)
 	}
 	else
 	{
-		int nIndex = m_RootVisGroups.Find(pGroup);
-		if (nIndex < (m_RootVisGroups.Count() - 1))
+		int nIndex = m_RootVisGroups->Find(pGroup);
+		if (nIndex < (m_RootVisGroups->Count() - 1))
 		{
-			m_RootVisGroups.Remove(nIndex);
-			m_RootVisGroups.InsertAfter(nIndex, pGroup);
+			m_RootVisGroups->Remove(nIndex);
+			m_RootVisGroups->InsertAfter(nIndex, pGroup);
 		}
 	}
 }
@@ -9345,8 +10252,8 @@ void CMapDoc::VisGroups_CombineGroups(CVisGroup *pFrom, CVisGroup *pTo)
 //-----------------------------------------------------------------------------
 void CMapDoc::VisGroups_UnlinkGroup(CVisGroup *pGroup)
 {
-	m_VisGroups.FindAndRemove(pGroup);
-	m_RootVisGroups.FindAndRemove(pGroup);
+	m_VisGroups->FindAndRemove(pGroup);
+	m_RootVisGroups->FindAndRemove(pGroup);
 
 	CVisGroup *pParent = pGroup->GetParent();
 	if (pParent)
@@ -9655,7 +10562,7 @@ void CMapDoc::OnUpdateLightPreview()
 
 	// Save out a file with just the ents.
 	char szFile[MAX_PATH];
-	strcpy(szFile, GetPathName());
+	V_strcpy_safe( szFile, GetPathName() );
 	szFile[strlen(szFile) - 1] = 'e';
 
 	if( !SaveVMF( szFile, SAVEFLAGS_LIGHTSONLY ) )
@@ -10054,6 +10961,20 @@ CMapView3D *CMapDoc::GetFirst3DView()
 	return NULL;
 }
 
+bool CMapDoc::HasAnyLPreview() const
+{
+	POSITION pos = this->GetFirstViewPosition();
+	while ( pos )
+	{
+		CView *pView = GetNextView(pos);
+		if (pView->IsKindOf(RUNTIME_CLASS(CMapView3D)) && ((CMapView3D *)pView)->GetDrawType() >= VIEW3D_LIGHTING_PREVIEW2)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 CMapView *CMapDoc::GetActiveMapView()
 {
 	POSITION p = GetFirstViewPosition();
@@ -10171,48 +11092,693 @@ void CMapDoc::OnLogicalobjectLayoutlogical()
 	// TODO: Add your command handler code here
 }
 
-void CMapDoc::CollapseInstances( bool bSelected, bool bRecursive )
+
+//-----------------------------------------------------------------------------
+// Purpose: Toggles the state of Tools | Instances | Hide. When enabled, instances are hidden.
+//-----------------------------------------------------------------------------
+void CMapDoc::OnToolsInstancesHide(void)
 {
-	CUtlVector<CMapClass*> toRemove;
-	CUtlVector<InstanceCollapseData_t> collapseData;
-	for ( CMapClass* child : std::as_const( bSelected ? *m_pSelection->GetList() : *m_pWorld->GetChildren() ) )
+	m_tShowInstance = INSTANCES_HIDE;
+	UpdateAllViews( MAPVIEW_RENDER_NOW );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Manages the state of the Tools | Instances | Hide menu item.
+//-----------------------------------------------------------------------------
+void CMapDoc::OnUpdateToolsInstancesHide(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(!GetMainWnd()->IsShellSessionActive());
+	pCmdUI->SetCheck( ( m_tShowInstance == INSTANCES_HIDE ) );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Toggles the state of Tools | Instances | Show Tinted. When enabled, instances are tinted.
+//-----------------------------------------------------------------------------
+void CMapDoc::OnToolsInstancesShowTinted(void)
+{
+	m_tShowInstance = INSTANCES_SHOW_TINTED;
+	UpdateAllViews( MAPVIEW_RENDER_NOW );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Manages the state of the Tools | Instances | Show Tinted menu item.
+//-----------------------------------------------------------------------------
+void CMapDoc::OnUpdateToolsInstancesShowTinted(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(!GetMainWnd()->IsShellSessionActive());
+	pCmdUI->SetCheck( ( m_tShowInstance == INSTANCES_SHOW_TINTED ) );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Toggles the state of Tools | Instances | Show Normal. When enabled, instances are shown just like the rest of the world.
+//-----------------------------------------------------------------------------
+void CMapDoc::OnToolsInstancesShowNormal(void)
+{
+	m_tShowInstance = INSTANCES_SHOW_NORMAL;
+	UpdateAllViews( MAPVIEW_RENDER_NOW );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Manages the state of the Tools | Instances | Show Normal menu item.
+//-----------------------------------------------------------------------------
+void CMapDoc::OnUpdateToolsInstancesShowNormal(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(!GetMainWnd()->IsShellSessionActive());
+	pCmdUI->SetCheck( ( m_tShowInstance == INSTANCES_SHOW_NORMAL ) );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will show or hide the map doc
+// Input  : bIsVisible - flag to indicate the visibility status
+//-----------------------------------------------------------------------------
+void CMapDoc::ShowWindow( bool bIsVisible )
+{
+	bool	bNeedsInitialUpdate = !HasInitialUpdate();
+
+	POSITION posOpenDoc = GetFirstViewPosition();
+	while ( posOpenDoc != NULL )
 	{
-		for ( CMapClass* subChild : std::as_const( *child->GetChildren() ) )
+		CView		*pView = GetNextView( posOpenDoc );
+		CFrameWnd	*pFrame = pView->GetParentFrame();
+
+		if ( pFrame )
 		{
-			if ( subChild && subChild->IsMapClass( MAPCLASS_TYPE( CMapInstance ) ) )
+			if ( bIsVisible && bNeedsInitialUpdate )
 			{
-				if ( static_cast<CMapInstance*>( subChild )->Collapse( bRecursive, collapseData[collapseData.AddToTail()] ) )
-					toRemove.AddToTail( child );
-				else
-					collapseData.Remove( collapseData.Count() - 1 ); // Do not delete func_instance if failed
-				break;
+				APP()->pMapDocTemplate->InitialUpdateFrame( pFrame, this, true );
+			}
+
+			pFrame->ActivateFrame( bIsVisible ? SW_SHOW : SW_HIDE );
+			pFrame->ShowWindow( bIsVisible ? SW_SHOW : SW_HIDE );
+
+			CMainFrame *pwndMain = GetMainWnd();
+			::SendMessage( pwndMain->m_hWndMDIClient, WM_MDIREFRESHMENU, 0, 0 );
+			pwndMain->DrawMenuBar();
+		}
+	}
+
+	if ( bIsVisible && !HasInitialUpdate() )
+	{
+		SetInitialUpdate();
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function checks to see if the map doc is visible
+// Output : returns true if the document is visible
+//-----------------------------------------------------------------------------
+bool CMapDoc::IsVisible( void )
+{
+	POSITION posOpenDoc = GetFirstViewPosition();
+	while ( posOpenDoc != NULL )
+	{
+		CView		*pView = GetNextView( posOpenDoc );
+		CFrameWnd	*pFrame = pView->GetParentFrame();
+
+		if ( pFrame )
+		{
+			return ( pFrame->IsWindowVisible() == TRUE );
+		}
+	}
+
+	return false;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will hide all instance map windows
+//-----------------------------------------------------------------------------
+void CMapDoc::OnInstancesHideAll( void )
+{
+	POSITION	pos = APP()->pMapDocTemplate->GetFirstDocPosition();
+
+	while( pos != NULL )
+	{
+		CDocument *pDoc = APP()->pMapDocTemplate->GetNextDoc( pos );
+		CMapDoc *pMapDoc = dynamic_cast< CMapDoc * >( pDoc );
+
+		if ( pMapDoc && pMapDoc->GetReferenceCount() != 0 && !pMapDoc->IsModified() )
+		{
+			pMapDoc->ShowWindow( false );
+		}
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will show all instance map windows
+//-----------------------------------------------------------------------------
+void CMapDoc::OnInstancesShowAll( void )
+{
+	POSITION	pos = APP()->pMapDocTemplate->GetFirstDocPosition();
+
+	while( pos != NULL )
+	{
+		CDocument *pDoc = APP()->pMapDocTemplate->GetNextDoc( pos );
+		CMapDoc *pMapDoc = dynamic_cast< CMapDoc * >( pDoc );
+
+		if ( pMapDoc && pMapDoc->GetReferenceCount() != 0 )
+		{
+			pMapDoc->ShowWindow( true );
+		}
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: This routine will open up the manifest dialog.  If the map is not
+//			a manifest, it will being the prompted to ask the user if he wants
+//			to convert it to one.
+//-----------------------------------------------------------------------------
+void CMapDoc::OnInstancingCreatemanifest()
+{
+	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
+	if (!pDoc)
+	{
+		return;
+	}
+
+	CManifest *pManifest = CMapDoc::GetManifest();
+	if ( !pManifest )
+	{
+		if ( AfxMessageBox( "Do you want to create a new manifest from this map?", MB_YESNO ) == IDNO )
+		{
+			return;
+		}
+		if ( !CreateNewManifest() )
+		{
+			return;
+		}
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose:
+// Input  :
+// Output :
+//-----------------------------------------------------------------------------
+void CMapDoc::OnInstancingCheckinAll( )
+{
+	CMapDoc	*activeDoc = CMapDoc::GetActiveMapDoc();
+	if ( !activeDoc || !activeDoc->GetManifest() )
+	{
+		return;
+	}
+
+	CManifest		*pManifest = activeDoc->GetManifest();
+
+	pManifest->m_bDefaultCheckin = true;
+	for( int i = 0; i < pManifest->GetNumMaps(); i++ )
+	{
+		CManifestMap	*pManifestMap = pManifest->GetMap( i );
+		pManifestMap->m_bDefaultCheckin = true;
+	}
+
+	CManifestCheckin	ManifestCheckin;
+	if ( ManifestCheckin.DoModal() == IDOK )
+	{
+		pManifest->CheckFileStatus();
+		GetMainWnd()->m_ManifestFilterControl.Invalidate();
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose:
+// Input  :
+// Output :
+//-----------------------------------------------------------------------------
+void CMapDoc::OnInstancingCheckOutManifest( )
+{
+	CMapDoc	*activeDoc = CMapDoc::GetActiveMapDoc();
+	if ( !activeDoc || !activeDoc->GetManifest() )
+	{
+		return;
+	}
+
+	CManifest		*pManifest = activeDoc->GetManifest();
+
+	if ( pManifest->CheckOut() == false && p4 )
+	{
+		char temp[ 2048 ];
+
+		sprintf( temp, "Could not check out manifest: %s", p4->GetLastError() );
+		AfxMessageBox( temp, MB_ICONHAND | MB_OK );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose:
+// Input  :
+// Output :
+//-----------------------------------------------------------------------------
+void CMapDoc::OnInstancingAddManifest( )
+{
+	CMapDoc	*activeDoc = CMapDoc::GetActiveMapDoc();
+	if ( !activeDoc || !activeDoc->GetManifest() )
+	{
+		return;
+	}
+
+	CManifest		*pManifest = activeDoc->GetManifest();
+
+	if ( pManifest->AddToVersionControl() == false && p4 )
+	{
+		char temp[ 2048 ];
+
+		sprintf( temp, "Could not check out manifest: %s", p4->GetLastError() );
+		AfxMessageBox( temp, MB_ICONHAND | MB_OK );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: This function checks to see if it should enable the Create Manifest menu item
+//-----------------------------------------------------------------------------
+void CMapDoc::OnUpdateInstancingCreatemanifest(CCmdUI *pCmdUI)
+{
+	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
+	if (!pDoc)
+	{
+		pCmdUI->Enable( false );
+		return;
+	}
+
+	CManifest *pManifest = CMapDoc::GetManifest();
+
+	pCmdUI->Enable( ( pManifest == NULL ) );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose:
+// Input  :
+// Output :
+//-----------------------------------------------------------------------------
+void CMapDoc::OnUpdateInstancingCheckinAll( CCmdUI *pCmdUI )
+{
+	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
+	if ( !pDoc || !p4 )
+	{
+		pCmdUI->Enable( false );
+		return;
+	}
+
+	CManifest *pManifest = CMapDoc::GetManifest();
+	if ( pManifest == NULL )
+	{
+		pCmdUI->Enable( false );
+		return;
+	}
+
+	if ( pManifest->m_bCheckedOut == true )
+	{
+		pCmdUI->Enable( true );
+		return;
+	}
+
+	for( int i = 0; i < pManifest->GetNumMaps(); i++ )
+	{
+		CManifestMap	*pManifestMap = pManifest->GetMap( i );
+		if ( pManifestMap->m_bCheckedOut == true )
+		{
+			pCmdUI->Enable( true );
+			return;
+		}
+	}
+
+	pCmdUI->Enable( false );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose:
+// Input  :
+// Output :
+//-----------------------------------------------------------------------------
+void CMapDoc::OnUpdateInstancingCheckOutManifest( CCmdUI *pCmdUI )
+{
+	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
+	if ( !pDoc || !p4 )
+	{
+		pCmdUI->Enable( false );
+		return;
+	}
+
+	CManifest *pManifest = CMapDoc::GetManifest();
+	if ( pManifest == NULL )
+	{
+		pCmdUI->Enable( false );
+		return;
+	}
+
+	if ( pManifest->m_bIsVersionControlled == true && pManifest->m_bCheckedOut == false )
+	{
+		pCmdUI->Enable( true );
+	}
+	else
+	{
+		pCmdUI->Enable( false );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose:
+// Input  :
+// Output :
+//-----------------------------------------------------------------------------
+void CMapDoc::OnUpdateInstancingAddManifest( CCmdUI *pCmdUI )
+{
+	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
+	if ( !pDoc || !p4 )
+	{
+		pCmdUI->Enable( false );
+		return;
+	}
+
+	CManifest *pManifest = CMapDoc::GetManifest();
+	if ( pManifest == NULL )
+	{
+		pCmdUI->Enable( false );
+		return;
+	}
+
+	if ( pManifest->m_bIsVersionControlled == false )
+	{
+		pCmdUI->Enable( true );
+	}
+	else
+	{
+		pCmdUI->Enable( false );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: This function will collapse all instances into the map ( and any children instances )
+//-----------------------------------------------------------------------------
+void CMapDoc::OnInstancesCollapseAll()
+{
+	CollapseInstances( false );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: This function will collapse all instances that are selected into the map ( and any children instances )
+//-----------------------------------------------------------------------------
+void CMapDoc::OnInstancesCollapseSelection()
+{
+	CollapseInstances( true );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Finds if this object/entity belongs to any FGD-defined AutoVisGroups
+//-----------------------------------------------------------------------------
+void CMapDoc::AddToFGDAutoVisGroups( CMapClass *pObject )
+{
+	if ( pGD != NULL )
+	{
+		CMapEntity *pEntity = dynamic_cast< CMapEntity * >( pObject );
+
+		if ( pEntity != NULL )
+		{
+			int gindex = 0; // Index of FGD-defined AutoVisGroups
+			int cindex = 0;	// Index of Classes
+			int eindex = 0;	// Index of Entities
+
+			// Parent
+			for( gindex = 0; gindex < pGD->m_FGDAutoVisGroups.Count(); gindex++ )
+			{
+				// Class
+				for ( cindex = 0; cindex < pGD->m_FGDAutoVisGroups[gindex].m_Classes.Count(); cindex++ )
+				{
+					// Object/Entity
+					for ( eindex = 0; eindex < pGD->m_FGDAutoVisGroups[gindex].m_Classes[cindex].szEntities.Count(); eindex++ )
+					{
+						//
+						if ( !V_stricmp( pEntity->GetClassName(), pGD->m_FGDAutoVisGroups[gindex].m_Classes[cindex].szEntities[eindex] ) )
+						{
+							AddChildGroupToAutoVisGroup( pEntity, pGD->m_FGDAutoVisGroups[gindex].m_Classes[cindex].szClass, pGD->m_FGDAutoVisGroups[gindex].szParent );
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Add objects/entities to QuickHide
+//-----------------------------------------------------------------------------
+void CMapDoc::QuickHide_HideObjects( void )
+{
+	const CMapObjectList *pSelList = m_pSelection->GetList();
+
+	for ( int index = 0; index < pSelList->Count(); index++ )
+	{
+		CMapClass *pObject = pSelList->Element( index );
+
+		// Hide the object
+		m_QuickHideGroup.AddToTail( pObject );
+
+		// If it's a Group or Entity, add each child - otherwise we get ghost group selection (driller:  FIXME)
+		if ( pObject->IsGroup() || pObject->IsMapClass( MAPCLASS_TYPE( CMapEntity ) ) )
+		{
+			EnumChildrenPos_t pos;
+			CMapClass *pChild = pObject->GetFirstDescendent( pos );
+
+			while ( pChild )
+			{
+				m_QuickHideGroup.AddToTail( pChild );
+
+				pChild = pObject->GetNextDescendent( pos );
+			}
+		}
+
+		// Does this object have a parent?
+		if ( pObject->GetParent() )
+		{
+			CMapClass *pParent = pObject->GetParent();
+
+			// Track all parents, so we can check if all children (eventually) end up hidden
+			while ( pParent )
+			{
+				if ( pParent->IsGroup() || pParent->IsMapClass( MAPCLASS_TYPE( CMapEntity ) ) )
+				{
+					if ( m_QuickHideGroupedParents.Find( pParent ) == m_QuickHideGroupedParents.InvalidIndex() )
+					{
+						m_QuickHideGroupedParents.AddToTail( pParent );
+					}
+				}
+				pParent = pParent->GetParent();
 			}
 		}
 	}
 
-	for ( CMapClass* pChild : toRemove )
-		m_pWorld->RemoveObjectFromWorld( pChild, true );
-
-	m_pSelection->RemoveDead();
-
-#ifdef FIXME
-	for ( const auto& data : std::as_const( collapseData ) )
+	// Now check any parents
+	if ( m_QuickHideGroupedParents.Count() > 0 )
 	{
-		for ( CVisGroup* visGroup : std::as_const( data.visGroups ) )
-			if ( !m_VisGroups.FindMatch( [visGroup]( CVisGroup* g ) { return !stricmp( g->GetName(), visGroup->GetName() ); } ) )
-				VisGroups_AddGroup( visGroup );
-			else
-				delete visGroup;
+		int nHiddenChildCount = 0;
 
-		for ( const auto& c : std::as_const( data.newChildren ) )
+		for ( int index = 0; index < m_QuickHideGroupedParents.Count(); index++ )
 		{
-			m_pWorld->AddChild( c.GetObject() );
-			c->PostloadWorld( m_pWorld );
-			m_pWorld->EntityList_Add( c.GetObject() );
-			m_pWorld->m_pCullTree->UpdateCullTreeObjectRecurse( c.GetObject() );
-			// TODO: renumber faceids and nodeids
+			EnumChildrenPos_t posParent;
+			CMapClass *pParent = m_QuickHideGroupedParents[ index ];
+			int nChildCount = pParent->GetChildCount();
+
+			if ( pParent )
+			{
+				CMapClass *pChild = pParent->GetFirstDescendent( posParent );
+
+				// Child visible?
+				while ( pChild )
+				{
+					// With the way GetChildCount() works, we need to count nested children, too
+					nChildCount += pChild->GetChildCount();
+
+					if (  m_QuickHideGroup.Find( pChild ) != m_QuickHideGroup.InvalidIndex() )
+					{
+						nHiddenChildCount++;
+					}
+
+					pChild = pParent->GetNextDescendent( posParent );
+				}
+			}
+
+			// If none of the children are visible...
+			if ( nHiddenChildCount == nChildCount )
+			{
+				// ...also add the parent
+				m_QuickHideGroup.AddToTail( pParent );
+			}
+
+			nHiddenChildCount = 0;
 		}
 	}
-	m_pWorld->CalcBounds();
-#endif
+
+	m_pToolManager->GetActiveTool()->SetEmpty();
+	UpdateVisibilityAll();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Add unselected objects/entities to QuickHide
+//-----------------------------------------------------------------------------
+void CMapDoc::QuickHide_HideUnselectedObjects( void )
+{
+	EnumChildrenPos_t pos;
+	CMapWorld *pWorld = GetMapWorld();
+	CMapClass *pObject = pWorld->GetFirstDescendent( pos );
+
+	while ( pObject )
+	{
+		if ( !pObject->IsSelected() )
+		{
+			m_QuickHideGroup.AddToTail( pObject );
+		}
+
+		pObject = pWorld->GetNextDescendent( pos );
+	}
+
+	// Check each selected object for a parent...
+	const CMapObjectList *pSelList = m_pSelection->GetList();
+	for ( int index = 0; index < pSelList->Count(); index++ )
+	{
+		CMapClass *pSelectedObject = pSelList->Element( index );
+		CMapClass *pSelectedParent = pSelectedObject->GetParent();
+
+		while ( pSelectedParent )
+		{
+			// ...and nuke them from QuickHide
+			m_QuickHideGroup.FindAndRemove( pSelectedParent );
+			pSelectedParent = pSelectedParent->GetParent();
+		}
+	}
+
+	UpdateVisibilityAll();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Restore any hidden objects and purge data
+//-----------------------------------------------------------------------------
+void CMapDoc::QuickHide_Unhide( void )
+{
+	if ( m_QuickHideGroup.Count() > 0 )
+	{
+		m_QuickHideGroup.RemoveAll();
+		m_QuickHideGroupedParents.RemoveAll();
+
+		UpdateVisibilityAll();
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Checks the QuickHideGroup for pObject
+//-----------------------------------------------------------------------------
+bool CMapDoc::QuickHide_IsObjectHidden( CMapClass *pObject )
+{
+	for ( int index = 0; index < m_QuickHideGroup.Count(); index++ )
+	{
+		// FIXME: use references to detect objects being deleted
+		if ( pObject == m_QuickHideGroup[index] )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Creates a visgroup with currently hidden objects
+//-----------------------------------------------------------------------------
+void CMapDoc::OnQuickHide_CreateVisGroupFromHidden( void )
+{
+	int iQuickHideObjects = m_QuickHideGroup.Count();
+
+	if ( iQuickHideObjects > 0 )
+	{
+		CString str;
+		str.Format( "_FromQuickHide(%d)", iQuickHideObjects );
+		VisGroups_CreateNamedVisGroup( m_QuickHideGroup, str, true, false );
+	}
+
+	QuickHide_Unhide();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Creates a token in the VMF, which we use for P4 check-in testing
+//-----------------------------------------------------------------------------
+ChunkFileResult_t CMapDoc::QuickHide_SaveVMF( CChunkFile *pFile, CSaveInfo *pSaveInfo )
+{
+	if ( m_QuickHideGroup.Count() == 0)
+	{
+		return( ChunkFile_Ok );
+	}
+
+	ChunkFileResult_t eResult = pFile->BeginChunk( "quickhide" );
+
+	if ( eResult == ChunkFile_Ok )
+	{
+		int nCount = m_QuickHideGroup.Count();
+		eResult = pFile->WriteKeyValueInt( "count", nCount );
+	}
+
+	if ( eResult == ChunkFile_Ok )
+	{
+		eResult = pFile->EndChunk();
+	}
+
+	return( eResult );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Menu/Button version of QuickHide_HideObjects
+//-----------------------------------------------------------------------------
+void CMapDoc::OnQuickHide_HideObjects( void )
+{
+	QuickHide_HideObjects();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Menu/Button version of QuickHide_HideUnselectedObjects
+//-----------------------------------------------------------------------------
+void CMapDoc::OnQuickHide_HideUnselectedObjects( void )
+{
+	QuickHide_HideUnselectedObjects();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Menu/Button version of OnQuickHide_Unhide
+//-----------------------------------------------------------------------------
+void CMapDoc::OnQuickHide_Unhide( void )
+{
+	QuickHide_Unhide();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CMapDoc::OnRadiusCulling( void )
+{
+	Options.general.bRadiusCulling = !Options.general.bRadiusCulling;
+	UpdateVisibilityAll();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CMapDoc::OnUpdateRadiusCulling( CCmdUI *pCmdUI )
+{
+	pCmdUI->SetCheck( Options.general.bRadiusCulling ? 1 : 0 );
+	pCmdUI->Enable(!GetMainWnd()->IsShellSessionActive());
 }

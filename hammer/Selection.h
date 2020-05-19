@@ -58,6 +58,8 @@ public:
 	bool	IsEmpty();
 	bool	IsSelected(CMapClass *pObject);
 	bool	IsAnEntitySelected();
+	bool	IsEditable();
+	bool	IsCopyable();
 
 
 	const CMapObjectList* GetList(void);

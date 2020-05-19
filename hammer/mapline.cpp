@@ -208,6 +208,8 @@ void CMapLine::CalcBounds(BOOL bFullUpdate)
 		m_pEndEntity->GetOrigin(End);
 		m_CullBox.UpdateBounds(End);
 	}
+
+	m_BoundingBox = m_CullBox;
 }
 
 

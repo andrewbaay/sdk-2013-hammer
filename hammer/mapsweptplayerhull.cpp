@@ -102,6 +102,7 @@ void CMapSweptPlayerHull::CalcBounds(BOOL bFullUpdate)
 		m_CullBox.UpdateBounds(vecMins, vecMaxs);
 	}
 
+	m_BoundingBox = m_CullBox;
 	m_Render2DBox = m_CullBox;
 }
 
@@ -174,7 +175,7 @@ CBaseTool *CMapSweptPlayerHull::GetToolObject(int nHitData, bool bAttachObject)
 //-----------------------------------------------------------------------------
 bool CMapSweptPlayerHull::HitTest2D(CMapView2D *pView, const Vector2D &point, HitInfo_t &HitData)
 {
-	if ( IsVisible() && ( !IsSelected() || !GetPreferredPickObject() ) )
+	if (IsVisible())
 	{
 		for (unsigned int i = 0; i < 2; i++)
 		{
@@ -327,8 +328,9 @@ void CMapSweptPlayerHull::Render3D(CRender3D *pRender)
 
 	if (GetSelectionState() == SELECT_NONE)
 	{
+		constexpr color32 clr{255, 255, 255, 0};
 		const color32 color = GetRenderColor();
-		if ( color != color32{255, 255, 255, 0} )
+		if ( color != clr )
 			pRender->SetDrawColor( color.r, color.g, color.b );
 		else
 			pRender->SetDrawColor( 200, 180, 0 );
@@ -432,8 +434,8 @@ void CMapSweptPlayerHull::OnParentKeyChanged(const char *szKey, const char *szVa
 {
 	if (!stricmp(szKey, "point0"))
 	{
-		Vector vecOrigin, temp;
-		sscanf(szValue, "%f %f %f, %f %f %f", &vecOrigin.x, &vecOrigin.y, &vecOrigin.z, &temp.x, &temp.y, &temp.z );
+		Vector vecOrigin;
+		sscanf(szValue, "%f %f %f", &vecOrigin.x, &vecOrigin.y, &vecOrigin.z );
 
 		vecOrigin += playerFixup;
 
@@ -442,8 +444,8 @@ void CMapSweptPlayerHull::OnParentKeyChanged(const char *szKey, const char *szVa
 	}
 	else if (!stricmp(szKey, "point1"))
 	{
-		Vector vecOrigin, temp;
-		sscanf(szValue, "%f %f %f, %f %f %f", &vecOrigin.x, &vecOrigin.y, &vecOrigin.z, &temp.x, &temp.y, &temp.z );
+		Vector vecOrigin;
+		sscanf(szValue, "%f %f %f", &vecOrigin.x, &vecOrigin.y, &vecOrigin.z );
 
 		vecOrigin += playerFixup;
 

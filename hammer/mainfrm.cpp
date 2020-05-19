@@ -33,6 +33,7 @@
 #include "materialsystem/MaterialSystem_Config.h"
 #include "soundbrowser.h"
 #include "KeyValues.h"
+#include "lprvwindow.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -92,6 +93,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_COMMAND_EX(ID_VIEW_MAPTOOLSBAR, CFrameWnd::OnBarCheck)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_TEXTUREBAR, CFrameWnd::OnUpdateControlBarMenu)
 	ON_COMMAND_EX(ID_VIEW_TEXTUREBAR, CFrameWnd::OnBarCheck)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_MANIFEST_BAR, CFrameWnd::OnUpdateControlBarMenu)
+	ON_COMMAND_EX(ID_VIEW_MANIFEST_BAR, CFrameWnd::OnBarCheck)
 	//ON_UPDATE_COMMAND_UI(ID_VIEW_ANIMATIONBAR, CFrameWnd::OnUpdateControlBarMenu)
 	//ON_COMMAND_EX(ID_VIEW_ANIMATIONBAR, CFrameWnd::OnBarCheck)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_MAPOPSBAR, CFrameWnd::OnUpdateControlBarMenu)
@@ -127,13 +130,6 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_COMMAND(ID_CONTEXT_HELP, CMDIFrameWnd::OnContextHelp)
 	ON_COMMAND(ID_DEFAULT_HELP, CMDIFrameWnd::OnHelpFinder)
 	ON_COMMAND(ID_HDR, OnHDR)
-	ON_COMMAND_EX(ID_INSTANCE_COLLAPSE_SEL, OnInstanceMsg)
-	ON_COMMAND_EX(ID_INSTANCE_COLLAPSE_SEL_RECURSIVE, OnInstanceMsg)
-	ON_COMMAND_EX(ID_INSTANCE_COLLAPSE_ALL, OnInstanceMsg)
-	ON_COMMAND_EX(ID_INSTANCE_COLLAPSE_ALL_RECURSIVE, OnInstanceMsg)
-	ON_COMMAND_EX(ID_INSTANCE_VIS_HIDE, OnInstanceMsg)
-	ON_COMMAND_EX(ID_INSTANCE_VIS_TINTED, OnInstanceMsg)
-	ON_COMMAND_EX(ID_INSTANCE_VIS_NORMAL, OnInstanceMsg)
 	ON_WM_HELPINFO()
 	ON_WM_SYSCOMMAND()
 	ON_WM_ENTERMENULOOP()
@@ -198,7 +194,7 @@ CMainFrame::CMainFrame(void)
 	m_bMinimized = false;
 	m_pSearchReplaceDlg = NULL;
 	m_pLightingPreviewOutputWindow = NULL;
-
+	m_bLightingPreviewOutputWindowShowing = false;
 }
 
 
@@ -211,6 +207,7 @@ CMainFrame::~CMainFrame(void)
 	delete pTextureBrowser;
 	delete m_pFaceEditSheet;
 	delete m_pSearchReplaceDlg;
+	delete m_pLightingPreviewOutputWindow;
 
 	CPrefabLibrary::FreeAllLibraries();
 }
@@ -399,6 +396,13 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_TextureBar.EnableDocking(CBRS_ALIGN_LEFT | CBRS_ALIGN_RIGHT);
 	DockControlBarLeftOf(&m_TextureBar, &m_FilterControl);
 
+	m_ManifestFilterControl.Create(this);
+	m_ManifestFilterControl.SetBarStyle(m_ManifestFilterControl.GetBarStyle() |
+		CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_FIXED);
+	m_ManifestFilterControl.EnableDocking(CBRS_ALIGN_LEFT | CBRS_ALIGN_RIGHT);
+	DockControlBar(&m_ManifestFilterControl, AFX_IDW_DOCKBAR_RIGHT);
+
+
 
 
 	m_pFaceEditSheet = new CFaceEditSheet( "Face Edit Sheet", this );
@@ -578,6 +582,20 @@ void CMainFrame::OnUpdateToolUI(CCmdUI *pUI)
 		//
 		CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
 
+		bool	bIsEditable = ( pDoc ? pDoc->IsSelectionEditable() : false );
+
+		if ( pUI->m_nID == ID_TOOLS_APPLYDECALS ||
+			 pUI->m_nID == ID_TOOLS_OVERLAY ||
+			 pUI->m_nID == ID_TOOLS_CLIPPER ||
+			 pUI->m_nID == ID_TOOLS_MORPH )
+		{
+
+		}
+		else
+		{
+			bIsEditable = ( pDoc ? true : false );
+		}
+
 #if 0
 		//
 		// Only enable the displacement toolbar button while editing HalfLife 2 maps.
@@ -596,12 +614,11 @@ void CMainFrame::OnUpdateToolUI(CCmdUI *pUI)
 		else
 #endif
 		{
-			pUI->Enable( pDoc != NULL );
+			pUI->Enable( bIsEditable );
 		}
 
 		ToolID_t eToolID = _ToolMsgToEnum(pUI->m_nID);
-		BOOL bEnable = CMapDoc::GetActiveMapDoc() ? TRUE : FALSE;
-		pUI->Enable(bEnable);
+		pUI->Enable( bIsEditable );
 		pUI->SetCheck(eToolID == ToolManager()->GetActiveToolID());
 	}
 }
@@ -1161,60 +1178,6 @@ void CMainFrame::SetUndoActive(BOOL bActive)
 	CMapDoc::GetActiveMapDoc()->SetUndoActive(bActive == TRUE);
 }
 
-void SetInstanceBoxChecked( UINT nID, CMainFrame* pFrm )
-{
-	CMenu* pMenu = pFrm->GetMenu();
-
-	switch ( nID )
-	{
-	case ID_INSTANCE_VIS_HIDE:
-		pMenu->CheckMenuItem( ID_INSTANCE_VIS_HIDE, MF_CHECKED | MF_BYCOMMAND );
-		pMenu->CheckMenuItem( ID_INSTANCE_VIS_TINTED, MF_UNCHECKED | MF_BYCOMMAND );
-		pMenu->CheckMenuItem( ID_INSTANCE_VIS_NORMAL, MF_UNCHECKED | MF_BYCOMMAND );
-		break;
-	case ID_INSTANCE_VIS_TINTED:
-		pMenu->CheckMenuItem( ID_INSTANCE_VIS_TINTED, MF_CHECKED | MF_BYCOMMAND );
-		pMenu->CheckMenuItem( ID_INSTANCE_VIS_HIDE, MF_UNCHECKED | MF_BYCOMMAND );
-		pMenu->CheckMenuItem( ID_INSTANCE_VIS_NORMAL, MF_UNCHECKED | MF_BYCOMMAND );
-		break;
-	case ID_INSTANCE_VIS_NORMAL:
-		pMenu->CheckMenuItem( ID_INSTANCE_VIS_NORMAL, MF_CHECKED | MF_BYCOMMAND );
-		pMenu->CheckMenuItem( ID_INSTANCE_VIS_HIDE, MF_UNCHECKED | MF_BYCOMMAND );
-		pMenu->CheckMenuItem( ID_INSTANCE_VIS_TINTED, MF_UNCHECKED | MF_BYCOMMAND );
-		break;
-	}
-	pFrm->DrawMenuBar();
-}
-
-BOOL CMainFrame::OnInstanceMsg(UINT nID)
-{
-	switch ( nID )
-	{
-	case ID_INSTANCE_COLLAPSE_SEL:
-	case ID_INSTANCE_COLLAPSE_SEL_RECURSIVE:
-	case ID_INSTANCE_COLLAPSE_ALL:
-	case ID_INSTANCE_COLLAPSE_ALL_RECURSIVE:
-		CMapDoc::GetActiveMapDoc()->CollapseInstances( nID == ID_INSTANCE_COLLAPSE_SEL || nID == ID_INSTANCE_COLLAPSE_SEL_RECURSIVE, nID == ID_INSTANCE_COLLAPSE_SEL_RECURSIVE || nID == ID_INSTANCE_COLLAPSE_ALL_RECURSIVE );
-		break;
-	case ID_INSTANCE_VIS_HIDE:
-		CMapDoc::GetActiveMapDoc()->SetInstanceVisibility( ShowInstance_t::INSTANCES_HIDE );
-		break;
-	case ID_INSTANCE_VIS_TINTED:
-		CMapDoc::GetActiveMapDoc()->SetInstanceVisibility( ShowInstance_t::INSTANCES_SHOW_TINTED );
-		break;
-	case ID_INSTANCE_VIS_NORMAL:
-		CMapDoc::GetActiveMapDoc()->SetInstanceVisibility( ShowInstance_t::INSTANCES_SHOW_NORMAL );
-		break;
-	default:
-		Assert( 0 );
-	}
-
-	if ( nID == ID_INSTANCE_VIS_HIDE || nID == ID_INSTANCE_VIS_TINTED || nID == ID_INSTANCE_VIS_NORMAL )
-	{
-		SetInstanceBoxChecked( nID, this );
-	}
-	return TRUE;
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: Toggles the active state of Undo/Redo.
@@ -1270,6 +1233,7 @@ void CMainFrame::GlobalNotify(int nCode)
 				//m_AnimationDlg.SelectionChanged(*pDoc->Selection_GetList());
 			}
 
+			m_ManifestFilterControl.UpdateManifestList();
 			break;
 		}
 
@@ -1283,6 +1247,15 @@ void CMainFrame::GlobalNotify(int nCode)
 
 			if (pDoc != NULL)
 				m_ObjectBar.UpdateListForTool( pDoc->GetTools()->GetActiveToolID());
+			break;
+		}
+
+		//
+		// Lighting preview window closed
+		//
+		case LPRV_WINDOWCLOSED:
+		{
+			m_bLightingPreviewOutputWindowShowing = false;
 			break;
 		}
 	}

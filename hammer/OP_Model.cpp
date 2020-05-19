@@ -73,8 +73,10 @@ void COP_Model::DoDataExchange(CDataExchange* pDX)
 // Input  : Mode - 
 //			pData - 
 //-----------------------------------------------------------------------------
-void COP_Model::UpdateData(int Mode, PVOID pData)
+void COP_Model::UpdateData( int Mode, PVOID pData, bool bCanEdit )
 {
+	__super::UpdateData( Mode, pData, bCanEdit );
+
 	if (!IsWindow(m_hWnd) || !pData)
 	{
 		return;
@@ -117,6 +119,8 @@ void COP_Model::UpdateData(int Mode, PVOID pData)
 	{
 		Assert(false);
 	}
+
+	SetReadOnly( !m_bCanEdit );
 }
 
 BOOL COP_Model::OnSetActive()
@@ -279,4 +283,15 @@ CMapStudioModel *COP_Model::GetModelHelper(void)
 		}
 	}
 	return NULL;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: sets the controls to be read only
+// Input  : bReadOnly - indicates if the controls should be read only
+//-----------------------------------------------------------------------------
+void COP_Model::SetReadOnly( bool bReadOnly )
+{
+	m_ComboSequence.EnableWindow( bReadOnly ? FALSE : TRUE );
+	m_ScrollBarFrame.EnableWindow( bReadOnly ? FALSE : TRUE );
 }

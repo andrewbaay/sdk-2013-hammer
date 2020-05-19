@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -28,7 +28,7 @@ public:
 	}
 
 	T& operator[] (int iIndex);
-	
+
 	void SetCount(int nObjects);
 	int GetCount() { return nCount; }
 
@@ -77,7 +77,7 @@ void BlockArray<T,nBlockSize,nMaxBlocks>::
 		{
 			Error( "BlockArray< ?, %d, %d > - too many blocks needed.", nBlockSize, nMaxBlocks );
 		}
-		
+
 		GetBlocks(nNewBlocks);
 	}
 	nCount = nObjects;
@@ -86,7 +86,9 @@ void BlockArray<T,nBlockSize,nMaxBlocks>::
 template <class T, int nBlockSize, int nMaxBlocks>
 T& BlockArray<T,nBlockSize,nMaxBlocks>::operator[] (int iIndex)
 {
-	if(iIndex >= nCount)
+	// Cast to unsigned so that this check will reject negative values as
+	// well as overly large values.
+	if((unsigned)iIndex >= (unsigned)nCount)
 	{
 		Error( "BlockArray< %d, %d > - invalid block index.", iIndex, nCount );
 		SetCount(iIndex+1);

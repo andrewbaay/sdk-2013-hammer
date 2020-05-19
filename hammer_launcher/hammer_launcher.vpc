@@ -16,6 +16,11 @@ $Configuration
 	{
 		$AdditionalOptions					"$BASE /EHa"
 	}
+
+	$Linker [$WIN32]
+	{
+		$EnableLargeAddresses				"Support Addresses Larger Than 2 Gigabytes (/LARGEADDRESSAWARE)"
+	}
 }
 
 $Project "Hammer_launcher"
@@ -32,6 +37,6 @@ $Project "Hammer_launcher"
 	
 	$Folder	"Link Libraries"
 	{
-		$File	"$SRCDIR\lib\public\appframework.lib"
+		$Lib appframework
 	}
 }

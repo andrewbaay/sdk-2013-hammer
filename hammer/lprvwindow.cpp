@@ -9,6 +9,8 @@
 #include "lprvwindow.h"
 #include "gameconfig.h"
 #include "lpreview_thread.h"
+#include "mainfrm.h"
+#include "custommessages.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -18,6 +20,7 @@
 BEGIN_MESSAGE_MAP( CLightingPreviewResultsWindow, CWnd )
 	//{{AFX_MSG_MAP(CTextureWindow)
 	ON_WM_PAINT()
+	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -54,6 +57,15 @@ void CLightingPreviewResultsWindow::Create( CWnd* pParentWnd )
 	rect.top = 500; rect.bottom = 600;
 
 	CWnd::CreateEx( 0, LPreviewWndClassName, "LightingPreviewWindow", WS_OVERLAPPEDWINDOW | WS_SIZEBOX, rect, pParentWnd, 0, nullptr );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CLightingPreviewResultsWindow::OnClose()
+{
+	GetMainWnd()->GlobalNotify(LPRV_WINDOWCLOSED);
+	CWnd::OnClose();
 }
 
 //-----------------------------------------------------------------------------

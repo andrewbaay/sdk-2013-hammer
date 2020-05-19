@@ -499,6 +499,10 @@ void COP_Output::DoDataExchange(CDataExchange *pDX)
 	DDX_CBString(pDX, IDC_EDIT_CONN_PARAM, m_strParam);
 	DDX_Check(pDX, IDC_EDIT_CONN_FIRE_ONCE, m_bFireOnce);
 	DDX_Control(pDX, IDC_SHOWHIDDENTARGETS, m_ctlShowHiddenTargetsAsBroken);
+	DDX_Control(pDX, IDC_ADD, m_AddControl);
+	DDX_Control(pDX, IDC_PASTE, m_PasteControl);
+	DDX_Control(pDX, IDC_DELETE, m_DeleteControl);
+
 	//}}AFX_DATA_MAP
 }
 
@@ -562,6 +566,10 @@ void COP_Output::UpdateEditControls(void)
 	//
 	m_EditList.RemoveAll();
 
+	m_AddControl.EnableWindow( ( m_bCanEdit ? TRUE : FALSE ) );
+	m_PasteControl.EnableWindow( ( m_bCanEdit ? TRUE : FALSE ) );
+	m_DeleteControl.EnableWindow( ( m_bCanEdit ? TRUE : FALSE ) );
+
 	// If nothing is selected, disable edit controls
 	if (!m_ListCtrl.IsWindowEnabled() || m_ListCtrl.GetSelectedCount() == 0)
 	{
@@ -618,6 +626,11 @@ void COP_Output::UpdateEditControls(void)
 
 		//CMapEntityList *pTarget = GetTarget(szBuf, sizeof(szBuf));
 		//UpdateCombosForSelectedTarget(pTarget);
+	}
+
+	if ( m_bCanEdit == false )
+	{
+		EnableEditControls( false );
 	}
 }
 
@@ -918,11 +931,11 @@ void COP_Output::OnMark(void)
 				COutputConnection *pOutputConn = (COutputConnection *)m_ListCtrl.GetItemData(nItem);
 				pConnection = pOutputConn->m_pConnList->Element(0);
 
-				CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
-				if (pDoc != NULL)
+				CMapDoc *pDocActive = CMapDoc::GetActiveMapDoc();
+				if ( pDocActive != NULL)
 				{
 					CMapEntityList Found;
-					pDoc->FindEntitiesByName(Found, m_ListCtrl.GetItemText(nItem, TARGET_NAME_COLUMN), false);
+					pDocActive->FindEntitiesByName(Found, m_ListCtrl.GetItemText(nItem, TARGET_NAME_COLUMN), false);
 
 					FOR_EACH_OBJ( Found, pos )
 					{
@@ -1162,8 +1175,10 @@ void COP_Output::RemoveAllEntityConnections(void)
 // Input  : Mode -
 //			pData -
 //-----------------------------------------------------------------------------
-void COP_Output::UpdateData(int Mode, PVOID pData)
+void COP_Output::UpdateData( int Mode, PVOID pData, bool bCanEdit )
 {
+	__super::UpdateData( Mode, pData, bCanEdit );
+
 	if (!IsWindow(m_hWnd))
 	{
 		return;
@@ -1194,6 +1209,8 @@ void COP_Output::UpdateData(int Mode, PVOID pData)
 			SortListByColumn(m_nSortColumn, m_eSortDirection[m_nSortColumn]);
 		}
 	}
+
+	UpdateEditControls();
 }
 
 
@@ -1979,7 +1996,7 @@ void COP_Output::FillInputList(void)
 
 			if (bAddInput)
 			{
-				int nIndex = m_ComboInput.AddString(pInput->GetName());
+				nIndex = m_ComboInput.AddString(pInput->GetName());
 				if (nIndex >= 0)
 				{
 					m_ComboInput.SetItemDataPtr(nIndex, pInput);
@@ -2501,5 +2518,3 @@ void COP_Output::OnSize( UINT nType, int cx, int cy )
 {
 	m_AnchorMgr.OnSize();
 }
-
-

@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -32,33 +32,35 @@ enum Visibility_t
 };
 
 
-class CCamera  
+class CCamera
 {
 	public:
 
 		CCamera(void);
 		virtual ~CCamera(void);
 
-		void Move(Vector &vDelta);
+		void Move(const Vector &vDelta);
 		void Pitch(float fDegrees);
 		void Roll(float fDegrees);
 		void Yaw(float fDegrees);
-		
+
 		void MoveForward(float fUnits);
 		void MoveRight(float fUnits);
 		void MoveUp(float fUnits);
-				
+
 		void GetViewPoint(Vector& fViewPoint) const;
 		void GetViewForward(Vector& ViewForward) const;
 		void GetViewUp(Vector& ViewUp) const;
 		void GetViewRight(Vector& ViewRight) const;
-		
+
 		void GetViewMatrix(VMatrix& Matrix);
         void GetProjMatrix(VMatrix& Matrix);
+		void GetViewProjMatrix(VMatrix& Matrix);
 
 		float GetYaw(void);
 		float GetPitch(void);
 		float GetRoll(void);
+		QAngle GetAngles();
 
 		void SetYaw(float fDegrees);
 		void SetPitch(float fDegrees);
@@ -79,7 +81,7 @@ class CCamera
 		void	SetPerspective(float fFOV, float fNearZ, float fFarZ);
 		void	GetFrustumPlanes( Vector4D Planes[6] );
 		float	GetFOV(void);
-		
+
 		void	SetOrthographic(float fZoom, float fNearZ, float fFarZ);
 		void	SetZoom(float fScale);
         void	Zoom(float fScale);

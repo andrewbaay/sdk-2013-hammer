@@ -751,7 +751,7 @@ int CChildFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	//
 	// The splitter gets its layout from the registry.
 	//
-	if (bUsingSplitter)
+	if (bUsingSplitter && CHammer::IsNewDocumentVisible())
 	{
 		CString str = APP()->GetProfileString("Splitter", "WindowPlacement", "");
 		if (!str.IsEmpty())

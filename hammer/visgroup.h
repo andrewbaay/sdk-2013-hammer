@@ -113,8 +113,6 @@ class CVisGroup
 
 		unsigned int m_dwID;
 		VisGroupState_t m_eVisible;
-
-		friend class CMapInstance;
 };
 
 

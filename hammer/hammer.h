@@ -57,6 +57,27 @@ public:
 };
 
 
+class CHammerDocTemplate : public CMultiDocTemplate
+{
+public:
+	CHammerDocTemplate( UINT nIDResource, CRuntimeClass* pDocClass, CRuntimeClass* pFrameClass, CRuntimeClass* pViewClass ) :
+	  CMultiDocTemplate( nIDResource, pDocClass, pFrameClass, pViewClass )
+	  {
+	  }
+
+	  virtual	CDocument	*OpenDocumentFile( LPCTSTR lpszPathName, BOOL bMakeVisible = TRUE );
+	  virtual	void		CloseAllDocuments( BOOL bEndSession );
+	  virtual	void		InitialUpdateFrame( CFrameWnd* pFrame, CDocument* pDoc, BOOL bMakeVisible = TRUE );
+				void		UpdateInstanceMap( CMapDoc *pInstanceMapDoc );
+};
+
+
+void AppRegisterPostInitFn( void (*)() );
+void AppRegisterMessageLoopFn( void (*)() );
+void AppRegisterMessagePretranslateFn( void (*)( MSG * ) );
+void AppRegisterPreShutdownFn( void (*)() );
+
+
 class CHammer : public CWinApp, public CTier3DmAppSystem<IHammer>
 {
 	typedef CTier3DmAppSystem<IHammer> BaseClass;
@@ -141,7 +162,11 @@ public:
 	void SetForceRenderNextFrame();
 	bool GetForceRenderNextFrame();
 
-	CMultiDocTemplate *pMapDocTemplate;
+	static void SetIsNewDocumentVisible( bool bIsVisible );
+	static bool IsNewDocumentVisible( void );
+
+	CHammerDocTemplate *pMapDocTemplate;
+	CHammerDocTemplate *pManifestDocTemplate;
 
 	//{{AFX_MSG(CHammer)
 	afx_msg void OnAppAbout();
@@ -159,6 +184,8 @@ protected:
 
 	static int StaticInternalMainLoop( void *pParam );
 	int InternalMainLoop();
+
+	static bool	m_bIsNewDocumentVisible;
 
 	// Check for 16-bit color or higher.
 	bool Check16BitColor();

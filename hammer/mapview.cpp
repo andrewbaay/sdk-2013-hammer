@@ -145,10 +145,13 @@ bool CMapView::SelectAt(const Vector2D &ptClient, bool bMakeFirst, bool bFace)
 
 	for ( int i=0; i<nHits; i++ )
 	{
-		CMapClass *pSelObject = HitData[i].pObject->PrepareSelection( eSelectMode );
-		if (pSelObject)
+		if ( HitData[i].pObject )
 		{
-			pSelection->AddHit(pSelObject);
+			CMapClass *pSelObject = HitData[i].pObject->PrepareSelection( eSelectMode );
+			if (pSelObject)
+			{
+				pSelection->AddHit(pSelObject);
+			}
 		}
 	}
 

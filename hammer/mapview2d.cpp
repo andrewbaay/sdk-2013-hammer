@@ -7,6 +7,7 @@
 #include "stdafx.h"
 #include "hammer.h"
 #include "MapView2D.h"
+#include "MapView3D.h"
 #include "MapDoc.h"
 #include "Render2D.h"
 #include "ToolManager.h"
@@ -17,6 +18,9 @@
 #include "ToolMorph.h"		// FIXME: remove
 #include "MapWorld.h"
 #include "camera.h"
+#include "Manifest.h"
+#include "MapInstance.h"
+#include "Options.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -222,9 +226,19 @@ void CMapView2D::Render()
 {
 	CMapDoc *pDoc = GetMapDoc();
 	CMapWorld *pWorld = pDoc->GetMapWorld();
+	CManifest	*pManifest = pDoc->GetManifest();
+
+	if ( pManifest )
+	{
+		pWorld = pManifest->GetManifestWorld();
+	}
 
 	GetRender()->StartRenderFrame();
 	
+	if ( Options.general.bRadiusCulling )
+	{
+		DrawCullingCircleHelper2D( GetRender() );
+	}
 
 	// Draw grid if enabled.
 	if (pDoc->m_bShowGrid)
@@ -256,6 +270,8 @@ void CMapView2D::Render()
 	//
 	// Render normal (nonselected) objects first
 	//
+
+	GetRender()->PrepareInstanceStencil();
 
 	CUtlVector<CMapClass *> selectedObjects;
 	CUtlVector<CMapClass *> helperObjects;
@@ -291,6 +307,8 @@ void CMapView2D::Render()
 		selectedObjects[i]->Render2D( GetRender() );
 	}
 
+	GetRender()->DrawInstanceStencil();
+
 	//
 	// Draw pointfile if enabled.
 	//
@@ -320,6 +338,74 @@ void CMapView2D::Render()
 	}
 
 	GetRender()->EndRenderFrame();
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will render an instance map at the specific offset and rotation
+// Input  : pInstanceClass - the map class of the func_instance
+//			pMapClass - the map class of the world spawn of the instance
+//			InstanceOrigin - the translation offset
+//			InstanceAngles - the axis rotation
+// Output : none
+//-----------------------------------------------------------------------------
+void CMapView2D::RenderInstance( CMapInstance *pInstanceClass, CMapClass *pMapClass, Vector &InstanceOrigin, QAngle &InstanceAngles )
+{
+	if ( !pInstanceClass->IsInstanceVisible() )
+	{
+		return;
+	}
+
+	GetRender()->PushInstanceData( pInstanceClass, InstanceOrigin, InstanceAngles );
+
+	RenderInstanceMapClass_r( pMapClass );
+
+	GetRender()->PopInstanceData();
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will recursively render an instance and all of its children
+// Input  : pObject - the object to be rendered
+// Output : none
+//-----------------------------------------------------------------------------
+void CMapView2D::RenderInstanceMapClass_r( CMapClass *pObject )
+{
+	if ( !pObject->IsVisible() )
+	{
+		return;
+	}
+
+	// Don't render groups, render their children instead.
+	if ( !pObject->IsGroup() )
+	{
+		if ( !pObject->IsVisible2D() )
+		{
+			return;
+		}
+
+		Vector vecMins, vecMaxs, vecExpandedMins, vecExpandedMaxs;
+		pObject->GetCullBox( vecMins, vecMaxs );
+		GetRender()->TransformInstanceAABB( vecMins, vecMaxs, vecExpandedMins, vecExpandedMaxs );
+
+		if ( IsValidBox( vecExpandedMins, vecExpandedMaxs ) )
+		{
+			// Make sure the object is in the update region.
+			if ( !IsInClientView( vecExpandedMins, vecExpandedMaxs ) )
+			{
+				return; 
+			}
+		}
+
+		pObject->Render2D( GetRender() );
+	}
+
+	// Recurse into children and add them.
+	const CMapObjectList *pChildren = pObject->GetChildren();
+	FOR_EACH_OBJ( *pChildren, pos )
+	{
+		RenderInstanceMapClass_r(pChildren->Element(pos));
+	}
 }
 
 
@@ -575,6 +661,29 @@ void CMapView2D::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	}
 
 	CMapView2DBase::OnKeyDown( nChar, nRepCnt, nFlags );
+}
+
+void CMapView2D::DrawCullingCircleHelper2D( CRender2D *pRender )
+{
+	CMapDoc *pDoc = GetMapDoc();
+
+	POSITION viewpos = pDoc->GetFirstViewPosition();
+
+	while ( viewpos )
+	{
+		CMapView3D *pView = dynamic_cast<CMapView3D*>( pDoc->GetNextView( viewpos ) );
+		if ( pView )
+		{
+			CCamera *pCamera = pView->GetCamera();
+
+			Vector cameraPos;
+			pCamera->GetViewPoint( cameraPos );
+			int iClipDist = (int)pCamera->GetFarClip();
+
+			pRender->SetDrawColor( 255, 0, 0 );
+			pRender->DrawCircle( cameraPos, iClipDist );
+		}
+	}
 }
 
 

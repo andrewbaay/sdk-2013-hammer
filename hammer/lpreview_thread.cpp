@@ -10,6 +10,7 @@
 #include "raytrace.h"
 #include "hammer.h"
 #include "mainfrm.h"
+#include "mapdoc.h"
 #include "lprvwindow.h"
 #include "vstdlib/jobthread.h"
 
@@ -577,7 +578,7 @@ void CLightingPreviewThread::CalculateForLightTask( int nLineMask, int nLineMatc
 	CIncrementalLightInfo* l_info = l.m_pIncrementalInfo;
 	CSIMDVectorMatrix& rslt = l_info->m_CalculatedContribution;
 	// figure out what lines to do
-	fltx4 ThresholdBrightness = ReplicateX4( 1.0f / 1024.0f );
+	fltx4 ThresholdBrightness = ReplicateX4( 0.1f / 1024.0f );
 	FourVectors LastLinesTotalLight = zero_vector;
 	int work_line_number = 0;									// for task masking
 	for ( int y = 0; y < rslt.m_nHeight; y++ )
@@ -650,7 +651,12 @@ void CLightingPreviewThread::CalculateForLight( const CLightingPreviewLightDescr
 	if ( m_pRtEnv && !m_bAccStructureBuilt )
 	{
 		m_bAccStructureBuilt = true;
+		Msg( "Starting building acceleration structure.\n" );
+		CFastTimer timer;
+		timer.Start();
 		m_pRtEnv->SetupAccelerationStructure();
+		timer.End();
+		Msg( "Acceleration structure setup done (%.2f ms)!", timer.GetDuration().GetMillisecondsF() );
 	}
 	CIncrementalLightInfo* l_info = l.m_pIncrementalInfo;
 	Assert( l_info );
@@ -726,6 +732,12 @@ unsigned LightingPreviewThreadFN( void* )
 
 void HandleLightingPreview()
 {
+	if ( GetMainWnd()->m_pLightingPreviewOutputWindow && !GetMainWnd()->m_bLightingPreviewOutputWindowShowing )
+	{
+		delete GetMainWnd()->m_pLightingPreviewOutputWindow;
+		GetMainWnd()->m_pLightingPreviewOutputWindow = NULL;
+	}
+
 	// called during main loop
 	while ( g_LPreviewToHammerMsgQueue.MessageWaiting() )
 	{
@@ -735,6 +747,8 @@ void HandleLightingPreview()
 		{
 			case LPREVIEW_MSG_DISPLAY_RESULT:
 			{
+				if ( !CMapDoc::GetActiveMapDoc() || !CMapDoc::GetActiveMapDoc()->HasAnyLPreview() )
+					break;
 				if ( g_pLPreviewOutputBitmap )
 					delete g_pLPreviewOutputBitmap;
 				g_pLPreviewOutputBitmap = msg.m_pBitmapToDisplay;
@@ -742,11 +756,12 @@ void HandleLightingPreview()
 				{
 					SignalUpdate( EVTYPE_BITMAP_RECEIVED_FROM_LPREVIEW );
 					CLightingPreviewResultsWindow* w = GetMainWnd()->m_pLightingPreviewOutputWindow;
-					if ( !w )
+					if ( !GetMainWnd()->m_bLightingPreviewOutputWindowShowing )
 					{
 						w = new CLightingPreviewResultsWindow;
 						GetMainWnd()->m_pLightingPreviewOutputWindow = w;
 						w->Create( GetMainWnd() );
+						GetMainWnd()->m_bLightingPreviewOutputWindowShowing = true;
 					}
 					if ( !w->IsWindowVisible() )
 						w->ShowWindow( SW_SHOW );

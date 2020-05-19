@@ -62,6 +62,7 @@ typedef struct HitInfo_s
 	CMapClass *pObject;		// Pointer to the CMapAtom that was clicked on.
 	unsigned int uData;		// Additional data provided by the CMapAtom object.
 	unsigned int nDepth;	// Depth value of the object that was clicked on.
+	VMatrix m_LocalMatrix;
 } HitInfo_t;
 
 
@@ -155,12 +156,6 @@ private:
 	friend class CRefCountAccessor;
 };
 
-struct InstanceCollapseData_t
-{
-	CMapObjectList newChildren;
-	CUtlVector<CVisGroup*> visGroups;
-};
-
 
 class CMapClass : public CMapPoint
 {
@@ -236,6 +231,7 @@ public:
 
 	const CMapObjectList *GetDependents() { return &m_Dependents; }
 
+	virtual void FindTargetNames( CUtlVector< const char * > &Names ) { }
 	virtual void ReplaceTargetname(const char *szOldName, const char *szNewName);
 
 	//
@@ -258,12 +254,12 @@ public:
 	//
 	virtual void CalcBounds(BOOL bFullUpdate = FALSE);
 
-	virtual void GetCullBox(Vector &mins, Vector &maxs);
-	virtual bool GetCullBoxChild( Vector &mins, Vector &maxs ) { return false; }
-	virtual void SetCullBoxFromFaceList( CMapFaceList *pFaces );
+	void GetCullBox(Vector &mins, Vector &maxs);
+	void SetCullBoxFromFaceList( CMapFaceList *pFaces );
+	void GetBoundingBox( Vector &mins, Vector &maxs );
+	void SetBoundingBoxFromFaceList( CMapFaceList *pFaces );
 
-	virtual void GetRender2DBox(Vector &mins, Vector &maxs);
-	virtual bool GetRender2DBoxChild( Vector &mins, Vector &maxs ) { return false; }
+	void GetRender2DBox(Vector &mins, Vector &maxs);
 
 	// NOTE: Logical position is in global space
 	virtual void SetLogicalPosition( const Vector2D &vecPosition ) {}
@@ -273,19 +269,17 @@ public:
 	virtual void GetRenderLogicalBox( Vector2D &mins, Vector2D &maxs );
 
 	// HACK: temp stuff to ease the transition to not inheriting from BoundBox
-	virtual void GetBoundsCenter(Vector &vecCenter) { m_Render2DBox.GetBoundsCenter(vecCenter); }
-	virtual bool GetBoundsCenterChild( Vector& vecCenter ) { return false; }
-	virtual void GetBoundsSize(Vector &vecSize) { m_Render2DBox.GetBoundsSize(vecSize); }
-	virtual bool GetBoundsSizeChild( Vector& vecCenter ) { return false; }
-	virtual bool IsInsideBox(Vector const &Mins, Vector const &Maxs) const { return(m_Render2DBox.IsInsideBox(Mins, Maxs)); }
-	virtual bool IsIntersectingBox(const Vector &vecMins, const Vector& vecMaxs) const { return(m_Render2DBox.IsIntersectingBox(vecMins, vecMaxs)); }
+	void GetBoundsCenter(Vector &vecCenter) { m_Render2DBox.GetBoundsCenter(vecCenter); }
+	void GetBoundsSize(Vector &vecSize) { m_Render2DBox.GetBoundsSize(vecSize); }
+	inline bool IsInsideBox(Vector const &Mins, Vector const &Maxs) const { return(m_Render2DBox.IsInsideBox(Mins, Maxs)); }
+	inline bool IsIntersectingBox(const Vector &vecMins, const Vector& vecMaxs) const { return(m_Render2DBox.IsIntersectingBox(vecMins, vecMaxs)); }
 
 	virtual CMapClass *PrepareSelection(SelectMode_t eSelectMode);
 
 	void PostUpdate(Notify_Dependent_t eNotifyType);
 	static void UpdateAllDependencies(CMapClass *pObject);
 
-	virtual void SetOrigin(Vector& origin);
+	void SetOrigin(Vector& origin);
 
 	// hierarchy
 	virtual void UpdateAnimation( float animTime ) {}
@@ -293,6 +287,8 @@ public:
 
 	virtual MAPCLASSTYPE GetType(void) = 0;
 	virtual BOOL IsMapClass(MAPCLASSTYPE Type) = 0;
+	virtual bool IsWorld() { return false; }
+
 	virtual CMapClass *Copy(bool bUpdateDependencies);
 	virtual CMapClass *CopyFrom(CMapClass *pFrom, bool bUpdateDependencies);
 
@@ -311,24 +307,23 @@ public:
 	virtual bool ShouldSerialize(void) { return true; }
 	virtual void PostloadWorld(CMapWorld *pWorld);
 	virtual void PresaveWorld(void) {}
-	virtual bool PostloadVisGroups( bool bIsLoading );
+	bool PostloadVisGroups( bool bIsLoading );
 
 	virtual bool IsGroup(void) { return false; }
 	virtual bool IsScaleable(void) { return false; }
 	virtual bool IsClutter(void) { return false; }			// Whether this object should be hidden when the user hides helpers.
 	virtual bool IsCulledByCordon(const Vector &vecMins, const Vector &vecMaxs);	// Whether this object is hidden based on its own intersection with the cordon, independent of its parent's intersection.
-
+	virtual bool IsEditable( void );
 	virtual bool ShouldSnapToHalfGrid() { return false; }
+	virtual bool IsSolid( ) { return false; }
 
 	// searching
-	virtual CMapEntity *FindChildByKeyValue( const char* key, const char* value );
+	virtual CMapEntity *FindChildByKeyValue( const char* key, const char* value, bool *bIsInInstance = NULL, VMatrix *InstanceMatrix = NULL );
 
 	// HACK: get the world that this object is contained within.
 	static CMapWorld *GetWorldObject(CMapAtom *pStart);
 
 	virtual const char* GetDescription() { return ""; }
-
-	virtual CMapClass* GetPreferredPickObject();
 
 	template <typename T1, typename T2 = CMapClass>
 	FORCEINLINE auto EnumChildren( BOOL (*pfn)( T2*, T1* ), T1* dwParam, MAPCLASSTYPE Type = NULL ) -> std::enable_if_t<__is_base_of( CMapClass, T2 ), BOOL>
@@ -407,6 +402,8 @@ public:
 	void RemoveEditorKeys(void);
 	void SetEditorKeyValue(const char *szKey, const char *szValue);
 
+	virtual void InstanceMoved( void );
+
 public:
 
 	// Set to true while loading a VMF file so it can delay certain calls like UpdateBounds.
@@ -442,9 +439,12 @@ protected:
 
 	void UpdateParent(CMapClass *pNewParent);
 
+	void SetBoxFromFaceList( CMapFaceList *pFaces, BoundBox &Box );
+
 	CSmartPtr<CSafeObject<CMapClass>> m_pSafeObject;
 
 	BoundBox m_CullBox;				// Our bounds for culling in the 3D views and intersecting with the cordon.
+	BoundBox m_BoundingBox;			// Our bounds for brushes / entities themselves.  This size may be smaller than m_CullBox ( i.e. spheres are not included )
 	BoundBox m_Render2DBox;			// Our bounds for rendering in the 2D views.
 
 	CMapObjectList m_Children;		// Each object can have many children. Children usually transform with their parents, etc.
@@ -469,7 +469,6 @@ protected:
 
 	friend class CTrackEntry;						// Friends with Undo/Redo system so that parentage can be changed.
 	friend void FixHiddenObject(MapError *pError);	// So that the Check for Problems dialog can fix visgroups problems.
-	friend class CMapInstance;
 };
 
 

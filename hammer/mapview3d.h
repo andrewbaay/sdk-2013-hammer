@@ -59,6 +59,7 @@ protected:
 
 public:
 
+	virtual LRESULT WindowProc( UINT message, WPARAM wParam, LPARAM lParam );
 	enum
 	{
 		updNothing = 0x00,
@@ -106,9 +107,9 @@ public:
 	DrawType_t GetDrawType() { return m_eDrawType; }
 	void SetDrawType(DrawType_t eDrawType);
 
-	int			ObjectsAt(const Vector2D &point, HitInfo_t *pObjects, int nMaxObjects);
+	int			ObjectsAt( const Vector2D &point, HitInfo_t *pObjects, int nMaxObjects, unsigned int nFlags = 0 );
 
-	CMapClass	*NearestObjectAt( const Vector2D &point, ULONG &ulFace);
+	CMapClass	*NearestObjectAt( const Vector2D &point, ULONG &ulFace, unsigned int nFlags = 0, VMatrix *pLocalMatrix = NULL );
 		
 	void RenderPreloadObject(CMapAtom *pObject);
 
@@ -152,6 +153,9 @@ private:
 	void ProcessMovementKeys(float fElapsedTime);
 	float GetKeyScale(unsigned int uKeyState);
 
+	// Radius culling
+	void ProcessCulling( void );
+
 	enum
 	{
 		MVTIMER_PICKNEXT = 0
@@ -185,6 +189,8 @@ private:
 	CRender3D *m_pRender;	// Performs the 3D rendering in our window.
 	CKeyboard m_Keyboard;	// Handles binding of keys and mouse buttons to logical functions.
 
+	bool m_bCameraPosChanged;
+	bool m_bClippingChanged;
 
 	//{{AFX_MSG(CMapView3D)
 protected:

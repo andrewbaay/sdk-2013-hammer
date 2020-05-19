@@ -39,6 +39,7 @@ struct COptionsGeneral
 	BOOL bShowNoDrawBrushes;
 	BOOL bEnableAutosave;
 	BOOL bShowHiddenTargetsAsBroken;
+	BOOL bRadiusCulling;
 }; 
 
 
@@ -73,6 +74,9 @@ struct COptionsColors
 	COLORREF clrToolMorph;		// The color of the morph tool.
 	COLORREF clrToolPath;		// The color of the path tool.
 	COLORREF clrToolDrag;		// The color of tool bounds while it is being dragged.
+	COLORREF clrModelCollisionWireframe;			// The color of a model's collision wireframe
+	COLORREF clrModelCollisionWireframeDisabled;	// The color of a model's collision wireframe when set to "Not Solid" via the entity properties
+
 };
 
 
@@ -118,6 +122,7 @@ struct COptionsView3D
 	BOOL bReverseSelection;	// Whether to animate studio models.
 	bool bPreviewModelFade; // Whether to preview model fade in the 3D view.
 	float fFOV;				// FOV of 3D Camera
+	float fLightConeLength;  // Multiplier for light_spot cone length 
 };
 
 

@@ -238,6 +238,7 @@ CMapClass *CMapClass::CopyFrom(CMapClass *pFrom, bool bUpdateDependencies)
 	m_bVisible2D = pFrom->m_bVisible2D;
 	m_nRenderFrame = pFrom->m_nRenderFrame;
 	m_CullBox = pFrom->m_CullBox;
+	m_BoundingBox = pFrom->m_BoundingBox;
 	m_Render2DBox = pFrom->m_Render2DBox;
 
 	r = pFrom->r;
@@ -281,10 +282,39 @@ void CMapClass::GetCullBox(Vector &mins, Vector &maxs)
 //-----------------------------------------------------------------------------
 void CMapClass::SetCullBoxFromFaceList( CMapFaceList *pFaces )
 {
+	SetBoxFromFaceList( pFaces, m_CullBox );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns the bounding bbox of this object.
+// Input  : mins - receives the minima for culling
+//			maxs - receives the maxima for culling.
+//-----------------------------------------------------------------------------
+void CMapClass::GetBoundingBox( Vector &mins, Vector &maxs )
+{
+	m_BoundingBox.GetBounds( mins, maxs );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Initialize the bounding box with the bounds of the faces.
+//-----------------------------------------------------------------------------
+void CMapClass::SetBoundingBoxFromFaceList( CMapFaceList *pFaces )
+{
+	SetBoxFromFaceList( pFaces, m_BoundingBox );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Initialize box with the bounds of the faces.
+//-----------------------------------------------------------------------------
+void CMapClass::SetBoxFromFaceList( CMapFaceList *pFaces, BoundBox &Box )
+{
 	//
 	// Calculate our 3D bounds.
 	//
-	m_CullBox.ResetBounds();
+	Box.ResetBounds();
 	for (int i = 0; i < pFaces->Count(); i++)
 	{
 		CMapFace *pFace = pFaces->Element(i);
@@ -300,13 +330,13 @@ void CMapClass::SetCullBoxFromFaceList( CMapFaceList *pFaces )
 			//
 			for (int nDim = 0; nDim < 3; nDim++)
 			{
-				m_CullBox.bmins[0] = min(m_CullBox.bmins[0], m_Origin[0] - point[nDim]);
-				m_CullBox.bmins[1] = min(m_CullBox.bmins[1], m_Origin[1] - point[nDim]);
-				m_CullBox.bmins[2] = min(m_CullBox.bmins[2], m_Origin[2] - point[nDim]);
+				Box.bmins[0] = min(Box.bmins[0], m_Origin[0] - point[nDim]);
+				Box.bmins[1] = min(Box.bmins[1], m_Origin[1] - point[nDim]);
+				Box.bmins[2] = min(Box.bmins[2], m_Origin[2] - point[nDim]);
 
-				m_CullBox.bmaxs[0] = max(m_CullBox.bmaxs[0], m_Origin[0] + point[nDim]);
-				m_CullBox.bmaxs[1] = max(m_CullBox.bmaxs[1], m_Origin[1] + point[nDim]);
-				m_CullBox.bmaxs[2] = max(m_CullBox.bmaxs[2], m_Origin[2] + point[nDim]);
+				Box.bmaxs[0] = max(Box.bmaxs[0], m_Origin[0] + point[nDim]);
+				Box.bmaxs[1] = max(Box.bmaxs[1], m_Origin[1] + point[nDim]);
+				Box.bmaxs[2] = max(Box.bmaxs[2], m_Origin[2] + point[nDim]);
 			}
 		}
 	}
@@ -490,14 +520,6 @@ CMapWorld *CMapClass::GetWorldObject(CMapAtom *pStart)
 	return NULL;
 }
 
-CMapClass* CMapClass::GetPreferredPickObject()
-{
-	CMapClass* pParent = GetParent();
-	if ( pParent )
-		return pParent->GetPreferredPickObject();
-
-	return NULL;
-}
 
 BOOL CMapClass::IsChildOf(CMapAtom *pObject)
 {
@@ -667,6 +689,9 @@ void CMapClass::AddChild(CMapClass *pChild)
 	pChild->GetCullBox(vecMins, vecMaxs);
 	m_CullBox.UpdateBounds(vecMins, vecMaxs);
 
+	pChild->GetBoundingBox( vecMins, vecMaxs );
+	m_BoundingBox.UpdateBounds( vecMins, vecMaxs );
+
 	pChild->GetRender2DBox(vecMins, vecMaxs);
 	m_Render2DBox.UpdateBounds(vecMins, vecMaxs);
 
@@ -751,6 +776,7 @@ void CMapClass::CalcBounds(BOOL bFullUpdate)
 		return;
 
 	m_CullBox.ResetBounds();
+	m_BoundingBox.ResetBounds();
 	m_Render2DBox.ResetBounds();
 
 	FOR_EACH_OBJ( m_Children, pos )
@@ -762,6 +788,7 @@ void CMapClass::CalcBounds(BOOL bFullUpdate)
 		}
 
 		m_CullBox.UpdateBounds(&pChild->m_CullBox);
+		m_BoundingBox.UpdateBounds(&pChild->m_BoundingBox);
 		m_Render2DBox.UpdateBounds(&pChild->m_Render2DBox);
 	}
 }
@@ -901,7 +928,7 @@ BOOL CMapClass::EnumChildrenRecurseGroupsOnly(ENUMMAPCHILDRENPROC pfn, unsigned 
 //			value -
 // Output : CMapEntity - the entity found
 //-----------------------------------------------------------------------------
-CMapEntity *CMapClass::FindChildByKeyValue( const char* key, const char* value )
+CMapEntity *CMapClass::FindChildByKeyValue( const char* key, const char* value, bool *bIsInInstance, VMatrix *InstanceMatrix )
 {
 	if ( !key || !value )
 		return NULL;
@@ -909,7 +936,7 @@ CMapEntity *CMapClass::FindChildByKeyValue( const char* key, const char* value )
 	FOR_EACH_OBJ( m_Children, pos )
 	{
 		CMapClass *pChild = m_Children.Element( pos );
-		CMapEntity *e = pChild->FindChildByKeyValue( key, value );
+		CMapEntity *e = pChild->FindChildByKeyValue( key, value, bIsInInstance, InstanceMatrix );
 		if ( e )
 			return e;
 	}
@@ -1767,3 +1794,50 @@ bool CMapClass::CheckVisibility( bool bLoading )
 
 	return bFoundOrphans;
 }
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this routine will indicate if the object is editable.  Generally it
+//			will not be editable if it is located in a separate instance or
+//			submap.
+//-----------------------------------------------------------------------------
+bool CMapClass::IsEditable( void ) 
+{ 
+	if ( GetParent() )
+	{
+		return GetParent()->IsEditable();
+	}
+	
+	return true;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will notify all children that the instance they belong to has been moved.
+//			it will also notify dependents of a translation.  this function is currently not
+//			used but may be.
+//-----------------------------------------------------------------------------
+void CMapClass::InstanceMoved( void )
+{
+#if 0
+	FOR_EACH_OBJ( m_Children, pos )
+	{
+		CMapClass *pChild = m_Children.Element(pos);
+		pChild->InstanceMoved();
+	}
+
+	CMapWorld *pThisWorld = GetWorldObject( this );
+
+	for (int i = 0; i < m_Dependents.Count(); i++)
+	{
+		CMapClass *pDependent = m_Dependents.Element(i);
+
+		CMapWorld *pDependentWorld = GetWorldObject( pDependent );
+		if ( pDependentWorld != pThisWorld )
+		{
+			pDependent->OnNotifyDependent( this, Notify_Transform );
+		}
+	}
+#endif
+}
+

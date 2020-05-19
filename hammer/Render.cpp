@@ -27,6 +27,8 @@
 #include "vphysics_interface.h"
 #include "materialsystem/MaterialSystem_Config.h"
 #include "VGuiWnd.h"
+#include "Box3D.h"
+#include "MapInstance.h"
 
 extern IMatSystemSurface *g_pMatSystemSurface;
 
@@ -75,9 +77,20 @@ CRender::CRender(void)
 	m_bIsClientSpace = false;
 	m_bIsLocalTransform = false;
 	m_bIsRenderingIntoVGUI = false;
-	m_LocalMatrix.Identity();
+
+	VMatrix	IdentityMatrix;
+
+	IdentityMatrix.Identity();
+	m_LocalMatrix.AddToHead( IdentityMatrix );
+
 	m_OrthoMatrix.Identity();
 	m_eCurrentRenderMode = m_eDefaultRenderMode = RENDER_MODE_FLAT;
+
+	m_bInstanceRendering = false;
+	m_nInstanceCount = 0;
+	m_InstanceSelectionDepth = 0;
+
+	PushInstanceData( NULL, Vector( 0.0f, 0.0f, 0.0f ), QAngle( 0.0f, 0.0f, 0.0f ) ); // always add a default state
 
 	UpdateStudioRenderConfig( false, false );
 }
@@ -85,6 +98,286 @@ CRender::CRender(void)
 CRender::~CRender(void)
 {
 }
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will push all of the instance data
+// Input  : pInstanceClass - the func_instance entity
+//			InstanceOrigin - the translation of the instance
+//			InstanceAngles - the rotation of the instance
+// Output : none
+//-----------------------------------------------------------------------------
+void CRender::PushInstanceData( CMapInstance *pInstanceClass, Vector &InstanceOrigin, QAngle &InstanceAngles )
+{
+	TInstanceState	InstanceState;
+	matrix3x4_t		Instance3x4Matrix;
+
+	InstanceState.m_InstanceOrigin = InstanceOrigin;
+	InstanceState.m_InstanceAngles = InstanceAngles;
+	InstanceState.m_pInstanceClass = pInstanceClass;
+	InstanceState.m_pTopInstanceClass = NULL;
+
+	AngleMatrix( InstanceState.m_InstanceAngles, InstanceState.m_InstanceOrigin, Instance3x4Matrix );
+	InstanceState.m_InstanceMatrix.Init( Instance3x4Matrix );
+
+	Vector		vecTransformedOrigin;
+	TransformInstanceVector( InstanceState.m_InstanceOrigin, vecTransformedOrigin );
+	m_CurrentInstanceState.m_InstanceOrigin = vecTransformedOrigin;
+	//	RotateInstanceVector( ( Vector )InstanceState.m_InstanceAngles, m_CurrentInstanceState.m_InstanceAngles );		no one uses this right now   make sure to store it in the same fashion as vecTransformedOrigin
+
+	if ( m_InstanceState.Count() > 0 )
+	{	// first push is just a default state
+		m_bInstanceRendering = true;
+		BeginLocalTransfrom( InstanceState.m_InstanceMatrix, true );
+		if ( m_CurrentInstanceState.m_pTopInstanceClass == NULL ) 
+		{
+			if ( pInstanceClass->IsEditable() == false )
+			{
+				InstanceState.m_pTopInstanceClass = pInstanceClass;
+			}
+		}
+		else
+		{
+			InstanceState.m_pTopInstanceClass = m_CurrentInstanceState.m_pTopInstanceClass;
+		}
+		if ( pInstanceClass->IsSelected() || m_InstanceSelectionDepth )
+		{
+			m_InstanceSelectionDepth++;
+		}
+		InstanceState.m_InstanceMatrix = m_CurrentInstanceState.m_InstanceMatrix * InstanceState.m_InstanceMatrix;
+		InstanceState.m_bIsEditable = pInstanceClass->IsEditable();
+	}
+	else
+	{
+		m_bInstanceRendering = false;
+		InstanceState.m_bIsEditable = true;
+	}
+
+	InstanceState.m_InstanceRenderMatrix = m_LocalMatrix.Head();
+	m_InstanceState.AddToHead( InstanceState );
+	m_CurrentInstanceState = InstanceState;
+
+	if ( !pInstanceClass )
+	{
+	}
+	else if ( m_InstanceSelectionDepth > 0 )
+	{
+		PushInstanceRendering( INSTANCE_STACE_SELECTED );
+	}
+	else if ( pInstanceClass->IsEditable() || CMapDoc::GetActiveMapDoc()->GetShowInstance() == INSTANCES_SHOW_NORMAL )
+	{
+		PushInstanceRendering( INSTANCE_STATE_OFF );
+	}
+	else
+	{
+		PushInstanceRendering( GetInstanceClass()->IsSelected() ? INSTANCE_STACE_SELECTED : INSTANCE_STATE_ON );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will pop off the top most instance data
+//-----------------------------------------------------------------------------
+void CRender::PopInstanceData( void )
+{
+	if ( m_CurrentInstanceState.m_pInstanceClass )
+	{
+		PopInstanceRendering();
+	}
+
+	m_InstanceState.Remove( 0 );
+	m_CurrentInstanceState = m_InstanceState.Head();
+
+	if ( m_InstanceState.Count() > 1 )
+	{	// first push is just a default state
+		m_bInstanceRendering = true;
+	}
+	else
+	{
+		m_bInstanceRendering = false;
+	}
+
+	if ( m_InstanceSelectionDepth > 0 )
+	{
+		m_InstanceSelectionDepth--;
+	}
+
+	EndLocalTransfrom();
+
+	//	m_CurrentInstanceState.m_InstanceRenderMatrix = m_LocalMatrix.Head();
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function initializes the stencil buffer for instance rendering
+//-----------------------------------------------------------------------------
+void CRender::PrepareInstanceStencil( void )
+{
+	CMatRenderContextPtr	pRenderContext( MaterialSystemInterface() );
+
+#if STENCIL_AS_CALLS
+	pRenderContext->SetStencilEnable( true );
+	pRenderContext->SetStencilCompareFunction( STENCILCOMPARISONFUNCTION_ALWAYS );
+	pRenderContext->SetStencilFailOperation( STENCILOPERATION_KEEP );
+	pRenderContext->SetStencilZFailOperation( STENCILOPERATION_KEEP );
+	pRenderContext->SetStencilWriteMask( 0xff );
+	pRenderContext->SetStencilTestMask( 0xff );
+	pRenderContext->SetStencilReferenceValue( 0x01 );
+	pRenderContext->SetStencilPassOperation( STENCILOPERATION_ZERO);
+#else
+	m_ShaderStencilState.m_bEnable = true;
+	m_ShaderStencilState.m_CompareFunc = SHADER_STENCILFUNC_ALWAYS;
+	m_ShaderStencilState.m_FailOp = SHADER_STENCILOP_KEEP;
+	m_ShaderStencilState.m_ZFailOp = SHADER_STENCILOP_KEEP;
+	m_ShaderStencilState.m_nWriteMask = 0xff;
+	m_ShaderStencilState.m_nTestMask = 0xff;
+	m_ShaderStencilState.m_nReferenceValue = 0x01;
+	m_ShaderStencilState.m_PassOp = SHADER_STENCILOP_ZERO;
+	pRenderContext->SetStencilState( m_ShaderStencilState );
+#endif // STENCIL_AS_CALLS
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will draw the various alpha color 2d rectangles for the instance states
+//-----------------------------------------------------------------------------
+void CRender::DrawInstanceStencil( void )
+{
+	CMatRenderContextPtr	pRenderContext( MaterialSystemInterface() );
+	CCamera					*pCamera = GetCamera();
+
+	if ( m_nNumInstancesRendered > 0 )
+	{
+#if STENCIL_AS_CALLS
+		pRenderContext->SetStencilPassOperation( STENCILOPERATION_KEEP );
+		pRenderContext->SetStencilCompareFunction( STENCILCOMPARISONFUNCTION_EQUAL );
+#else
+		m_ShaderStencilState.m_PassOp = SHADER_STENCILOP_KEEP;
+		m_ShaderStencilState.m_CompareFunc = SHADER_STENCILFUNC_EQUAL;
+#endif // STENCIL_AS_CALLS
+
+		Color	InstanceColoring;
+		int		width, height;
+
+		pCamera->GetViewPort( width, height );
+		PushRenderMode( RENDER_MODE_INSTANCE_OVERLAY );
+
+		BeginClientSpace();
+		InstanceColor( InstanceColoring, false );
+#if STENCIL_AS_CALLS
+		pRenderContext->SetStencilReferenceValue( 0x01 );
+#else
+		m_ShaderStencilState.m_nReferenceValue = 0x01;
+		pRenderContext->SetStencilState( m_ShaderStencilState );
+#endif // STENCIL_AS_CALLS
+		DrawFilledRect( Vector2D( 0.0f, 0.0f ), Vector2D( width, height ), ( byte * )&InstanceColoring, false );
+
+		InstanceColor( InstanceColoring, true );
+#if STENCIL_AS_CALLS
+		pRenderContext->SetStencilTestMask( 0xff );
+		pRenderContext->SetStencilReferenceValue( 0x02 );
+#else
+		m_ShaderStencilState.m_nReferenceValue = 0x02;
+		pRenderContext->SetStencilState( m_ShaderStencilState );
+#endif // STENCIL_AS_CALLS
+		DrawFilledRect( Vector2D( 0.0f, 0.0f ), Vector2D( width, height ), ( byte * )&InstanceColoring, false );
+
+		EndClientSpace();
+		PopRenderMode();
+	}
+#if STENCIL_AS_CALLS
+	pRenderContext->SetStencilEnable( false );
+#else
+	m_ShaderStencilState.m_bEnable = false;
+	pRenderContext->SetStencilState( m_ShaderStencilState );
+#endif // STENCIL_AS_CALLS
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will push all of the instance data
+// Input  : pInstanceClass - the func_instance entity
+//			InstanceOrigin - the translation of the instance
+//			InstanceAngles - the rotation of the instance
+// Output : none
+//-----------------------------------------------------------------------------
+void CRender::PushInstanceRendering( InstanceRenderingState_t State )
+{
+	SetInstanceRendering( State );
+
+	m_InstanceRenderingState.AddToHead( State );
+
+	if ( State != INSTANCE_STATE_OFF )
+	{
+		m_nNumInstancesRendered++;
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will pop off the top most instance data
+//-----------------------------------------------------------------------------
+void CRender::PopInstanceRendering( void )
+{
+	m_InstanceRenderingState.Remove( 0 );
+	if ( m_InstanceRenderingState.Count() > 0 )
+	{
+		SetInstanceRendering( m_InstanceRenderingState.Head() );
+	}
+	else
+	{
+		SetInstanceRendering( INSTANCE_STATE_OFF );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Sets the instance rendering state for stencil buffer operations.
+//			0 in stencil buffer = normal drawing
+//			1 in stencil buffer = instance shaded pass
+//			2 in stencil buffer = instance selected shaded pass
+// Input  : State - the state at which the next drawing operations should impact
+//				the stencil buffer
+//-----------------------------------------------------------------------------
+void CRender::SetInstanceRendering( InstanceRenderingState_t State )
+{
+	CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
+
+	switch( State )
+	{
+	case INSTANCE_STATE_OFF:
+#ifdef STENCIL_AS_CALLS
+		pRenderContext->SetStencilPassOperation( STENCILOPERATION_ZERO );
+#else
+		m_ShaderStencilState.m_PassOp = SHADER_STENCILOP_ZERO;
+#endif // STENCIL_AS_CALLS
+		break;
+
+	case INSTANCE_STATE_ON:
+#if STENCIL_AS_CALLS
+		pRenderContext->SetStencilPassOperation( STENCILOPERATION_REPLACE );
+		pRenderContext->SetStencilReferenceValue( 0x01 );
+#else
+		m_ShaderStencilState.m_PassOp = SHADER_STENCILOP_SET_TO_REFERENCE;
+		m_ShaderStencilState.m_nReferenceValue = 0x01;
+#endif // STENCIL_AS_CALLS
+		break;
+
+	case INSTANCE_STACE_SELECTED:
+#if STENCIL_AS_CALLS
+		pRenderContext->SetStencilPassOperation( STENCILOPERATION_REPLACE );
+		pRenderContext->SetStencilReferenceValue( 0x02 );
+#else
+		m_ShaderStencilState.m_PassOp = SHADER_STENCILOP_SET_TO_REFERENCE;
+		m_ShaderStencilState.m_nReferenceValue = 0x02;
+#endif // STENCIL_AS_CALLS
+		break;
+	}
+
+#ifndef STENCIL_AS_CALLS
+	pRenderContext->SetStencilState( m_ShaderStencilState );
+#endif // STENCIL_AS_CALLS
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: This function renders a text string at the given position, width,
@@ -100,7 +393,7 @@ void CRender::DrawText( const char *text, int x, int y, int nFlags )
 {
 	wchar_t unicode[ 128 ];
 
-	mbstowcs( unicode, text, sizeof(unicode) );
+	mbstowcs( unicode, text, ARRAYSIZE(unicode) );
 
 	int len = min( 127, Q_strlen( text ) );
 
@@ -206,6 +499,8 @@ void CRender::StartRenderFrame()
 {
 	Assert( !m_bIsRendering );
 
+	m_nNumInstancesRendered = 0;
+
 	m_bIsRenderingIntoVGUI = dynamic_cast<CVGuiWnd*>( GetView() );
 	if ( m_bIsRenderingIntoVGUI )
 	{
@@ -241,6 +536,8 @@ void CRender::StartRenderFrame()
 	pRenderContext->LoadIdentity();
 
 	pRenderContext->SetAmbientLight( 1.0, 1.0, 1.0 );
+
+	pCamera->GetViewMatrix( m_CurrentMatrix );
 
 	// Disable all the lights..
 	for( int i = 0; i < MaterialSystemHardwareConfig()->MaxNumLights(); ++i)
@@ -333,18 +630,28 @@ void CRender::DrawLine( const Vector &vStart, const Vector &vEnd )
 	m_pMesh->Draw();
 }
 
-void CRender::BeginLocalTransfrom( const VMatrix &matrix )
+void CRender::BeginLocalTransfrom( const VMatrix &matrix, bool MultiplyCurrent )
 {
-	Assert( !m_bIsLocalTransform );
 	Assert( !m_bIsClientSpace );
+
+	VMatrix	LocalCopy = matrix;
+
+	if ( MultiplyCurrent )
+	{
+		LocalCopy = m_LocalMatrix.Head() * LocalCopy;
+	}
+	m_LocalMatrix.AddToHead( LocalCopy );
 
 	CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
 	pRenderContext->MatrixMode(MATERIAL_MODEL);
 	pRenderContext->PushMatrix();
-	pRenderContext->LoadMatrix( matrix );
+	pRenderContext->LoadMatrix( m_LocalMatrix.Head() );
+
+	CCamera *pCamera = GetCamera();
+	pCamera->GetViewMatrix( m_CurrentMatrix );
+	m_CurrentMatrix = m_CurrentMatrix * LocalCopy;
 
 	m_bIsLocalTransform = true;
-	m_LocalMatrix = matrix;
 }
 
 void CRender::EndLocalTransfrom()
@@ -357,8 +664,19 @@ void CRender::EndLocalTransfrom()
 	pRenderContext->MatrixMode(MATERIAL_MODEL);
 	pRenderContext->PopMatrix();
 
-	m_LocalMatrix.Identity();
-	m_bIsLocalTransform = false;
+	m_LocalMatrix.Remove( 0 );
+
+	CCamera *pCamera = GetCamera();
+	pCamera->GetViewMatrix( m_CurrentMatrix );
+	if ( m_LocalMatrix.Count() > 1 )
+	{
+		m_CurrentMatrix = m_CurrentMatrix * m_LocalMatrix.Head();
+		m_bIsLocalTransform = true;
+	}
+	else
+	{
+		m_bIsLocalTransform = false;
+	}
 }
 
 bool CRender::IsInLocalTransformMode() const
@@ -368,7 +686,7 @@ bool CRender::IsInLocalTransformMode() const
 
 void CRender::GetLocalTranform( VMatrix &matrix )
 {
-	matrix = m_LocalMatrix;
+	matrix = m_LocalMatrix.Head();
 }
 
 bool CRender::BeginClientSpace(void)
@@ -429,7 +747,7 @@ void CRender::TransformPoint( Vector2D &vClient, const Vector& vWorld )
 	}
 	else
 	{
-		m_LocalMatrix.V3Mul( vWorld, vecActualPos );
+		m_LocalMatrix.Head().V3Mul( vWorld, vecActualPos );
 	}
 
 	m_pView->WorldToClient( vClient, vecActualPos );
@@ -648,6 +966,11 @@ void CRender::DrawFilledRect( Vector2D& ul, Vector2D& lr, unsigned char *pColor,
 
 void CRender::DrawHandle( const Vector &vCenter, const Vector2D *vOffset )
 {
+	if ( !m_CurrentInstanceState.m_bIsEditable )
+	{
+		return;
+	}
+
 	int size = m_nHandleSize;
 
 	bool bPopMode = BeginClientSpace();
@@ -713,7 +1036,7 @@ bool CRender::SetView( CMapView * pView )
 	m_pFlatNoZ[1] = m_pFlatNoZ[0];
 	m_pFlatNoCull[1] = m_pFlatNoCull[0];
 	m_pWireframe[1] = m_pWireframe[0];
-	m_pWireframe[1] = m_pDotted[0];
+	m_pDotted[1] = m_pDotted[0];
 	m_pSelectionOverlay[1] = m_pSelectionOverlay[0];
 
 	return true;
@@ -1012,16 +1335,27 @@ void CRender::DrawPoint( const Vector &vPoint )
 //			to this rendering context, it is uploaded to the driver.
 // Input  : pTexture - Pointer to the texture object being bound.
 //-----------------------------------------------------------------------------
-
 void CRender::BindTexture(IEditorTexture *pTexture)
 {
 	// These textures must be CMaterials....
-	if (m_pBoundMaterial != pTexture->GetMaterial())
+	BindMaterial( pTexture->GetMaterial() );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Binds a material for rendering. If the material has never been bound
+//			to this rendering context, it is uploaded to the driver.
+// Input  : pMaterial - Pointer to the material object being bound.
+//-----------------------------------------------------------------------------
+void CRender::BindMaterial( IMaterial *pMaterial )
+{
+	if ( m_pBoundMaterial != pMaterial )
 	{
-		m_pBoundMaterial = pTexture->GetMaterial();
+		m_pBoundMaterial = pMaterial;
 		SetRenderMode( RENDER_MODE_CURRENT, true );
 	}
 }
+
 
 bool CRender::GetRequiredMaterial( const char *pName, IMaterial* &pMaterial )
 {
@@ -1101,6 +1435,7 @@ void CRender::SetRenderMode(EditorRenderMode_t eRenderMode, bool bForce)
 			break;
 
 		case RENDER_MODE_SELECTION_OVERLAY:
+		case RENDER_MODE_INSTANCE_OVERLAY:
 			// Ensures we get red even for decals
 			m_pCurrentMaterial = m_pSelectionOverlay[m_nDecalMode];
 			break;
@@ -1172,3 +1507,38 @@ void CRender::PopRenderMode()
 	m_RenderModeStack.Pop();
 }
 
+#define CAMERA_RIGHT		0
+#define CAMERA_UP			1
+#define CAMERA_FORWARD		2
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns a vector indicating the camera's forward axis.
+//-----------------------------------------------------------------------------
+void CRender::GetViewForward( Vector &ViewForward ) const
+{
+	ViewForward[ 0 ] = -m_CurrentMatrix[ CAMERA_FORWARD ][ 0 ];
+	ViewForward[ 1 ] = -m_CurrentMatrix[ CAMERA_FORWARD ][ 1 ];
+	ViewForward[ 2 ] = -m_CurrentMatrix[ CAMERA_FORWARD ][ 2 ];
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns a vector indicating the camera's up axis.
+//-----------------------------------------------------------------------------
+void CRender::GetViewUp(Vector& ViewUp) const
+{
+	ViewUp[ 0 ] = m_CurrentMatrix[ CAMERA_UP ][ 0 ];
+	ViewUp[ 1 ] = m_CurrentMatrix[ CAMERA_UP ][ 1 ];
+	ViewUp[ 2 ] = m_CurrentMatrix[ CAMERA_UP ][ 2 ];
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns a vector indicating the camera's right axis.
+//-----------------------------------------------------------------------------
+void CRender::GetViewRight(Vector& ViewRight) const
+{
+	ViewRight[ 0 ] = m_CurrentMatrix[ CAMERA_RIGHT ][ 0 ];
+	ViewRight[ 1 ] = m_CurrentMatrix[ CAMERA_RIGHT ][ 1 ];
+	ViewRight[ 2 ] = m_CurrentMatrix[ CAMERA_RIGHT ][ 2 ];
+}

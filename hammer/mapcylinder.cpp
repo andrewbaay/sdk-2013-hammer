@@ -230,6 +230,7 @@ void CMapCylinder::CalcBounds(BOOL bFullUpdate)
 			m_CullBox.UpdateBounds(pStartVerts[i]);
 			m_CullBox.UpdateBounds(pEndVerts[i]);
 		}
+		m_BoundingBox = m_CullBox;
 	}
 }
 

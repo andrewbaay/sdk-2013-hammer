@@ -27,6 +27,18 @@ IMPLEMENT_DYNCREATE(CObjectPage, CPropertyPage)
 
 
 //-----------------------------------------------------------------------------
+// Purpose: stores whether or not this page can be updated
+// Input  : Mode - unused
+//			pData - unused
+//			bCanEdit - the edit state
+//-----------------------------------------------------------------------------
+void CObjectPage::UpdateData( int Mode, PVOID pData, bool bCanEdit ) 
+{ 
+	m_bCanEdit = bCanEdit;
+}
+
+
+//-----------------------------------------------------------------------------
 // Purpose: Called when we become the active page.
 //-----------------------------------------------------------------------------
 BOOL CObjectPage::OnSetActive(void)

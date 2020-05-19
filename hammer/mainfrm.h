@@ -17,6 +17,7 @@
 #include "MapAnimationDlg.h"
 #include "SelectModeDlgBar.h"
 #include "materialdlg.h"
+#include "ManifestDialog.h"
 
 class CChildFrame;
 class CObjectProperties;
@@ -83,8 +84,10 @@ public:
 	CFilterControl			m_FilterControl;
 	CObjectBar				m_ObjectBar;
 	CTextureBar				m_TextureBar;
+	CManifestFilter			m_ManifestFilterControl;
 	CFaceEditSheet			*m_pFaceEditSheet;
 	CLightingPreviewResultsWindow *m_pLightingPreviewOutputWindow;
+	bool					m_bLightingPreviewOutputWindowShowing;
 
 	//CMapAnimationDlg m_AnimationDlg;
 
@@ -112,7 +115,6 @@ protected:
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnToolsOptions();
 	afx_msg void OnViewShowconnections();
-	afx_msg BOOL OnInstanceMsg(UINT nID);
 	afx_msg BOOL OnHelpOpenURL(UINT nID);
 	afx_msg void OnHelpFinder();
 	afx_msg void OnEditUndoredoactive();

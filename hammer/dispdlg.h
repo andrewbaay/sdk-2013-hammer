@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -170,6 +170,79 @@ protected:
 };
 
 
+
+//=============================================================================
+//
+// Displacement Paint Dist Dialog
+//
+class CSculptPushOptions;
+class CSculptCarveOptions;
+class CSculptProjectOptions;
+
+class CPaintSculptDlg : public CDialog
+{
+public:
+
+	CPaintSculptDlg(CWnd *pParent = nullptr);
+	~CPaintSculptDlg();
+
+	bool	GetAutoSew( ) { return m_bAutoSew; }
+
+	void	UpdateSpatialData( );
+
+	//{{AFX_DATA( CPaintSculptDlg )
+	enum { IDD = IDD_DISP_PAINT_SCULPT };
+	//}}AFX_DATA
+
+	//{{AFX_VIRTUAL( CPaintSculptDlg )
+	virtual void DoDataExchange(CDataExchange* pDX);
+	virtual BOOL OnInitDialog();
+	//}}AFX_VIRTUAL
+
+protected:
+	//{{AFX_MSG( CPaintSculptDlg )
+	afx_msg void OnCheckAutoSew();
+
+	afx_msg void OnClose();
+	afx_msg void OnDestroy();
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg void OnBnClickedSculptPush();
+	afx_msg void OnBnClickedSculptCarve();
+	afx_msg void OnBnClickedSculptProject();
+	//}}AFX_MSG
+
+	DECLARE_MESSAGE_MAP()
+
+protected:
+	enum SculptMode
+	{
+		SCULPT_MODE_PUSH,
+		SCULPT_MODE_CARVE,
+		SCULPT_MODE_PROJECT,
+	};
+
+	// Save/Restore
+	CRect					m_DialogPosRect;
+
+	CSculptPushOptions		*m_PushOptions;
+	CSculptCarveOptions		*m_CarveOptions;
+	CSculptProjectOptions	*m_ProjectOptions;
+
+	bool					m_bAutoSew;
+	SculptMode				m_SculptMode;
+
+	void	SetActiveMode(SculptMode NewMode);
+
+	CStatic m_SculptOptionsLoc;
+	CButton m_AutoSew;
+	CButton m_PushButton;
+	CButton m_CarveButton;
+	CButton m_ProjectButton;
+};
+
+
 //=============================================================================
 //
 // Displacement Paint Dist Dialog
@@ -218,7 +291,7 @@ protected:
 	afx_msg void OnEditValue( void );
 
 	afx_msg void OnClose( void );
-	afx_msg void OnDestroy( void );	
+	afx_msg void OnDestroy( void );
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()

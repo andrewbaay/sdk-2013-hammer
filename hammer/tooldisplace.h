@@ -30,6 +30,8 @@ class CMapView3D;
 #define DISPTOOL_SELECT_DISP_FACE	3
 #define DISPTOOL_TAG_WALKABLE		4
 #define DISPTOOL_TAG_BUILDABLE		5
+#define DISPTOOL_TAG_REMOVE			6
+#define DISPTOOL_PAINT_SCULPT		7
 
 #define DISPPAINT_EFFECT_RAISELOWER	0
 #define DISPPAINT_EFFECT_RAISETO	1
@@ -44,6 +46,8 @@ class CMapView3D;
 
 #define DISPPAINT_BRUSHTYPE_SOFT	0
 #define DISPPAINT_BRUSHTYPE_HARD	1
+
+class CSculptTool;
 
 //=============================================================================
 //
@@ -98,6 +102,9 @@ public:
 	inline CDispMapImageFilterManager *GetFilterRaiseToMgr( void );
 	inline CDispMapImageFilterManager *GetFilterSmoothMgr( void );
 
+	inline void			SetSculptPainter( CSculptTool *Painter ) { m_SculptTool = Painter; }
+	inline CSculptTool	*GetSculptPainter( void ) { return m_SculptTool; }
+
 	// flags
 	inline bool GetAutoSew( void );
 	inline void ToggleAutoSew( void );
@@ -125,6 +132,7 @@ protected:
 
 	void ApplyPaintTool( UINT nFlags, const Vector2D &vPoint, CMapDisp *pDisp );
 	void ApplySpatialPaintTool( UINT nFlags,const Vector2D &vPoint, CMapDisp *pDisp );
+	void ApplySculptSpatialPaintTool( CMapView3D *pView, UINT nFlags,const Vector2D &vPoint );
 	void LiftFaceNormal( CMapView3D *pView, const Vector2D &vPoint );
 	void ResizeSpatialRadius_Activate( CMapView3D *pView );
 	void ResizeSpatialRadius_Do( void );
@@ -139,6 +147,7 @@ protected:
 	inline CMapDisp *GetEditDisp( void );
 
 	void HandleTagging( CMapView3D *pView, const Vector2D &vPoint );
+	void HandleTaggingRemove( CMapDisp *pDisp, int nTriIndex );
 	void HandleTaggingReset( CMapView3D *pView, const Vector2D &vPoint );
 		
 private:
@@ -190,9 +199,11 @@ protected:
 	EditDispHandle_t			m_EditDispHandle;		// displacement currently being nudged or painted on
 	CPoint						m_viewCenter;			// center point of the given view
 
+	Vector2D					m_MousePoint;
 	bool						m_bLMBDown;				// left mouse button state
 	bool						m_bRMBDown;				// right mouse button state
 	CDispPaintMgr				m_DispPaintMgr;			// displacement painting manager
+	CSculptTool					*m_SculptTool;
 };
 
 

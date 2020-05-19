@@ -289,7 +289,7 @@ int CPrefabVMF::Load(DWORD dwFlags)
 		delete m_pWorld;
 	}
 
-	m_pWorld = new CMapWorld;
+	m_pWorld = new CMapWorld( NULL );
 
 	//
 	// Open the file.

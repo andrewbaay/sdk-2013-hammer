@@ -174,6 +174,8 @@ void CMapSprite::CalcBounds(BOOL bFullUpdate)
 	Vector Maxs = m_Origin + Vector(fRadius, fRadius, fRadius);
 	m_CullBox.UpdateBounds(Mins, Maxs);
 
+	m_BoundingBox = m_CullBox;
+
 	//
 	// Build our bounds for 2D rendering. We keep sprites small in the 2D views no
 	// matter how large they are scaled.

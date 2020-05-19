@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -32,7 +32,7 @@ COPTTextures::COPTTextures() : CPropertyPage(COPTTextures::IDD)
 COPTTextures::~COPTTextures()
 {
 	// detach the material exclusion list box
-	m_MaterialExclude.Detach();
+	m_MaterialExcludeList.Detach();
 }
 
 void COPTTextures::DoDataExchange(CDataExchange* pDX)
@@ -49,13 +49,15 @@ BEGIN_MESSAGE_MAP(COPTTextures, CPropertyPage)
 	ON_WM_HSCROLL()
 	ON_BN_CLICKED( ID_MATERIALEXCLUDE_ADD, OnMaterialExcludeAdd )
 	ON_BN_CLICKED( ID_MATERIALEXCLUDE_REM, OnMaterialExcludeRemove )
+	ON_LBN_SELCHANGE(ID_MATERIALEXCLUDE_LIST, OnMaterialExcludeListSel)
+
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // COPTTextures message handlers
 
-BOOL COPTTextures::OnInitDialog() 
+BOOL COPTTextures::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 
@@ -64,21 +66,21 @@ BOOL COPTTextures::OnInitDialog()
 	m_cBrightness.SetPos(int(Options.textures.fBrightness * 10));
 
 	// attach the material exclusion list box
-	m_MaterialExclude.Attach( GetDlgItem( ID_MATERIALEXCLUDE_LIST )->m_hWnd );
+	m_MaterialExcludeList.Attach( GetDlgItem( ID_MATERIALEXCLUDE_LIST )->m_hWnd );
 
 	return TRUE;
 }
 
 
-void COPTTextures::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
+void COPTTextures::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	if(pScrollBar == (CScrollBar*) &m_cBrightness)
 		SetModified();
-	
+
 	CPropertyPage::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
-BOOL COPTTextures::OnApply() 
+BOOL COPTTextures::OnApply()
 {
 	Options.textures.fBrightness = (float)m_cBrightness.GetPos() / 10.0f;
 
@@ -96,7 +98,7 @@ void GetDirectory(char *pDest, const char *pLongName)
 
 	if (i <= 0)
 		i = 0;
-	
+
 	pDest[i] = 0;
 
 	return;
@@ -121,15 +123,15 @@ static int CALLBACK BrowseCallbackProc( HWND hwnd, UINT uMsg, LPARAM lParam, LPA
 		   break;
 		}
 	}
-         
+
 	return 0;
 }
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pszTitle - 
-//			*pszDirectory - 
+// Purpose:
+// Input  : *pszTitle -
+//			*pszDirectory -
 // Output : Returns TRUE on success, FALSE on failure.
 //-----------------------------------------------------------------------------
 BOOL COPTTextures::BrowseForFolder( const char *pszTitle, char *pszDirectory )
@@ -152,8 +154,8 @@ BOOL COPTTextures::BrowseForFolder( const char *pszTitle, char *pszDirectory )
 		ULONG ulEaten;
 		ULONG ulAttributes;
 		pshDesktop->ParseDisplayName( NULL, NULL, A2OLE( s_szStartFolder ), &ulEaten, &pidlStartFolder, &ulAttributes );
-	}	
-	
+	}
+
 	char szTmp[MAX_PATH];
 
 	BROWSEINFO bi;
@@ -174,8 +176,8 @@ BOOL COPTTextures::BrowseForFolder( const char *pszTitle, char *pszDirectory )
 
 	SHGetPathFromIDList( idl, pszDirectory );
 
-	// Start in this folder next time.	
-	Q_strncpy( s_szStartFolder, pszDirectory, sizeof( s_szStartFolder ) ); 
+	// Start in this folder next time.
+	Q_strncpy( s_szStartFolder, pszDirectory, sizeof( s_szStartFolder ) );
 
 	CoTaskMemFree( pidlStartFolder );
 	CoTaskMemFree( idl );
@@ -225,14 +227,14 @@ BOOL COPTTextures::OnSetActive( void )
 void COPTTextures::MaterialExcludeUpdate( void )
 {
 	// remove all of the data in the current "material exclude" list box
-	m_MaterialExclude.ResetContent();
+	m_MaterialExcludeList.ResetContent();
 
 	//
 	// add the data from the current material config
 	//
 	for( int i = 0; i < m_pMaterialConfig->m_MaterialExclusions.Count(); i++ )
 	{
-		int result = m_MaterialExclude.AddString( m_pMaterialConfig->m_MaterialExclusions[i].szDirectory );
+		int result = m_MaterialExcludeList.AddString( m_pMaterialConfig->m_MaterialExclusions[i].szDirectory );
 		if( ( result == LB_ERR ) || ( result == LB_ERRSPACE ) )
 			return;
 	}
@@ -283,7 +285,8 @@ void COPTTextures::OnMaterialExcludeAdd( void )
 	//
 	// add directory to list box
 	//
-	int result = m_MaterialExclude.AddString( szSubDirName );
+	int result = m_MaterialExcludeList.AddString( szSubDirName );
+	m_MaterialExcludeList.SetItemData( result, 1 );
 	if( ( result == LB_ERR ) || ( result == LB_ERRSPACE ) )
 		return;
 
@@ -304,24 +307,41 @@ void COPTTextures::OnMaterialExcludeRemove( void )
 	//
 	// get the directory to remove
 	//
-	int ndxSel = m_MaterialExclude.GetCurSel();
+	int ndxSel = m_MaterialExcludeList.GetCurSel();
 	if( ndxSel == LB_ERR )
 		return;
 
 	char szTmp[MAX_PATH];
-	m_MaterialExclude.GetText( ndxSel, &szTmp[0] );
+	m_MaterialExcludeList.GetText( ndxSel, &szTmp[0] );
 
 	//
 	// remove directory from the list box
 	//
-	int result = m_MaterialExclude.DeleteString( ndxSel );
+	int result = m_MaterialExcludeList.DeleteString( ndxSel );
 	if( result == LB_ERR )
 		return;
 
 	//
-	// remove the name of the directory from the global exlusion list
+	// remove the name of the directory from the global exclusion list
 	//
 	const int find = m_pMaterialConfig->m_MaterialExclusions.FindMatch( [&szTmp]( const MatExlcusions_s& e ) { return !V_strcmp( szTmp, e.szDirectory ); } );
 	if ( m_pMaterialConfig->m_MaterialExclusions.IsValidIndex( find ) )
 		m_pMaterialConfig->m_MaterialExclusions.Remove( find );
 }
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void COPTTextures::OnMaterialExcludeListSel( void )
+{
+	int ndxSel = m_MaterialExcludeList.GetCurSel();
+	if( ndxSel == LB_ERR )
+		return;
+
+	char szTmp[MAX_PATH];
+	m_MaterialExcludeList.GetText( ndxSel, &szTmp[0] );
+
+	// Item data of 0 = FGD exclusion, 1 = user-created exclusion
+	DWORD dwData = m_MaterialExcludeList.GetItemData( ndxSel );
+	GetDlgItem( ID_MATERIALEXCLUDE_REM )->EnableWindow( dwData ? TRUE : FALSE );
+}
+

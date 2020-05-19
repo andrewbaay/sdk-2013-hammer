@@ -99,6 +99,8 @@ void CMapKeyFrame::CalcBounds(BOOL bFullUpdate)
 		}
 	}
 
+	m_BoundingBox = m_CullBox;
+
 	//
 	// Our 2D bounds are just a point, because we don't render in 2D.
 	//

@@ -21,6 +21,7 @@
 #include "hammer.h"
 #include "Worldsize.h"
 #include "MapOverlay.h"
+#include "Manifest.h"
 #include "smartptr.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -134,7 +135,16 @@ bool BoxesIntersect(Vector const &mins1, Vector const &maxs1, Vector const &mins
 //-----------------------------------------------------------------------------
 // Purpose: Constructor. Initializes data members.
 //-----------------------------------------------------------------------------
-CMapWorld::CMapWorld(void)
+CMapWorld::CMapWorld( void )
+{
+
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor. Initializes data members.
+//-----------------------------------------------------------------------------
+CMapWorld::CMapWorld( CMapDoc *pOwningDocument )
 {
 	//
 	// Make sure subsequent UpdateBounds() will be effective.
@@ -151,7 +161,7 @@ CMapWorld::CMapWorld(void)
 	// create the world displacement manager
 	m_pWorldDispMgr = CreateWorldEditDispMgr();
 
-	m_pPreferredPickObject = NULL;
+	m_pOwningDocument = pOwningDocument;
 }
 
 
@@ -349,15 +359,6 @@ int CMapWorld::FindEntityBucket( CMapEntity *pEntity, int *pnIndex )
 	return -1;
 }
 
-void CMapWorld::SetVMFPath( const char* pVMFPath )
-{
-	m_strVMFPath = pVMFPath;
-}
-
-const char* CMapWorld::GetVMFPath() const
-{
-	return m_strVMFPath;
-}
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -397,7 +398,7 @@ void CMapWorld::EntityList_Add(CMapClass *pObject)
 	CMapClass *pChild = pObject->GetFirstDescendent(pos);
 	while (pChild != NULL)
 	{
-		CMapEntity *pEntity = dynamic_cast<CMapEntity *>(pChild);
+		pEntity = dynamic_cast<CMapEntity *>(pChild);
 		if ((pEntity != NULL) && (m_EntityList.Find(pEntity) == -1))
 		{
 			AddEntity(pEntity);
@@ -447,7 +448,7 @@ void CMapWorld::EntityList_Remove(CMapClass *pObject, bool bRemoveChildren)
 		CMapClass *pChild = pObject->GetFirstDescendent(pos);
 		while (pChild != NULL)
 		{
-			CMapEntity *pEntity = dynamic_cast<CMapEntity *>(pChild);
+			pEntity = dynamic_cast<CMapEntity *>(pChild);
 			if (pEntity != NULL)
 			{
 				m_EntityList.FindAndRemove(pEntity);
@@ -474,6 +475,26 @@ void CMapWorld::RemoveChild(CMapClass *pChild, bool bUpdateBounds)
 	{
 		m_pCullTree->RemoveCullTreeObjectRecurse(pChild);
 	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will attempt to find a child.  If the bool and matrix
+//			are supplied, the localized matrix will be built.
+// Input  : key - the key field to lookup
+//			value - the value to find
+// Output : returns the entity found 
+//			bIsInInstance - optional parameter to indicate if the found entity is inside of an instance
+//			InstanceMatrix - optional parameter to set the localized matrix of the instance stack
+//-----------------------------------------------------------------------------
+CMapEntity *CMapWorld::FindChildByKeyValue( const char* key, const char* value, bool *bIsInInstance, VMatrix *InstanceMatrix )
+{
+	if ( bIsInInstance )
+	{
+		*bIsInInstance = false;
+	}
+
+	return __super::FindChildByKeyValue( key, value, bIsInInstance, InstanceMatrix );
 }
 
 
@@ -551,6 +572,12 @@ void CMapWorld::UpdateChild(CMapClass *pChild)
 			pDoc->UpdateObject(pChild);
 		}
 	}
+
+	if ( CMapDoc::GetInLevelLoad() == 0 )
+	{
+		APP()->pMapDocTemplate->UpdateInstanceMap( m_pOwningDocument );
+		APP()->pManifestDocTemplate->UpdateInstanceMap( m_pOwningDocument );
+	}
 }
 
 
@@ -572,7 +599,11 @@ void CMapWorld::GetUsedTextures(CUsedTextureList &List)
 //-----------------------------------------------------------------------------
 void CMapWorld::CullTree_FreeNode(CCullTreeNode *pNode)
 {
-	Assert(pNode != NULL);
+	if ( pNode == NULL )
+	{
+		Assert(pNode != NULL);
+		return;
+	}
 
 	int nChildCount = pNode->GetChildCount();
 	if (nChildCount != 0)
@@ -824,55 +855,50 @@ int CMapWorld::GetGroupList(CUtlVector<CMapGroup *> &GroupList)
 //-----------------------------------------------------------------------------
 void CMapWorld::PostloadWorld(void)
 {
+	// This causes certain calculations to get delayed until the end.
+	CMapClass::s_bLoadingVMF = true;
+
+	//
+	// Set the class name from our "classname" key and discard the key.
+	//
+	int nIndex;
+	const char *pszValue = pszValue = m_KeyValues.GetValue("classname", &nIndex);
+	if (pszValue != NULL)
 	{
-		// This causes certain calculations to get delayed until the end.
-		CAutoPushPop loadingVMF( CMapClass::s_bLoadingVMF, true );
-
-		//
-		// Set the class name from our "classname" key and discard the key.
-		//
-		int nIndex;
-		const char *pszValue = pszValue = m_KeyValues.GetValue("classname", &nIndex);
-		if (pszValue != NULL)
-		{
-			SetClass(pszValue);
-			RemoveKey(nIndex);
-		}
-
-		//
-		// Call PostLoadWorld on all our children and add any entities to the
-		// entity list.
-		//
-
-		FOR_EACH_OBJ( m_Children, pos )
-		{
-			CMapClass *pChild = m_Children[pos];
-			pChild->PostloadWorld(this);
-			EntityList_Add(pChild);
-		}
+		SetClass(pszValue);
+		RemoveKey(nIndex);
 	}
 
+	//
+	// Call PostLoadWorld on all our children and add any entities to the
+	// entity list.
+	//
+
+	FOR_EACH_OBJ( m_Children, pos )
 	{
-		// Since s_bLoadingVMF was on before, a bunch of stuff got delayed. Now let's do that stuff.
-		CAutoPushPop loadingVMF( CMapClass::s_bLoadingVMF, false );
-
-		FOR_EACH_OBJ( m_Children, pos )
-		{
-			CMapClass *pChild = m_Children[pos];
-			pChild->CalcBounds( TRUE );
-			//
-			// Relink the child in the culling tree.
-			//
-			if (m_pCullTree != NULL)
-			{
-				m_pCullTree->UpdateCullTreeObjectRecurse(pChild);
-			}
-
-			pChild->PostUpdate(Notify_Changed);
-			pChild->SignalChanged();
-		}
-		CalcBounds( FALSE ); // Recalculate the world's bounds now that everyone else's bounds are upadted.
+		CMapClass *pChild = m_Children[pos];
+		pChild->PostloadWorld(this);
+		EntityList_Add(pChild);
 	}
+
+	// Since s_bLoadingVMF was on before, a bunch of stuff got delayed. Now let's do that stuff.
+	CMapClass::s_bLoadingVMF = false;
+	FOR_EACH_OBJ( m_Children, pos )
+	{
+		CMapClass *pChild = m_Children[pos];
+		pChild->CalcBounds( TRUE );
+		//
+		// Relink the child in the culling tree.
+		//
+		if (m_pCullTree != NULL)
+		{
+			m_pCullTree->UpdateCullTreeObjectRecurse(pChild);
+		}
+
+		pChild->PostUpdate(Notify_Changed);
+		pChild->SignalChanged();
+	}
+	CalcBounds( FALSE ); // Recalculate the world's bounds now that everyone else's bounds are upadted.
 }
 
 
@@ -1006,6 +1032,22 @@ void CMapWorld::PresaveWorld(void)
 		pChild->PresaveWorld();
 		pChild = GetNextDescendent(pos);
 	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : 
+// Output : 
+//-----------------------------------------------------------------------------
+ChunkFileResult_t CMapWorld::SaveSolids(CChunkFile *pFile, CSaveInfo *pSaveInfo, int saveFlags)
+{
+	PresaveWorld();
+
+	SaveLists_t SaveLists;
+	EnumChildrenRecurseGroupsOnly((ENUMMAPCHILDRENPROC)BuildSaveListsCallback, (DWORD)&SaveLists);
+
+	return SaveObjectListVMF(pFile, pSaveInfo, &SaveLists.Solids, saveFlags);
 }
 
 
@@ -1607,7 +1649,7 @@ bool CMapWorld::GenerateNewTargetname( const char *startName, char *outputName, 
 
 	// Only append numbers to the name if we need to. It's possible that adding
 	// the prefix was sufficient to make the name unique.
-	if ( bMakeUnique && FindEntityByName( outputName ) )
+	if ( bMakeUnique && FindEntityByName( outputName, false, true ) )
 	{
 		// try to find entities that match the name
 		CMapEntity *pEnt = NULL;
@@ -1616,7 +1658,7 @@ bool CMapWorld::GenerateNewTargetname( const char *startName, char *outputName, 
 			// increment the entity name
 			IncrementStringName( outputName, newNameBufferSize );
 
-			pEnt = FindEntityByName( outputName );
+			pEnt = FindEntityByName( outputName, false, true );
 
 			if ( !pEnt && pRoot )
 			{
@@ -1679,7 +1721,7 @@ void CMapWorld::PostloadVisGroups()
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-CMapEntity *CMapWorld::FindEntityByName( const char *pszName, bool bVisiblesOnly )
+CMapEntity *CMapWorld::FindEntityByName( const char *pszName, bool bVisiblesOnly, bool bSearchInstanceParms )
 {
 	if ( !pszName )
 		return NULL;
@@ -1702,6 +1744,36 @@ CMapEntity *CMapWorld::FindEntityByName( const char *pszName, bool bVisiblesOnly
 			if ( pEntity->NameMatches( pszName ) )
 			{
 				return pEntity;
+			}
+		}
+	}
+
+	if ( bSearchInstanceParms == true )
+	{
+		const CMapEntityList *pEntities = EntityList_GetList();
+		FOR_EACH_OBJ( *pEntities, pos )
+		{
+			CMapEntity *pEntity = dynamic_cast< CMapEntity *>( (*pEntities)[pos] );
+			if ( pEntity->ClassNameMatches( "func_instance" ) == true )
+			{
+				for ( int j = pEntity->GetFirstKeyValue(); j != pEntity->GetInvalidKeyValue(); j = pEntity->GetNextKeyValue( j ) )
+				{
+					LPCTSTR	pInstanceKey = pEntity->GetKey( j );
+					LPCTSTR	pInstanceValue = pEntity->GetKeyValue( j );
+					if ( strnicmp( pInstanceKey, "replace", strlen( "replace" ) ) == 0 )
+					{
+						const char *InstancePos = strchr( pInstanceValue, ' ' );
+						if ( InstancePos == NULL )
+						{
+							continue;
+						}
+
+						if ( strcmpi( pszName, InstancePos + 1 ) == 0 )
+						{
+							return pEntity;
+						}
+					}
+				}
 			}
 		}
 	}
@@ -1874,5 +1946,21 @@ void CMapWorld::UpdateAllDependencies( CMapClass *pObject )
 			}
 		}
 	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns if this map world is editable.  If it is not part of an instance
+//			or manifest, then it is editable.  Otherwise, it lets the owning document
+//			determine the editing state.
+//-----------------------------------------------------------------------------
+bool CMapWorld::IsEditable( void ) 
+{
+	if ( !m_pOwningDocument )
+	{
+		return true;
+	}
+	
+	return m_pOwningDocument->IsEditable();
 }
 

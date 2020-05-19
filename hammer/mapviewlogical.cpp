@@ -522,7 +522,6 @@ void CMapViewLogical::RenderConnections(const bool bDrawSelected, const bool bAn
 					float my = y + ( nInputCount / 2 ) * LOGICAL_CONN_VERT_SPACING/2;
 
 					Vector vecStart( x + LOGICAL_CONN_MULTI_CIRCLE_RADIUS, y, 0.0f );
-					Vector vecDelta;
 					for ( int k = 0; k < nInputCount; ++k )
 					{
 						// bBadInput = false; // This should be based on whether downstream entity has the specificied named input

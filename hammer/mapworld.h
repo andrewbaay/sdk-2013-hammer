@@ -32,6 +32,7 @@ class CVisGroup;
 class CCullTreeNode;
 class IEditorTexture;
 class CMapGroup;
+class CMapInstance;
 
 struct SaveLists_t;
 
@@ -68,8 +69,11 @@ class CMapWorld : public CMapClass, public CEditGameClass
 
 		DECLARE_MAPCLASS(CMapWorld,CMapClass)
 
-		CMapWorld(void);
+		CMapWorld( void );
+		CMapWorld( CMapDoc *pOwningDocument );
 		~CMapWorld(void);
+
+		CMapDoc *GetOwningDocument( void ) { return m_pOwningDocument; }
 
 		//
 		// Public interface to the culling tree.
@@ -85,6 +89,9 @@ class CMapWorld : public CMapClass, public CEditGameClass
 		virtual CMapClass *CopyFrom(CMapClass *pFrom, bool bUpdateDependencies);
 		virtual void PresaveWorld(void);
 		virtual void RemoveChild(CMapClass *pChild, bool bUpdateBounds = true);
+		virtual bool IsWorld() { return true; }
+
+		virtual CMapEntity *FindChildByKeyValue( const char* key, const char* value, bool *bIsInInstance = NULL, VMatrix *InstanceMatrix = NULL );
 
 		void AddObjectToWorld(CMapClass *pObject, CMapClass *pParent = NULL);
 		void RemoveObjectFromWorld(CMapClass *pObject, bool bRemoveChildren);
@@ -92,6 +99,7 @@ class CMapWorld : public CMapClass, public CEditGameClass
 		// Groups have to be treated as logical because they potentially have logical children
 		virtual bool IsLogical(void) { return true; }
 		virtual bool IsVisibleLogical(void) { return IsVisible(); }
+		virtual bool IsEditable( void );
 
 		//
 		// Serialization.
@@ -101,6 +109,7 @@ class CMapWorld : public CMapClass, public CEditGameClass
 		void PostloadVisGroups(void);
 
 		// saveFlags is a combination of SAVEFLAGS_ defines.
+		ChunkFileResult_t SaveSolids(CChunkFile *pFile, CSaveInfo *pSaveInfo, int saveFlags);
 		ChunkFileResult_t SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo, int saveFlags);
 
 		virtual void UpdateChild(CMapClass *pChild);
@@ -128,7 +137,7 @@ class CMapWorld : public CMapClass, public CEditGameClass
 		inline int EntityList_GetCount();
 		inline CMapEntity *EntityList_GetEntity( int nIndex );
 
-		CMapEntity *FindEntityByName( const char *pszName, bool bVisiblesOnly = false );
+		CMapEntity *FindEntityByName( const char *pszName, bool bVisiblesOnly = false, bool bSearchInstanceParms = false );
 		bool FindEntitiesByKeyValue(CMapEntityList &Found, const char *szKey, const char *szValue, bool bVisiblesOnly);
 		bool FindEntitiesByName(CMapEntityList &Found, const char *szName, bool bVisiblesOnly);
 		bool FindEntitiesByClassName(CMapEntityList &Found, const char *szClassName, bool bVisiblesOnly);
@@ -140,15 +149,6 @@ class CMapWorld : public CMapClass, public CEditGameClass
 		inline IWorldEditDispMgr *GetWorldEditDispManager( void ) { return m_pWorldDispMgr; }
 
 		int GetGroupList(CUtlVector<CMapGroup *> &GroupList);
-
-		CMapClass* GetPreferredPickObject() override { return m_pPreferredPickObject; }
-		void SetPreferredPickObject( CMapClass* pObject ) { m_pPreferredPickObject = pObject; }
-
-		void SetVMFPath( const char* pVMFPath );
-		const char* GetVMFPath() const;
-
-		void SetOwningDoc( CMapDoc* pDoc ) { m_pOwningDocument = pDoc; }
-		ShowInstance_t GetInstanceVisibility() const { return m_pOwningDocument ? m_pOwningDocument->GetInstanceVisibility() : ShowInstance_t::INSTANCES_SHOW_NORMAL; }
 
 	protected:
 
@@ -192,11 +192,7 @@ class CMapWorld : public CMapClass, public CEditGameClass
 
 		IWorldEditDispMgr	*m_pWorldDispMgr;	// world editable displacement manager
 
-		CMapClass* m_pPreferredPickObject;
-
-		CString m_strVMFPath;
-
-		CMapDoc* m_pOwningDocument;
+		CMapDoc				*m_pOwningDocument;
 };
 
 

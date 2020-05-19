@@ -27,7 +27,8 @@
 class CEditGameClass;
 class COP_Entity;
 class COP_Flags;
-
+class CMyComboBox;
+class CModelBrowser;
 
 //-----------------------------------------------------------------------------
 // Owner-draw list control that uses cool colors to show
@@ -136,7 +137,17 @@ enum EKeyState
 {
 	k_EKeyState_DefaultFGDValue=0,	// This key is unmodified from its default value in the FGD.
 	k_EKeyState_Modified=1,			// This key is in the FGD, and its value has been modified.
-	k_EKeyState_AddedManually		// This key was added manually (i.e. it does not exist in the FGD).
+	k_EKeyState_AddedManually,		// This key was added manually (i.e. it does not exist in the FGD).
+	k_EKeyState_InstanceParm,
+};
+
+
+class CInstanceParmData
+{
+public:
+	GDinputvariable		*m_ParmVariable;
+	CString				m_ParmKey;
+	CString				m_VariableName;
 };
 
 
@@ -174,7 +185,7 @@ class COP_Entity : public CObjectPage, CFilteredComboBox::ICallbacks, public CCo
 		// Interface for property sheet.
 		//
 		virtual bool SaveData(void);
-		virtual void UpdateData(int Mode, PVOID pData);
+		virtual void UpdateData( int Mode, PVOID pData, bool bCanEdit );
 		virtual void RememberState(void);
 
 		//
@@ -195,6 +206,7 @@ class COP_Entity : public CObjectPage, CFilteredComboBox::ICallbacks, public CCo
 		CFilteredComboBox m_cClasses;
 		CEdit m_Comments;
 		CEdit m_KeyValueHelpText;
+		CButton	m_PasteControl;
 		//}}AFX_DATA
 
 		// ClassWizard generate virtual function overrides
@@ -243,6 +255,8 @@ class COP_Entity : public CObjectPage, CFilteredComboBox::ICallbacks, public CCo
 		void CreateSmartControls_BrowseAndPlayButtons( GDinputvariable *pVar, CRect &ctrlrect, HFONT hControlFont );
 		void CreateSmartControls_MarkAndEyedropperButtons( GDinputvariable *pVar, CRect &ctrlrect, HFONT hControlFont );
 		void CreateSmartControls_PickButton( GDinputvariable *pVar, CRect &ctrlrect, HFONT hControlFont );
+		void CreateSmartControls_InstanceVariable( GDinputvariable *pVar, CRect &ctrlrect, HFONT hControlFont );
+		void CreateSmartControls_InstanceParm( GDinputvariable *pVar, CRect &ctrlrect, HFONT hControlFont );
 
 		void UpdateDisplayClass(const char *pszClass);
 		void UpdateDisplayClass(GDclass *pClass);
@@ -262,8 +276,8 @@ class COP_Entity : public CObjectPage, CFilteredComboBox::ICallbacks, public CCo
 		afx_msg void OnAddkeyvalue();
 		afx_msg BOOL OnApply(void);
 		afx_msg void OnBrowse(void);
+		afx_msg void OnBrowseInstance(void);
 		afx_msg void OnPlaySound(void);
-		afx_msg void OnEditInstance(void);
 		virtual BOOL OnInitDialog();
 		afx_msg void OnSelchangeKeyvalues();
 		afx_msg void OnRemovekeyvalue();
@@ -278,6 +292,8 @@ class COP_Entity : public CObjectPage, CFilteredComboBox::ICallbacks, public CCo
 		afx_msg LRESULT OnChangeAngleBox(WPARAM, LPARAM);
 		afx_msg void OnChangeSmartcontrol();
 		afx_msg void OnChangeSmartcontrolSel();
+		afx_msg void OnChangeInstanceVariableControl();
+		afx_msg void OnChangeInstanceParmControl();
 		afx_msg void OnPickFaces(void);
 		afx_msg void OnPickColor();
 		afx_msg void OnMark();
@@ -291,7 +307,7 @@ class COP_Entity : public CObjectPage, CFilteredComboBox::ICallbacks, public CCo
 		afx_msg void OnDblClickKeyValues(NMHDR* pNMHDR, LRESULT* pResult);
 		//}}AFX_MSG
 
-		void BrowseTextures( const char *szFilter );
+		void BrowseTextures( const char *szFilter, bool bIsSprite = false ); 
 		bool BrowseModels( char *szModelName, int length, int &nSkin );
 		void MergeObjectKeyValues(CEditGameClass *pEdit);
 		void MergeKeyValue(char const *pszKey);
@@ -321,6 +337,10 @@ class COP_Entity : public CObjectPage, CFilteredComboBox::ICallbacks, public CCo
 		void SetSmartControlText(const char *pszText);
 		void PerformMark(const char *pTargetName, bool bClear, bool bNameOrClass);
 
+		void LoadCustomColors();
+		void SaveCustomColors();
+		
+		GDinputvariable *GetVariableAt( int index );
 
 	private:
 
@@ -337,12 +357,16 @@ class COP_Entity : public CObjectPage, CFilteredComboBox::ICallbacks, public CCo
 		bool m_bSmartedit;
 		int m_nNewKeyCount;
 
+		CEdit		*m_pEditInstanceVariable, *m_pEditInstanceValue;
+		CMyComboBox	*m_pComboInstanceParmType;
+
 		// Used to prevent unnecessary calls to PresentProperties.
 		int m_nPresentPropertiesCalls;
 		bool m_bAllowPresentProperties;
 
 		GDclass *m_pDisplayClass;		// The class that the dialog is showing. Can be different from m_pEditClass
 										// until the user hits Apply.
+		GDinputvariable *m_pInstanceVar;
 
 		short m_VarMap[GD_MAX_VARIABLES];
 
@@ -380,14 +404,20 @@ class COP_Entity : public CObjectPage, CFilteredComboBox::ICallbacks, public CCo
 
 		CSmartControlTargetNameRouter m_SmartControlTargetNameRouter;
 
+		CUtlMap<CString, CInstanceParmData> m_InstanceParmData; 
+		
 		// Used when multiselecting classes to remember whether they've selected a class
 		// or not yet.
 		bool m_bClassSelectionEmpty;
+		CModelBrowser *pModelBrowser; 
 
 	friend class CPickAnglesTarget;
 	friend class CPickEntityTarget;
 	friend class CPickFaceTarget;
 	friend class CSmartControlTargetNameRouter;
+
+	COLORREF CustomColors[16];
+	bool m_bCustomColorsLoaded;
 };
 
 // These are used to load the filesystem open dialog.

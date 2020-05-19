@@ -158,6 +158,8 @@ protected:
 	bool LoadMaterialHeader(IMaterial *material);
 	bool LoadMaterialImage();
 
+	static bool IsIgnoredMaterial( const char *pName );
+
 	// Will actually load the material bits
 	// We don't want to load them all at once because it takes way too long
 	bool LoadMaterial();

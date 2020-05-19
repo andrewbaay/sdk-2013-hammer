@@ -17,6 +17,7 @@
 #include "MessageWnd.h"
 #include "ChildFrm.h"
 #include "MapDoc.h"
+#include "Manifest.h"
 #include "MapView3D.h"
 #include "MapView2D.h"
 #include "PakDoc.h"
@@ -89,6 +90,7 @@
 // dvs: hack
 extern LPCTSTR GetErrorString(void);
 extern void MakePrefabLibrary(LPCTSTR pszName);
+void EditorUtil_ConvertPath(CString &str, bool bSave);
 
 CHammer theApp;
 COptions Options;
@@ -101,6 +103,8 @@ CMessageWnd *g_pwndMessage = NULL;
 CMessageQueue<MessageToLPreview> g_HammerToLPreviewMsgQueue;
 CMessageQueue<MessageFromLPreview> g_LPreviewToHammerMsgQueue;
 ThreadHandle_t g_LPreviewThread;
+
+bool	CHammer::m_bIsNewDocumentVisible = true;
 
 //-----------------------------------------------------------------------------
 // Expose singleton
@@ -196,6 +200,114 @@ void Msg(int type, const char *fmt, ...)
 		len -= MESSAGE_WND_MESSAGE_LENGTH-1;
 
 	} while (len > 0);
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this routine calls the default doc template's OpenDocumentFile() but
+//			with the ability to override the visible flag
+// Input  : lpszPathName - the document to open
+//			bMakeVisible - ignored
+// Output : returns the opened document if successful
+//-----------------------------------------------------------------------------
+CDocument *CHammerDocTemplate::OpenDocumentFile( LPCTSTR lpszPathName, BOOL bMakeVisible )
+{
+	CDocument *pDoc = __super::OpenDocumentFile( lpszPathName, CHammer::IsNewDocumentVisible() );
+
+	return pDoc;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will attempt an orderly shutdown of all maps.  It will attempt to
+//			close only documents that have no references, hopefully freeing up additional documents
+// Input  : bEndSession - ignored
+//-----------------------------------------------------------------------------
+void CHammerDocTemplate::CloseAllDocuments( BOOL bEndSession )
+{
+	bool	bFound = true;
+
+	// rough loop to always remove the first map doc that has no references, then start over, try again.
+	// if we still have maps with references ( that's bad ), we'll exit out of this loop and just do
+	// the default shutdown to force them all to close.
+	while( bFound )
+	{
+		bFound = false;
+
+		POSITION pos = GetFirstDocPosition();
+		while( pos != NULL )
+		{
+			CDocument *pDoc = GetNextDoc( pos );
+			CMapDoc *pMapDoc = dynamic_cast< CMapDoc * >( pDoc );
+
+			if ( pMapDoc && pMapDoc->GetReferenceCount() == 0 )
+			{
+				pDoc->OnCloseDocument();
+				bFound = true;
+				break;
+			}
+		}
+	}
+
+#if 0
+	POSITION pos = GetFirstDocPosition();
+	while( pos != NULL )
+	{
+		CDocument *pDoc = GetNextDoc( pos );
+		CMapDoc *pMapDoc = dynamic_cast< CMapDoc * >( pDoc );
+
+		if ( pMapDoc )
+		{
+			pMapDoc->ForceNoReference();
+		}
+	}
+
+	__super::CloseAllDocuments( bEndSession );
+#endif
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: This function will allow hammer to control the initial visibility of an opening document
+// Input  : pFrame - the new document's frame
+//			pDoc - the new document
+//			bMakeVisible - ignored as a parameter
+//-----------------------------------------------------------------------------
+void CHammerDocTemplate::InitialUpdateFrame( CFrameWnd* pFrame, CDocument* pDoc, BOOL bMakeVisible )
+{
+	bMakeVisible = CHammer::IsNewDocumentVisible();
+
+	__super::InitialUpdateFrame( pFrame, pDoc, bMakeVisible );
+
+	if ( bMakeVisible )
+	{
+		CMapDoc *pMapDoc = dynamic_cast< CMapDoc * >( pDoc );
+
+		if ( pMapDoc )
+		{
+			pMapDoc->SetInitialUpdate();
+		}
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will let all other maps know that an instanced map has been updated ( usually for volume size )
+// Input  : pInstanceMapDoc - the document that has been updated
+//-----------------------------------------------------------------------------
+void CHammerDocTemplate::UpdateInstanceMap( CMapDoc *pInstanceMapDoc )
+{
+	POSITION pos = GetFirstDocPosition();
+	while( pos != NULL )
+	{
+		CDocument *pDoc = GetNextDoc( pos );
+		CMapDoc *pMapDoc = dynamic_cast< CMapDoc * >( pDoc );
+
+		if ( pMapDoc && pMapDoc != pInstanceMapDoc )
+		{
+			pMapDoc->UpdateInstanceMap( pInstanceMapDoc );
+		}
+	}
 }
 
 
@@ -740,26 +852,36 @@ CGameConfig *CHammer::PromptForGameConfig()
 bool CHammer::InitSessionGameConfig(const char *szGame)
 {
 	CGameConfig *pConfig = NULL;
+	bool bManualChoice = false;
 
-	if (szGame && szGame[0] != '\0')
+	if ( CommandLine()->FindParm( "-chooseconfig" ) )
 	{
-		// They passed in -game on the command line, use that.
-		pConfig = Options.configs.FindConfigForGame(szGame);
-		if (!pConfig)
-		{
-			Msg(mwError, "Invalid game \"%s\" specified on the command-line, ignoring.", szGame);
-		}
+		pConfig = PromptForGameConfig();
+		bManualChoice = true;
 	}
-	else
+
+	if (!bManualChoice)
 	{
-		// No -game on the command line, try using VPROJECT.
-		const char *pszGameDir = getenv("vproject");
-		if ( pszGameDir )
+		if (szGame && szGame[0] != '\0')
 		{
-			pConfig = Options.configs.FindConfigForGame(pszGameDir);
+			// They passed in -game on the command line, use that.
+			pConfig = Options.configs.FindConfigForGame(szGame);
 			if (!pConfig)
 			{
-				Msg(mwError, "Invalid game \"%s\" found in VPROJECT environment variable, ignoring.", pszGameDir);
+				Msg(mwError, "Invalid game \"%s\" specified on the command-line, ignoring.", szGame);
+			}
+		}
+		else
+		{
+			// No -game on the command line, try using VPROJECT.
+			const char *pszGameDir = getenv("vproject");
+			if ( pszGameDir )
+			{
+				pConfig = Options.configs.FindConfigForGame(pszGameDir);
+				if (!pConfig)
+				{
+					Msg(mwError, "Invalid game \"%s\" found in VPROJECT environment variable, ignoring.", pszGameDir);
+				}
 			}
 		}
 	}
@@ -898,12 +1020,24 @@ InitReturnVal_t CHammer::HammerInternalInit()
 
 	// Register the application's document templates.  Document templates
 	//  serve as the connection between documents, frame windows and views.
-	pMapDocTemplate = new CMultiDocTemplate(
+	pMapDocTemplate = new CHammerDocTemplate(
 		IDR_MAPDOC,
 		RUNTIME_CLASS(CMapDoc),
 		RUNTIME_CLASS(CChildFrame), // custom MDI child frame
 		RUNTIME_CLASS(CMapView2D));
 	AddDocTemplate(pMapDocTemplate);
+
+	pManifestDocTemplate = new CHammerDocTemplate(
+		IDR_MANIFESTDOC,
+		RUNTIME_CLASS(CManifest),
+		RUNTIME_CLASS(CChildFrame), // custom MDI child frame
+		RUNTIME_CLASS(CMapView2D));
+	HINSTANCE hInst = AfxFindResourceHandle( MAKEINTRESOURCE( IDR_MAPDOC ), RT_MENU );
+	pManifestDocTemplate->m_hMenuShared = ::LoadMenu( hInst, MAKEINTRESOURCE( IDR_MAPDOC ) );
+	hInst = AfxFindResourceHandle( MAKEINTRESOURCE( IDR_MAPDOC ), RT_ACCELERATOR );
+	pManifestDocTemplate->m_hAccelTable = ::LoadAccelerators( hInst, MAKEINTRESOURCE( IDR_MAPDOC ) );
+	AddDocTemplate(pManifestDocTemplate);
+
 
 	// register shell file types
 	RegisterShellFileTypes();
@@ -966,6 +1100,9 @@ InitReturnVal_t CHammer::HammerInternalInit()
         Error("Failed to load custom keybinds for IDR_MAINFRAME!");
 
     if (!g_pKeyBinds->GetAccelTableFor("IDR_MAPDOC", pMapDocTemplate->m_hAccelTable))
+        Error("Failed to load custom keybinds for the IDR_MAPDOC!");
+
+    if (!g_pKeyBinds->GetAccelTableFor("IDR_MAPDOC", pManifestDocTemplate->m_hAccelTable))
         Error("Failed to load custom keybinds for the IDR_MAPDOC!");
 
 	//
@@ -1205,14 +1342,14 @@ void CHammer::BeginClosing()
 //-----------------------------------------------------------------------------
 int CHammer::ExitInstance()
 {
-	g_ShellMessageWnd.DestroyWindow();
-
-	UpdatePrefabs_Shutdown();
-
 	if ( GetSpewOutputFunc() == HammerDbgOutput )
 	{
 		SpewOutputFunc( oldSpewFunc );
 	}
+
+	g_ShellMessageWnd.DestroyWindow();
+
+	UpdatePrefabs_Shutdown();
 
 	SaveStdProfileSettings();
 
@@ -1231,6 +1368,27 @@ int CHammer::ExitInstance()
 	}
 
 	return CWinApp::ExitInstance();
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function sets the global flag indicating if new documents should
+//			be visible.
+// Input  : bIsVisible - flag to indicate visibility status.
+//-----------------------------------------------------------------------------
+void CHammer::SetIsNewDocumentVisible( bool bIsVisible )
+{
+	CHammer::m_bIsNewDocumentVisible = bIsVisible;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this functionr eturns the global flag indicating if new documents should
+//			be visible.
+//-----------------------------------------------------------------------------
+bool CHammer::IsNewDocumentVisible( void )
+{
+	return CHammer::m_bIsNewDocumentVisible;
 }
 
 
@@ -1353,7 +1511,7 @@ void CHammer::OnFileOpen(void)
 		strcpy(szInitialDir, g_pGameConfig->szMapDir);
 	}
 
-	CFileDialog dlg(TRUE, NULL, NULL, OFN_LONGNAMES | OFN_HIDEREADONLY | OFN_NOCHANGEDIR, "Valve Map Files (*.vmf)|*.vmf|Valve Map Files Autosave (*.vmf_autosave)|*.vmf_autosave||");
+	CFileDialog dlg(TRUE, NULL, NULL, OFN_LONGNAMES | OFN_HIDEREADONLY | OFN_NOCHANGEDIR, "Valve Map Files (*.vmf;*.vmm)|*.vmf;*.vmm|Valve Map Files Autosave (*.vmf_autosave)|*.vmf_autosave||");
 	dlg.m_ofn.lpstrInitialDir = szInitialDir;
 	int iRvl = dlg.DoModal();
 
@@ -1403,18 +1561,36 @@ CDocument* CHammer::OpenDocumentFile(LPCTSTR lpszFileName)
 {
 	if(GetFileAttributes(lpszFileName) == 0xFFFFFFFF)
 	{
-		AfxMessageBox("That file does not exist.");
+		CString		Message;
+
+		Message = "The file " + CString( lpszFileName ) + " does not exist.";
+		AfxMessageBox( Message );
 		return NULL;
 	}
 
-	CDocument *pDoc = m_pDocManager->OpenDocumentFile(lpszFileName);
+	CDocument	*pDoc = m_pDocManager->OpenDocumentFile( lpszFileName );
+	CMapDoc		*pMapDoc = dynamic_cast< CMapDoc * >( pDoc );
 
-	if(Options.general.bLoadwinpos && Options.general.bIndependentwin)
+	if ( pMapDoc )
+	{
+		CMapDoc::SetActiveMapDoc( pMapDoc );
+	}
+
+	if( pDoc && Options.general.bLoadwinpos && Options.general.bIndependentwin)
 	{
 		::GetMainWnd()->LoadWindowStates();
 	}
 
-	if ( ((CMapDoc *)pDoc)->IsAutosave() )
+	if ( pMapDoc && !CHammer::IsNewDocumentVisible() )
+	{
+		pMapDoc->ShowWindow( false );
+	}
+	else
+	{
+		pMapDoc->ShowWindow( true );
+	}
+
+	if ( pMapDoc && pMapDoc->IsAutosave() )
 	{
 		char szRenameMessage[MAX_PATH+MAX_PATH+256];
 		CString newMapPath = *((CMapDoc *)pDoc)->AutosavedFrom();
@@ -1432,6 +1608,25 @@ CDocument* CHammer::OpenDocumentFile(LPCTSTR lpszFileName)
 
 
 //-----------------------------------------------------------------------------
+// Returns true if this is a key message that is not a special dialog navigation message.
+//-----------------------------------------------------------------------------
+inline bool IsKeyStrokeMessage( MSG *pMsg )
+{
+	if ( ( pMsg->message != WM_KEYDOWN ) && ( pMsg->message != WM_CHAR ) )
+		return false;
+
+	// Check for special dialog navigation characters -- they don't count
+	if ( ( pMsg->wParam == VK_ESCAPE ) || ( pMsg->wParam == VK_RETURN ) || ( pMsg->wParam == VK_TAB ) )
+		return false;
+
+	if ( ( pMsg->wParam == VK_UP ) || ( pMsg->wParam == VK_DOWN ) || ( pMsg->wParam == VK_LEFT ) || ( pMsg->wParam == VK_RIGHT ) )
+		return false;
+
+	return true;
+}
+
+
+//-----------------------------------------------------------------------------
 // Purpose:
 // Input  : pMsg -
 // Output : Returns TRUE on success, FALSE on failure.
@@ -1441,6 +1636,25 @@ BOOL CHammer::PreTranslateMessage(MSG* pMsg)
 	// CG: The following lines were added by the Splash Screen component.
 	if (CSplashWnd::PreTranslateAppMessage(pMsg))
 		return TRUE;
+
+	// This is for raw input, these shouldn't be translated so skip that here.
+	if ( pMsg->message == WM_INPUT )
+		return TRUE;
+
+	// Suppress the accelerator table for edit controls so that users can type
+	// uppercase characters without invoking Hammer tools.
+	if ( IsKeyStrokeMessage( pMsg ) )
+	{
+		char className[80];
+		::GetClassNameA( pMsg->hwnd, className, sizeof( className ) );
+
+		// The classname of dialog window in the VGUI model browser and particle browser is AfxWnd100sd in Debug and AfxWnd100s in Release
+		if ( !V_stricmp( className, "edit" ) || V_stristr( className, "AfxWnd" ) )
+		{
+			// Typing in an edit control. Don't pretranslate, just translate/dispatch.
+			return FALSE;
+		}
+	}
 
 	return CWinApp::PreTranslateMessage(pMsg);
 }
@@ -1622,12 +1836,14 @@ void CHammer::RunFrame(void)
 
 	HammerVGui()->Simulate();
 
-	HandleLightingPreview();
+	if ( CMapDoc::GetActiveMapDoc() && !IsClosing() || m_bForceRenderNextFrame )
+		HandleLightingPreview();
 
 	// never render without document or when closing down
 	// usually only render when active, but not compiling a map unless forced
 	if ( CMapDoc::GetActiveMapDoc() && !IsClosing() &&
-		 ( ( !IsRunningCommands() && IsActiveApp() ) || m_bForceRenderNextFrame ) )
+		 ( ( !IsRunningCommands() && IsActiveApp() ) || m_bForceRenderNextFrame ) &&
+		 CMapDoc::GetActiveMapDoc()->HasInitialUpdate() )
 
 	{
 		// get the time
@@ -1868,6 +2084,9 @@ void CHammer::Autosave( void )
 		APP()->GetDirectory(DIR_AUTOSAVE, szRootDir);
 		CString strAutosaveDirectory( szRootDir );
 
+		//expand the path if $SteamUserDir etc are used for SDK users
+		EditorUtil_ConvertPath(strAutosaveDirectory, true);
+
 		CString strExtension  = ".vmf";
 		//this will hold the name of the map w/o leading directory info or file extension
 		CString strMapTitle;
@@ -1961,13 +2180,15 @@ bool CHammer::VerifyAutosaveDirectory( char *szAutosaveDirectory ) const
 		AfxMessageBox( "No autosave directory has been selected.\nThe autosave feature will be disabled until a directory is entered.", MB_OK );
 		return false;
 	}
-	if ( ( szRootDir[1] != ':' ) || ( szRootDir[2] != '\\' ) )
-	{
-		AfxMessageBox( "The current autosave directory does not have an absolute path.\nThe autosave feature will be disabled until a new directory is entered.", MB_OK );
-		return false;
-	}
-
 	CString strAutosaveDirectory( szRootDir );
+	{
+		EditorUtil_ConvertPath(strAutosaveDirectory, true);
+		if ( ( strAutosaveDirectory[1] != ':' ) || ( strAutosaveDirectory[2] != '\\' ) )
+		{
+			AfxMessageBox( "The current autosave directory does not have an absolute path.\nThe autosave feature will be disabled until a new directory is entered.", MB_OK );
+			return false;
+		}
+	}
 
 	hDir = CreateFile (
 		strAutosaveDirectory,

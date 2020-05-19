@@ -117,6 +117,7 @@ void CMapPointHandle::CalcBounds(BOOL bFullUpdate)
 	Vector Mins = m_Origin + Vector(2, 2, 2);
 	Vector Maxs = m_Origin + Vector(2, 2, 2);
 	m_CullBox.SetBounds(Mins, Maxs);
+	m_BoundingBox = m_CullBox;
 }
 
 

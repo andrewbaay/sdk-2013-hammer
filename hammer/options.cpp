@@ -538,10 +538,11 @@ bool COptions::Read(void)
 	general.bClosedCorrectly = APP()->GetProfileInt(pszGeneral, "Closed Correctly", TRUE);
 	general.bUseVGUIModelBrowser = APP()->GetProfileInt(pszGeneral, "VGUI Model Browser", TRUE);	
 	general.bShowHiddenTargetsAsBroken = APP()->GetProfileInt(pszGeneral, "Show Hidden Targets As Broken", TRUE);	
+	general.bRadiusCulling = APP()->GetProfileInt(pszGeneral, "Use Radius Culling", FALSE);
 	
 	char szDefaultAutosavePath[MAX_PATH];
-	strcpy( szDefaultAutosavePath, APP()->GetProfileString(pszGeneral, "Directory", "C:"));
-	strcat( szDefaultAutosavePath, "\\HammerAutosave\\" );
+	V_strcpy_safe( szDefaultAutosavePath, APP()->GetProfileString( pszGeneral, "Directory", "C:" ) );
+	V_strcpy_safe( szDefaultAutosavePath, "\\HammerAutosave\\" );
 	strcpy( general.szAutosaveDir, APP()->GetProfileString("General", "Autosave Dir", szDefaultAutosavePath));
 	if ( Q_strlen( general.szAutosaveDir ) == 0 )
 	{
@@ -586,6 +587,7 @@ bool COptions::Read(void)
 	view3d.bFilterTextures = APP()->GetProfileInt(pszView3D, "FilterTextures", TRUE);
 	view3d.bReverseSelection = APP()->GetProfileInt(pszView3D, "ReverseSelection", FALSE);
 	view3d.fFOV = 90;
+	view3d.fLightConeLength = 10;
 		
 	ReadColorSettings();
 
@@ -721,6 +723,8 @@ void COptions::ReadColorSettings(void)
 		colors.clrToolMorph = RGB(255, 0, 0);
 		colors.clrToolPath = RGB(255, 0, 0);
 		colors.clrEntity = RGB(220, 30, 220);
+		colors.clrModelCollisionWireframe = RGB( 255, 255, 0 );
+		colors.clrModelCollisionWireframeDisabled = RGB( 220, 30, 220 );
 	}
 }
 
@@ -756,6 +760,8 @@ void COptions::Write( BOOL fOverwrite, BOOL fSaveConfigs )
 	APP()->SetDirectory( DIR_AUTOSAVE, general.szAutosaveDir );
 	APP()->WriteProfileInt(pszGeneral, "VGUI Model Browser", general.bUseVGUIModelBrowser );
 	APP()->WriteProfileInt(pszGeneral, "Show Hidden Targets As Broken", general.bShowHiddenTargetsAsBroken);
+	APP()->WriteProfileInt(pszGeneral, "Use Radius Culling", general.bRadiusCulling);
+
 
 	
 	// write view2d

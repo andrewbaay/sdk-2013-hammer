@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 #if !defined(AFX_ARCHDLG_H__C146AA5D_38FE_11D1_AFC9_0060979D2F4E__INCLUDED_)
@@ -21,8 +21,6 @@ public:
 
 	void DrawArch(CDC *pDC);
 
-	float fOuterPoints[ARC_MAX_POINTS][2];
-	float fInnerPoints[ARC_MAX_POINTS][2];
 	Vector bmins, bmaxs;
 
 // Dialog Data

@@ -169,6 +169,7 @@ void CMapSideList::CalcBounds(BOOL bFullUpdate)
 		pFace->GetCenter(Center);
 		m_CullBox.UpdateBounds(Center);
 	}
+	m_BoundingBox = m_CullBox;
 }
 
 

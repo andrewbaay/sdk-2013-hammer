@@ -12,7 +12,6 @@
 #include "MainFrm.h"
 #include "MapDoc.h"
 #include "GlobalFunctions.h"
-#include "UndoWarningDlg.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -175,27 +174,6 @@ void CHistory::MarkUndoPosition( const CMapObjectList *pSelection, LPCTSTR pszNa
 
 		Opposite->Tracks.RemoveAll();
 		Opposite->CurTrack = NULL;
-	}
-
-	if(CurTrack)
-	{
-		MEMORYSTATUS ms;
-		GlobalMemoryStatus(&ms);
-		uDataSize += CurTrack->uDataSize;
-		BOOL bWarnMemory = AfxGetApp()->GetProfileInt("General", 
-			"Undo Memory Warning", TRUE);
-		if(ms.dwMemoryLoad > 80 && bWarnMemory)
-		{
-			// inform user that undo is taking up lots of
-			// memory..
-			CUndoWarningDlg dlg;
-			dlg.DoModal();
-			if(dlg.m_bNoShow)
-			{
-				AfxGetApp()->WriteProfileInt("General", 
-					"Undo Memory Warning", FALSE);
-			}
-		}
 	}
 
 	// create a new track
@@ -362,7 +340,7 @@ void CHistory::OnRemoveVisGroup(CVisGroup *pVisGroup)
 		CurTrack->OnRemoveVisGroup(pVisGroup);
 	}
 
-	if (Opposite->CurTrack)
+	if (Opposite && Opposite->CurTrack)
 	{
 		Opposite->CurTrack->OnRemoveVisGroup(pVisGroup);
 	}

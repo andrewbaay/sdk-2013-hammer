@@ -41,7 +41,7 @@ InitViewerSettings (void)
 {
 	memset (&g_viewerSettings, 0, sizeof (ViewerSettings));
 	g_viewerSettings.rot[0] = -90.0f;
-	g_viewerSettings.trans[3] = 50.0f;
+	//g_viewerSettings.trans[3] = 50.0f;
 	g_viewerSettings.renderMode = RM_TEXTURED;
 	g_viewerSettings.transparency = 1.0f;
 

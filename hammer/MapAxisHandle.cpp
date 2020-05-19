@@ -127,6 +127,7 @@ void CMapAxisHandle::CalcBounds(BOOL bFullUpdate)
 		m_Point[i].GetCullBox(vecMins, vecMaxs);
 		m_CullBox.UpdateBounds(vecMins, vecMaxs);
 	}
+	m_BoundingBox = m_CullBox;
 }
 
 

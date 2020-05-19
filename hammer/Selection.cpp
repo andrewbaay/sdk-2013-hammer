@@ -12,6 +12,7 @@
 #include "mapdoc.h"
 #include "MapHelper.h"
 #include "MapSolid.h"
+#include "Manifest.h"
 #include "mapdefs.h"
 #include "globalfunctions.h"
 #include "mainfrm.h"
@@ -40,12 +41,9 @@ void CSelection::Init( CMapDoc *pDocument )
 	UpdateSelectionBounds();
 }
 
-bool CSelection::IsSelected(CMapClass *pObj)
+bool CSelection::IsSelected(CMapClass *pobj)
 {
-	if ( CMapClass* pPreferred = pObj->GetPreferredPickObject() )
-		pObj = pPreferred;
-
-	return (m_SelectionList.Find(pObj) != m_SelectionList.InvalidIndex());
+	return (m_SelectionList.Find(pobj) != m_SelectionList.InvalidIndex());
 }
 
 
@@ -237,6 +235,54 @@ bool CSelection::IsAnEntitySelected(void)
 
 
 //-----------------------------------------------------------------------------
+// Purpose: Returns true if the selection is editable.  Every object must be
+//			individually editable for this routine to return true.
+//-----------------------------------------------------------------------------
+bool CSelection::IsEditable()
+{
+	if ( m_SelectionList.Count() > 0 )
+	{
+		int nSelCount = m_SelectionList.Count();
+		for (int i = 0; i < nSelCount; i++)
+		{
+			CMapClass *pObject = m_SelectionList.Element(i);
+
+			if ( pObject->IsEditable() == false )
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns true if the selection is copyable.  CManifestInstance classes
+//			are not copyable.
+//-----------------------------------------------------------------------------
+bool CSelection::IsCopyable()
+{
+	if ( m_SelectionList.Count() > 0 )
+	{
+		int nSelCount = m_SelectionList.Count();
+		for (int i = 0; i < nSelCount; i++)
+		{
+			CMapClass *pObject = m_SelectionList.Element(i);
+
+			if ( pObject->IsMapClass( MAPCLASS_TYPE( CManifestInstance ) ) )
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+
+//-----------------------------------------------------------------------------
 // Purpose: Sets the current selection mode, which determines which objects
 //			are selected when the user clicks on things.
 //-----------------------------------------------------------------------------
@@ -292,9 +338,6 @@ void CSelection::SetMode(SelectMode_t eNewSelectMode)
 //-----------------------------------------------------------------------------
 void CSelection::AddHit(CMapClass *pObject)
 {
-	if ( CMapClass* pPreferred = pObject->GetPreferredPickObject() )
-		pObject = pPreferred;
-
 	if ( m_HitList.Find(pObject) == -1 )
 	{
 		m_HitList.AddToTail(pObject);
@@ -330,13 +373,8 @@ bool CSelection::RemoveDead(void)
 
 	for ( int i=m_SelectionList.Count()-1; i>=0; i-- )
 	{
-		CMapClass *pObject = m_SelectionList.Element( i );
-		if ( !pObject )
-		{
-			m_SelectionList.FastRemove( i );
-			bFoundOne = true;
-		}
-		else if (!pObject->GetParent())
+		CMapClass *pObject = m_SelectionList.Element(i);
+		if (!pObject->GetParent())
 		{
 			m_SelectionList.FastRemove(i);
 			pObject->SetSelectionState(SELECT_NONE);
@@ -479,9 +517,6 @@ bool CSelection::SelectObject(CMapClass *pObj, int cmd)
 	}
 	else // object oriented operation
 	{
-		if ( CMapClass* pPreferred = pObj->GetPreferredPickObject() )
-			pObj = pPreferred;
-
 		int iIndex = m_SelectionList.Find(pObj);
 		bool bAlreadySelected = iIndex != -1;
 

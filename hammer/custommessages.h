@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -10,7 +10,7 @@
 #pragma once
 
 
-enum 
+enum
 {
 	CUSTOMMESSAGESSTART = WM_USER + 1,
 
@@ -28,6 +28,11 @@ enum
 	//
 	TWN_SELCHANGED,		// The texture window selection has changed.
 	TWN_LBUTTONDBLCLK,	// The user double clicked in the texture window.
+
+	//
+	// Posted by CLightingPreviewResultsWindow
+	//
+	LPRV_WINDOWCLOSED,
 };
 
 

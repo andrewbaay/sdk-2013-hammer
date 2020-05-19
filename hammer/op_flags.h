@@ -45,7 +45,7 @@ public:
 	void SetEntityPage( COP_Entity *pEntityPage );
 
 	virtual bool SaveData(void);
-	virtual void UpdateData(int Mode, PVOID pData);
+	virtual void UpdateData( int Mode, PVOID pData, bool bCanEdit );
 	void UpdateForClass(CEditGameClass* pObj);
 	void MergeForClass(CEditGameClass* pObj);
 	void CreateCheckList(void);

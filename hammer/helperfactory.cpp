@@ -26,8 +26,8 @@
 #include "MapLight.h"
 #include "MapSideList.h"
 #include "MapCylinder.h"
-#include "mapsweptplayerhull.h"
 #include "MapInstance.h"
+#include "mapsweptplayerhull.h"
 #include "DispShore.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

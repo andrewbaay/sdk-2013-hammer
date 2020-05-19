@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -16,14 +16,19 @@
 #include "OP_Model.h"
 #include "OP_Input.h"
 #include "MapDoc.h"
+#include "MapView.h"
 #include "MapEntity.h"
 #include "MapGroup.h"
+#include "MapInstance.h"
 #include "MapSolid.h"
 #include "MapStudioModel.h"
 #include "MapWorld.h"
 #include "History.h"
 #include "GlobalFunctions.h"
 #include "Selection.h"
+#include "CustomMessages.h"
+#include "Camera.h"
+#include "Manifest.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -42,7 +47,7 @@ enum LayoutType_t
 	ltEntity,		// Enable entity, flags, groups
 	ltEntityMulti,	// Enable entity, flags
 	ltWorld,		// Enable entity, flags, groups
-	ltModelEntity,	// Enable entity, flags, groups, model, 
+	ltModelEntity,	// Enable entity, flags, groups, model,
 	ltMulti			// Enable none
 };
 
@@ -65,6 +70,7 @@ BEGIN_MESSAGE_MAP(CObjectProperties, CPropertySheet)
 	ON_COMMAND(IDCANCEL, OnCancel)
 	ON_COMMAND(IDI_INPUT, OnInputs)
 	ON_COMMAND(IDI_OUTPUT, OnOutputs)
+	ON_COMMAND(IDD_EDIT_INSTANCE, OnEditInstance)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -86,8 +92,10 @@ CObjectProperties::CObjectProperties(void) :
 	m_pDummy = NULL;
 	m_pInputButton = NULL;
 	m_pOutputButton = NULL;
+	m_pInstanceButton = NULL;
 	m_pOrgObjects = NULL;
 	m_bDataDirty = false;
+	m_bCanEdit = false;
 
 	CreatePages();
 }
@@ -95,9 +103,9 @@ CObjectProperties::CObjectProperties(void) :
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor.
-// Input  : nIDCaption - 
-//			pParentWnd - 
-//			iSelectPage - 
+// Input  : nIDCaption -
+//			pParentWnd -
+//			iSelectPage -
 //-----------------------------------------------------------------------------
 CObjectProperties::CObjectProperties(UINT nIDCaption, CWnd* pParentWnd, UINT iSelectPage)
 	:CPropertySheet(nIDCaption, pParentWnd, iSelectPage)
@@ -106,6 +114,8 @@ CObjectProperties::CObjectProperties(UINT nIDCaption, CWnd* pParentWnd, UINT iSe
 	m_pDummy = NULL;
 	m_pInputButton = NULL;
 	m_pOutputButton = NULL;
+	m_pInstanceButton = NULL;
+	m_bCanEdit = false;
 
 	CreatePages();
 }
@@ -113,9 +123,9 @@ CObjectProperties::CObjectProperties(UINT nIDCaption, CWnd* pParentWnd, UINT iSe
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor.
-// Input  : pszCaption - 
-//			pParentWnd - 
-//			iSelectPage - 
+// Input  : pszCaption -
+//			pParentWnd -
+//			iSelectPage -
 //-----------------------------------------------------------------------------
 CObjectProperties::CObjectProperties(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
 	:CPropertySheet(pszCaption, pParentWnd, iSelectPage)
@@ -124,6 +134,8 @@ CObjectProperties::CObjectProperties(LPCTSTR pszCaption, CWnd* pParentWnd, UINT 
 	m_pDummy = NULL;
 	m_pInputButton = NULL;
 	m_pOutputButton = NULL;
+	m_pInstanceButton = NULL;
+	m_bCanEdit = false;
 
 	CreatePages();
 }
@@ -145,6 +157,7 @@ CObjectProperties::~CObjectProperties()
 
 	delete m_pInputButton;
 	delete m_pOutputButton;
+	delete m_pInstanceButton;
 
 	delete[] m_ppPages;
 }
@@ -191,8 +204,8 @@ void CObjectProperties::CreatePages(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pType - 
+// Purpose:
+// Input  : pType -
 //-----------------------------------------------------------------------------
 PVOID CObjectProperties::GetEditObject(CRuntimeClass *pType)
 {
@@ -213,9 +226,9 @@ PVOID CObjectProperties::GetEditObject(CRuntimeClass *pType)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pobj - 
-//			pType - 
+// Purpose:
+// Input  : pobj -
+//			pType -
 //-----------------------------------------------------------------------------
 PVOID CObjectProperties::GetEditObjectFromMapObject(CMapClass *pobj, CRuntimeClass *pType)
 {
@@ -243,8 +256,8 @@ PVOID CObjectProperties::GetEditObjectFromMapObject(CMapClass *pobj, CRuntimeCla
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pobj - 
+// Purpose:
+// Input  : *pobj -
 //-----------------------------------------------------------------------------
 void CObjectProperties::CopyDataToEditObjects(CMapClass *pobj)
 {
@@ -268,7 +281,7 @@ void CObjectProperties::CopyDataToEditObjects(CMapClass *pobj)
 
 //------------------------------------------------------------------------------
 // Purpose:
-// Input  : nState - 
+// Input  : nState -
 //------------------------------------------------------------------------------
 void CObjectProperties::SetOutputButtonState(int nState)
 {
@@ -299,7 +312,7 @@ void CObjectProperties::SetOutputButtonState(int nState)
 
 //------------------------------------------------------------------------------
 // Purpose:
-// Input  : nState - 
+// Input  : nState -
 //------------------------------------------------------------------------------
 void CObjectProperties::SetInputButtonState(int nState)
 {
@@ -431,10 +444,10 @@ void CObjectProperties::CreateButtons(void)
 	rect	rcButton;
 	pApplyButton->GetWindowRect( &rcButton );
 
-	// Grab, enable and rename the OK button to be Apply 
+	// Grab, enable and rename the OK button to be Apply
 	// (Because <enter> only accelerates IDOK)
 	// and we dont want "OK" (apply+close) functionality
-	CButton	*pOKButton = reinterpret_cast<CButton *>(GetDlgItem(IDOK)); 
+	CButton	*pOKButton = reinterpret_cast<CButton *>(GetDlgItem(IDOK));
 	pOKButton->SetWindowTextA("Apply");
 	pOKButton->EnableWindow();
 	pOKButton->ShowWindow(SW_SHOWNA);
@@ -443,7 +456,7 @@ void CObjectProperties::CreateButtons(void)
 	// Grab, enable and DONT show the OK button
 	// (Because <enter> only accelerates IDOK)
 	// and we dont want "OK" (apply+close) functionality
-	CButton	*pOKButton = reinterpret_cast<CButton *>(GetDlgItem(IDOK)); 
+	CButton	*pOKButton = reinterpret_cast<CButton *>(GetDlgItem(IDOK));
 	pOKButton->EnableWindow();
 	// Dont show the window, just make it active to forward <enter> -> IDOK -> OnApply
 
@@ -479,6 +492,9 @@ void CObjectProperties::CreateButtons(void)
 
 	m_pOutputButton = new CButton;
 	m_pOutputButton->Create(_T("My button"), WS_CHILD|WS_VISIBLE|BS_ICON|BS_FLAT, CRect(40,rect.bottom - 34,72,rect.bottom - 2), this, IDI_OUTPUT);
+
+	m_pInstanceButton = new CButton;
+	m_pInstanceButton->Create( _T( "Edit Instance" ), WS_CHILD|WS_VISIBLE|BS_TEXT, CRect( 6, rect.bottom - 28, 140, rect.bottom - 4 ), this, IDD_EDIT_INSTANCE );
 }
 
 
@@ -546,12 +562,12 @@ LayoutType_t CObjectProperties::GetLayout(void)
 		//
 		bool bFirst = true;
 		MAPCLASSTYPE PrevType = MAPCLASS_TYPE(CMapEntity);
-		
+
 		FOR_EACH_OBJ( m_DstObjects, pos )
 		{
 			CMapClass *pObject = m_DstObjects.Element(pos);
 			MAPCLASSTYPE ThisType = pObject->GetType();
-			
+
 			if (bFirst)
 			{
 				bFirst = false;
@@ -604,7 +620,7 @@ LayoutType_t CObjectProperties::GetLayout(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CObjectProperties::RestoreActivePage(void)
 {
@@ -633,7 +649,7 @@ void CObjectProperties::RestoreActivePage(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CObjectProperties::SaveActivePage(void)
 {
@@ -663,13 +679,13 @@ BOOL CObjectProperties::SetupPages(void)
 	// Save the current active page.
 	//
 	if ((eLastLayoutType != ltZero) && (eLastLayoutType != ltNone))
-	{	
+	{
 		SaveActivePage();
 	}
 
 	//
 	// Determine the appropriate layout for the current object list.
-	//	
+	//
 	LayoutType_t eLayoutType = GetLayout();
 
 	bool bEntity;
@@ -759,8 +775,8 @@ BOOL CObjectProperties::SetupPages(void)
 			pages[i].m_bIsVisible = false;
 		}
 	}
-	
-	// We're about to add pages, but it'll only add them to the right of what's already there, 
+
+	// We're about to add pages, but it'll only add them to the right of what's already there,
 	// so we must get rid of anything to the right of our leftmost addition.
 	for ( int i=0; i < ARRAYSIZE( pages ); i++ )
 	{
@@ -778,7 +794,7 @@ BOOL CObjectProperties::SetupPages(void)
 			break;
 		}
 	}
-	
+
 	for ( int i=0; i < ARRAYSIZE( pages ); i++ )
 	{
 		if ( !pages[i].m_bIsVisible && pages[i].m_bWantVisible )
@@ -825,7 +841,7 @@ BOOL CObjectProperties::SetupPages(void)
 		pActiveWnd->SetActiveWindow();
 	}
 
-	bFirstTime = false;	
+	bFirstTime = false;
 
 	return TRUE;	// pages changed - return true
 }
@@ -834,7 +850,7 @@ BOOL CObjectProperties::SetupPages(void)
 //------------------------------------------------------------------------------
 // Purpose: Set object properties dialogue to the Output tab and highlight
 //			the given item
-// Input  : pConnection - 
+// Input  : pConnection -
 //------------------------------------------------------------------------------
 void CObjectProperties::SetPageToOutput(CEntityConnection *pConnection)
 {
@@ -851,13 +867,13 @@ void CObjectProperties::SetPageToInput(CEntityConnection *pConnection)
 		ReloadData();
 
 	SetActivePage(m_pInput);
-	
+
 	m_pInput->SetSelectedConnection(pConnection);
 }
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CObjectProperties::SaveData(void)
 {
@@ -916,7 +932,7 @@ void CObjectProperties::SaveData(void)
 	}
 
 	// Objects may have changed. Update the views.
-		
+
 	pDoc->SetModifiedFlag();
 }
 
@@ -929,7 +945,7 @@ void CObjectProperties::SaveData(void)
 void CObjectProperties::LoadDataForPages(int iPage)
 {
 	//VPROF_BUDGET( "CObjectProperties::LoadDataForPages", "Object Properties" );
-	
+
 	if (m_bDummy)
 	{
 		return;
@@ -939,15 +955,21 @@ void CObjectProperties::LoadDataForPages(int iPage)
 	// Determine whether we are editing multiple objects or not.
 	//
 	bool bMultiEdit = (m_DstObjects.Count() > 1);
+	m_bCanEdit = true;
 
 	//
 	// Submit the edit objects to each page one at a time.
 	//
 	int nMode = CObjectPage::LoadFirstData;
-	
+
 	FOR_EACH_OBJ( m_DstObjects, pos )
 	{
 		CMapClass *pobj = m_DstObjects.Element(pos);
+
+		if ( pobj->IsEditable() == false )
+		{
+			m_bCanEdit = false;
+		}
 
 		if (iPage != -1)
 		{
@@ -959,7 +981,7 @@ void CObjectProperties::LoadDataForPages(int iPage)
 			void *pObject = GetEditObjectFromMapObject(pobj, m_ppPages[iPage]->GetEditObjectRuntimeClass());
 			if (pObject != NULL)
 			{
-				m_ppPages[iPage]->UpdateData(nMode, pObject);
+				m_ppPages[iPage]->UpdateData(nMode, pObject, m_bCanEdit);
 				m_ppPages[iPage]->m_bHasUpdatedData = true;
 			}
 		}
@@ -977,13 +999,16 @@ void CObjectProperties::LoadDataForPages(int iPage)
 			void *pObject = GetEditObjectFromMapObject(pobj, m_ppPages[i]->GetEditObjectRuntimeClass());
 			if (pObject != NULL)
 			{
-				m_ppPages[i]->UpdateData(nMode, pObject);
+				m_ppPages[i]->UpdateData(nMode, pObject, m_bCanEdit);
 				m_ppPages[i]->m_bHasUpdatedData = true;
-			}								  
+			}
 		}
 
 		nMode = CObjectPage::LoadData;
 	}
+
+	CButton *pApplyButton = reinterpret_cast<CButton *>(GetDlgItem(ID_APPLY_NOW));
+	pApplyButton->EnableWindow( ( m_bCanEdit ? TRUE : FALSE ) );
 
 	//
 	// Tell the pages that we are done submitting data.
@@ -993,7 +1018,7 @@ void CObjectProperties::LoadDataForPages(int iPage)
 		//
 		// Specific page.
 		//
-		m_ppPages[iPage]->UpdateData(CObjectPage::LoadFinished, NULL);
+		m_ppPages[iPage]->UpdateData(CObjectPage::LoadFinished, NULL, m_bCanEdit);
 	}
 	else for (int i = 0; i < m_nPages; i++)
 	{
@@ -1005,7 +1030,7 @@ void CObjectProperties::LoadDataForPages(int iPage)
 		if (m_ppPages[i]->m_bFirstTimeActive)
 			continue;
 
-		m_ppPages[i]->UpdateData(CObjectPage::LoadFinished, NULL);
+		m_ppPages[i]->UpdateData(CObjectPage::LoadFinished, NULL, m_bCanEdit);
 	}
 
 	//
@@ -1027,7 +1052,7 @@ void CObjectProperties::AddObjectExpandGroups(CMapClass *pObject)
 	if (pObject->IsGroup())
 	{
 		const CMapObjectList *pChildren = pObject->GetChildren();
-		
+
 		FOR_EACH_OBJ( *pChildren, pos )
 		{
 			AddObjectExpandGroups( pChildren->Element(pos) );
@@ -1048,6 +1073,8 @@ void CObjectProperties::ReloadData()
 {
 	//VPROF_BUDGET( "CObjectProperties::LoadData", "Object Properties" );
 
+	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
+
 	//
 	// Disable window so it does not gain focus during this operation.
 	//
@@ -1066,6 +1093,8 @@ void CObjectProperties::ReloadData()
 			AddObjectExpandGroups( m_pOrgObjects->Element(pos) );
 		}
 	}
+
+	m_pInstanceButton->ShowWindow( SW_HIDE );
 
 	//
 	// If there is only one object selected, copy its data to our temporary
@@ -1086,6 +1115,45 @@ void CObjectProperties::ReloadData()
 		char szTitle[MAX_PATH];
 		sprintf(szTitle, "Object Properties: %s", pobj->GetDescription());
 		SetWindowText(szTitle);
+
+		CManifestInstance	*pManifestInstance = dynamic_cast< CManifestInstance * >( pobj );
+		if ( pManifestInstance )
+		{
+			CManifest *pManifest = CMapDoc::GetManifest();
+
+			if ( pManifest )
+			{
+				ShowWindow( SW_HIDE );
+				if ( pDoc )
+				{
+					pDoc->UpdateAllViews( MAPVIEW_UPDATE_SELECTION | MAPVIEW_UPDATE_TOOL | MAPVIEW_RENDER_NOW );
+				}
+				pManifest->SetPrimaryMap( pManifestInstance->GetManifestMap() );
+				return;
+			}
+		}
+
+		CMapEntity	*pEntity = dynamic_cast< CMapEntity * >( pobj );
+		if ( pEntity )
+		{
+			if ( strcmpi( pEntity->GetClassName(), "func_instance" ) == 0 )
+			{
+				pDoc->PopulateInstance( pEntity );
+				CMapInstance	*pMapInstance = pEntity->GetChildOfType<CMapInstance>();
+				if ( pMapInstance && pMapInstance->GetInstancedMap() )
+				{
+					m_pInstanceButton->ShowWindow( SW_SHOW );
+				}
+			}
+			else if ( strcmpi( pEntity->GetClassName(), "func_instance_parms" ) == 0 )
+			{
+				if ( pDoc )
+				{
+					pDoc->PopulateInstanceParms( pEntity );
+				}
+			}
+		}
+
 	}
 	else if (m_DstObjects.Count() > 1)
 	{
@@ -1105,14 +1173,14 @@ void CObjectProperties::ReloadData()
 }
 
 
-BOOL CObjectProperties::OnInitDialog() 
+BOOL CObjectProperties::OnInitDialog()
 {
 	BOOL b = CPropertySheet::OnInitDialog();
 	SetWindowText("Object Properties");
 
 	CreateButtons();
 	UpdateAnchors( NULL );
-		
+
 	return b;
 }
 
@@ -1121,7 +1189,7 @@ void CObjectProperties::UpdateAnchors( CWnd *pPage )
 {
 	if ( !GetSafeHwnd() )
 		return;
-		
+
 	// Anchor stuff.
 	HWND hTab = NULL;
 	if ( GetTabControl() )
@@ -1134,6 +1202,7 @@ void CObjectProperties::UpdateAnchors( CWnd *pPage )
 		CAnchorDef( IDCANCEL, k_eSimpleAnchorBottomRight ),
 		CAnchorDef( IDI_INPUT, k_eSimpleAnchorBottomRight ),
 		CAnchorDef( IDI_OUTPUT, k_eSimpleAnchorBottomRight ),
+		CAnchorDef( IDD_EDIT_INSTANCE, k_eSimpleAnchorBottomRight ),
 		CAnchorDef( hTab, k_eSimpleAnchorAllSides ),
 		CAnchorDef( pPage ? pPage->GetSafeHwnd() : (HWND)NULL, k_eSimpleAnchorAllSides )
 	};
@@ -1157,15 +1226,15 @@ void CObjectProperties::OnPaint()
 	CPaintDC dc(this); // device context for painting
 
 	if ( m_bDataDirty )
-		ReloadData(); 
+		ReloadData();
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : bShow - 
-//			nStatus - 
+// Purpose:
+// Input  : bShow -
+//			nStatus -
 //-----------------------------------------------------------------------------
-void CObjectProperties::OnShowWindow(BOOL bShow, UINT nStatus) 
+void CObjectProperties::OnShowWindow(BOOL bShow, UINT nStatus)
 {
 	//VPROF_BUDGET( "CObjectProperties::OnShowWindow", "Object Properties" );
 
@@ -1196,11 +1265,16 @@ void CObjectProperties::OnApply(void)
 {
 	//VPROF_BUDGET( "CObjectProperties::OnApply", "Object Properties" );
 
+	if ( !m_bCanEdit )
+	{
+		return;
+	}
+
 	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
 	if ( !pDoc )
 		return;
 
-	//We lock visgroup updates here because activities in the object properties dialog can 
+	//We lock visgroup updates here because activities in the object properties dialog can
 	//change visgroups which, if updated, will change the object properties, causing problems.
 	//All visgroup updates will occur at the end of this apply operation.
     bool bLocked = pDoc->VisGroups_LockUpdates( true );
@@ -1219,7 +1293,7 @@ void CObjectProperties::OnApply(void)
 	SaveData();
 
 	ReloadData();
-	
+
 	// Pass along the apply message to the entities.
 	FOR_EACH_OBJ( m_DstObjects, pos )
 	{
@@ -1276,8 +1350,43 @@ void CObjectProperties::OnOutputs(void)
 
 
 //-----------------------------------------------------------------------------
+// Purpose: handle the pushing of the Edit Instance button.  Will attempt to
+//			switch to the map document containing the instance.
+// Input  : none
+// Output : none
 //-----------------------------------------------------------------------------
-int CObjectProperties::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+void CObjectProperties::OnEditInstance(void)
+{
+	if (m_DstObjects.Count() == 1)
+	{
+		CMapClass	*pObj = m_DstObjects.Element( 0 );
+		CMapEntity	*pEntity = dynamic_cast< CMapEntity * >( pObj );
+
+		if ( pEntity )
+		{
+			EnumChildrenPos_t	pos;
+			CMapClass *pChild = pEntity->GetFirstDescendent( pos );
+			while ( pChild != NULL )
+			{
+				CMapInstance *pMapInstance = dynamic_cast< CMapInstance * >( pChild );
+				if ( pMapInstance != NULL )
+				{
+					OnClose();
+
+					pMapInstance->SwitchTo();
+				}
+
+				pChild = pEntity->GetNextDescendent( pos );
+			}
+		}
+	}
+
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+int CObjectProperties::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	//VPROF_BUDGET( "CObjectProperties::OnCreate", "Object Properties" );
 
@@ -1299,7 +1408,7 @@ void CObjectProperties::SetObjectList(const CMapObjectList *pObjectList)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CObjectProperties::MarkDataDirty()
 {

@@ -27,7 +27,7 @@ public:
 	~COP_Model();
 
 	virtual bool SaveData(void);
-	virtual void UpdateData(int Mode, PVOID pData);
+	virtual void UpdateData( int Mode, PVOID pData, bool bCanEdit );
 	void UpdateForClass(LPCTSTR pszClass);
 
 	void OnSelChangeSequence( int iSequence );
@@ -53,6 +53,9 @@ public:
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
+
+private:
+	void SetReadOnly( bool bReadOnly );
 
 protected:
 

@@ -440,6 +440,12 @@ bool CMaterial::LoadMaterialsInDirectory( char const* pDirectoryName, int nDirec
 	const char *pFileName = g_pFullFileSystem->FindFirstEx( pWildCard, "GAME", &findHandle );
 	while( pFileName )
 	{
+		if (IsIgnoredMaterial(pFileName))
+		{
+			pFileName = g_pFullFileSystem->FindNext( findHandle );
+			continue;
+		}
+
 		if( !g_pFullFileSystem->FindIsDirectory( findHandle ) )
 		{
 			// Strip off the 'materials/' part of the material name.
@@ -493,18 +499,21 @@ bool CMaterial::InitDirectoryRecursive( char const* pDirectoryName,
 	const char *pFileName = g_pFullFileSystem->FindFirstEx( pWildCard, "GAME", &findHandle );
 	while( pFileName )
 	{
-		if ((pFileName[0] != '.') || (pFileName[1] != '.' && pFileName[1] != 0))
+		if (!IsIgnoredMaterial(pFileName))
 		{
-			if( g_pFullFileSystem->FindIsDirectory( findHandle ) )
+			if ((pFileName[0] != '.') || (pFileName[1] != '.' && pFileName[1] != 0))
 			{
-				int fileNameStrLen = Q_strlen( pFileName );
-				char *pFileNameWithPath = ( char * )stackalloc( nPathStrLen + fileNameStrLen + 1 );
-				memcpy( pFileNameWithPath, pWildCard, nPathStrLen );
-				pFileNameWithPath[nPathStrLen] = '\0';
-				Q_strncat( pFileNameWithPath, pFileName, nPathStrLen + fileNameStrLen + 1 );
-
-				if (!InitDirectoryRecursive( pFileNameWithPath, pEnum, nContext, nFlags ))
-					return false;
+				if( g_pFullFileSystem->FindIsDirectory( findHandle ) )
+				{
+					int fileNameStrLen = Q_strlen( pFileName );
+					char *pFileNameWithPath = ( char * )stackalloc( nPathStrLen + fileNameStrLen + 1 );
+					memcpy( pFileNameWithPath, pWildCard, nPathStrLen );
+					pFileNameWithPath[nPathStrLen] = '\0';
+					Q_strncat( pFileNameWithPath, pFileName, nPathStrLen + fileNameStrLen + 1 );
+	
+					if (!InitDirectoryRecursive( pFileNameWithPath, pEnum, nContext, nFlags ))
+						return false;
+				}
 			}
 		}
 		pFileName = g_pFullFileSystem->FindNext( findHandle );
@@ -618,7 +627,15 @@ CMaterial *CMaterial::CreateMaterial(const char *pszMaterialName, bool bLoadImme
 	return pMaterial;
 }
 
+bool CMaterial::IsIgnoredMaterial( const char *pName )
+{
+	//TODO: make this a customizable user option?
+	if ( !Q_strnicmp(pName, ".svn", 4) || strstr (pName, ".svn") ||
+		!Q_strnicmp(pName, "models", 6) || strstr (pName, "models") )
+		return true;
 
+	return false;
+}
 //-----------------------------------------------------------------------------
 // Will actually load the material bits
 // We don't want to load them all at once because it takes way too long
@@ -628,6 +645,11 @@ bool CMaterial::LoadMaterial()
 	bool bFound = true;
 	if (!m_bLoaded)
 	{
+		if (IsIgnoredMaterial(m_szFileName))
+		{
+			return false;
+		}
+
 		m_bLoaded = true;
 
 		IMaterial *pMat = materials->FindMaterial(m_szFileName, TEXTURE_GROUP_OTHER);
@@ -698,10 +720,16 @@ void CMaterial::Reload( bool bFullReload )
 	IMaterialVar *pVar = m_pMaterial->FindVar("%keywords", &bFound, false);
 	if (bFound)
 	{
-		strcpy(m_szKeywords, pVar->GetStringValue());
+		V_strcpy_safe( m_szKeywords, pVar->GetStringValue() );
 
 		// Register the keywords
 		g_Textures.RegisterTextureKeywords( this );
+	}
+
+	// Make sure to bump the refcount again. Not sure why this wasn't always done (check for leaks).
+	if (m_pMaterial)
+	{
+		m_pMaterial->IncrementReferenceCount();
 	}
 }
 
@@ -1048,7 +1076,7 @@ bool CMaterial::LoadMaterialHeader( IMaterial *pMat )
 	IMaterialVar *pVar = pMat->FindVar("%keywords", &bFound, false);
 	if (bFound)
 	{
-		strcpy(m_szKeywords, pVar->GetStringValue());
+		V_strcpy_safe( m_szKeywords, pVar->GetStringValue() );
 
 		// Register the keywords
 		g_Textures.RegisterTextureKeywords( this );

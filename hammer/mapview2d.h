@@ -16,10 +16,11 @@
 #include "MapView2DBase.h"
 #include "tier1/utlvector.h"
 
+class CMapInstance;
+
 
 class CMapView2D : public CMapView2DBase
 {
-
 protected:
 	CMapView2D();           // protected constructor used by dynamic creation
 	virtual ~CMapView2D();
@@ -28,6 +29,8 @@ protected:
 	virtual bool IsLogical() { return false; }
 	virtual void OnRenderListDirty();
 
+	void RenderInstance( CMapInstance *pInstanceClass, CMapClass *pMapClass, Vector &InstanceOrigin, QAngle &InstanceAngles );
+
 private:
 	void DrawPointFile( CRender2D *pRender );
 	void AddToRenderLists( CMapClass *pObject );
@@ -35,6 +38,9 @@ private:
 	void SetDrawType( DrawType_t drawType );
 	virtual void ActivateView( bool bActivate );
  	bool UpdateRenderObjects();
+	void DrawCullingCircleHelper2D( CRender2D *pRender );
+
+	void RenderInstanceMapClass_r( CMapClass *pObject );
 
 	// general variables:	
 	bool m_bLastActiveView;					// is this the last active view?

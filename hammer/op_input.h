@@ -43,7 +43,7 @@ class COP_Input : public CObjectPage
 		COP_Input(void);
 		~COP_Input(void);
 
-		void UpdateData(int Mode, PVOID pData);
+		void UpdateData( int Mode, PVOID pData, bool bCanEdit );
 		void SetSelectedConnection(CEntityConnection *pConnection);
 
 	protected:

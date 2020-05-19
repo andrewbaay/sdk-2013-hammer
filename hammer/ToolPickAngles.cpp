@@ -12,7 +12,7 @@
 #include "camera.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
-#include <tier0/memdbgon.h>
+#include "tier0/memdbgon.h"
 
 
 //-----------------------------------------------------------------------------
@@ -83,7 +83,7 @@ bool CToolPickAngles::OnLMouseDown3D(CMapView3D *pView, UINT nFlags, const Vecto
 			//
 			// Build a ray to trace against the face that they clicked on to
 			// find the point of intersection.
-			//			
+			//
 			Vector Start,End;
 			pView->GetCamera()->BuildRay( vPoint, Start, End);
 
@@ -163,12 +163,12 @@ bool CToolPickAngles::OnMouseMove3D(CMapView3D *pView, UINT nFlags, const Vector
 void CToolPickAngles::SetToolCursor(void)
 {
 	static HCURSOR hcur = NULL;
-	
+
 	if (!hcur)
 	{
 		hcur = LoadCursor(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDC_CROSSHAIR));
 	}
-	
+
 	SetCursor(hcur);
 }
 

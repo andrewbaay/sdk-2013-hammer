@@ -450,8 +450,10 @@ void COP_Input::RemoveAllEntityConnections(void)
 // Input  : Mode - 
 //			pData - 
 //-----------------------------------------------------------------------------
-void COP_Input::UpdateData(int Mode, PVOID pData)
+void COP_Input::UpdateData( int Mode, PVOID pData, bool bCanEdit )
 {
+	__super::UpdateData( Mode, pData, bCanEdit );
+
 	if (!IsWindow(m_hWnd))
 	{
 		return;

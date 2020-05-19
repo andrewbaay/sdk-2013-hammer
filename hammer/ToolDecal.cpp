@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -18,12 +18,12 @@
 #include "camera.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
-#include <tier0/memdbgon.h>
+#include "tier0/memdbgon.h"
 
 
 //-----------------------------------------------------------------------------
 // Purpose: Handles key down events in the 2D view.
-// Input  : Per CWnd::OnKeyDown. 
+// Input  : Per CWnd::OnKeyDown.
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CToolDecal::OnKeyDown2D(CMapView2D *pView, UINT nChar, UINT nRepCnt, UINT nFlags)
@@ -36,7 +36,7 @@ bool CToolDecal::OnKeyDown2D(CMapView2D *pView, UINT nChar, UINT nRepCnt, UINT n
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -46,7 +46,7 @@ bool CToolDecal::OnKeyDown2D(CMapView2D *pView, UINT nChar, UINT nRepCnt, UINT n
 // Input  : Per CWnd::OnMouseMove.
 // Output : Returns true if the message was handled, false if not.
 //-----------------------------------------------------------------------------
-bool CToolDecal::OnMouseMove2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoint) 
+bool CToolDecal::OnMouseMove2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoint)
 {
 	SetDecalCursor();
 	return true;
@@ -58,7 +58,7 @@ bool CToolDecal::OnMouseMove2D(CMapView2D *pView, UINT nFlags, const Vector2D &v
 // Input  : Per CWnd::OnKeyDown.
 // Output : Returns true if the message was handled, false if not.
 //-----------------------------------------------------------------------------
-bool CToolDecal::OnKeyDown3D(CMapView3D *pView, UINT nChar, UINT nRepCnt, UINT nFlags) 
+bool CToolDecal::OnKeyDown3D(CMapView3D *pView, UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	switch (nChar)
 	{
@@ -73,11 +73,11 @@ bool CToolDecal::OnKeyDown3D(CMapView3D *pView, UINT nChar, UINT nRepCnt, UINT n
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Handles left button down events in the 3D view. 
+// Purpose: Handles left button down events in the 3D view.
 // Input  : Per CWnd::OnLButtonDown.
 // Output : Returns true if the message was handled, false if not.
 //-----------------------------------------------------------------------------
-bool CToolDecal::OnLMouseDown3D(CMapView3D *pView, UINT nFlags, const Vector2D &vPoint) 
+bool CToolDecal::OnLMouseDown3D(CMapView3D *pView, UINT nFlags, const Vector2D &vPoint)
 {
 	//
 	// See if they clicked on a brush face. If so, apply a decal where they clicked.
@@ -98,7 +98,7 @@ bool CToolDecal::OnLMouseDown3D(CMapView3D *pView, UINT nFlags, const Vector2D &
 		//
 		// Build a ray to trace against the face that they clicked on to
 		// find the point of intersection.
-		//			
+		//
 		Vector Start,End;
 		pView->GetCamera()->BuildRay( vPoint, Start, End);
 
@@ -153,12 +153,12 @@ bool CToolDecal::OnMouseMove3D(CMapView3D *pView, UINT nFlags, const Vector2D &v
 void CToolDecal::SetDecalCursor(void)
 {
 	static HCURSOR hcurDecal;
-	
+
 	if (!hcurDecal)
 	{
 		hcurDecal = LoadCursor(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDC_DECAL));
 	}
-	
+
 	SetCursor(hcurDecal);
 }
 

@@ -114,6 +114,17 @@ float CCamera::GetYaw(void)
 	return(m_fYaw);
 }
 
+
+//-----------------------------------------------------------------------------
+// Purpose: returns the camera angles
+// Output : returns the camera angles
+//-----------------------------------------------------------------------------
+QAngle CCamera::GetAngles()
+{
+	return QAngle(m_fPitch, m_fYaw, m_fRoll);
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Moves the camera along the camera's right axis.
 // Input  : fUnits - World units to move the camera.
@@ -229,10 +240,10 @@ float CCamera::GetFarClip(void)
 
 //-----------------------------------------------------------------------------
 // Purpose: Sets up fields of view & clip plane distances for the view frustum.
-// Input  : fHorizontalFOV - 
-//			fVerticalFOV - 
-//			fNearClip - 
-//			fFarClip - 
+// Input  : fHorizontalFOV -
+//			fVerticalFOV -
+//			fNearClip -
+//			fFarClip -
 //-----------------------------------------------------------------------------
 void CCamera::SetPerspective(float fHorizontalFOV, float fNearClip, float fFarClip)
 {
@@ -328,7 +339,7 @@ void CCamera::BuildProjMatrix()
 		// same as D3DXMatrixOrthoRH
 		float w = (float)m_nViewWidth / m_fZoom;
 		float h = (float)m_nViewHeight / m_fZoom;
-	
+
 		m[0][0] = 2/w;
 		m[1][1] = 2/h;
 
@@ -489,6 +500,15 @@ void CCamera::SetViewTarget(const Vector &ViewTarget)
 	SetPitch(fPitch);
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Move the camera along a worldspace vector.
+//-----------------------------------------------------------------------------
+void CCamera::Move(const Vector &vDelta)
+{
+	m_ViewPoint += vDelta;
+	BuildViewMatrix();
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Pitches the camera forward axis toward the camera's down axis a
@@ -575,12 +595,12 @@ void CCamera::CameraIdentityMatrix(VMatrix& Matrix)
 void CCamera::BuildViewMatrix()
 {
 	// The camera transformation is produced by multiplying roll * yaw * pitch.
-	// This will transform a point from world space into quake camera space, 
+	// This will transform a point from world space into quake camera space,
 	// which is exactly what we want for our view matrix. However, quake
 	// camera space isn't the same as material system camera space, so
 	// we're going to have to apply a transformation that goes from quake
 	// camera space to material system camera space.
-	
+
 	CameraIdentityMatrix( m_ViewMatrix );
 
 	RotateAroundAxis(m_ViewMatrix, m_fPitch, 0 );
@@ -600,8 +620,8 @@ void CCamera::BuildViewMatrix()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : Matrix - 
+// Purpose:
+// Input  : Matrix -
 //-----------------------------------------------------------------------------
 void CCamera::GetViewMatrix(VMatrix& Matrix)
 {
@@ -613,6 +633,17 @@ void CCamera::GetProjMatrix(VMatrix& Matrix)
 {
 	Matrix = m_ProjMatrix;
 }
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Sets the view matrix of the current projection
+// Output : Matrix - the matrix to store the current projection matrix
+//-----------------------------------------------------------------------------
+void CCamera::GetViewProjMatrix( VMatrix &Matrix )
+{
+	Matrix = m_ViewProjMatrix;
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: to set the zoom in the orthographic gl view
@@ -636,7 +667,7 @@ void CCamera::Zoom( float fScale )
 {
     m_fZoom += fScale;
 
-    // don't zoom negative 
+    // don't zoom negative
     if( m_fZoom < 0.00001f )
         m_fZoom = 0.00001f;
 }
@@ -664,7 +695,7 @@ void CCamera::WorldToView( const Vector& vWorld, Vector2D &vView )
 }
 
 void CCamera::ViewToWorld( const Vector2D &vView, Vector& vWorld)
-{	
+{
 	Vector vView3D;
 
 	vView3D.x = 2.0 * vView.x / m_nViewWidth - 1;
@@ -684,7 +715,7 @@ void CCamera::BuildRay( const Vector2D &vView, Vector& vStart, Vector& vEnd )
 	// Build a ray from the viewpoint through the point on the near clipping plane.
 	Vector vRay = vClickPoint - m_ViewPoint;
 	VectorNormalize( vRay );
-	
+
 	vStart = m_ViewPoint;
 	vEnd = vStart + vRay * 99999;
 }

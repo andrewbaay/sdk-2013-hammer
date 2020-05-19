@@ -101,7 +101,7 @@ void CListBoxEx::SetItemChoices(int iItem, CStringArray * pChoices,
 
 	lbis.pChoices = pChoices;
 	lbis.iDataValue = iDefaultChoice;
-	strcpy(lbis.szDataString, pChoices->GetAt(iDefaultChoice));
+	V_strcpy_safe(lbis.szDataString, pChoices->GetAt(iDefaultChoice));
 }
 
 void CListBoxEx::MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct) 

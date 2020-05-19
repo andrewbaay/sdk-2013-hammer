@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -17,7 +17,7 @@ bool BoxesIntersect(Vector const &mins1, Vector const &maxs1, Vector const &mins
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CCullTreeNode::CCullTreeNode(void)
 {
@@ -25,7 +25,7 @@ CCullTreeNode::CCullTreeNode(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CCullTreeNode::~CCullTreeNode(void)
 {
@@ -33,18 +33,21 @@ CCullTreeNode::~CCullTreeNode(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pChild - 
+// Purpose:
+// Input  : pChild -
 //-----------------------------------------------------------------------------
 void CCullTreeNode::AddCullTreeChild(CCullTreeNode *pChild)
 {
-	m_Children.AddToTail(pChild);
+	if (pChild == nullptr)
+		Assert( pChild );
+	else
+		m_Children.AddToTail( pChild );
 }
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pObject - 
+// Purpose:
+// Input  : pObject -
 //-----------------------------------------------------------------------------
 void CCullTreeNode::AddCullTreeObject(CMapClass *pObject)
 {
@@ -53,15 +56,15 @@ void CCullTreeNode::AddCullTreeObject(CMapClass *pObject)
 	// If it's already here, bail out.
 	if ( m_Objects.Find( pObject ) != -1 )
 		return;
-	
+
 	// Add the object.
 	m_Objects.AddToTail(pObject);
 }
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pObject - 
+// Purpose:
+// Input  : pObject -
 //-----------------------------------------------------------------------------
 void CCullTreeNode::AddCullTreeObjectRecurse(CMapClass *pObject)
 {
@@ -120,13 +123,13 @@ void CCullTreeNode::RemoveAllCullTreeObjectsRecurse(void)
 
 //-----------------------------------------------------------------------------
 // Purpose: Removes all instances of a given object from this node.
-// Input  : pObject - 
+// Input  : pObject -
 //-----------------------------------------------------------------------------
 void CCullTreeNode::RemoveCullTreeObject(CMapClass *pObject)
 {
 	// Remove occurrence of pObject from the array
-	
-	m_Objects.FindAndRemove( pObject );
+
+	m_Objects.FindAndFastRemove( pObject );
 
 	// make sure it's not in there twice
 	Assert( m_Objects.Find( pObject) == -1 );
@@ -135,7 +138,7 @@ void CCullTreeNode::RemoveCullTreeObject(CMapClass *pObject)
 
 //-----------------------------------------------------------------------------
 // Purpose: Removes all instances of a given object from this node.
-// Input  : pObject - 
+// Input  : pObject -
 //-----------------------------------------------------------------------------
 void CCullTreeNode::RemoveCullTreeObjectRecurse(CMapClass *pObject)
 {
@@ -145,13 +148,13 @@ void CCullTreeNode::RemoveCullTreeObjectRecurse(CMapClass *pObject)
 	{
 		CCullTreeNode *pChild = m_Children[nChild];
 		pChild->RemoveCullTreeObjectRecurse(pObject);
-	}	
+	}
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose: Removes all instances of a given object from this node.
-// Input  : pObject - 
+// Input  : pObject -
 //-----------------------------------------------------------------------------
 CCullTreeNode *CCullTreeNode::FindCullTreeObjectRecurse(CMapClass *pObject)
 {
@@ -180,8 +183,8 @@ CCullTreeNode *CCullTreeNode::FindCullTreeObjectRecurse(CMapClass *pObject)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pObject - 
+// Purpose:
+// Input  : pObject -
 //-----------------------------------------------------------------------------
 void CCullTreeNode::UpdateCullTreeObject(CMapClass *pObject)
 {
@@ -226,7 +229,7 @@ void CCullTreeNode::UpdateCullTreeObjectRecurse(CMapClass *pObject)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 // Input  : pObject - The object whose bounding box has changed.
 //-----------------------------------------------------------------------------
 void CCullTreeNode::UpdateAllCullTreeObjectsRecurse(void)

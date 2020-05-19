@@ -48,7 +48,7 @@ public:
 	inline void SetObjectList(const CMapObjectList *pObjectList);
 
 	// Called by the sheet to update the selected objects. pData points to the object being added to the selection.
-	virtual void UpdateData(int Mode, PVOID pData) {}
+	virtual void UpdateData( int Mode, PVOID pData, bool bCanEdit );
 
 	// Called by the sheet to store this page's data into the objects being edited.
 	virtual bool SaveData(void) { return(true); }
@@ -77,6 +77,7 @@ protected:
 
 	const CMapObjectList *m_pObjectList;				// The list of objects that we are editing.
 	bool m_bMultiEdit;							// Set to true if we are editing more than one object.
+	bool m_bCanEdit;							// Set to true if this page allows for editing
 
 	CRuntimeClass *m_pEditObjectRuntimeClass;	// The type of object that this page can edit.
 

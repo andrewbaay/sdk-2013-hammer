@@ -676,6 +676,7 @@ void CMapSolid::CalcBounds(BOOL bFullUpdate)
 	}
 
 	m_Render2DBox.GetBoundsCenter(m_Origin);
+	m_BoundingBox = m_CullBox;
 }
 
 
@@ -764,6 +765,11 @@ void CMapSolid::SetTexture(LPCTSTR pszTex, int iFace)
 	{
 		Faces[iFace].SetTexture(pszTex);
 	}
+
+	CMapDoc		*pMapDoc = CMapDoc::GetActiveMapDoc();
+
+	pMapDoc->RemoveFromAutoVisGroups( this );
+	pMapDoc->AddToAutoVisGroup( this );
 }
 
 
@@ -1753,7 +1759,7 @@ bool CMapSolid::Subtract(CMapObjectList *pInside, CMapObjectList *pOutside, CMap
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-color32 CMapSolid::GetLineColor()
+color32 CMapSolid::GetLineColor( CRender2D *pRender )
 {
 	//
 	// If the solid is not selected, determine the appropriate pen color.
@@ -1837,13 +1843,13 @@ void CMapSolid::Render2D(CRender2D *pRender)
 	int sizex = abs(pt2.x-pt.x)+1;
 	int sizey = abs(pt2.y-pt.y)+1;
 
-	color32 rgbLineColor = GetLineColor();
+	color32 rgbLineColor = GetLineColor( pRender );
 
 	// check if we should draw handles & vertices
 
 	bool bIsSmall  = sizex < (HANDLE_RADIUS*2) || sizey < (HANDLE_RADIUS*2);
 	bool bIsTiny = sizex < 2 || sizey < 2;
-	bool bDrawHandles  = pRender->IsActiveView() && !bIsSmall;
+	bool bDrawHandles  = pRender->IsActiveView() && !bIsSmall && IsEditable();
 	bool bDrawVertices = Options.view2d.bDrawVertices && !bIsTiny;
 
 	pRender->SetDrawColor( rgbLineColor.r, rgbLineColor.g, rgbLineColor.b );
@@ -1928,7 +1934,7 @@ bool CMapSolid::HitTest2D(CMapView2D *pView, const Vector2D &point, HitInfo_t &H
 	{
 		return true;
 	}
-	else if (!Options.view2d.bSelectbyhandles)
+	else if (!Options.view2d.bSelectbyhandles || !IsEditable() )
 	{
 		//
 		// See if any edges are within certain distance from the the point.

@@ -10,6 +10,7 @@
 #include "EditGameConfigs.h"
 #include "hammer.h"
 #include "OPTConfigs.h"
+#include "ConfigManager.h"
 #include "process.h"
 #include "Options.h"
 #include "TextureBrowser.h"
@@ -34,7 +35,8 @@ bool GetPersistentEnvironmentVariable( const char *pName, char *pReturn, int siz
 {
 	// Open the key
 	HKEY hregkey;
-	if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, VPROJECT_REG_KEY, 0, KEY_QUERY_VALUE, &hregkey ) != ERROR_SUCCESS )
+	// Changed to HKEY_CURRENT_USER from HKEY_LOCAL_MACHINE
+	if ( RegOpenKeyEx( HKEY_CURRENT_USER, VPROJECT_REG_KEY, 0, KEY_QUERY_VALUE, &hregkey ) != ERROR_SUCCESS )
 		return false;
 
 	// Get the value
@@ -59,8 +61,8 @@ void SetPersistentEnvironmentVariable( const char *pName, const char *pValue )
 	HKEY hregkey;
 	DWORD dwReturnValue = 0;
 
-	// Open the key
-	if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, VPROJECT_REG_KEY, 0, KEY_ALL_ACCESS, &hregkey ) != ERROR_SUCCESS )
+	// Changed from HKEY_LOCAL_MACHINE to HKEY_CURRENT_USER
+	if ( RegOpenKeyEx( HKEY_CURRENT_USER, VPROJECT_REG_KEY, 0, KEY_ALL_ACCESS, &hregkey ) != ERROR_SUCCESS )
 		return;
 
 	// Set the value to the string passed in
