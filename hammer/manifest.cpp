@@ -156,7 +156,7 @@ ChunkFileResult_t CManifest::LoadKeyInfoCallback( const char *szKey, const char 
 //-----------------------------------------------------------------------------
 ChunkFileResult_t CManifest::LoadManifestInfoCallback( CChunkFile *pFile, CManifest *pDoc )
 {
-	ChunkFileResult_t eResult = pFile->ReadChunk( ( KeyHandler_t )LoadKeyInfoCallback, pDoc );
+	ChunkFileResult_t eResult = pFile->ReadChunk( LoadKeyInfoCallback, pDoc );
 
 	return( eResult );
 }
@@ -214,7 +214,7 @@ ChunkFileResult_t CManifest::LoadManifestVMFCallback( CChunkFile *pFile, CManife
 	CManifestMap	*pManifestMap = pDoc->CreateNewMap( FileName, "", false );
 	SetActiveMapDoc( pManifestMap->m_Map );
 
-	ChunkFileResult_t eResult = pFile->ReadChunk( ( KeyHandler_t )LoadKeyCallback, pManifestMap );
+	ChunkFileResult_t eResult = pFile->ReadChunk( LoadKeyCallback, pManifestMap );
 
 	if ( pManifestMap->m_Map )
 	{
@@ -235,7 +235,7 @@ ChunkFileResult_t CManifest::LoadManifestVMFCallback( CChunkFile *pFile, CManife
 ChunkFileResult_t CManifest::LoadManifestMapsCallback( CChunkFile *pFile, CManifest *pDoc )
 {
 	CChunkHandlerMap Handlers;
-	Handlers.AddHandler( "VMF", ( ChunkHandler_t )LoadManifestVMFCallback, pDoc );
+	Handlers.AddHandler( "VMF", LoadManifestVMFCallback, pDoc );
 	pFile->PushHandlers(&Handlers);
 
 	ChunkFileResult_t eResult = ChunkFile_Ok;
@@ -307,7 +307,7 @@ ChunkFileResult_t CManifest::LoadManifestVMFPrefsCallback( CChunkFile *pFile, CM
 	ManifestLoadPrefs.pDoc = pDoc;
 	ManifestLoadPrefs.pManifestMap = NULL;
 
-	ChunkFileResult_t eResult = pFile->ReadChunk( ( KeyHandler_t )LoadKeyPrefsCallback, &ManifestLoadPrefs );
+	ChunkFileResult_t eResult = pFile->ReadChunk( LoadKeyPrefsCallback, &ManifestLoadPrefs );
 
 	return( eResult );
 }
@@ -322,7 +322,7 @@ ChunkFileResult_t CManifest::LoadManifestVMFPrefsCallback( CChunkFile *pFile, CM
 ChunkFileResult_t CManifest::LoadManifestMapsPrefsCallback( CChunkFile *pFile, CManifest *pDoc )
 {
 	CChunkHandlerMap Handlers;
-	Handlers.AddHandler( "VMF", ( ChunkHandler_t )LoadManifestVMFPrefsCallback, pDoc );
+	Handlers.AddHandler( "VMF", LoadManifestVMFPrefsCallback, pDoc );
 	pFile->PushHandlers(&Handlers);
 
 	ChunkFileResult_t eResult = ChunkFile_Ok;
@@ -343,7 +343,7 @@ ChunkFileResult_t CManifest::LoadManifestMapsPrefsCallback( CChunkFile *pFile, C
 ChunkFileResult_t CManifest::LoadManifestCordoningPrefsCallback( CChunkFile *pFile, CManifest *pDoc )
 {
 	CChunkHandlerMap Handlers;
-	Handlers.AddHandler( "cordons", ( ChunkHandler_t )CMapDoc::LoadCordonCallback, pDoc );
+	Handlers.AddHandler( "cordons", CMapDoc::LoadCordonCallback, pDoc );
 	pFile->PushHandlers(&Handlers);
 
 	ChunkFileResult_t eResult = ChunkFile_Ok;
@@ -383,10 +383,10 @@ bool CManifest::LoadVMFManifest( const char *pszFileName )
 		// Set up handlers for the subchunks that we are interested in.
 		//
 		CChunkHandlerMap Handlers;
-		Handlers.AddHandler( "Info", ( ChunkHandler_t )CManifest::LoadManifestInfoCallback, this );
-		Handlers.AddHandler( "Maps", ( ChunkHandler_t )CManifest::LoadManifestMapsCallback, this );
+		Handlers.AddHandler( "Info", CManifest::LoadManifestInfoCallback, this );
+		Handlers.AddHandler( "Maps", CManifest::LoadManifestMapsCallback, this );
 
-		Handlers.SetErrorHandler( ( ChunkErrorHandler_t )CMapDoc::HandleLoadError, this);
+		Handlers.SetErrorHandler( CMapDoc::HandleLoadError, this);
 
 		File.PushHandlers(&Handlers);
 
@@ -509,10 +509,10 @@ bool CManifest::LoadVMFManifestUserPrefs( const char *pszFileName )
 		// Set up handlers for the subchunks that we are interested in.
 		//
 		CChunkHandlerMap Handlers;
-		Handlers.AddHandler( "Maps", ( ChunkHandler_t )CManifest::LoadManifestMapsPrefsCallback, this );
-		Handlers.AddHandler( "cordoning", ( ChunkHandler_t )CManifest::LoadManifestCordoningPrefsCallback, this );
+		Handlers.AddHandler( "Maps", CManifest::LoadManifestMapsPrefsCallback, this );
+		Handlers.AddHandler( "cordoning", CManifest::LoadManifestCordoningPrefsCallback, this );
 
-		Handlers.SetErrorHandler( ( ChunkErrorHandler_t )CMapDoc::HandleLoadError, this);
+		Handlers.SetErrorHandler( CMapDoc::HandleLoadError, this);
 
 		File.PushHandlers(&Handlers);
 
