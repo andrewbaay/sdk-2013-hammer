@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -67,16 +67,13 @@ class CMapInstance : public CMapHelper
 
 		void GetAngles(QAngle &Angles);
 
-		int SerializeRMF(std::fstream &File, BOOL bRMF);
-		int SerializeMAP(std::fstream &File, BOOL bRMF);
-
 		bool ShouldRenderLast(void);
 
 		bool IsVisualElement(void) { return(true); }
-		
+
 		virtual bool	IsEditable( void );
 				bool	IsInstanceVisible( void );
-		
+
 		const char		*GetDescription( void ) { return( "Instance" ); }
 		CMapDoc			*GetInstancedMap( void ) { return m_pInstancedMap; }
 		CManifestMap	*GetManifestMap( void ) { return m_pManifestMap; }
@@ -91,7 +88,7 @@ class CMapInstance : public CMapHelper
 		// Implements CMapAtom transformation functions.
 		//
 		void DoTransform(const VMatrix &matrix);
-		
+
 		QAngle			m_Angles;
 
 		char			m_FileName[ MAX_PATH ];

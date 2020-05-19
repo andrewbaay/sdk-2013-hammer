@@ -655,30 +655,6 @@ void CMapInstance::SwitchTo( void )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: we do not want to serialize this
-// Input  : &File -
-//			bRMF -
-// Output : int
-//-----------------------------------------------------------------------------
-int CMapInstance::SerializeRMF(std::fstream &File, BOOL bRMF)
-{
-	return(0);
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: we do not want to serialize this
-// Input  : &File -
-//			bRMF -
-// Output : int
-//-----------------------------------------------------------------------------
-int CMapInstance::SerializeMAP(std::fstream &File, BOOL bRMF)
-{
-	return(0);
-}
-
-
-//-----------------------------------------------------------------------------
 // Purpose: Canculate angles based upon the transform
 // Input  : pTransBox -
 //-----------------------------------------------------------------------------
