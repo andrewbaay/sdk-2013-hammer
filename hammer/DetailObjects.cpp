@@ -24,6 +24,7 @@
 #include "materialsystem/IMaterialVar.h"
 #include "materialsystem/IMaterial.h"
 #include "mapface.h"
+#include "MapDoc.h"	// TERROR
 #include "camera.h"
 #include "options.h"
 
@@ -479,6 +480,11 @@ void DetailObjects::EmitDetailObjectsOnFace( CMapFace *pMapFace, DetailObject_t&
 	if (nPoints < 3)
 		return;
 
+	// TERROR:
+	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
+	CMapEntityList detailBlockers;
+	pDoc->FindEntitiesByClassName( detailBlockers, "func_detail_blocker", false );
+
 	// Get the first point of the face
 	Vector	p0;
 	pMapFace->GetPoint(p0,0);
@@ -538,6 +544,20 @@ void DetailObjects::EmitDetailObjectsOnFace( CMapFace *pMapFace, DetailObject_t&
 			VectorMA( pt, v, e2, pt );
 			VectorDivide( areaVec, -normalLength, normal );
 
+			bool blocked = false;
+			for ( int b=0; b<detailBlockers.Count(); ++b )
+			{
+				CMapEntity *blocker = detailBlockers[b];
+				if ( blocker->ContainsPoint( pt ) )
+				{
+					blocked = true;
+					break;
+				}
+			}
+
+			if ( blocked )
+				continue;
+
 			PlaceDetail( detail.m_Groups[group].m_Models[model], pt, normal );
 		}
 	}
@@ -578,6 +598,11 @@ void DetailObjects::EmitDetailObjectsOnDisplacementFace( CMapFace *pMapFace,
 {
 	assert(pMapFace->GetPointCount() == 4);
 
+	// TERROR:
+	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
+	CMapEntityList detailBlockers;
+	pDoc->FindEntitiesByClassName( detailBlockers, "func_detail_blocker", false );
+
 	// We're going to pick a bunch of random points, and then probabilistically
 	// decide whether or not to plant a detail object there.
 
@@ -603,6 +628,20 @@ void DetailObjects::EmitDetailObjectsOnDisplacementFace( CMapFace *pMapFace,
 		Vector pt, normal;
 		pCoreDispInfo->GetPositionOnSurface( u, v, pt, &normal, &alpha );
 		alpha /= 255.0f;
+
+		bool blocked = false;
+		for ( int b=0; b<detailBlockers.Count(); ++b )
+		{
+			CMapEntity *blocker = detailBlockers[b];
+			if ( blocker->ContainsPoint( pt ) )
+			{
+				blocked = true;
+				break;
+			}
+		}
+
+		if ( blocked )
+			continue;
 
 		// Select a group based on the alpha value
 		int group = SelectGroup( detail, alpha );
@@ -748,7 +787,7 @@ void DetailObjects::Render3D(CRender3D *pRender)
 				Maxs[j] += fDetailDistance;
 			}
 			if ( IsPointInBox( viewPoint, Mins, Maxs ) )
-				pModel->DrawModel3D( pRender, 1, false );
+				pModel->DrawModel3D( pRender, Color(255, 255, 255, 255), 1, false  );
 		}
 		pRender->PopRenderMode();
 

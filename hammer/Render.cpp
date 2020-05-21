@@ -117,7 +117,36 @@ void CRender::PushInstanceData( CMapInstance *pInstanceClass, Vector &InstanceOr
 	InstanceState.m_pInstanceClass = pInstanceClass;
 	InstanceState.m_pTopInstanceClass = NULL;
 
-	AngleMatrix( InstanceState.m_InstanceAngles, InstanceState.m_InstanceOrigin, Instance3x4Matrix );
+	matrix3x4_t		TransMatrix;
+	matrix3x4_t		RotMatrix;
+	matrix3x4_t		TransRotMatrix;
+
+	AngleMatrix( InstanceState.m_InstanceAngles, RotMatrix );
+	SetIdentityMatrix( TransMatrix );
+	PositionMatrix( InstanceState.m_InstanceOrigin, TransMatrix );
+
+	MatrixMultiply( TransMatrix, RotMatrix, TransRotMatrix );
+
+	Vector vLocalOrigin = vec3_origin;
+	if ( pInstanceClass != NULL && pInstanceClass->GetInstancedMap() != NULL )
+	{
+		CMapEntityList	entityList;
+
+		pInstanceClass->GetInstancedMap()->FindEntitiesByClassName( entityList, "func_instance_origin", false );
+		if ( entityList.Count() == 1 )
+		{
+			entityList.Element( 0 )->GetOrigin( vLocalOrigin );
+		}
+	}
+
+	matrix3x4_t		LocalTransRotMatrix;
+	Vector			vOut;
+	VectorRotate( -vLocalOrigin, RotMatrix, vOut );
+	SetIdentityMatrix( TransMatrix );
+	PositionMatrix( vOut, TransMatrix );
+
+	MatrixMultiply( TransMatrix, TransRotMatrix, Instance3x4Matrix );
+
 	InstanceState.m_InstanceMatrix.Init( Instance3x4Matrix );
 
 	Vector		vecTransformedOrigin;
@@ -129,7 +158,7 @@ void CRender::PushInstanceData( CMapInstance *pInstanceClass, Vector &InstanceOr
 	{	// first push is just a default state
 		m_bInstanceRendering = true;
 		BeginLocalTransfrom( InstanceState.m_InstanceMatrix, true );
-		if ( m_CurrentInstanceState.m_pTopInstanceClass == NULL ) 
+		if ( m_CurrentInstanceState.m_pTopInstanceClass == NULL )
 		{
 			if ( pInstanceClass->IsEditable() == false )
 			{
@@ -702,7 +731,12 @@ bool CRender::BeginClientSpace(void)
 
 	pRenderContext->MatrixMode(MATERIAL_VIEW);
 	pRenderContext->PushMatrix();
+	// For DX9, we need to offset vertex positions by 1/2 pixel, so that pixel and texel centers fall on the same spot.
+	// If we don't do this, we are at relying on undefined behavior in the various GPUs' texture units, and e.g. the 4800 series
+	// will render garbage text because of it. If Hammer ever needs to run on top of GL or D3D10/11, this translate has to
+	// become conditional based on the API we're using.
 	pRenderContext->LoadIdentity();
+	pRenderContext->Translate( -.5f, .5f, 0.0f );
 
 	if ( m_bIsLocalTransform )
 	{
@@ -1017,6 +1051,7 @@ bool CRender::SetView( CMapView * pView )
 
 	// Store off the three materials we use most often...
 	if ( !GetRequiredMaterial( "editor/wireframe", m_pWireframe[0] ) ||
+		!GetRequiredMaterial( "debug/debugwireframevertexcolor", m_pModelWireframe ) ||
 		!GetRequiredMaterial( "editor/flat", m_pFlat[0] ) ||
 		!GetRequiredMaterial( "editor/flatdecal", m_pFlat[1] ) ||
 		!GetRequiredMaterial( "editor/translucentflat", m_pTranslucentFlat[0] ) ||
@@ -1145,11 +1180,26 @@ void CRender::DrawDisplacement( CCoreDispInfo *pMapDisp )
 	m_pMesh->Draw();
 }
 
-void CRender::DrawModel( DrawModelInfo_t* pInfo, matrix3x4_t *pBoneToWorld, const Vector &vOrigin, float fAlpha, bool bWireFrame )
+void CRender::DrawModel( DrawModelInfo_t* pInfo, matrix3x4_t *pBoneToWorld, const Vector &vOrigin, float fAlpha, bool bWireFrame, const Color &color )
 {
 	UpdateStudioRenderConfig( true, bWireFrame );
 
 	g_pStudioRender->SetAlphaModulation( fAlpha );
+
+	float col[3];
+	col[0] = color.r() / 255.0f;
+	col[1] = color.g() / 255.0f;
+	col[2] = color.b() / 255.0f;
+
+	if ( bWireFrame )
+	{
+		col[0] = 0;
+		col[1] = 1;
+		col[2] = 1;
+		g_pStudioRender->ForcedMaterialOverride( m_pModelWireframe );
+	}
+
+	g_pStudioRender->SetColorModulation( col );
 
 	Vector viewOrigin;
 	GetCamera()->GetViewPoint( viewOrigin );
@@ -1158,7 +1208,12 @@ void CRender::DrawModel( DrawModelInfo_t* pInfo, matrix3x4_t *pBoneToWorld, cons
 
 	g_pStudioRender->DrawModel( NULL, *pInfo, pBoneToWorld, NULL, NULL, vOrigin, STUDIORENDER_DRAW_ENTIRE_MODEL );
 
+	if ( bWireFrame )
+		g_pStudioRender->ForcedMaterialOverride( NULL );
+
 	g_pStudioRender->SetAlphaModulation( 1.0f );
+	col[0] = col[1] = col[2] = 1.0f;
+	g_pStudioRender->SetColorModulation( col );
 
 	// force rendermode reset
 	SetRenderMode( RENDER_MODE_CURRENT, true );

@@ -202,8 +202,10 @@ public:
 			void DrawArrow( Vector const &vStart, Vector const &vEnd );
 			void DrawPlane( const Vector &p0, const Vector &p1, const Vector &p2, const Vector &p3, bool bFill = false );
 
+	// client space helper functions:
+			void DrawFilledRect( Vector2D& pt1, Vector2D& pt2, unsigned char *pColor, bool bBorder );
 	// drawing complex objects
-			void DrawModel( DrawModelInfo_t* pInfo, matrix3x4_t *pBoneToWorld, const Vector &vOrigin, float fAlpha = 1, bool bWireframe = false );
+			void DrawModel( DrawModelInfo_t* pInfo, matrix3x4_t *pBoneToWorld, const Vector &vOrigin, float fAlpha = 1, bool bWireframe = false, const Color &color = Color( 255, 255, 255, 255 ) );
 			void DrawDisplacement( CCoreDispInfo *pDisp );
 			void DrawCollisionModel( MDLHandle_t mdlHandle, const VMatrix &mViewMatrix );
 
@@ -235,13 +237,12 @@ public:
 			void			TransformInstanceVector( Vector &In, Vector &Out ) { m_CurrentInstanceState.m_InstanceMatrix.V3Mul( In, Out ); }
 			void			RotateInstanceVector( Vector &In, Vector &Out ) { VectorRotate( In, m_CurrentInstanceState.m_InstanceMatrix.As3x4(), Out ); }
 			void			TransformInstanceAABB( Vector &InMins, Vector &InMaxs, Vector &OutMins, Vector &OutMaxs ) { TransformAABB( m_CurrentInstanceState.m_InstanceMatrix.As3x4(), InMins, InMaxs, OutMins, OutMaxs );  }
-  
+
 protected:
 
 	bool GetRequiredMaterial( const char *pName, IMaterial* &pMaterial );
 	void UpdateStudioRenderConfig( bool bFlat, bool bWireframe );
 	// client space helper functions:
-	void DrawFilledRect( Vector2D& pt1, Vector2D& pt2, unsigned char *pColor, bool bBorder );
 	void DrawCross( Vector2D& pt1, Vector2D& pt2, unsigned char *pColor );
 	void DrawCircle( Vector2D &vCenter, float fRadius, int nSegments, unsigned char *pColor );
 	void DrawRect( Vector2D& pt1, Vector2D& pt2, unsigned char *pColor );
@@ -280,6 +281,7 @@ protected:
 
 	int				m_nDecalMode;			// 0 or 1
 	IMaterial*		m_pWireframe[2];		// default wireframe material
+	IMaterial*		m_pModelWireframe;		// default wireframe material
 	IMaterial*		m_pFlat[2];				// default flat material
 	IMaterial*		m_pDotted[2];			// default dotted material
 	IMaterial*		m_pFlatNoZ[2];			// default flat material, ignore Z

@@ -1,6 +1,6 @@
 //===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //===========================================================================//
@@ -30,7 +30,7 @@ using namespace vgui;
 //-----------------------------------------------------------------------------
 // Enums
 //-----------------------------------------------------------------------------
-enum 
+enum
 {
 	SCROLLBAR_SIZE=18,  // the width of a scrollbar
 	WINDOW_BORDER_WIDTH=2 // the width of the window's border
@@ -49,7 +49,11 @@ CParticleSystemPanel::CParticleSystemPanel( vgui::Panel *pParent, const char *pN
 	m_bRenderBounds = false;
 	m_bRenderCullBounds = false;
 	m_bRenderHelpers = false;
+	m_bRenderControlPoints = false;
 	m_bPerformNameBasedLookup = true;
+	m_bTickMyself = true;
+	m_bAutoView = false;
+	m_bSuppressAutoView = false;
 	m_ParticleSystemName = NULL;
 	InvalidateUniqueId( &m_ParticleSystemId );
 	InvalidateUniqueId( &m_RenderHelperId );
@@ -61,18 +65,29 @@ CParticleSystemPanel::CParticleSystemPanel( vgui::Panel *pParent, const char *pN
 
 	for ( int i = 0; i < MAX_PARTICLE_CONTROL_POINTS; ++i )
 	{
-		SetControlPointValue( i, Vector( 0, 0, 10.0f * i ) );
+		SetControlPointValue( i, vec3_invalid );
 	}
-
-	UseEngineCoordinateSystem( true );
 }
 
 CParticleSystemPanel::~CParticleSystemPanel()
 {
 	m_pLightmapTexture.Shutdown();
 	m_DefaultEnvCubemap.Shutdown();
+
+	delete m_pParticleSystem;
+	m_pParticleSystem = NULL;
 }
 
+
+void CParticleSystemPanel::ResetView()
+{
+	BaseClass::ResetView();
+	LookAt(SPHERE_RADIUS);
+
+	m_BestViewBoundsMin = vec3_origin;
+	m_BestViewBoundsMax = vec3_origin;
+	m_bSuppressAutoView = false;
+}
 
 //-----------------------------------------------------------------------------
 // Scheme
@@ -83,6 +98,25 @@ void CParticleSystemPanel::ApplySchemeSettings( vgui::IScheme *pScheme )
 	SetBorder( pScheme->GetBorder( "MenuBorder") );
 }
 
+//-----------------------------------------------------------------------------
+// Stop System
+//-----------------------------------------------------------------------------
+
+void CParticleSystemPanel::StopEffect()
+{
+	if ( !m_pParticleSystem )
+		return;
+	m_pParticleSystem->StopEmission();
+}
+
+//-----------------------------------------------------------------------------
+// Indicates that the grid should be drawn
+//-----------------------------------------------------------------------------
+void CParticleSystemPanel::RenderGrid( bool bEnable )
+{
+	m_bRenderGrid = bEnable;
+}
+
 
 //-----------------------------------------------------------------------------
 // Indicates that bounds should be drawn
@@ -90,6 +124,15 @@ void CParticleSystemPanel::ApplySchemeSettings( vgui::IScheme *pScheme )
 void CParticleSystemPanel::RenderBounds( bool bEnable )
 {
 	m_bRenderBounds = bEnable;
+}
+
+
+//-----------------------------------------------------------------------------
+// Indicates that control points should be drawn
+//-----------------------------------------------------------------------------
+void CParticleSystemPanel::RenderControlPoints( bool bEnable )
+{
+	m_bRenderControlPoints = bEnable;
 }
 
 
@@ -134,6 +177,15 @@ void CParticleSystemPanel::SetRenderedHelper( CDmeParticleFunction *pOp )
 void CParticleSystemPanel::OnTick()
 {
 	BaseClass::OnTick();
+
+	if( m_bTickMyself )
+	{
+		Simulate();
+	}
+}
+
+void CParticleSystemPanel::Simulate()
+{
 	if ( !m_pParticleSystem )
 		return;
 
@@ -148,15 +200,13 @@ void CParticleSystemPanel::OnTick()
 
 	for ( int i = 0; i < MAX_PARTICLE_CONTROL_POINTS; ++i )
 	{
-		if ( !m_pParticleSystem->ReadsControlPoint( i ) )
+		if ( !m_pParticleSystem->ReadsControlPoint( i ) || m_pControlPointValue[i] == vec3_invalid )
 			continue;
 
 		m_pParticleSystem->SetControlPoint( i, m_pControlPointValue[i] );
 		m_pParticleSystem->SetControlPointOrientation( i, Vector( 1, 0, 0 ), Vector( 0, -1, 0 ), Vector( 0, 0, 1 ) );
 		m_pParticleSystem->SetControlPointParent( i, i );
 	}
-
-	m_pParticleSystem->Simulate( flDt, false );
 
 	// Restart the particle system if it's finished
 	bool bIsInvalid = !m_pParticleSystem->IsValid();
@@ -188,6 +238,15 @@ void CParticleSystemPanel::OnTick()
 		}
 		m_flLastTime = FLT_MAX;
 	}
+	else
+	{
+		m_pParticleSystem->Simulate( flDt, false );
+	}
+
+	if( m_bAutoView && !m_bSuppressAutoView )
+	{
+		UseAutoView();
+	}
 }
 
 
@@ -196,7 +255,7 @@ void CParticleSystemPanel::OnTick()
 //-----------------------------------------------------------------------------
 void CParticleSystemPanel::StartupParticleCollection()
 {
-	if ( m_pParticleSystem )
+	if ( m_pParticleSystem && m_bTickMyself )
 	{
 		vgui::ivgui()->AddTickSignal( GetVPanel(), 0 );
 	}
@@ -207,10 +266,31 @@ void CParticleSystemPanel::ShutdownParticleCollection()
 {
 	if ( m_pParticleSystem )
 	{
-		vgui::ivgui()->RemoveTickSignal( GetVPanel() );
+		if( m_bTickMyself )
+		{
+			vgui::ivgui()->RemoveTickSignal( GetVPanel() );
+		}
+
 		delete m_pParticleSystem;
 		m_pParticleSystem = NULL;
 	}
+}
+
+void CParticleSystemPanel::SetSelfSimulation(bool bSelfSimulate )
+{
+	if( m_pParticleSystem && ( m_bTickMyself != bSelfSimulate ) )
+	{
+		if ( !bSelfSimulate )
+		{
+			vgui::ivgui()->RemoveTickSignal( GetVPanel() );
+		}
+		else
+		{
+			vgui::ivgui()->AddTickSignal( GetVPanel(), 0 );
+		}
+	}
+
+	m_bTickMyself = bSelfSimulate;
 }
 
 //-----------------------------------------------------------------------------
@@ -234,6 +314,28 @@ void CParticleSystemPanel::SetParticleSystem( CDmeParticleSystemDefinition *pDef
 			Assert( g_pParticleSystemMgr->IsParticleSystemDefined( m_ParticleSystemId ) );
 			m_pParticleSystem = g_pParticleSystemMgr->CreateParticleCollection( m_ParticleSystemId );
 		}
+
+		PostActionSignal( new KeyValues( "ParticleSystemReconstructed" ) );
+	}
+	StartupParticleCollection();
+}
+
+void CParticleSystemPanel::SetParticleSystem( const char* szParticleSystemName )
+{
+	ShutdownParticleCollection();
+	if ( szParticleSystemName )
+	{
+		m_ParticleSystemName = szParticleSystemName;
+
+		if ( g_pParticleSystemMgr->IsParticleSystemDefined( m_ParticleSystemName ) )
+		{
+			m_pParticleSystem = g_pParticleSystemMgr->CreateParticleCollection( m_ParticleSystemName );
+		}
+		else
+		{
+			m_pParticleSystem = NULL;
+		}
+
 		PostActionSignal( new KeyValues( "ParticleSystemReconstructed" ) );
 	}
 	StartupParticleCollection();
@@ -249,6 +351,45 @@ CParticleCollection *CParticleSystemPanel::GetParticleSystem()
 	return m_pParticleSystem;
 }
 
+//-----------------------------------------------------------------------------
+// Auto-viewing
+//-----------------------------------------------------------------------------
+
+void CParticleSystemPanel::EnterManipulationMode( ManipulationMode_t manipMode, bool bMouseCapture, vgui::MouseCode mouseCode )
+{
+	BaseClass::EnterManipulationMode(manipMode,bMouseCapture,mouseCode);
+
+	if( manipMode != CAMERA_ROTATE )
+	{
+		m_bSuppressAutoView = true;
+	}
+}
+
+void CParticleSystemPanel::EnableAutoViewing( bool bEnable )
+{
+	m_bAutoView = bEnable;
+	m_BestViewBoundsMin = vec3_origin;
+	m_BestViewBoundsMax = vec3_origin;
+
+	if ( m_bAutoView )
+	{
+		m_bSuppressAutoView = false;
+	}
+}
+
+void CParticleSystemPanel::UseAutoView()
+{
+	Vector vecMins, vecMaxs;
+	m_pParticleSystem->GetBounds( &vecMins, &vecMaxs );
+	m_BestViewBoundsMin = m_BestViewBoundsMin.Min(vecMins);
+	m_BestViewBoundsMax = m_BestViewBoundsMax.Max(vecMaxs);
+
+	float flBestViewRad = MAX( 5.0f, 0.25f*(m_BestViewBoundsMax-m_BestViewBoundsMin).Length() );
+
+	Vector viewCenter = ( m_BestViewBoundsMin + m_BestViewBoundsMax ) * 0.5f;
+
+	LookAt( viewCenter, flBestViewRad );
+}
 
 //-----------------------------------------------------------------------------
 // Draw bounds
@@ -285,20 +426,20 @@ void CParticleSystemPanel::OnPaint3D()
 	CMatRenderContextPtr pRenderContext( MaterialSystem() );
 	pRenderContext->BindLightmapTexture( m_pLightmapTexture );
 	pRenderContext->BindLocalCubemap( m_DefaultEnvCubemap );
-	 
+
 	// Draw axes
 	pRenderContext->MatrixMode( MATERIAL_MODEL );
 	pRenderContext->PushMatrix();
 	pRenderContext->LoadIdentity( );
 
+	if ( m_bRenderGrid )
+	{
+		DrawGrid();
+	}
+
 	if ( m_bRenderBounds )
 	{
 		DrawBounds();
-		Vector vP1;
-		Vector vP2;
-		m_pParticleSystem->GetControlPointAtTime( 0, m_pParticleSystem->m_flCurTime, &vP1 );
-		m_pParticleSystem->GetControlPointAtTime( 1, m_pParticleSystem->m_flCurTime, &vP2 );
-		RenderLine( vP1, vP2, Color( 0, 255, 255, 255 ), true );
 	}
 
 	if ( m_bRenderCullBounds )
@@ -310,14 +451,28 @@ void CParticleSystemPanel::OnPaint3D()
 	{
 		m_pParticleSystem->VisualizeOperator( &m_RenderHelperId );
 	}
+
 	m_pParticleSystem->Render( pRenderContext );
 	m_pParticleSystem->VisualizeOperator( );
 	RenderAxes( vec3_origin, AXIS_SIZE, true );
 
+	if ( m_bRenderControlPoints )
+	{
+		for ( int i = 0; i < MAX_PARTICLE_CONTROL_POINTS; ++i )
+		{
+			if ( m_pParticleSystem->ReadsControlPoint( i ) )
+			{
+				Vector vP;
+				m_pParticleSystem->GetControlPointAtTime( i, m_pParticleSystem->m_flCurTime, &vP );
+				RenderAxes( vP, 3.0f, true );
+			}
+		}
+	}
+
 	pRenderContext->MatrixMode( MATERIAL_MODEL );
 	pRenderContext->PopMatrix();
 }
-	    
+
 
 //-----------------------------------------------------------------------------
 //
@@ -348,7 +503,7 @@ private:
 	CParticleSystemPanel *m_pParticleSystemPanel;
 };
 
-	
+
 //-----------------------------------------------------------------------------
 // Contstructor
 //-----------------------------------------------------------------------------
@@ -448,7 +603,9 @@ void CControlPointPage::CreateControlPointControls()
 		m_pControlPointValue[i]->SendNewLine( true );
 		m_pControlPointValue[i]->SetMultiline( false );
 
-		const Vector &vecValue = m_pParticleSystemPanel->GetControlPointValue( i );
+		Vector vecValue = m_pParticleSystemPanel->GetControlPointValue( i );
+		if ( vecValue == vec3_invalid )
+			vecValue = vec3_origin;
 		Q_snprintf( pName, sizeof(pName), "%.3f %.3f %.3f", vecValue.x, vecValue.y, vecValue.z );
 		m_pControlPointValue[i]->SetText( pName );
 	}
@@ -516,6 +673,8 @@ IMPLEMENT_DMEPANEL_FACTORY( CParticleSystemPreviewPanel, DmeParticleSystemDefini
 CParticleSystemPreviewPanel::CParticleSystemPreviewPanel( vgui::Panel *pParent, const char *pName ) :
 	BaseClass( pParent, pName )
 {
+	m_pUnlockSystem = NULL;
+
 	m_Splitter = new vgui::Splitter( this, "Splitter", SPLITTER_MODE_VERTICAL, 1 );
 	vgui::Panel *pSplitterLeftSide = m_Splitter->GetChild( 0 );
 	vgui::Panel *pSplitterRightSide = m_Splitter->GetChild( 1 );
@@ -534,14 +693,26 @@ CParticleSystemPreviewPanel::CParticleSystemPreviewPanel( vgui::Panel *pParent, 
 	m_pRenderBounds = new vgui::CheckButton( m_pRenderPage, "RenderBounds", "Render Bounding Box" );
 	m_pRenderBounds->AddActionSignalTarget( this );
 
+	m_pRenderControlPoints = new vgui::CheckButton( m_pRenderPage, "RenderControlPoints", "Render Control Points" );
+	m_pRenderControlPoints->AddActionSignalTarget( this );
+
 	m_pRenderCullBounds = new vgui::CheckButton( m_pRenderPage, "RenderCullBounds", "Render Culling Bounds" );
 	m_pRenderCullBounds->AddActionSignalTarget( this );
 
 	m_pRenderHelpers = new vgui::CheckButton( m_pRenderPage, "RenderHelpers", "Render Helpers" );
 	m_pRenderHelpers->AddActionSignalTarget( this );
 
+	m_pRenderGrid = new vgui::CheckButton( m_pRenderPage, "RenderGrid", "Render Grid" );
+	m_pRenderGrid->AddActionSignalTarget( this );
+
 	m_pBackgroundColor = new CColorPickerButton( m_pRenderPage, "BackgroundColor", this );
 	m_pBackgroundColor->SetColor( m_pParticleSystemPanel->GetBackgroundColor() );
+
+	m_pLockPreview = new vgui::CheckButton( m_pRenderPage, "LockPreview", "Lock Preview System" );
+	m_pLockPreview->AddActionSignalTarget( this );
+
+	m_pStopEffect = new vgui::Button( m_pRenderPage, "StopEffect", "Stop Effect", this, "StopEffect" );
+
 
 	m_pRenderPage->LoadControlSettingsAndUserConfig( "resource/particlesystempreviewpanel_renderpage.res" );
 
@@ -575,7 +746,7 @@ void CParticleSystemPreviewPanel::OnThink()
 	else
 	{
 		char buf[256];
-		Q_snprintf( buf, sizeof(buf), "Particle Count: %5d/%5d", 
+		Q_snprintf( buf, sizeof(buf), "Particle Count: %5d/%5d",
 			pParticleSystem->m_nActiveParticles, pParticleSystem->m_nAllocatedParticles );
 		m_pParticleCount->SetText( buf );
 	}
@@ -594,14 +765,39 @@ void CParticleSystemPreviewPanel::OnParticleSystemReconstructed()
 //-----------------------------------------------------------------------------
 // Set the particle system to draw
 //-----------------------------------------------------------------------------
-void CParticleSystemPreviewPanel::SetParticleSystem( CDmeParticleSystemDefinition *pDef )
+void CParticleSystemPreviewPanel::SetParticleSystem( CDmeParticleSystemDefinition *pDef, bool bOverrideLock )
 {
+	bool bLocked = m_pLockPreview->IsSelected();
+
+	if ( bOverrideLock || !bLocked )
+	{
 	m_pParticleSystemPanel->SetParticleSystem( pDef );
+
+		if ( bOverrideLock && bLocked )
+		{
+			m_pLockPreview->SetSelected(false);
+			m_pUnlockSystem = NULL;
+		}
+		else
+		{
+			m_pUnlockSystem = pDef;
+		}
+	}
+	else
+	{
+		m_pUnlockSystem = pDef;
+	}
+}
+
+void CParticleSystemPreviewPanel::ClearParticleSystemLock()
+{
+	m_pLockPreview->SetSelected(false);
+	m_pUnlockSystem = NULL;
 }
 
 void CParticleSystemPreviewPanel::SetDmeElement( CDmeParticleSystemDefinition *pDef )
 {
-	m_pParticleSystemPanel->SetDmeElement( pDef );
+	SetParticleSystem( pDef, false );
 }
 
 
@@ -655,4 +851,19 @@ void CParticleSystemPreviewPanel::OnBackgroundColorPreview( KeyValues *pParams )
 void CParticleSystemPreviewPanel::OnBackgroundColorCancel( KeyValues *pParams )
 {
 	m_pParticleSystemPanel->SetBackgroundColor( pParams->GetColor( "startingColor" ) );
+}
+
+//-----------------------------------------------------------------------------
+// Called when buttons are clicked
+//-----------------------------------------------------------------------------
+void CParticleSystemPreviewPanel::OnCommand( const char *pCommand )
+{
+
+	if ( !Q_stricmp( pCommand, "StopEffect" ) )
+	{
+		m_pParticleSystemPanel->StopEffect();
+		return;
+	}
+
+	BaseClass::OnCommand( pCommand );
 }

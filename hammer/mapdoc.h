@@ -10,6 +10,7 @@
 #pragma once
 #endif
 
+#include "cordon.h"
 #include "MapClass.h"
 #include "Selection.h"
 #include "MapEntity.h"
@@ -33,7 +34,7 @@ class CManifest;
 struct FindEntity_t;
 struct FindGroup_t;
 struct AddNonSelectedInfo_t;
-
+struct AssetUsageInfo_t;
 
 enum SelectionHandleMode_t;
 enum MAPFORMAT;
@@ -85,6 +86,18 @@ enum VMFLoadFlags_t
 	VMF_LOAD_IS_SUBMAP = 0x02,	// loading map is part of an instance / manifest
 };
 
+
+enum SelectCordonFlags_t
+{
+	SELECT_CORDON_FROM_TOOL = 0x01,
+	SELECT_CORDON_FROM_DIALOG = 0x02,
+};
+
+
+// File state
+#define FILE_IS_READ_ONLY			0x01
+#define FILE_IS_CHECKED_OUT			0x02
+
 typedef struct
 {
 	WORD wFlags;
@@ -100,6 +113,12 @@ struct ExportDXFInfo_s
 	FILE *fp;
 };
 
+typedef struct
+{
+	int m_nHammerID;
+	CMapEntity *m_pEntityFound;
+} FindEntityByHammerID_t;
+
 
 //
 // The doc holds a list of objects with dependents that changed since the last render. The list
@@ -107,7 +126,7 @@ struct ExportDXFInfo_s
 //
 struct NotifyListEntry_t
 {
-	CSmartPtr<CSafeObject<CMapClass>> pObject;
+	CUtlReference< CMapClass > pObject;
 	Notify_Dependent_t eNotifyType;
 };
 
@@ -226,10 +245,19 @@ class CMapDoc : public CDocument
 		CMapEntity *FindEntity(const char *pszClassName, float x, float y, float z);
 
 		CMapEntity *FindEntityByName( const char *pszName, bool bVisiblesOnly );
+		CMapEntity *FindEntityByHammerID( int nHammerID );
 		bool FindEntitiesByKeyValue(CMapEntityList &Found, const char *szKey, const char *szValue, bool bVisiblesOnly);
 		bool FindEntitiesByName(CMapEntityList &Found, const char *szName, bool bVisiblesOnly);
 		bool FindEntitiesByClassName(CMapEntityList &Found, const char *szClassName, bool bVisiblesOnly);
 		bool FindEntitiesByNameOrClassName(CMapEntityList &Found, const char *pszName, bool bVisiblesOnly);
+
+		void GetUsedModels( CUtlVector<AssetUsageInfo_t> &usedModels );
+
+		void			CheckFileStatus();
+
+		void			GetBspPathFromVmfPath( CUtlString &bspPath );
+
+		bool			IsReadOnly( ) { return m_bReadOnly; }
 
 		virtual void Update(void);
 		virtual void SetModifiedFlag(BOOL bModified = TRUE);
@@ -257,16 +285,51 @@ class CMapDoc : public CDocument
 
 		void GotoPFPoint(int iDirection);
 
-		// world cordon
-		bool IsCordoning(void);
-		bool SetCordoning( bool bState);
-		void GetCordon( Vector &mins, Vector &maxs);
-		void SetCordon( const Vector &mins, const Vector &maxs);
-		CMapWorld *CordonCreateWorld();
-		ChunkFileResult_t CordonSaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo);
-		Vector		m_vCordonMins;
-		Vector		m_vCordonMaxs;
+		//
+		// Users can create one or more cordons, which are sets of rectangular boxes that define a volumetric
+		// visibility region. When a cordon is active, any objects outside the cordon volume are hidden.
+		//
+		// Cordons can be named for convenience. When the map is saved with a cordon active, brushes are
+		// added to the file to seal the cordon volume so that the map compiles without leaks.
+		//
+		bool Cordon_SetCordoning( bool bState );
+		inline bool Cordon_IsCordoning();
+		inline int Cordon_GetCount();
+		inline Cordon_t *Cordon_GetCordon( int nIndex );
+		void Cordon_GetIndices( Cordon_t *pCordon, BoundBox *pBox, int *pnCordon, int *pnBox );
+		void Cordon_GetBounds( Vector &mins, Vector &maxs );
+		void Cordon_Activate( int nIndex, bool bActive );
+		Cordon_t *Cordon_CreateNewCordon( const char *name = NULL, BoundBox **ppBox = NULL );
+		Cordon_t *Cordon_AddCordon( const char *szName );
+		BoundBox *Cordon_AddBox( Cordon_t *cordon );
+		void Cordon_RemoveCordon( Cordon_t *cordon );
+		void Cordon_RemoveBox( Cordon_t *cordon, BoundBox *box );
+		void Cordon_CombineCordons( Cordon_t *pSourceCordon, BoundBox *pSourceBox, Cordon_t *pDestCordon );
+
+		// We can only edit one of our cordon bounds at a time
+		Cordon_t *Cordon_GetSelectedCordonForEditing( BoundBox **pBox = NULL );
+		void Cordon_SelectCordonForEditing( Cordon_t *cordon, BoundBox *box, int nFlags = 0 ); // NULL cordon here means use current edit cordon
+		void Cordon_GetEditCordon( Vector &mins, Vector &maxs );
+		void Cordon_SetEditCordon( const Vector &mins, const Vector &maxs );
+		inline bool Cordon_IsEditCordon( int nCordon, int nBox );
+
+		CMapWorld *Cordon_CreateWorld();
+		CMapWorld *Cordon_AddCordonObjectsToWorld( CMapObjectList &CordonList );
+		ChunkFileResult_t Cordon_SaveVMF( CChunkFile *pFile, CSaveInfo *pSaveInfo );
+		CMapWorld *Cordon_AddTempObjectsToWorld( CMapObjectList &CordonList );
+		bool Cordon_IsCulledByCordon( CMapClass *pObject );
+
+		void Cordon_MoveUp( Cordon_t *cordon );
+		void Cordon_MoveDown( Cordon_t *cordon );
+
+	protected:
+
+		CUtlVector<Cordon_t> m_Cordons;
 		bool		m_bIsCordoning;
+		int m_nEditCordon;
+		int m_nEditCordonBox;
+
+	public:
 
 		CMapView *GetActiveMapView();
 		CMapView3D *GetFirst3DView();
@@ -308,7 +371,11 @@ class CMapDoc : public CDocument
 		void Set3DViewsPosAng( const Vector &vPos, const Vector &vAng );
 		void GetSelectedCenter(Vector &vCenter);
 
+		void ClearEntitySelection();
+
 		void GetBestVisiblePoint(Vector &ptOrg);
+		void GetBestVisibleBox( Vector &vecMins, Vector &vecMaxs );
+
 		void Cut( IHammerClipboard *pClipboard );
 		void Copy( IHammerClipboard *pClipboard = NULL );
 		void Paste(CMapObjectList &Objects, CMapWorld *pSourceWorld, CMapWorld *pDestWorld, Vector vecOffset, QAngle vecRotate, CMapClass *pParent, bool bMakeEntityNamesUnique, const char *pszEntityNamePrefix);
@@ -321,7 +388,7 @@ class CMapDoc : public CDocument
 		void NudgeObjects(const Vector &Delta, bool bClone);
 		void GetNudgeVector(const Vector& vHorz, const Vector& vVert, int nChar, bool bSnap, Vector &vecNudge);
 
-		void GetBestPastePoint(Vector &vecPasteOrigin);
+		void GetBestPastePoint(Vector &vecPasteOrigin, IHammerClipboard *pClipboard);
 		void UpdateStatusbar();
 		void UpdateStatusBarSnap();
 		void SetView2dInfo(VIEW2DINFO& vi);
@@ -355,6 +422,7 @@ class CMapDoc : public CDocument
 		inline CHistory *GetDocHistory(void);
 
 		inline int GetNextMapObjectID(void);
+		inline int GetNextLoadID();			// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
 		inline int GetNextNodeID(void);
 		inline void SetNextNodeID(int nID);
 
@@ -445,7 +513,7 @@ class CMapDoc : public CDocument
 		bool QuickHide_IsObjectHidden( CMapClass *pObject );
 		ChunkFileResult_t QuickHide_SaveVMF( CChunkFile *pFile, CSaveInfo *pSaveInfo );
 		CMapObjectList m_QuickHideGroup;
-		CUtlVector< CMapClass* > m_QuickHideGroupedParents;
+		CMapObjectList m_QuickHideGroupedParents;
 
 		// Default logical placement for new entities
 		void GetDefaultNewLogicalPosition( Vector2D &vecPosition );
@@ -474,8 +542,9 @@ class CMapDoc : public CDocument
 		// Save a VMF file. saveFlags is a combination of SAVEFLAGS_ defines.
 		bool SaveVMF(const char *pszFileName, int saveFlags );
 
+		void PreloadDocument();
 		bool LoadVMF( const char *pszFileName, int LoadFlags = VMF_LOAD_ACTIVATE );
-		void Postload(const char *pszFileName);
+		void PostloadDocument(const char *pszFileName);
 		inline bool IsLoading(void);
 
 		inline void SetInitialUpdate( void ) { m_bHasInitialUpdate = true; }
@@ -491,7 +560,9 @@ class CMapDoc : public CDocument
 		int				GetClipboardCount( void );
 		void			ManifestPaste( CMapWorld *pDestWorld, Vector vecOffset, QAngle vecRotate, CMapClass *pParent, bool bMakeEntityNamesUnique, const char *pszEntityNamePrefix );
 		virtual void	UpdateInstanceMap( CMapDoc *pInstanceMapDoc );
+		bool			CollapseInstance( CMapEntity *pEntity, int &InstanceCount );
 		void			CollapseInstances( bool bOnlySelected );
+		void			CollapseInstancesRecursive( bool bOnlySelected );
 		void			PopulateInstanceParms_r( CMapEntity *pEntity, const CMapObjectList *pChildren, CUtlVector< CString > &ParmList );
 		void			PopulateInstanceParms( CMapEntity *pEntity );
 		void			PopulateInstance( CMapEntity *pEntity );
@@ -517,6 +588,7 @@ class CMapDoc : public CDocument
 
 		void AddToAutoVisGroup( CMapClass *pObject );
 		void AddToAutoVisGroup( CMapClass *pObject, const char *pAutoVisGroup );
+		void AddAutoVisGroup( const char *pAutoVisGroup, const char *pParentName );
 		void AddChildGroupToAutoVisGroup( CMapClass *pObject, const char *pAutoVisGroup, const char *pParentName );
 		void RemoveFromAutoVisGroups( CMapClass *pObject );
 		void AddToFGDAutoVisGroups( CMapClass *pObject );
@@ -545,6 +617,9 @@ class CMapDoc : public CDocument
 		bool m_bHasInitialUpdate;
 		bool m_bLoading; // Set to true while we are being loaded from VMF.
 
+		bool m_bReadOnly;
+		bool m_bDeferredSave;	// Used when deferring a re-save of the map while loading is occurring
+
 		static BOOL GetBrushNumberCallback(CMapClass *pObject, class CFindBrushInfo *pFindInfo);
 
 		//
@@ -555,8 +630,17 @@ class CMapDoc : public CDocument
 		ChunkFileResult_t SaveViewSettingsVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo);
 
 		static bool HandleLoadError(CChunkFile *pFile, const char *szChunkName, CMapDoc *pDoc);
+
+		// Cordon loading.
+		static ChunkFileResult_t LoadCordonsCallback( CChunkFile *pFile, CMapDoc *pDoc );
+		static ChunkFileResult_t LoadCordonsKeyCallback( const char *pszKey, const char *pszValue, CMapDoc *pDoc );
 		static ChunkFileResult_t LoadCordonCallback(CChunkFile *pFile, CMapDoc *pDoc);
-		static ChunkFileResult_t LoadCordonKeyCallback(const char *pszKey, const char *pszValue, CMapDoc *pDoc);
+		static ChunkFileResult_t LoadCordonKeyCallback(const char *pszKey, const char *pszValue, Cordon_t *pCordon);
+		static ChunkFileResult_t LoadCordonBoxCallback( CChunkFile *pFile, Cordon_t *pCordon );
+		static ChunkFileResult_t LoadCordonBoxKeyCallback(const char *pszKey, const char *pszValue, BoundBox *pBox );
+		static ChunkFileResult_t LoadCordonCallback_Legacy( CChunkFile *pFile, CMapDoc *pDoc );
+		static ChunkFileResult_t LoadCordonKeyCallback_Legacy( const char *pszKey, const char *pszValue, CMapDoc *pDoc );
+
 		static ChunkFileResult_t LoadEntityCallback(CChunkFile *pFile, CMapDoc *pDoc);
 		static ChunkFileResult_t LoadHiddenCallback(CChunkFile *pFile, CMapDoc *pDoc);
 		static ChunkFileResult_t LoadGroupKeyCallback(const char *szKey, const char *szValue, CMapGroup *pGroup);
@@ -571,6 +655,7 @@ class CMapDoc : public CDocument
 		//
 		// Search functions.
 		//
+		static BOOL FindEntityByHammerIDCallback( CMapClass *pObject, FindEntityByHammerID_t *pFindInfo );
 		static BOOL FindEntityCallback(CMapClass *pObject, FindEntity_t *pFindInfo);
 		static BOOL FindGroupCallback(CMapGroup *pGroup, FindGroup_t *pFindInfo);
 
@@ -582,6 +667,7 @@ class CMapDoc : public CDocument
 		void InitUpdateVisibilityData( UpdateVisibilityData_t &data );
 		bool ShouldObjectBeVisible( CMapClass *pObject, UpdateVisibilityData_t *pData );
 		static BOOL UpdateVisibilityCallback( CMapClass *pObject, UpdateVisibilityData_t *pData );
+		static BOOL ForceVisibilityCallback(CMapClass *pObject, bool bVisibility);
 
 		bool GetChildrenToHide(CMapClass *pObject, bool bSelected, CMapObjectList &List);
 
@@ -589,9 +675,9 @@ class CMapDoc : public CDocument
 		// Interobject dependency notification.
 		//
 		void ProcessNotifyList();
-		void DispatchNotifyDependents(CMapClass *pObject, Notify_Dependent_t eNotifyType);
+		void DispatchNotifyDependents(CUtlReference< CMapClass > pObject, Notify_Dependent_t eNotifyType);
 
-		CUtlVector<NotifyListEntry_t > m_NotifyList;
+		CUtlVector< NotifyListEntry_t* > m_NotifyList;
 
 		CMapWorld *m_pWorld;				// The world that this document represents.
 		CMapObjectList m_UpdateList;		// List of objects that have changed since the last call to Update.
@@ -609,6 +695,7 @@ class CMapDoc : public CDocument
 		CSelection *m_pSelection;				// object selection list
 
 		int m_nNextMapObjectID;			// The ID that will be assigned to the next CMapClass object in this document.
+		int m_nNextLoadID;				// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
 		int m_nNextNodeID;				// The ID that will be assigned to the next "info_node_xxx" object created in this document.
 
 		// Editing prefabs data.
@@ -821,21 +908,20 @@ class CMapDoc : public CDocument
 		afx_msg void OnInstancesHideAll( void );
 		afx_msg void OnInstancesShowAll( void );
 
-	public:
-		afx_msg void OnToggle3DGrid();
+		afx_msg void OnInstancingCreatemanifest();
+		afx_msg void OnUpdateInstancingCreatemanifest(CCmdUI *pCmdUI);
+		afx_msg void OnInstancesCollapseAll();
+		afx_msg void OnInstancesCollapseSelection();
+		afx_msg void OnInstancesCollapseAllRecursive();
+		afx_msg void OnInstancesCollapseSelectionRecursive();
+		afx_msg void OnUpdateToolsSprinkle( CCmdUI *pCmdUI );
+		afx_msg void OnToolsSprinkle();
 		//}}AFX_MSG
 
 		DECLARE_MESSAGE_MAP()
-		afx_msg void OnInstancingCreatemanifest();
-		afx_msg void OnUpdateInstancingCreatemanifest(CCmdUI *pCmdUI);
-		afx_msg void OnInstancingCheckinAll();
-		afx_msg void OnUpdateInstancingCheckinAll( CCmdUI *pCmdUI );
-		afx_msg void OnInstancingCheckOutManifest();
-		afx_msg void OnUpdateInstancingCheckOutManifest( CCmdUI *pCmdUI );
-		afx_msg void OnInstancingAddManifest();
-		afx_msg void OnUpdateInstancingAddManifest( CCmdUI *pCmdUI );
-		afx_msg void OnInstancesCollapseAll();
-		afx_msg void OnInstancesCollapseSelection();
+public:
+		afx_msg void OnNewCordon();
+		afx_msg void OnToggle3DGrid();
 };
 
 
@@ -934,6 +1020,15 @@ int CMapDoc::GetNextMapObjectID(void)
 
 
 //-----------------------------------------------------------------------------
+// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
+//-----------------------------------------------------------------------------
+int CMapDoc::GetNextLoadID()
+{
+	return m_nNextLoadID++;
+}
+
+
+//-----------------------------------------------------------------------------
 // Purpose: Returns the next unique ID for an AI node. Called when an AI node
 //			is created so that each one can have a unique ID.
 //
@@ -963,6 +1058,38 @@ void CMapDoc::SetNextNodeID(int nID)
 bool CMapDoc::IsSnapEnabled(void)
 {
 	return m_bSnapToGrid;
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+int CMapDoc::Cordon_GetCount()
+{
+	return m_Cordons.Count();
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+Cordon_t *CMapDoc::Cordon_GetCordon( int nIndex )
+{
+	return &m_Cordons.Element( nIndex );
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+bool CMapDoc::Cordon_IsCordoning()
+{
+	return m_bIsCordoning;
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+bool CMapDoc::Cordon_IsEditCordon( int nCordon, int nBox )
+{
+	return ( nCordon == m_nEditCordon ) && ( nBox == m_nEditCordonBox );
 }
 
 

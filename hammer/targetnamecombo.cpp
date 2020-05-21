@@ -15,6 +15,9 @@
 #include "stdafx.h"
 #include "MapEntity.h"
 #include "TargetNameCombo.h"
+#include "hammer.h"
+#include "mapdoc.h"
+#include "mapworld.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -188,7 +191,27 @@ void CTargetNameComboBox::OnTextChanged( const char *pText )
 
 	COLORREF clrWanted = RGB(255,0,0);
 	if ( nCount > 0 )
+	{
 		clrWanted = RGB(0,0,0);
+	}
+	else
+	{
+		POSITION	pos = APP()->pMapDocTemplate->GetFirstDocPosition();
+		while( pos != NULL )
+		{
+			CDocument *pDoc = APP()->pMapDocTemplate->GetNextDoc( pos );
+			CMapDoc *pMapDoc = dynamic_cast< CMapDoc * >( pDoc );
+
+			if ( pMapDoc )
+			{
+				if ( pMapDoc->GetMapWorld()->FindEntityByName( pText ) != NULL )
+				{
+					clrWanted = RGB( 0, 192, 192 );
+					break;
+				}
+			}
+		}
+	}
 
 	SetEditControlFont( *pWantedFont );
 	SetEditControlTextColor( clrWanted );

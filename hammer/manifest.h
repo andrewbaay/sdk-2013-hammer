@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=====================================================================================//
 
@@ -30,9 +30,6 @@ public:
 	CString				m_FriendlyName;
 	bool				m_bTopLevelMap;
 	bool				m_bReadOnly;
-	bool				m_bIsVersionControlled;
-	bool				m_bCheckedOut;
-	bool				m_bDefaultCheckin;
 	int					m_InternalID;
 	CManifestInstance	*m_Entity;
 
@@ -108,8 +105,6 @@ public:
 	bool			AddExistingMap( void );
 	bool			RemoveSubMap( CManifestMap *pManifestMap );
 
-	bool			CheckOut( );
-	bool			AddToVersionControl( );
 	void			CheckFileStatus( );
 
 	CSelection		*GetSelection( void ) { return m_pSelection; }
@@ -121,9 +116,6 @@ public:
 	CMapWorld		*GetManifestWorld( void ) { return m_ManifestWorld; }
 
 	bool			m_bReadOnly;
-	bool			m_bIsVersionControlled;
-	bool			m_bCheckedOut;
-	bool			m_bDefaultCheckin;
 
 protected:
 	virtual BOOL OnOpenDocument(LPCTSTR lpszPathName);

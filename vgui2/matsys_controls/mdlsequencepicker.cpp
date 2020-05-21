@@ -1,23 +1,23 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
-#include "dme_controls/MDLSequencePicker.h"
-#include "tier1/keyvalues.h"
+#include "matsys_controls/mdlsequencepicker.h"
+#include "tier1/KeyValues.h"
 #include "tier1/utldict.h"
 #include "datacache/imdlcache.h"
 #include "filesystem.h"
 #include "studio.h"
-#include "vgui/ivgui.h"
-#include "vgui/cursor.h"
-#include "vgui/isurface.h"
+#include "vgui/IVGui.h"
+#include "vgui/Cursor.h"
+#include "vgui/ISurface.h"
 #include "vgui_controls/Splitter.h"
 #include "vgui_controls/ComboBox.h"
 #include "vgui_controls/PropertySheet.h"
 #include "vgui_controls/PropertyPage.h"
-#include "vgui_controls/toolwindow.h"
+#include "vgui_controls/ToolWindow.h"
 #include "vgui_controls/Button.h"
 #include "matsys_controls/gamefiletreeview.h"
 #include "matsys_controls/matsyscontrols.h"
@@ -116,7 +116,7 @@ CMDLSequencePicker::~CMDLSequencePicker()
 //-----------------------------------------------------------------------------
 // Purpose: This is a bit of a hack to make sure that the ToolWindow containing this picker punches
 // a hold for the rendering viewport, too
-// Input : - 
+// Input : -
 //-----------------------------------------------------------------------------
 void CMDLSequencePicker::OnTick()
 {
@@ -167,7 +167,7 @@ void CMDLSequencePicker::PerformLayout()
 	m_pMDLSplitter->SetBounds( 0, 0, w, h );
 }
 
-	
+
 //-----------------------------------------------------------------------------
 // Purpose: Refreshes the active file list
 //-----------------------------------------------------------------------------
@@ -199,7 +199,7 @@ void CMDLSequencePicker::RefreshActivitiesAndSequencesList()
 	studiohdr_t *hdr = vgui::MDLCache()->GetStudioHdr( m_hSelectedMDL );
 
 	CUtlDict<int, unsigned short> activityNames( true, 0, hdr->GetNumSeq() );
-	    
+
 	for (int j = 0; j < hdr->GetNumSeq(); j++)
 	{
 		if ( /*g_viewerSettings.showHidden ||*/ !(hdr->pSeqdesc(j).flags & STUDIO_HIDDEN))
@@ -275,13 +275,13 @@ int SelectWeightedSequence( studiohdr_t *pstudiohdr, int activity, int curSequen
 				break;
 			}
 			weighttotal += iabs(weight);
-			
+
 			int randomValue;
 			if ( IsInPrediction() )
 				randomValue = SharedRandomInt( "SelectWeightedSequence", 0, weighttotal - 1, i );
 			else
 				randomValue = RandomInt( 0, weighttotal - 1 );
-			
+
 			if (!weighttotal || randomValue < iabs(weight))
 				seq = i;
 		}
@@ -463,8 +463,8 @@ int	CMDLSequencePicker::GetSequenceNumber()
 //-----------------------------------------------------------------------------
 // Sequence picker frame
 //-----------------------------------------------------------------------------
-CMDLSequencePickerFrame::CMDLSequencePickerFrame( vgui::Panel *parent, char const *title  ) : 
-	BaseClass( parent, "MDLSequencePickerFrame" ) 
+CMDLSequencePickerFrame::CMDLSequencePickerFrame( vgui::Panel *parent, char const *title  ) :
+	BaseClass( parent, "MDLSequencePickerFrame" )
 {
 	m_pMDLSequencePicker = new CMDLSequencePicker( this );
 	SetTitle( title, true );
@@ -484,7 +484,7 @@ CMDLSequencePickerFrame::CMDLSequencePickerFrame( vgui::Panel *parent, char cons
 	vgui::ivgui()->AddTickSignal( GetVPanel(), 0 );
 }
 
-CMDLSequencePickerFrame::~CMDLSequencePickerFrame() 
+CMDLSequencePickerFrame::~CMDLSequencePickerFrame()
 {
 }
 

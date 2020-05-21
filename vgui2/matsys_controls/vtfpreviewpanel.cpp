@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,12 +6,15 @@
 
 #include "matsys_controls/vtfpreviewpanel.h"
 #include "matsys_controls/matsyscontrols.h"
-#include "vguimatsurface/imatsystemsurface.h"
-#include "materialsystem/materialsystemutil.h"
+#include "VGuiMatSurface/IMatSystemSurface.h"
+#include "materialsystem/MaterialSystemUtil.h"
 #include "materialsystem/imaterialsystem.h"
 #include "materialsystem/itexture.h"
 #include "materialsystem/imesh.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
+
+// NOTE: This has to be the last file included!
+#include "tier0/memdbgon.h"
 
 
 using namespace vgui;
@@ -39,18 +42,6 @@ CVTFPreviewPanel::CVTFPreviewPanel( vgui::Panel *pParent, const char *pName ) :
 	m_nTextureID = MatSystemSurface()->CreateNewTextureID( false );
 }
 
-CVTFPreviewPanel::~CVTFPreviewPanel()
-{
-    if (m_nTextureID)
-    {
-        MatSystemSurface()->DeleteTextureByID(m_nTextureID);
-    }
-
-    m_PreviewMaterial.Shutdown();
-    m_PreviewTexture.Shutdown();
-}
-
-
 
 //-----------------------------------------------------------------------------
 // Sets the current VTF
@@ -59,6 +50,37 @@ void CVTFPreviewPanel::SetVTF( const char *pFullPath, bool bLoadImmediately )
 {
 	m_PreviewTexture.Init( pFullPath, "editor texture" );
 	m_VTFName = pFullPath;
+
+	KeyValues *pVMTKeyValues = new KeyValues( "UnlitGeneric" );
+	if ( m_PreviewTexture->IsCubeMap() )
+    {
+		pVMTKeyValues->SetString( "$envmap", pFullPath );
+    }
+	else if ( m_PreviewTexture->IsNormalMap() )
+	{
+		pVMTKeyValues->SetString( "$bumpmap", pFullPath );
+	}
+	else
+	{
+		pVMTKeyValues->SetString( "$basetexture", pFullPath );
+	}
+	pVMTKeyValues->SetInt( "$nocull", 1 );
+	pVMTKeyValues->SetInt( "$nodebug", 1 );
+	m_PreviewMaterial.Init( MaterialSystem()->CreateMaterial( pFullPath, pVMTKeyValues ));
+
+	MatSystemSurface()->DrawSetTextureMaterial( m_nTextureID, m_PreviewMaterial );
+
+	// Reset the camera direction
+	m_vecCameraDirection.Init( 1.0f, 0.0f, 0.0f );
+	m_flLastRotationTime = Plat_FloatTime();
+}
+
+void CVTFPreviewPanel::SetTwoVTFs( const char *pFullPath, const char *pSecondFullPath )
+{
+	m_PreviewTexture.Init( pFullPath, "editor texture" );
+	m_VTFName = pFullPath;
+	m_SecondPreviewTexture.Init( pSecondFullPath, "editor texture" );
+	m_SecondVTFName = pSecondFullPath;
 
 	KeyValues *pVMTKeyValues = new KeyValues( "UnlitGeneric" );
 	if ( m_PreviewTexture->IsCubeMap() )
@@ -73,6 +95,11 @@ void CVTFPreviewPanel::SetVTF( const char *pFullPath, bool bLoadImmediately )
 	{
 		pVMTKeyValues->SetString( "$basetexture", pFullPath );
 	}
+
+	pVMTKeyValues->SetString( "$detail", pSecondFullPath );
+	pVMTKeyValues->SetInt( "$detailscale", 1 );
+	pVMTKeyValues->SetInt( "$detailblendmode", 1 ); // additive
+
 	pVMTKeyValues->SetInt( "$nocull", 1 );
 	pVMTKeyValues->SetInt( "$nodebug", 1 );
 	m_PreviewMaterial.Init( MaterialSystem()->CreateMaterial( pFullPath, pVMTKeyValues ));
@@ -93,6 +120,10 @@ const char *CVTFPreviewPanel::GetVTF() const
 	return m_VTFName;
 }
 
+const char *CVTFPreviewPanel::GetSecondVTF() const
+{
+	return m_SecondVTFName;
+}
 
 //-----------------------------------------------------------------------------
 // Draw a sphere

@@ -74,7 +74,7 @@ public:
 	void SetStringList( const PickerList_t &list ); 
 
 	// Purpose: 
-	virtual void OnKeyCodePressed( vgui::KeyCode code );
+	virtual void OnKeyCodeTyped( vgui::KeyCode code );
 
 	// Returns the selected string
 	PickerChoiceType_t GetSelectionType() const;

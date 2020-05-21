@@ -8,6 +8,7 @@
 #include <afxadv.h>
 #include "hammer.h"
 #include "Box3D.h"				// For units
+#include "EntityReportDlg.h"
 #include "FaceEditSheet.h"
 #include "MainFrm.h"
 #include "MessageWnd.h"
@@ -34,6 +35,9 @@
 #include "soundbrowser.h"
 #include "KeyValues.h"
 #include "lprvwindow.h"
+#include "ModelBrowser.h"
+#include "cmdhandlers.h"
+#include "matsys_controls/assetpickerdefs.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -113,6 +117,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_TOOLS_APPLYDECALS, OnUpdateToolUI)
 	ON_COMMAND_EX(ID_TOOLS_MORPH, OnChangeTool)
 	ON_UPDATE_COMMAND_UI(ID_TOOLS_MORPH, OnUpdateToolUI)
+	ON_COMMAND_EX(ID_TOOLS_SYNC_MESH, OnChangeTool)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_SYNC_MESH, OnUpdateToolUI)
 	ON_COMMAND_EX(ID_TOOLS_CLIPPER, OnChangeTool)
 	ON_UPDATE_COMMAND_UI(ID_TOOLS_CLIPPER, OnUpdateToolUI)
 	ON_COMMAND_EX(ID_TOOLS_EDITCORDON, OnChangeTool)
@@ -123,6 +129,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_TOOLS_OVERLAY, OnUpdateToolUI)
 	ON_COMMAND_EX(ID_MODE_APPLICATOR, OnApplicator)
 	ON_COMMAND_EX(ID_TOOLS_SOUND_BROWSER, OnSoundBrowser)
+	ON_COMMAND(ID_TOOLS_MODEL_BROWSER, OnModelBrowser)
 	ON_COMMAND_EX(ID_FILE_RELOAD_SOUNDS, OnReloadSounds)
     ON_UPDATE_COMMAND_UI(ID_MODE_APPLICATOR, OnUpdateApplicatorUI)
 	ON_COMMAND(ID_HELP_FINDER, CMDIFrameWnd::OnHelpFinder)
@@ -188,6 +195,7 @@ CMainFrame::CMainFrame(void)
 {
 	pTextureBrowser = NULL;
 	pObjectProperties = NULL;
+	m_pModelBrowser = NULL;
 	m_bUndoActive = TRUE;
 	m_bShellSessionActive = false;
 	m_pFaceEditSheet = NULL;
@@ -208,6 +216,7 @@ CMainFrame::~CMainFrame(void)
 	delete m_pFaceEditSheet;
 	delete m_pSearchReplaceDlg;
 	delete m_pLightingPreviewOutputWindow;
+	delete m_pModelBrowser;
 
 	CPrefabLibrary::FreeAllLibraries();
 }
@@ -565,6 +574,45 @@ static ToolID_t _ToolMsgToEnum(UINT uMsg)
 }
 
 
+class CToolHandler_Disabled : public IToolHandlerInfo
+{
+public:
+	virtual BOOL UpdateCmdUI( CCmdUI *pCmdUI );
+	virtual BOOL Execute( UINT uMsg );
+}
+g_ToolHandlerDisabled;
+
+BOOL CToolHandler_Disabled::UpdateCmdUI( CCmdUI *pCmdUI )
+{
+	pCmdUI->Enable( FALSE );
+	pCmdUI->SetCheck( FALSE );
+	return TRUE;
+}
+
+BOOL CToolHandler_Disabled::Execute( UINT uMsg )
+{
+	uMsg;
+	return TRUE;
+}
+
+
+IToolHandlerInfo * _ToolToHanderInfo(UINT uMsg)
+{
+	extern IToolHandlerInfo *g_pToolHandlerSyncMesh;
+
+	switch ( uMsg )
+	{
+	case ID_TOOLS_SYNC_MESH:
+		return g_pToolHandlerSyncMesh;
+
+	default:
+		return NULL;
+
+		// return &g_ToolHandlerDisabled to make a control look disabled
+	}
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: activates the current tool toolbar button
 // Input  : pUI - interface to button that has had a action happen
@@ -596,30 +644,19 @@ void CMainFrame::OnUpdateToolUI(CCmdUI *pUI)
 			bIsEditable = ( pDoc ? true : false );
 		}
 
-#if 0
-		//
-		// Only enable the displacement toolbar button while editing HalfLife 2 maps.
-		//
-		if ( pUI->m_nID == ID_TOOLS_DISPLACE )
-		{
-			if ( pDoc != NULL )
-			{
-				pUI->Enable(pDoc->GetMapFormat() == mfHalfLife2);
-			}
-			else
-			{
-				pUI->Enable( pDoc != NULL );
-			}
-		}
-		else
-#endif
-		{
-			pUI->Enable( bIsEditable );
-		}
-
-		ToolID_t eToolID = _ToolMsgToEnum(pUI->m_nID);
 		pUI->Enable( bIsEditable );
-		pUI->SetCheck(eToolID == ToolManager()->GetActiveToolID());
+
+		// Obtain custom tool handler
+		IToolHandlerInfo *pHandlerInfo = _ToolToHanderInfo( pUI->m_nID );
+		BOOL bHandled = pHandlerInfo ? pHandlerInfo->UpdateCmdUI( pUI ) : FALSE;
+
+		// Use default handler if custom tool handler didn't work
+		if ( !bHandled )
+		{
+			ToolID_t eToolID = _ToolMsgToEnum(pUI->m_nID);
+			pUI->Enable( bIsEditable );
+			pUI->SetCheck(eToolID == ToolManager()->GetActiveToolID());
+		}
 	}
 }
 
@@ -642,11 +679,19 @@ BOOL CMainFrame::OnChangeTool(UINT nMessageID)
 		EnableFaceEditMode(false);
 	}
 
-	//
-	// Activate the new tool.
-	//
-	ToolID_t eToolID = _ToolMsgToEnum(nMessageID);
-	ToolManager()->SetTool(eToolID);
+	// Obtain custom tool handler
+	IToolHandlerInfo *pHandlerInfo = _ToolToHanderInfo( nMessageID );
+	BOOL bHandled = pHandlerInfo ? pHandlerInfo->Execute( nMessageID ) : FALSE;
+
+	if ( !bHandled )
+	{
+		//
+		// Activate the new tool.
+		//
+		ToolID_t eToolID = _ToolMsgToEnum(nMessageID);
+		ToolManager()->SetTool(eToolID);
+	}
+
 	return TRUE;
 }
 
@@ -1031,6 +1076,56 @@ BOOL CMainFrame::OnSoundBrowser(UINT nID)
 
 
 //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CModelBrowser *CMainFrame::GetModelBrowser()
+{
+	delete m_pModelBrowser;
+	m_pModelBrowser = NULL;
+
+	if (m_pModelBrowser == NULL)
+	{
+		m_pModelBrowser = new CModelBrowser( this );
+	}
+
+	return m_pModelBrowser;
+}
+
+
+//-----------------------------------------------------------------------------
+// Brings up the model browser.
+//-----------------------------------------------------------------------------
+void CMainFrame::OnModelBrowser()
+{
+	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
+	if ( !pDoc )
+		return;
+	CModelBrowser *pModelBrowser = GetModelBrowser();
+	pModelBrowser->Show();
+
+	CUtlVector<AssetUsageInfo_t> usedModels;
+	pDoc->GetUsedModels( usedModels );
+
+	pModelBrowser->SetUsedModelList( usedModels );
+
+	int nRet = pModelBrowser->DoModal();
+	pModelBrowser->Hide();
+
+	if ( nRet == ID_FIND_ASSET )
+	{
+		// They hit the Find button in the model browser. Invoke the Entity Report dialog
+		// to find all occurences of the chosen model.
+		char szModelName[1024];
+		pModelBrowser->GetModelName( szModelName, sizeof( szModelName ) );
+
+		EntityReportFilterParms_t filter;
+		filter.FilterByKeyValue( "model", szModelName );
+
+		CEntityReportDlg::ShowEntityReport( pDoc, this, &filter );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
 // Purpose: Brings up the sound browser
 //-----------------------------------------------------------------------------
 BOOL CMainFrame::OnReloadSounds(UINT nID)
@@ -1214,9 +1309,10 @@ void CMainFrame::GlobalNotify(int nCode)
 		case WM_MAPDOC_CHANGED:
 		{
 			//
-			// Update the visgroups.
+			// Update the visgroups & cordons.
 			//
 			m_FilterControl.UpdateGroupList();
+			m_FilterControl.UpdateCordonList();
 
 			//
 			// If the Object Properties dialog has a Groups tab, update

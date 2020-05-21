@@ -254,6 +254,9 @@ void CMapViewLogical::PopulateConnectionList( )
 						for ( j = 0; j < nInputCount; ++j )
 						{
 							CMapEntity *pEntity = pEntityList->Element(j);
+							if ( !pEntity )
+								continue;
+
 							if ( m_RenderDict.Find( pEntity ) != m_RenderDict.InvalidIndex() )
 							{
 								m_ConnectionList.AddToTail( pObject );

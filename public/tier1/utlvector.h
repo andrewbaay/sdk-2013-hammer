@@ -178,6 +178,8 @@ public:
 
 	void Sort( int (__cdecl *pfnCompare)(const T *, const T *) );
 
+	void InPlaceQuickSort( int (__cdecl *pfnCompare)(const T *, const T *) );
+
 	void Shuffle( IUniformRandomStream* pSteam = NULL );
 
 #ifdef DBGFLAG_VALIDATE
@@ -212,6 +214,8 @@ private:
 	// Can't copy this unless we explicitly do it!
 	// Use CCopyableUtlVector<T> to get this functionality
 	CUtlVector( CUtlVector const& vec );
+
+	void InPlaceQuickSort_r( int (__cdecl *pfnCompare)(const T *, const T *), int nLeft, int nRight );
 };
 
 
@@ -864,6 +868,64 @@ void CUtlVector<T, A>::Sort( int (__cdecl *pfnCompare)(const T *, const T *) )
 		}
 	}
 }
+
+
+//----------------------------------------------------------------------------------------------
+// Private function that does the in-place quicksort for non-contiguously allocated vectors.
+//----------------------------------------------------------------------------------------------
+template< typename T, class A >
+void CUtlVector<T, A>::InPlaceQuickSort_r( int (__cdecl *pfnCompare)(const T *, const T *), int nLeft, int nRight )
+{
+	int nPivot;
+	int nLeftIdx = nLeft;
+	int nRightIdx = nRight;
+
+	if ( nRight - nLeft > 0 )
+	{
+		nPivot = ( nLeft + nRight ) / 2;
+
+		while ( ( nLeftIdx <= nPivot ) && ( nRightIdx >= nPivot ) )
+		{
+			while ( ( pfnCompare( &Element( nLeftIdx ), &Element( nPivot ) ) < 0 ) && ( nLeftIdx <= nPivot ) )
+			{
+				nLeftIdx++;
+			}
+
+			while ( ( pfnCompare( &Element( nRightIdx ), &Element( nPivot ) ) > 0 ) && ( nRightIdx >= nPivot ) )
+			{
+				nRightIdx--;
+			}
+
+			V_swap( Element( nLeftIdx ), Element( nRightIdx ) );
+
+			nLeftIdx++;
+			nRightIdx--;
+
+			if ( ( nLeftIdx - 1 ) == nPivot )
+			{
+				nPivot = nRightIdx = nRightIdx + 1;
+			}
+			else if ( nRightIdx + 1 == nPivot )
+			{
+				nPivot = nLeftIdx = nLeftIdx - 1;
+			}
+		}
+
+		InPlaceQuickSort_r( pfnCompare, nLeft, nPivot - 1 );
+		InPlaceQuickSort_r( pfnCompare, nPivot + 1, nRight );
+	}
+}
+
+
+//----------------------------------------------------------------------------------------------
+// Call this to quickly sort non-contiguously allocated vectors. Sort uses a slower bubble sort.
+//----------------------------------------------------------------------------------------------
+template< typename T, class A >
+void CUtlVector<T, A>::InPlaceQuickSort( int (__cdecl *pfnCompare)(const T *, const T *) )
+{
+	InPlaceQuickSort_r( pfnCompare, 0, Count() - 1 );
+}
+
 
 //-----------------------------------------------------------------------------
 // Makes sure we have enough memory allocated to store a requested # of elements

@@ -435,7 +435,7 @@ void CMapDecal::OnNotifyDependent(CMapClass *pObject, Notify_Dependent_t eNotify
 		int index = m_Solids.Find(pSolid);
 		if (index != -1)
 		{
-			m_Solids.Remove(index);
+			m_Solids.FastRemove(index);
 			UpdateDependency(pSolid, NULL);
 		}
 	}

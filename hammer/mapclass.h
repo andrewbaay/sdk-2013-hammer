@@ -171,7 +171,9 @@ public:
 	const CSmartPtr<CSafeObject<CMapClass>>& GetSafeObjectSmartPtr() const { return m_pSafeObject; }
 
 	inline int GetID(void) const;
+	inline int GetHammerID(void) const { return GetID(); }
 	inline void SetID(int nID);
+	inline int GetLoadID() const; 	// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
 	virtual size_t GetSize(void);
 
 	//
@@ -254,7 +256,9 @@ public:
 	//
 	virtual void CalcBounds(BOOL bFullUpdate = FALSE);
 
-	void GetCullBox(Vector &mins, Vector &maxs);
+	void GetCullBox(Vector &mins, Vector &maxs) const;
+	inline const Vector &GetCullBoxMins() const;
+	inline const Vector &GetCullBoxMaxs() const;
 	void SetCullBoxFromFaceList( CMapFaceList *pFaces );
 	void GetBoundingBox( Vector &mins, Vector &maxs );
 	void SetBoundingBoxFromFaceList( CMapFaceList *pFaces );
@@ -273,6 +277,7 @@ public:
 	void GetBoundsSize(Vector &vecSize) { m_Render2DBox.GetBoundsSize(vecSize); }
 	inline bool IsInsideBox(Vector const &Mins, Vector const &Maxs) const { return(m_Render2DBox.IsInsideBox(Mins, Maxs)); }
 	inline bool IsIntersectingBox(const Vector &vecMins, const Vector& vecMaxs) const { return(m_Render2DBox.IsIntersectingBox(vecMins, vecMaxs)); }
+	inline bool ContainsPoint(const Vector &vecPoint) const { return(m_Render2DBox.ContainsPoint(vecPoint)); }
 
 	virtual CMapClass *PrepareSelection(SelectMode_t eSelectMode);
 
@@ -285,8 +290,8 @@ public:
 	virtual void UpdateAnimation( float animTime ) {}
 	virtual bool GetTransformMatrix( VMatrix& matrix );
 
-	virtual MAPCLASSTYPE GetType(void) = 0;
-	virtual BOOL IsMapClass(MAPCLASSTYPE Type) = 0;
+	virtual MAPCLASSTYPE GetType(void) const = 0;
+	virtual BOOL IsMapClass(MAPCLASSTYPE Type) const = 0;
 	virtual bool IsWorld() { return false; }
 
 	virtual CMapClass *Copy(bool bUpdateDependencies);
@@ -309,10 +314,11 @@ public:
 	virtual void PresaveWorld(void) {}
 	bool PostloadVisGroups( bool bIsLoading );
 
-	virtual bool IsGroup(void) { return false; }
-	virtual bool IsScaleable(void) { return false; }
-	virtual bool IsClutter(void) { return false; }			// Whether this object should be hidden when the user hides helpers.
-	virtual bool IsCulledByCordon(const Vector &vecMins, const Vector &vecMaxs);	// Whether this object is hidden based on its own intersection with the cordon, independent of its parent's intersection.
+	virtual bool IsGroup(void) const { return false; }
+	virtual bool IsScaleable(void) const { return false; }
+	virtual bool IsClutter(void) const { return false; }			// Whether this object should be hidden when the user hides helpers.
+	virtual bool CanBeCulledByCordon() const { return true; }								// Whether this object cares about cordons at all
+	virtual bool IsIntersectingCordon(const Vector &vecMins, const Vector &vecMaxs);	// Whether this object is visible based on its intersection with the given cordon bounds
 	virtual bool IsEditable( void );
 	virtual bool ShouldSnapToHalfGrid() { return false; }
 	virtual bool IsSolid( ) { return false; }
@@ -339,8 +345,16 @@ public:
 		return EnumChildrenRecurseGroupsOnly( (ENUMMAPCHILDRENPROC)pfn, reinterpret_cast<unsigned int>( dwParam ), Type );
 	}
 
+	template <typename T>
+	FORCEINLINE BOOL EnumChildrenAndInstances( BOOL (*pfn)( CMapClass*, T* ), T* dwParam, MAPCLASSTYPE Type = NULL )
+	{
+		static_assert( sizeof( unsigned int ) == sizeof( T* ) );
+		return EnumChildrenAndInstances( (ENUMMAPCHILDRENPROC)pfn, reinterpret_cast<unsigned int>( dwParam ), Type );
+	}
+
 	BOOL EnumChildren(ENUMMAPCHILDRENPROC pfn, unsigned int dwParam = 0, MAPCLASSTYPE Type = NULL);
 	BOOL EnumChildrenRecurseGroupsOnly(ENUMMAPCHILDRENPROC pfn, unsigned int dwParam, MAPCLASSTYPE Type = NULL);
+	BOOL EnumChildrenAndInstances( ENUMMAPCHILDRENPROC pfn, unsigned int dwParam, MAPCLASSTYPE Type = NULL );
 
 	BOOL IsChildOf(CMapAtom *pObject);
 
@@ -354,10 +368,10 @@ public:
 		return false;
 	}
 
-	inline bool IsVisible(void) { return(m_bVisible); }
+	inline bool IsVisible(void) const { return(m_bVisible); }
 	void SetVisible(bool bVisible);
 
-	inline bool IsVisGroupShown(void) { return m_bVisGroupShown && m_bVisGroupAutoShown; }
+	inline bool IsVisGroupShown(void) const { return m_bVisGroupShown && m_bVisGroupAutoShown; }
 	void VisGroupShow(bool bShow, VisGroupSelection eVisGroup = USER);
 	bool CheckVisibility(bool bIsLoading = false);
 
@@ -451,11 +465,13 @@ protected:
 	CMapObjectList m_Dependents;	// Objects that this object should notify if it changes.
 
 	int m_nID;						// This object's unique ID.
+	int m_nLoadID;					// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
+
 	bool m_bTemporary;				// Whether to track this object for Undo/Redo.
 	int m_nRenderFrame;				// Frame counter used to avoid rendering the same object twice in a 3D frame.
 
-	bool m_bVisible2D;				// Whether this object is visible in the 2D view. Currently only used for morphing.
-	bool m_bVisible;				// Whether this object is currently visible in the 2D and 3D views based on ALL factors: visgroups, cordon, etc.
+	bool m_bVisible2D : 1;			// Whether this object is visible in the 2D view. Currently only used for morphing.
+	bool m_bVisible : 1;			// Whether this object is currently visible in the 2D and 3D views based on ALL factors: visgroups, cordon, etc.
 
 	bool m_bVisGroupShown;			// Whether this object is shown or hidden by user visgroups. Kept separate from m_bVisible so we can
 	// reflect this state in the visgroups list independent of the cordon, hide entities state, etc.
@@ -475,7 +491,7 @@ protected:
 //-----------------------------------------------------------------------------
 // Purpose: Returns this object's unique ID.
 //-----------------------------------------------------------------------------
-int CMapClass::GetID(void) const
+int CMapClass::GetID() const
 {
 	return(m_nID);
 }
@@ -488,6 +504,28 @@ void CMapClass::SetID(int nID)
 {
 	m_nID = nID;
 }
+
+
+//-----------------------------------------------------------------------------
+// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
+//-----------------------------------------------------------------------------
+int CMapClass::GetLoadID() const
+{
+	return m_nLoadID;
+}
+
+
+const Vector &CMapClass::GetCullBoxMins() const
+{
+	return m_CullBox.bmins;
+}
+
+
+const Vector &CMapClass::GetCullBoxMaxs() const
+{
+	return m_CullBox.bmaxs;
+}
+
 
 class CMapClassManager
 {
@@ -505,8 +543,8 @@ public:
 
 
 #define IMPLEMENT_MAPCLASS(class_name) \
-	MAPCLASSTYPE class_name::GetType() { return __Type; }	\
-	BOOL class_name::IsMapClass(MAPCLASSTYPE Type) \
+	MAPCLASSTYPE class_name::GetType() const { return __Type; }	\
+	BOOL class_name::IsMapClass(MAPCLASSTYPE Type) const\
 		{ return (Type == __Type) ? TRUE : FALSE; } \
 	CMapClass * class_name##_CreateObject() \
 		{ return new class_name; } \
@@ -517,8 +555,8 @@ public:
 #define DECLARE_MAPCLASS(class_name,class_base) \
 	typedef class_base BaseClass; \
 	static constexpr const char __Type[] = #class_name; \
-	virtual MAPCLASSTYPE GetType(); \
-	virtual BOOL IsMapClass(MAPCLASSTYPE Type);
+	virtual MAPCLASSTYPE GetType() const; \
+	virtual BOOL IsMapClass(MAPCLASSTYPE Type) const;
 
 
 class CCheckFaceInfo

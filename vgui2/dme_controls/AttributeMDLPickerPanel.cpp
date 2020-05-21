@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -11,7 +11,7 @@
 #include "vgui_controls/Button.h"
 #include "vgui_controls/FileOpenDialog.h"
 #include "dme_controls/AttributeTextEntry.h"
-#include "dme_controls/MDLPicker.h"
+#include "matsys_controls/MDLPicker.h"
 #include "tier1/keyvalues.h"
 
 

@@ -113,7 +113,8 @@ public:
 	public:
 	virtual BOOL InitInstance();
 	virtual int ExitInstance();
-	virtual CDocument* OpenDocumentFile(LPCTSTR lpszFileName);
+	virtual CDocument *OpenDocumentFile(LPCTSTR lpszFileName);	// Called by the framework
+	virtual CDocument *OpenDocumentOrInstanceFile(LPCTSTR lpszFileName);	// Called by instances or other Hammer code
 	virtual BOOL OnIdle(LONG lCount);
 	virtual int Run(void);
 	//}}AFX_VIRTUAL

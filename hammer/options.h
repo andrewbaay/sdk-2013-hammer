@@ -33,7 +33,6 @@ struct COptionsGeneral
 	int iMaxAutosavesPerMap;
 	BOOL bClosedCorrectly;
 	char szAutosaveDir[MAX_PATH];
-	BOOL bUseVGUIModelBrowser;
 	BOOL bShowCollisionModels;
 	BOOL bShowDetailObjects;
 	BOOL bShowNoDrawBrushes;
@@ -197,8 +196,6 @@ struct COptions
 
 	BOOL SetScaleLockingTextures(BOOL b);
 	BOOL IsScaleLockingTextures(void);
-
-	bool IsVGUIModelBrowserEnabled();
 
 	// Attributes:
 	UINT uDaysSinceInstalled;

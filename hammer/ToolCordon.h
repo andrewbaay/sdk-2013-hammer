@@ -40,6 +40,7 @@ class Cordon3D : public Box3D
 		// CBaseTool implementation.
 		virtual void OnActivate();
 		virtual ToolID_t GetToolID(void) { return TOOL_EDITCORDON; }
+		virtual void RefreshToolState();
 
 		virtual bool OnLMouseDown2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoint);
 		virtual bool OnLMouseUp2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoint);
@@ -47,9 +48,15 @@ class Cordon3D : public Box3D
 		virtual bool OnKeyDown2D(CMapView2D *pView, UINT nChar, UINT nRepCnt, UINT nFlags);
 		virtual bool OnKeyDown3D(CMapView3D *pView, UINT nChar, UINT nRepCnt, UINT nFlags);
 		
+		virtual void RenderTool2D( CRender2D *pRender );
+		
 	private:
 
-		void OnEscape(void);
+		void OnDelete();
+		void OnEscape();
+
+		static Vector m_vecLastMins;	// Last mins & maxs the user dragged out with this tool;
+		static Vector m_vecLastMaxs;	// used to fill in the third axis when starting a new box.
 };
 
 #endif // CORDON3D_H

@@ -69,7 +69,7 @@ public:
 	virtual CBaseTool *GetToolObject(int nHitData, bool bAttachObject );
 
 	virtual bool IsVisualElement(void) { return true; }
-	virtual bool IsClutter(void) { return false; }
+	virtual bool IsClutter(void) const { return false; }
 	
 	virtual const char* GetDescription() { return("Swept player hull helper"); }
 

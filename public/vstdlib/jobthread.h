@@ -876,6 +876,14 @@ inline void ParallelProcess( const char* pszDescription, IThreadPool* pPool, ITE
 	processor.Run( pItems, nItems, nMaxParallel, pPool );
 }
 
+template <typename ITEM_TYPE, typename OBJECT_TYPE, typename FUNCTION_CLASS >
+inline void ParallelProcess( const char* pszDescription, IThreadPool* pPool, ITEM_TYPE* pItems, unsigned nItems, OBJECT_TYPE* pObject, void ( FUNCTION_CLASS::* pfnProcess )( ITEM_TYPE& ), void ( FUNCTION_CLASS::* pfnBegin )() = nullptr, void ( FUNCTION_CLASS::* pfnEnd )() = nullptr, int nMaxParallel = INT_MAX )
+{
+	CParallelProcessor<ITEM_TYPE, CMemberFuncJobItemProcessor<ITEM_TYPE, OBJECT_TYPE, FUNCTION_CLASS>> processor( pszDescription );
+	processor.m_ItemProcessor.Init( pObject, pfnProcess, pfnBegin, pfnEnd );
+	processor.Run( pItems, nItems, nMaxParallel, pPool );
+}
+
 
 template <class ITEM_PROCESSOR_TYPE>
 class CParallelLoopProcessor

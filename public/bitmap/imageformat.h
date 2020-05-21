@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //===========================================================================//
 
@@ -32,14 +32,14 @@ typedef enum _D3DFORMAT D3DFORMAT;
 // don't bitch that inline functions aren't used!!!!
 #pragma warning(disable : 4514)
 
-enum ImageFormat 
+enum ImageFormat
 {
 	IMAGE_FORMAT_UNKNOWN  = -1,
-	IMAGE_FORMAT_RGBA8888 = 0, 
-	IMAGE_FORMAT_ABGR8888, 
-	IMAGE_FORMAT_RGB888, 
+	IMAGE_FORMAT_RGBA8888 = 0,
+	IMAGE_FORMAT_ABGR8888,
+	IMAGE_FORMAT_RGB888,
 	IMAGE_FORMAT_BGR888,
-	IMAGE_FORMAT_RGB565, 
+	IMAGE_FORMAT_RGB565,
 	IMAGE_FORMAT_I8,
 	IMAGE_FORMAT_IA88,
 	IMAGE_FORMAT_P8,
@@ -67,11 +67,11 @@ enum ImageFormat
 	IMAGE_FORMAT_RGBA32323232F,
 
 	// Depth-stencil texture formats for shadow depth mapping
-	IMAGE_FORMAT_NV_DST16,		// 
+	IMAGE_FORMAT_NV_DST16,		//
 	IMAGE_FORMAT_NV_DST24,		//
 	IMAGE_FORMAT_NV_INTZ,		// Vendor-specific depth-stencil texture
-	IMAGE_FORMAT_NV_RAWZ,		// formats for shadow depth mapping 
-	IMAGE_FORMAT_ATI_DST16,		// 
+	IMAGE_FORMAT_NV_RAWZ,		// formats for shadow depth mapping
+	IMAGE_FORMAT_ATI_DST16,		//
 	IMAGE_FORMAT_ATI_DST24,		//
 	IMAGE_FORMAT_NV_NULL,		// Dummy format which takes no video memory
 
@@ -141,7 +141,7 @@ typedef enum _D3DFORMAT
 		D3DFMT_INDEX32,
 
 		// adding fake D3D format names for the vendor specific ones (eases debugging/logging)
-		
+
 		// NV shadow depth tex
 		D3DFMT_NV_INTZ		= 0x5a544e49,	// MAKEFOURCC('I','N','T','Z')
 		D3DFMT_NV_RAWZ		= 0x5a574152,	// MAKEFOURCC('R','A','W','Z')
@@ -156,10 +156,39 @@ typedef enum _D3DFORMAT
 		// ATI 1N and 2N compressed tex
 		D3DFMT_ATI_2N		= 0x32495441,	// MAKEFOURCC('A', 'T', 'I', '2')
 		D3DFMT_ATI_1N		= 0x31495441,	// MAKEFOURCC('A', 'T', 'I', '1')
-		
+
 		D3DFMT_UNKNOWN
 	} D3DFORMAT;
 #endif
+
+#pragma warning ( push )
+#pragma warning ( disable : 4293 )
+template< int nBitCount > FORCEINLINE int ConvertTo10Bit( int x )
+{
+	switch ( nBitCount )
+	{
+	case 1:
+		return ( x & 0x1 ) ? 0x3FF : 0;
+	case 2:
+		return ( x << 8 ) | ( x << 6 ) | ( x << 4 ) | ( x << 2 ) | x;
+	case 3:
+		return ( x << 7 ) | ( x << 4 ) | ( x << 1 ) | ( x >> 2 );
+	case 4:
+		return ( x << 6 ) | ( x << 2 ) | ( x >> 2 );
+	default:
+#if defined(POSIX) || defined(_PS3)
+		return ( x << ( 10 - nBitCount ) ) | ( x >> MAX( 0, MIN( 32, ( nBitCount - ( 10 - nBitCount ) ) ) ) );
+#else // !_PS3
+		return ( x << ( 10 - nBitCount ) ) | ( x >> ( nBitCount - ( 10 - nBitCount ) ) );
+#endif
+	}
+}
+#pragma warning ( pop )
+
+template< int nBitCount > FORCEINLINE int ConvertFrom10Bit( int x )
+{
+	return ( x >> ( 10 - nBitCount ) );
+}
 
 //-----------------------------------------------------------------------------
 // Color structures
@@ -167,7 +196,7 @@ typedef enum _D3DFORMAT
 
 struct BGRA8888_t
 {
-	unsigned char b;		// change the order of names to change the 
+	unsigned char b;		// change the order of names to change the
 	unsigned char g;		//  order of the output ARGB or BGRA, etc...
 	unsigned char r;		//  Last one is MSB, 1st is LSB.
 	unsigned char a;
@@ -176,11 +205,19 @@ struct BGRA8888_t
 		*( unsigned int * )this = *( unsigned int * )&in;
 		return *this;
 	}
+	inline int RTo10Bit( ) const { return ConvertTo10Bit<8>( r ); }
+	inline int GTo10Bit( ) const { return ConvertTo10Bit<8>( g ); }
+	inline int BTo10Bit( ) const { return ConvertTo10Bit<8>( b ); }
+	inline int ATo10Bit( ) const { return ConvertTo10Bit<8>( a ); }
+	inline void RFrom10Bit( int r10 ) { r = ConvertFrom10Bit<8>( r10 ); }
+	inline void GFrom10Bit( int g10 ) { g = ConvertFrom10Bit<8>( g10 ); }
+	inline void BFrom10Bit( int b10 ) { b = ConvertFrom10Bit<8>( b10 ); }
+	inline void AFrom10Bit( int a10 ) { a = ConvertFrom10Bit<8>( a10 ); }
 };
 
 struct RGBA8888_t
 {
-	unsigned char r;		// change the order of names to change the 
+	unsigned char r;		// change the order of names to change the
 	unsigned char g;		//  order of the output ARGB or BGRA, etc...
 	unsigned char b;		//  Last one is MSB, 1st is LSB.
 	unsigned char a;
@@ -192,6 +229,14 @@ struct RGBA8888_t
 		a = in.a;
 		return *this;
 	}
+	inline int RTo10Bit( ) const { return ConvertTo10Bit<8>( r ); }
+	inline int GTo10Bit( ) const { return ConvertTo10Bit<8>( g ); }
+	inline int BTo10Bit( ) const { return ConvertTo10Bit<8>( b ); }
+	inline int ATo10Bit( ) const { return ConvertTo10Bit<8>( a ); }
+	inline void RFrom10Bit( int r10 ) { r = ConvertFrom10Bit<8>( r10 ); }
+	inline void GFrom10Bit( int g10 ) { g = ConvertFrom10Bit<8>( g10 ); }
+	inline void BFrom10Bit( int b10 ) { b = ConvertFrom10Bit<8>( b10 ); }
+	inline void AFrom10Bit( int a10 ) { a = ConvertFrom10Bit<8>( a10 ); }
 };
 
 struct RGB888_t
@@ -214,6 +259,12 @@ struct RGB888_t
 	{
 		return ( r != in.r ) || ( g != in.g ) || ( b != in.b );
 	}
+	inline int RTo10Bit( ) const { return ConvertTo10Bit<8>( r ); }
+	inline int GTo10Bit( ) const { return ConvertTo10Bit<8>( g ); }
+	inline int BTo10Bit( ) const { return ConvertTo10Bit<8>( b ); }
+	inline void RFrom10Bit( int r10 ) { r = ConvertFrom10Bit<8>( r10 ); }
+	inline void GFrom10Bit( int g10 ) { g = ConvertFrom10Bit<8>( g10 ); }
+	inline void BFrom10Bit( int b10 ) { b = ConvertFrom10Bit<8>( b10 ); }
 };
 
 struct BGR888_t
@@ -228,6 +279,12 @@ struct BGR888_t
 		b = in.b;
 		return *this;
 	}
+	inline int RTo10Bit( ) const { return ConvertTo10Bit<8>( r ); }
+	inline int GTo10Bit( ) const { return ConvertTo10Bit<8>( g ); }
+	inline int BTo10Bit( ) const { return ConvertTo10Bit<8>( b ); }
+	inline void RFrom10Bit( int r10 ) { r = ConvertFrom10Bit<8>( r10 ); }
+	inline void GFrom10Bit( int g10 ) { g = ConvertFrom10Bit<8>( g10 ); }
+	inline void BFrom10Bit( int b10 ) { b = ConvertFrom10Bit<8>( b10 ); }
 };
 
 // 360 uses this structure for x86 dxt decoding
@@ -339,15 +396,15 @@ namespace ImageLoader
 	void GetMipMapLevelDimensions( int *width, int *height, int skipMipLevels );
 	int  GetNumMipMapLevels( int width, int height, int depth = 1 );
 	bool Load( unsigned char *imageData, const char *fileName, int width, int height, enum ImageFormat imageFormat, float targetGamma, bool mipmap );
-	bool Load( unsigned char *imageData, FILE *fp, int width, int height, 
+	bool Load( unsigned char *imageData, FILE *fp, int width, int height,
 			   enum ImageFormat imageFormat, float targetGamma, bool mipmap );
 
 	// convert from any image format to any other image format.
 	// return false if the conversion cannot be performed.
-	// Strides denote the number of bytes per each line, 
+	// Strides denote the number of bytes per each line,
 	// by default assumes width * # of bytes per pixel
 	bool ConvertImageFormat( const unsigned char *src, enum ImageFormat srcImageFormat,
-							 unsigned char *dst, enum ImageFormat dstImageFormat, 
+							 unsigned char *dst, enum ImageFormat dstImageFormat,
 							 int width, int height, int srcStride = 0, int dstStride = 0 );
 
 	// must be used in conjunction with ConvertImageFormat() to pre-swap and post-swap
@@ -389,20 +446,20 @@ namespace ImageLoader
 		int m_nSrcWidth;
 		int m_nSrcHeight;
 		int m_nSrcDepth;
-		
+
 		int m_nDestWidth;
 		int m_nDestHeight;
 		int m_nDestDepth;
-		
+
 		float m_flSrcGamma;
 		float m_flDestGamma;
-		
+
 		float m_flColorScale[4];	// Color scale factors RGBA
 		float m_flColorGoal[4];		// Color goal values RGBA		DestColor = ColorGoal + scale * (SrcColor - ColorGoal)
-		
+
 		float m_flAlphaThreshhold;
 		float m_flAlphaHiFreqThreshhold;
-		
+
 		int m_nFlags;
 	};
 
@@ -417,7 +474,7 @@ namespace ImageLoader
 	void ConvertNormalMapRGBA8888ToDUDVMapUV88( const unsigned char *src, int width, int height,
 												unsigned char *dst_ );
 
-	void ConvertIA88ImageToNormalMapRGBA8888( const unsigned char *src, int width, 
+	void ConvertIA88ImageToNormalMapRGBA8888( const unsigned char *src, int width,
 											  int height, unsigned char *dst,
 											  float bumpScale );
 
@@ -448,23 +505,23 @@ namespace ImageLoader
 	// Generates a number of mipmap levels
 	//-----------------------------------------------------------------------------
 	void GenerateMipmapLevels( unsigned char* pSrc, unsigned char* pDst, int width,
-							   int height,	int depth, ImageFormat imageFormat, float srcGamma, float dstGamma, 
+							   int height,	int depth, ImageFormat imageFormat, float srcGamma, float dstGamma,
 							   int numLevels = 0 );
 
-	// Low quality mipmap generation, but way faster. 
-	void GenerateMipmapLevelsLQ( unsigned char* pSrc, unsigned char* pDst, int width, int height, 
+	// Low quality mipmap generation, but way faster.
+	void GenerateMipmapLevelsLQ( unsigned char* pSrc, unsigned char* pDst, int width, int height,
 		                         ImageFormat imageFormat, int numLevels );
 
 	//-----------------------------------------------------------------------------
 	// operations on square images (src and dst can be the same)
 	//-----------------------------------------------------------------------------
-	bool RotateImageLeft( const unsigned char *src, unsigned char *dst, 
+	bool RotateImageLeft( const unsigned char *src, unsigned char *dst,
 						  int widthHeight, ImageFormat imageFormat );
-	bool RotateImage180( const unsigned char *src, unsigned char *dst, 
+	bool RotateImage180( const unsigned char *src, unsigned char *dst,
 						 int widthHeight, ImageFormat imageFormat );
 	bool FlipImageVertically( void *pSrc, void *pDst, int nWidth, int nHeight, ImageFormat imageFormat, int nDstStride = 0 );
 	bool FlipImageHorizontally( void *pSrc, void *pDst, int nWidth, int nHeight, ImageFormat imageFormat, int nDstStride = 0 );
-	bool SwapAxes( unsigned char *src, 
+	bool SwapAxes( unsigned char *src,
 				   int widthHeight, ImageFormat imageFormat );
 
 

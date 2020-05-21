@@ -467,7 +467,7 @@ void CMapView2DBase::DrawGrid(CRender2D *pRender, int xAxis, int yAxis, float de
 				meshBuilder.Color4ubv( (byte*)&m_clrGridDot );
 				meshBuilder.AdvanceVertex();
 
-				meshBuilder.Position3f( roundfx+1, v2D.y+1, 0 );
+				meshBuilder.Position3f( roundfx+1, v2D.y, 0 );
 				meshBuilder.Color4ubv( (byte*)&m_clrGridDot );
 				meshBuilder.AdvanceVertex();
 

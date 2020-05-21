@@ -55,6 +55,7 @@
 #include "KeyBinds.h"
 #include "fmtstr.h"
 #include "KeyValues.h"
+#include "particles/particles.h"
 // #include "vgui/ILocalize.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -311,6 +312,47 @@ void CHammerDocTemplate::UpdateInstanceMap( CMapDoc *pInstanceMapDoc )
 }
 
 
+template < typename T, int Instance >
+static T& ReliableStaticStorage()
+{
+	static T storage;
+	return storage;
+}
+
+enum Storage_t
+{
+	APP_FN_POST_INIT,
+	APP_FN_PRE_SHUTDOWN,
+	APP_FN_MESSAGE_LOOP,
+	APP_FN_MESSAGE_PRETRANSLATE
+};
+
+#define s_appRegisteredPostInitFns		ReliableStaticStorage<CUtlVector<void(*)()>, APP_FN_POST_INIT>()
+#define s_appRegisteredPreShutdownFns	ReliableStaticStorage<CUtlVector<void(*)()>, APP_FN_PRE_SHUTDOWN>()
+#define s_appRegisteredMessageLoop		ReliableStaticStorage<CUtlVector<void(*)()>, APP_FN_MESSAGE_LOOP>()
+#define s_appRegisteredMessagePreTrans	ReliableStaticStorage<CUtlVector<void(*)(MSG*)>, APP_FN_MESSAGE_PRETRANSLATE>()
+
+void AppRegisterPostInitFn( void (*fn)() )
+{
+	s_appRegisteredPostInitFns.AddToTail( fn );
+}
+
+void AppRegisterMessageLoopFn( void (*fn)() )
+{
+	s_appRegisteredMessageLoop.AddToTail( fn );
+}
+
+void AppRegisterMessagePretranslateFn( void (*fn)( MSG * ) )
+{
+	s_appRegisteredMessagePreTrans.AddToTail( fn );
+}
+
+void AppRegisterPreShutdownFn( void (*fn)() )
+{
+	s_appRegisteredPreShutdownFns.AddToTail( fn );
+}
+
+
 class CHammerCmdLine : public CCommandLineInfo
 {
 	public:
@@ -513,6 +555,12 @@ bool CHammer::HammerPreTranslateMessage(MSG * pMsg)
 bool CHammer::HammerIsIdleMessage(MSG * pMsg)
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	// We generate lots of WM_TIMER messages and shouldn't call OnIdle because of them.
+	// This fixes tool tips not popping up when a map is open.
+	if ( pMsg->message == WM_TIMER )
+		return false;
+
 	return IsIdleMessage(pMsg) != FALSE;
 }
 
@@ -1123,6 +1171,13 @@ InitReturnVal_t CHammer::HammerInternalInit()
 		g_Textures.SetActiveConfig(g_pGameConfig);
 	}
 
+	//
+	// Initialize the particle system manager
+	//
+	g_pParticleSystemMgr->Init( NULL );
+	g_pParticleSystemMgr->AddBuiltinSimulationOperators();
+	g_pParticleSystemMgr->AddBuiltinRenderingOperators();
+
 	// Watch for changes to models.
 	InitStudioFileChangeWatcher();
 
@@ -1171,6 +1226,13 @@ InitReturnVal_t CHammer::HammerInternalInit()
 	g_VProfCurrentProfile.Start();
 #endif
 
+	// Execute the post-init registered callbacks
+	for ( int iFn = 0; iFn < s_appRegisteredPostInitFns.Count(); ++ iFn )
+	{
+		void (*fn)() = s_appRegisteredPostInitFns[ iFn ];
+		(*fn)();
+	}
+
 	CSplashWnd::HideSplashScreen();
 
 	// create the lighting preview thread
@@ -1214,6 +1276,13 @@ int CHammer::InternalMainLoop()
 			bIdle = false;
 		}
 
+		// Execute the message loop registered callbacks
+		for ( int iFn = 0; iFn < s_appRegisteredMessageLoop.Count(); ++ iFn )
+		{
+			void (*fn)() = s_appRegisteredMessageLoop[ iFn ];
+			(*fn)();
+		}
+
 		//
 		// Pump messages until the message queue is empty.
 		//
@@ -1221,6 +1290,14 @@ int CHammer::InternalMainLoop()
 		{
 			if ( msg.message == WM_QUIT )
 				return 1;
+
+			// Pump the message through a custom message
+			// pre-translation chain
+			for ( int iFn = 0; iFn < s_appRegisteredMessagePreTrans.Count(); ++ iFn )
+			{
+				void (*fn)( MSG * ) = s_appRegisteredMessagePreTrans[ iFn ];
+				(*fn)( &msg );
+			}
 
 			if ( !HammerPreTranslateMessage(&msg) )
 			{
@@ -1253,6 +1330,13 @@ void CHammer::Shutdown()
 		g_HammerToLPreviewMsgQueue.QueueMessage( StopMsg );
 		ThreadJoin( g_LPreviewThread );
 		g_LPreviewThread = 0;
+	}
+
+	// Execute the pre-shutdown registered callbacks
+	for ( int iFn = s_appRegisteredPreShutdownFns.Count(); iFn --> 0 ; )
+	{
+		void (*fn)() = s_appRegisteredPreShutdownFns[ iFn ];
+		(*fn)();
 	}
 
 #ifdef VPROF_HAMMER
@@ -1553,27 +1637,42 @@ void CHammer::OnFileOpen(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose:
-// Input  : lpszFileName -
-// Output : CDocument*
+// This is the generic file open function that is called by the framework.
 //-----------------------------------------------------------------------------
-CDocument* CHammer::OpenDocumentFile(LPCTSTR lpszFileName)
+CDocument *CHammer::OpenDocumentFile(LPCTSTR lpszFileName)
 {
-	if(GetFileAttributes(lpszFileName) == 0xFFFFFFFF)
+	CDocument *pDoc = OpenDocumentOrInstanceFile( lpszFileName );
+
+	// Do work that needs to happen after opening all instances here.
+	// NOTE: Make sure this work doesn't need to happen per instance!!!
+
+	return pDoc;
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CDocument *CHammer::OpenDocumentOrInstanceFile(LPCTSTR lpszFileName)
+{
+	// CWinApp::OnOpenRecentFile may get its file history cycled through by instances being opened, thus the pointer becomes invalid
+	CString		SaveFileName = lpszFileName;
+
+	if(GetFileAttributes( SaveFileName ) == 0xFFFFFFFF)
 	{
 		CString		Message;
 
-		Message = "The file " + CString( lpszFileName ) + " does not exist.";
+		Message = "The file " + SaveFileName + " does not exist.";
 		AfxMessageBox( Message );
 		return NULL;
 	}
 
-	CDocument	*pDoc = m_pDocManager->OpenDocumentFile( lpszFileName );
+	CDocument	*pDoc = m_pDocManager->OpenDocumentFile( SaveFileName );
 	CMapDoc		*pMapDoc = dynamic_cast< CMapDoc * >( pDoc );
 
 	if ( pMapDoc )
 	{
 		CMapDoc::SetActiveMapDoc( pMapDoc );
+		pMapDoc->CheckFileStatus();
 	}
 
 	if( pDoc && Options.general.bLoadwinpos && Options.general.bIndependentwin)
@@ -1593,13 +1692,26 @@ CDocument* CHammer::OpenDocumentFile(LPCTSTR lpszFileName)
 	if ( pMapDoc && pMapDoc->IsAutosave() )
 	{
 		char szRenameMessage[MAX_PATH+MAX_PATH+256];
-		CString newMapPath = *((CMapDoc *)pDoc)->AutosavedFrom();
+		CString newMapPath = *pMapDoc->AutosavedFrom();
 
 		sprintf( szRenameMessage, "This map was loaded from an autosave file.\nWould you like to rename it from \"%s\" to \"%s\"?\nNOTE: This will not save the file with the new name; it will only rename it.", lpszFileName, (LPCTSTR)newMapPath );
 
-		if ( AfxMessageBox( szRenameMessage, MB_YESNO ) == IDYES )
+		if ( AfxMessageBox( szRenameMessage, MB_ICONHAND | MB_YESNO ) == IDYES )
 		{
-			((CMapDoc *)pDoc)->SetPathName( newMapPath );
+			pMapDoc->SetPathName( newMapPath );
+		}
+	}
+	else
+	{
+		if ( CHammer::m_bIsNewDocumentVisible == true )
+		{
+			pMapDoc->CheckFileStatus();
+			if ( pMapDoc->IsReadOnly() == true )
+			{
+				char szMessage[ MAX_PATH + MAX_PATH + 256 ];
+				sprintf( szMessage, "This map is marked as READ ONLY.  You will not be able to save this file.\n\n%s", (LPCSTR)SaveFileName );
+				AfxMessageBox( szMessage );
+			}
 		}
 	}
 
@@ -1863,8 +1975,6 @@ void CHammer::RunFrame(void)
 	}
 
 	m_bForceRenderNextFrame = false;
-
-
 }
 
 
@@ -1904,8 +2014,6 @@ void CHammer::OnActivateApp(bool bActive)
 //		DBG("OFF %d\n", nCount);
 //	nCount++;
 	m_bActiveApp = bActive;
-
-
 }
 
 //-----------------------------------------------------------------------------

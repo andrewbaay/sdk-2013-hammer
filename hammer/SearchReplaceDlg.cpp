@@ -31,7 +31,7 @@ struct FindObject_t
 	CMapWorld *pWorld;
 	EnumChildrenPos_t WorldPos;					// A position in the world tree for world searches.
 
-	CUtlVector<CMapClass *> SelectionList;		// A copy of the selection list for selection only searches.
+	CMapObjectList SelectionList;				// A copy of the selection list for selection only searches.
 	int nSelectionIndex;						// The index into the selection list for iterating the selection list.
 
 	//

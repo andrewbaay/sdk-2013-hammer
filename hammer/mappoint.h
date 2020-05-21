@@ -27,7 +27,7 @@ class CMapPoint : public CMapAtom
 
 		CMapPoint(void);
 
-		virtual void GetOrigin(Vector& pfOrigin);
+		virtual void GetOrigin(Vector& pfOrigin) const;
 		virtual void SetOrigin(Vector& pfOrigin);
 		
 	protected:

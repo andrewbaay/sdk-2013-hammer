@@ -153,7 +153,10 @@ void CNewVisGroupDlg::UpdateGroupList(void)
 		for (int i = 0; i < nCount; i++)
 		{
 			CVisGroup *pGroup = pDoc->VisGroups_GetRootVisGroup(i);
-			m_cGroupList.AddVisGroup(pGroup);
+			if (stricmp(pGroup->GetName(), "Auto") != 0)
+			{
+				m_cGroupList.AddVisGroup(pGroup);
+			}			
 		}
 	}
 

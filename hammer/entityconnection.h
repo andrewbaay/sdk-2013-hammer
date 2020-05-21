@@ -40,6 +40,7 @@ enum
 	CONNECTION_BAD,	// if any entity output is bad
 };
 
+class CMapDoc;
 class CMapEntity;
 typedef CUtlReferenceVector<CMapEntity> CMapEntityList;
 
@@ -95,16 +96,16 @@ public:
 	static bool ValidateOutput(CMapEntity *pEntity, const char* pszOutput);
 	static bool ValidateOutput(const CMapEntityList *pEntityList, const char* pszOutput);
 	static bool ValidateTarget(const CMapEntityList *pEntityList, bool bVisibilityCheck, const char* pszTarget);
-	static bool ValidateInput(const char* pszTarget, const char* pszInput, bool bVisiblesOnly);
+	static bool ValidateInput( const char *pszTarget, const char *pszInput, bool bVisiblesOnly, CMapDoc *pDoc = NULL );
 
-	static int  ValidateOutputConnections(CMapEntity *pEntity, bool bVisibilityCheck, bool bIgnoreHiddenTargets=false );
+	static int  ValidateOutputConnections( CMapEntity *pEntity, bool bVisibilityCheck, bool bIgnoreHiddenTargets=false, bool CheckAllDocuments = false );
 	static int  ValidateInputConnections(CMapEntity *pEntity, bool bVisibilityCheck);
 
-	static void FindBadConnections(CMapEntity *pEntity, bool bVisibilityCheck, CUtlVector<CEntityConnection *> &BadConnectionList, bool bIgnoreHiddenTargets=false);
+	static void FindBadConnections( CMapEntity *pEntity, bool bVisibilityCheck, CUtlVector<CEntityConnection *> &BadConnectionList, bool bIgnoreHiddenTargets=false, bool CheckAllDocuments = false );
 	static void FixBadConnections(CMapEntity *pEntity, bool bVisibilityCheck);
 
 protected:
-	char m_szSourceEntity[MAX_ENTITY_NAME_LEN];		// Targetname of the source entity 
+	char m_szSourceEntity[MAX_ENTITY_NAME_LEN];		// Targetname of the source entity
 	CMapEntityList *m_pSourceEntityList;
 	char m_szOutput[MAX_IO_NAME_LEN];				// Name of the output in the source entity.
 	char m_szTargetEntity[MAX_ENTITY_NAME_LEN];		// Targetname of the target entity.

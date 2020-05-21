@@ -25,6 +25,7 @@ enum GDIV_TYPE
 	ivTargetSrc,
 	ivInteger,
 	ivString,
+	ivStringInstanced,
 	ivChoices,
 	ivFlags,
 	ivDecal,
@@ -46,11 +47,13 @@ enum GDIV_TYPE
 	ivAxis,			// The axis of rotation for a rotating entity, in the form "x0 y0 z0, x1 y1 z1".
 	ivPointEntityClass,
 	ivNodeDest,
+	ivParticleSystem,
 	ivInstanceFile,			// used for hammer to know this field should display a browse button to find map files
-	ivAngleNegativePitch,	// used for instance rotating when just a pitch value is present
+	ivAngleNegativePitch,	// used for instance rotating when just a negative pitch value is present ( light_ pitch fields )
 	ivInstanceVariable,		// used for instance variables for easy hammer editing
 	ivInstanceParm,			// used for instance parameter declaration
 	ivBoolean,
+	ivNodeID,				// used for instance node id remapping
 
 	ivMax					// count of types
 };

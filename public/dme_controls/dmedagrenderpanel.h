@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2001, Valve LLC, All rights reserved. ============
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================
@@ -13,7 +13,7 @@
 #endif
 
 #include "tier1/utlvector.h"
-#include "dme_controls/SimplePotteryWheelPanel.h"
+#include "matsys_controls/PotteryWheelPanel.h"
 #include "datamodel/dmehandle.h"
 
 
@@ -39,9 +39,9 @@ namespace vgui
 //-----------------------------------------------------------------------------
 // Material Viewer Panel
 //-----------------------------------------------------------------------------
-class CDmeDagRenderPanel : public CSimplePotteryWheelPanel
+class CDmeDagRenderPanel : public CPotteryWheelPanel
 {
-	DECLARE_CLASS_SIMPLE( CDmeDagRenderPanel, CSimplePotteryWheelPanel );
+	DECLARE_CLASS_SIMPLE( CDmeDagRenderPanel, CPotteryWheelPanel );
 
 public:
 	// constructor, destructor
@@ -60,6 +60,9 @@ public:
 	void DrawJoints( bool bDrawJoint );
 	void DrawJointNames( bool bDrawJointNames );
 	void DrawGrid( bool bDrawGrid );
+	void DrawAxis( bool bDrawAxis );
+	void ModelInEngineCoordinates( bool bModelInEngineCoordinates );
+	void ModelZUp( bool bModelZUp );
 
 	CDmeDag *GetDmeElement();
 
@@ -93,10 +96,14 @@ private:
 	MESSAGE_FUNC( OnGrayShade, "GrayShade" );
 	MESSAGE_FUNC( OnFrame, "Frame" );
 
-	void DrawGrid();
-
 	// Draw joint names
 	void DrawJointNames( CDmeDag *pRoot, CDmeDag *pDag, const matrix3x4_t& parentToWorld );
+
+	// Draw highlighted vertices
+	void DrawHighlightPoints();
+
+	// Draw the coordinate axis
+	void DrawAxis();
 
 	// Rebuilds the list of operators
 	void RebuildOperatorList();
@@ -105,12 +112,22 @@ private:
 	void UpdateMenu();
 	CTextureReference m_DefaultEnvCubemap;
 	CTextureReference m_DefaultHDREnvCubemap;
-	CMaterialReference m_Wireframe;
 	vgui::HFont m_hFont;
+	CMaterialReference m_axisMaterial;
 
 	bool m_bDrawJointNames : 1;
 	bool m_bDrawJoints : 1;
 	bool m_bDrawGrid : 1;
+	bool m_bDrawAxis : 1;
+
+	// NOTE: m_bModelInEngineCoordinates overrides m_bZUp
+	bool m_bModelInEngineCoordinates : 1;	// Is the model already in engine coordinates
+
+	// Note: m_bZUp implies the data is in Z Up coordinates with -Y as the forward axis
+	bool m_bModelZUp : 1;					// Is the model Z Up?
+
+	// NOTE: If neither m_bModelInEngineCoordinates nor m_bModelZUp is true then
+	//       the model is in Y Up coordinates with Z as the forward axis
 
 	CDmeHandle< CDmeAnimationList > m_hAnimationList;
 	CDmeHandle< CDmeAnimationList > m_hVertexAnimationList;
@@ -118,7 +135,7 @@ private:
 	CDmeHandle< CDmeChannelsClip > m_hCurrentVertexAnimation;
 	CUtlVector< IDmeOperator* > m_operators;
 	float m_flStartTime;
-
+	CDmeHandle< CDmeDag > m_hDag;
 
 	CDmeDrawSettings *m_pDrawSettings;
 	CDmeHandle< CDmeDrawSettings, true > m_hDrawSettings;

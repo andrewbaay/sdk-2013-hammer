@@ -123,7 +123,7 @@ struct MatWinData_t
     HWND	hWnd;
 	HDC		hDC;
 };
-
+class CLightPreview_Light;
 
 class CRender3D : public CRender
 {
@@ -188,12 +188,25 @@ public:
 	// indicates we need to render an overlay pass...
 	bool NeedsOverlay() const;
 
-	void BuildLightList( CUtlVector<CLightingPreviewLightDescription> *pList ) const;
+	CUtlIntrusiveList<CLightingPreviewLightDescription> BuildLightList() const;
 
 	void SendLightList();									// send lighting list to lighting preview thread
 
 	void SendShadowTriangles();
 	void AddTranslucentDeferredRendering( CMapPoint *pMapPoint );
+
+	void AccumulateLights( CUtlPriorityQueue<CLightPreview_Light> &light_queue,
+						   CMatRenderContextPtr &pRenderContext,
+						   int nTargetWidth, int nTargetHeight,
+						   ITexture *dest_rt );
+
+	void SendGBuffersToLightingThread( void );
+	void SendGBuffersToLightingThread( int nTargetWidth, int nTargetHeight );
+
+	// Utility.
+	float ComputePixelWidthOfSphere( const Vector &vecOrigin, float flRadius );
+	float ComputePixelDiameterOfSphere( const Vector &vecOrigin, float flRadius );
+
 
 protected:
 

@@ -46,7 +46,13 @@ LRESULT CVGuiPanelWnd::WindowProc( UINT message, WPARAM wParam, LPARAM lParam )
 	return 1;
 }
 
+BOOL CVGuiPanelWnd::OnEraseBkgnd(CDC* pDC) 
+{
+	return TRUE;
+}
+
 BEGIN_MESSAGE_MAP(CVGuiPanelWnd, CWnd)
+	ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
 CVGuiWnd::CVGuiWnd(void)

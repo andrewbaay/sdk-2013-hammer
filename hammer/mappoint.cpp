@@ -27,7 +27,7 @@ CMapPoint::CMapPoint(void)
 //-----------------------------------------------------------------------------
 // Purpose: Returns this point's X, Y, Z coordinates.
 //-----------------------------------------------------------------------------
-void CMapPoint::GetOrigin(Vector &Origin)
+void CMapPoint::GetOrigin(Vector &Origin) const
 {
 	Origin = m_Origin;
 }

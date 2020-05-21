@@ -28,6 +28,7 @@
 #include "MapCylinder.h"
 #include "MapInstance.h"
 #include "mapsweptplayerhull.h"
+#include "mapworldtext.h"
 #include "DispShore.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -69,7 +70,8 @@ static const constexpr HelperFactoryMap_t HelperFactoryMap[] =
 	{ "cylinder", CMapCylinder::Create },						// Wireframe cylinder with separate radii at each end
 	{ "sweptplayerhull", CMapSweptPlayerHull::Create },			// A swept player sized hull between two points (ladders)
 	{ "overlay_transition", CMapOverlayTransition::Create },	// Notes!!
-	{ "instance", CMapInstance::Create },
+	{ "instance", CMapInstance::Create },						// A map instance used for rendering the sub-map
+	{ "worldtext", CWorldTextHelper::CreateWorldText }			// Text string oriented in world space
 };
 
 

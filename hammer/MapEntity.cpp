@@ -28,10 +28,12 @@
 #include "MapSprite.h"
 #include "camera.h"
 #include "hammer.h"
+#include "vmfentitysupport.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
 
+#undef GetClassName
 
 IMPLEMENT_MAPCLASS(CMapEntity)
 
@@ -478,7 +480,7 @@ void CMapEntity::AddHelpersForClass(GDclass *pClass, bool bLoading)
 	{
 		CHelperInfo HelperInfo;
 		HelperInfo.SetName("iconsprite");
-		HelperInfo.AddParameter("sprites/obsolete.spr");
+		HelperInfo.AddParameter("sprites/obsolete.vmt");
 
 		CMapClass *pSprite = CHelperFactory::CreateHelper(&HelperInfo, this);
 		if (pSprite != NULL)
@@ -684,6 +686,9 @@ ChunkFileResult_t CMapEntity::LoadVMF(CChunkFile *pFile)
 	Handlers.AddHandler("editor", LoadEditorCallback, this);
 	Handlers.AddHandler("hidden", LoadHiddenCallback, this);
 	Handlers.AddHandler("connections", LoadConnectionsCallback, this);
+
+	VmfAddMapEntityHandlers( &Handlers, static_cast< IMapEntity_Type_t* >( this ) );
+
 	pFile->PushHandlers(&Handlers);
 	ChunkFileResult_t eResult = pFile->ReadChunk(LoadKeyCallback, this);
 	pFile->PopHandlers();
@@ -704,6 +709,9 @@ ChunkFileResult_t CMapEntity::LoadKeyCallback(const char *szKey, const char *szV
 	if (!stricmp(szKey, "id"))
 	{
 		pEntity->SetID(atoi(szValue));
+
+		// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
+		pEntity->m_nLoadID = CMapDoc::GetActiveMapDoc()->GetNextLoadID();
 	}
 	else
 	{
@@ -1763,6 +1771,11 @@ ChunkFileResult_t CMapEntity::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo)
 	}
 
 	//
+	// Save custom model information
+	//
+	eResult = VmfSaveVmfEntityHandlers( pFile, static_cast< IMapEntity_Type_t * >( this ),
+		static_cast< IMapEntity_SaveInfo_t * >( pSaveInfo ) );
+	//
 	// End this entity's scope.
 	//
 	if (eResult == ChunkFile_Ok)
@@ -1888,7 +1901,7 @@ bool MapEntityList_HasInput(const CMapEntityList *pList, const char *szInput, In
 	FOR_EACH_OBJ( *pList, pos )
 	{
 		CMapEntity *pEntity = pList->Element(pos);
-		GDclass *pClass = pEntity->GetClass();
+		GDclass *pClass = pEntity ? pEntity->GetClass() : NULL;
 		if ((pClass != pLastClass) && (pClass != NULL))
 		{
 			CClassInput *pInput = pClass->FindInput(szInput);
@@ -2235,7 +2248,7 @@ int CMapEntity::GetNodeID(void)
 //			cordon bounds.
 // Output : Returns true to cull the object, false to keep it.
 //-----------------------------------------------------------------------------
-bool CMapEntity::IsCulledByCordon(const Vector &vecMins, const Vector &vecMaxs)
+bool CMapEntity::IsIntersectingCordon(const Vector &vecMins, const Vector &vecMaxs)
 {
 	// Point entities are culled by their origin, not by their bounding box.
 	// An exception to that is swept hulls, such as ladders, that are more like solid ents.
@@ -2243,10 +2256,10 @@ bool CMapEntity::IsCulledByCordon(const Vector &vecMins, const Vector &vecMaxs)
 	{
 		Vector vecOrigin;
 		GetOrigin(vecOrigin);
-		return !IsPointInBox(vecOrigin, vecMins, vecMaxs);
+		return IsPointInBox(vecOrigin, vecMins, vecMaxs);
 	}
 
-	return !IsIntersectingBox(vecMins, vecMaxs);
+	return IsIntersectingBox(vecMins, vecMaxs);
 }
 
 
@@ -2389,7 +2402,7 @@ bool CMapEntity::IsVisibleLogical(void)
 //			wildcards.
 // Input  : szName -
 //-----------------------------------------------------------------------------
-bool CMapEntity::NameMatches(const char *szName)
+bool CMapEntity::NameMatches(const char *szName) const
 {
 	const char *pszTargetName = GetKeyValue( "targetname" );
 	if (pszTargetName)
@@ -2406,7 +2419,7 @@ bool CMapEntity::NameMatches(const char *szName)
 //			wildcards.
 // Input  : szName -
 //-----------------------------------------------------------------------------
-bool CMapEntity::ClassNameMatches(const char *szName)
+bool CMapEntity::ClassNameMatches(const char *szName) const
 {
 	const char *pszClassName = GetClassName();
 	if (pszClassName)

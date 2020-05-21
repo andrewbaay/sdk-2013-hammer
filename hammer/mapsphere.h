@@ -52,9 +52,9 @@ class CMapSphere : public CMapHelper
 		virtual void Render3D(CRender3D *pRender);
 
 		virtual bool IsVisualElement(void) { return false; } // Only visible when the parent entity is selected.
-		virtual bool IsScaleable(void) { return false; } // TODO: allow for scaling the sphere by itself
-		virtual bool IsClutter(void) { return true; }
-		virtual bool IsCulledByCordon(const Vector &vecMins, const Vector &vecMaxs) { return false; } // We don't hide unless our parent hides.
+		virtual bool IsScaleable(void) const { return false; } // TODO: allow for scaling the sphere by itself
+		virtual bool IsClutter(void) const { return true; }
+		virtual bool CanBeCulledByCordon() const { return false; } // We don't hide unless our parent hides.
 
 		virtual CBaseTool *GetToolObject(int nHitData, bool bAttachObject );
 		
@@ -64,7 +64,7 @@ class CMapSphere : public CMapHelper
 
 	protected:
 
-		void SetRadius(float flRadius);
+		virtual void SetRadius(float flRadius);
 
 		char m_szKeyName[KEYVALUE_MAX_KEY_LENGTH];
 		float m_flRadius;

@@ -85,7 +85,7 @@ void COP_Flags::UpdateData( int Mode, PVOID pData, bool bCanEdit )
 // Purpose: 
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool COP_Flags::SaveData(void)
+bool COP_Flags::SaveData( SaveData_Reason_t reason )
 {
 	if (!IsWindow(m_hWnd))
 	{

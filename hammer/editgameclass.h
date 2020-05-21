@@ -14,6 +14,8 @@
 #include "EntityConnection.h"
 
 
+#undef GetClassName
+
 #define MAX_CLASS_NAME_LEN		64
 
 
@@ -38,7 +40,7 @@ class CEditGameClass
 		inline bool IsClass(const char *pszClass = NULL);
 		inline GDclass *GetClass(void) { return(m_pClass); }
 		inline void SetClass(GDclass *pClass) { m_pClass = pClass; }
-		inline const char* GetClassName(void) { return(m_szClass); }
+		inline const char* GetClassName(void) const { return(m_szClass); }
 		inline bool IsKeyFrameClass(void) { return((m_pClass != NULL) && (m_pClass->IsKeyFrameClass())); }
 		inline bool IsMoveClass(void) { return((m_pClass != NULL) && (m_pClass->IsMoveClass())); }
 		inline bool IsPointClass(void) { return((m_pClass != NULL) && (m_pClass->IsPointClass())); }
@@ -56,9 +58,9 @@ class CEditGameClass
 
 		inline void RemoveKey(int nIndex) { m_KeyValues.RemoveKeyAt(nIndex); }
 		inline void SetKeyValue(LPCTSTR pszKey, int iValue) { m_KeyValues.SetValue(pszKey, iValue); }
-		inline LPCTSTR GetKey(int nIndex) { return(m_KeyValues.GetKey(nIndex)); }
-		inline LPCTSTR GetKeyValue(int nIndex) { return(m_KeyValues.GetValue(nIndex)); }
-		inline LPCTSTR GetKeyValue(LPCTSTR pszKey, int *piIndex = NULL) { return(m_KeyValues.GetValue(pszKey, piIndex)); }
+		inline LPCTSTR GetKey(int nIndex) const { return(m_KeyValues.GetKey(nIndex)); }
+		inline LPCTSTR GetKeyValue(int nIndex) const { return(m_KeyValues.GetValue(nIndex)); }
+		inline LPCTSTR GetKeyValue(LPCTSTR pszKey, int *piIndex = NULL) const { return(m_KeyValues.GetValue(pszKey, piIndex)); }
 
 		// Iterate the list of keyvalues.
 		inline int GetFirstKeyValue() const			{ return m_KeyValues.GetFirst(); }

@@ -2,6 +2,7 @@
 
 #include "resource.h"
 #include "VGuiWnd.h"
+#include "utlvector.h"
 
 // CModelBrowser dialog
 
@@ -14,6 +15,9 @@ namespace vgui
 
 class CModelBrowserPanel;
 class CMDLPicker;
+struct AssetUsageInfo_t;
+
+#define ID_FIND_ASSET	100
 
 
 class CModelBrowser : public CDialog
@@ -23,6 +27,8 @@ class CModelBrowser : public CDialog
 public:
 	CModelBrowser(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CModelBrowser();
+
+	void SetUsedModelList( CUtlVector<AssetUsageInfo_t> &usedModels );
 
 	void	SetModelName( const char *pModelName );
 	void	GetModelName( char *pModelName, int length );
@@ -42,6 +48,7 @@ protected:
 public:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnDestroy();
+	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 
 	virtual BOOL OnInitDialog();
 
@@ -58,5 +65,5 @@ public:
 
 	void Show();
 	void Hide();
-	
+
 };

@@ -12,6 +12,11 @@ class CVGuiWnd;
 
 extern IMatSystemSurface *g_pMatSystemSurface;
 
+namespace vgui
+{
+	typedef unsigned long HScheme;
+}
+
 class CHammerVGui
 {
 public:
@@ -25,11 +30,14 @@ public:
 	void SetFocus( CVGuiWnd *pWnd );
 	bool IsInitialized() { return m_hMainWindow != NULL; };
 
-	
+	vgui::HScheme GetHammerScheme() const { return m_hHammerScheme; }
+
 protected:
 
 	HWND			m_hMainWindow;
 	CVGuiWnd		*m_pActiveWindow;	// the VGUI window that has the focus
+
+	vgui::HScheme	m_hHammerScheme;
 };
 
 CHammerVGui *HammerVGui();

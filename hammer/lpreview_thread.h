@@ -12,19 +12,41 @@
 
 #include "tier0/threadtools.h"
 #include "bitmap/bitmap.h"
-#include "bitmap/float_bm.h"
 #include "tier1/utlvector.h"
 #include "mathlib/lightdesc.h"
+#include "utlintrusivelist.h"
+
+class FloatBitMap2_t;
 
 class CLightingPreviewLightDescription : public LightDesc_t
 {
 public:
+	CLightingPreviewLightDescription *m_pNext;
+	CUtlVector<CLightingPreviewLightDescription*> m_TempChildren;
+
 	int m_nObjectID;
-	class CIncrementalLightInfo* m_pIncrementalInfo;
+	float m_flJitterAmount;									// for area lights - how much to
+															// randomly perturb light pos when
+															// tracing
+
+	class CIncrementalLightInfo *m_pIncrementalInfo;
+	bool m_bLowRes;											// whether to generate at 1/16 screen res
+	bool m_bDidIndirect;									// whether or not we tried to generate pseudo lights yet
+
+	CLightingPreviewLightDescription( void )
+	{
+		m_flJitterAmount = 0;
+		m_bLowRes = true;
+		m_bDidIndirect = false;
+	}
+
+
 	void Init( int obj_id )
 	{
+		m_pNext = NULL;
 		m_pIncrementalInfo = nullptr;
 		m_nObjectID = obj_id;
+		m_bDidIndirect = false;
 	}
 };
 
@@ -57,8 +79,8 @@ struct MessageToLPreview
 
 	// this structure uses a fat format for the args instead of separate classes for each
 	// message. the messages are small anyway, since pointers are used for anything of size.
-	FloatBitMap_t*									m_pDefferedRenderingBMs[4];	// if LPREVIEW_MSG_G_BUFFERS
-	CUtlVector<CLightingPreviewLightDescription>*	m_pLightList;				// if LPREVIEW_MSG_LIGHT_DATA
+	FloatBitMap2_t*									m_pDefferedRenderingBMs[4];	// if LPREVIEW_MSG_G_BUFFERS
+	CUtlIntrusiveList<CLightingPreviewLightDescription> m_LightList;			// if LPREVIEW_MSG_LIGHT_DATA
 	Vector											m_EyePosition;				// for LPREVIEW_MSG_LIGHT_DATA & G_BUFFERS
 	CUtlVector<Vector>*								m_pShadowTriangleList;		// for LPREVIEW_MSG_GEOM_DATA
 	int												m_nBitmapGenerationCounter;	// for LPREVIEW_MSG_G_BUFFERS

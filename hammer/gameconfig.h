@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -63,7 +63,6 @@ public:
 	char szMapDir[128];
 	char szBSPDir[128];
 	char m_szModDir[128];
-	char m_szPrefabDir[128];
 	CUtlVector<MatExlcusions_s> m_MaterialExclusions;
 
 	CStringArray GDFiles;
@@ -95,7 +94,7 @@ protected:
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 const char *CGameConfig::GetCordonTexture(void)
 {
@@ -104,7 +103,7 @@ const char *CGameConfig::GetCordonTexture(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CGameConfig::SetCordonTexture(const char *szCordonTexture)
 {
@@ -113,7 +112,7 @@ void CGameConfig::SetCordonTexture(const char *szCordonTexture)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 int CGameConfig::GetDefaultLightmapScale(void)
 {
@@ -122,7 +121,7 @@ int CGameConfig::GetDefaultLightmapScale(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CGameConfig::SetDefaultLightmapScale(int nScale)
 {
@@ -131,7 +130,7 @@ void CGameConfig::SetDefaultLightmapScale(int nScale)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 float CGameConfig::GetDefaultTextureScale(void)
 {
@@ -140,7 +139,7 @@ float CGameConfig::GetDefaultTextureScale(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CGameConfig::SetDefaultTextureScale(float fScale)
 {
@@ -180,12 +179,12 @@ void CGameConfig::GetSteamUserDir(CString &str)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CGameConfig::GetSteamAppID(CString &str)
 {
 	str = m_szSteamAppID;
-} 
+}
 
 
 extern GameData *pGD;

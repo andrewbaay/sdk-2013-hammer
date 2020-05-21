@@ -75,7 +75,7 @@ bool			g_bUpdateBones2D = true;
 // Model meshes themselves are cached to avoid redundancy. There should never be
 // more than one copy of a given studio model in memory at once.
 //-----------------------------------------------------------------------------
-ModelCache_t CStudioModelCache::m_Cache[1024];
+ModelCache_t CStudioModelCache::m_Cache[MAX_STUDIOMODELCACHE];
 int CStudioModelCache::m_nItems = 0;
 
 
@@ -108,6 +108,31 @@ StudioModel *CStudioModelCache::FindModel(const char *pszModelPath)
 	return NULL;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Find all models in the cache with the same model name and reload them
+//-----------------------------------------------------------------------------
+void CStudioModelCache::ReloadModel( const char *pszModelPath )
+{
+	// Fix up our name to match what will be in the cache
+	char testPath[MAX_PATH];
+	V_strncpy( testPath, pszModelPath, sizeof( testPath ) );
+	V_FixSlashes( testPath );
+
+	// Look through all models in the cache, updating them as we find them
+	for ( int i = 0; i < m_nItems; i++ )
+	{
+		char testPath2[MAX_PATH];
+		V_strncpy( testPath2, m_Cache[i].pszPath, sizeof( testPath2 ) );
+		V_FixSlashes( testPath2 );
+
+		// If it's a match, reload it
+		if (!stricmp(testPath, testPath2))
+		{
+			m_Cache[i].pModel->FreeModel();
+			m_Cache[i].pModel->LoadModel( pszModelPath );
+		}
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Returns an instance of a particular studio model. If the model is
@@ -117,10 +142,6 @@ StudioModel *CStudioModelCache::FindModel(const char *pszModelPath)
 //-----------------------------------------------------------------------------
 StudioModel *CStudioModelCache::CreateModel(const char *pszModelPath)
 {
-	StudioModel *pTest = FindModel( pszModelPath );
-	if ( pTest )
-		return pTest;
-
 	//
 	// If it isn't there, try to create one.
 	//
@@ -164,29 +185,34 @@ StudioModel *CStudioModelCache::CreateModel(const char *pszModelPath)
 //-----------------------------------------------------------------------------
 BOOL CStudioModelCache::AddModel(StudioModel *pModel, const char *pszModelPath)
 {
-	//
-	// Copy the model pointer.
-	//
-	m_Cache[m_nItems].pModel = pModel;
-
-	//
-	// Allocate space for and copy the model path.
-	//
-	m_Cache[m_nItems].pszPath = new char [strlen(pszModelPath) + 1];
-	if (m_Cache[m_nItems].pszPath != NULL)
+	if ( m_nItems < MAX_STUDIOMODELCACHE )
 	{
-		strcpy(m_Cache[m_nItems].pszPath, pszModelPath);
+		//
+		// Copy the model pointer.
+		//
+		m_Cache[m_nItems].pModel = pModel;
+	
+		//
+		// Allocate space for and copy the model path.
+		//
+		m_Cache[m_nItems].pszPath = new char [strlen(pszModelPath) + 1];
+		if (m_Cache[m_nItems].pszPath != NULL)
+		{
+			strcpy(m_Cache[m_nItems].pszPath, pszModelPath);
+		}
+		else
+		{
+			return(FALSE);
+		}
+	
+		m_Cache[m_nItems].nRefCount = 1;
+	
+		m_nItems++;
+	
+		return(TRUE);
 	}
-	else
-	{
-		return(FALSE);
-	}
 
-	m_Cache[m_nItems].nRefCount = 1;
-
-	m_nItems++;
-
-	return(TRUE);
+	return(FALSE);
 }
 
 
@@ -349,13 +375,8 @@ void CStudioFileChangeWatcher::Update()
 			g_pMDLCache->Flush( hModel );
 			g_pMDLCache->ResetErrorModelStatus( hModel );
 
-			// If we have it in the StudioModel cache, flush its data.
-			StudioModel *pTest = CStudioModelCache::FindModel( pName );
-			if ( pTest )
-			{
-				pTest->FreeModel();
-				pTest->LoadModel( pName );
-			}
+			// Find all studio models and refresh their data
+			CStudioModelCache::ReloadModel( pName );			
 		}
 
 		m_ChangedModels.Purge();
@@ -557,7 +578,7 @@ void StudioModel::SetupModel ( int bodypart )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void StudioModel::DrawModel3D( CRender3D *pRender, float flAlpha, bool bWireframe )
+void StudioModel::DrawModel3D( CRender3D *pRender, const Color &color, float flAlpha, bool bWireframe )
 {
 	studiohdr_t *pStudioHdr = GetStudioRenderHdr();
 	if (!pStudioHdr)
@@ -601,7 +622,7 @@ void StudioModel::DrawModel3D( CRender3D *pRender, float flAlpha, bool bWirefram
 
 		matrix3x4_t boneToWorld[MAXSTUDIOBONES];
 		SetUpBones( false, boneToWorld );
-		pRender->DrawModel( &info, boneToWorld, m_origin, flAlpha, bWireframe );
+		pRender->DrawModel( &info, boneToWorld, m_origin, flAlpha, bWireframe, color );
 
 		m_origin = orgOrigin;
 		m_angles = orgAngles;
@@ -610,7 +631,7 @@ void StudioModel::DrawModel3D( CRender3D *pRender, float flAlpha, bool bWirefram
 	{
 		matrix3x4_t boneToWorld[MAXSTUDIOBONES];
 		SetUpBones( true, boneToWorld );
-		pRender->DrawModel( &info, boneToWorld, m_origin, flAlpha, bWireframe );
+		pRender->DrawModel( &info, boneToWorld, m_origin, flAlpha, bWireframe, color );
 
 		if ( Options.general.bShowCollisionModels )
 		{
@@ -699,12 +720,12 @@ bool StudioModel::IsTranslucent()
 	{
 		for (int i = 0; i < pHardwareData->m_pLODs[lodID].numMaterials; ++i)
 		{
-			if (!pHardwareData->m_pLODs[lodID].ppMaterials[i]->IsTranslucent())
-				return false;
+			if (pHardwareData->m_pLODs[lodID].ppMaterials[i]->IsTranslucent())
+				return true;
 		}
 	}
 
-	return true;
+	return false;
 }
 
 
@@ -1000,6 +1021,12 @@ void StudioModel::SetOrigin( float x, float y, float z )
 }
 
 
+int StudioModel::SetBodygroups( int iValue )
+{
+	m_bodynum = iValue;
+	return m_bodynum;
+}
+
 void StudioModel::SetOrigin( const Vector &v )
 {
 	m_origin = v;
@@ -1060,6 +1087,37 @@ int StudioModel::SetSkin( int iValue )
 	return iValue;
 }
 
+const char *StudioModel::GetModelName( void )
+{
+	return m_pModelName;
+}
+
+void StudioModel::SetFrame( int nFrame )
+{
+	CStudioHdr *pStudioHdr = GetStudioHdr();
+	if ( !pStudioHdr )
+		return;
+
+	if ( nFrame <= 0 )
+		nFrame = 0;
+
+	int maxFrame = GetMaxFrame();
+	if ( nFrame >= maxFrame )
+	{
+		nFrame = maxFrame;
+		m_cycle = 0.99999;
+		return;
+	}
+
+	m_cycle = nFrame / (float)maxFrame;
+	return;
+}
+
+int StudioModel::GetMaxFrame( void )
+{
+	CStudioHdr *pStudioHdr = GetStudioHdr();
+	return Studio_MaxFrame( pStudioHdr, m_sequence, NULL );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose:

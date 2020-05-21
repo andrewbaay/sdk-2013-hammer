@@ -1,13 +1,16 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 //=============================================================================
 
 #include "filesystem.h"
-#include "matsys_controls/VtfPicker.h"
-#include "matsys_controls/VtfPreviewPanel.h"
-#include "vgui_controls/splitter.h"
+#include "matsys_controls/vtfpicker.h"
+#include "matsys_controls/vtfpreviewpanel.h"
+#include "vgui_controls/Splitter.h"
+
+// NOTE: This has to be the last file included!
+#include "tier0/memdbgon.h"
 
 
 using namespace vgui;

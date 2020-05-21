@@ -121,7 +121,7 @@ void CManifestMove::OnEnChangeManifestFilename()
 //-----------------------------------------------------------------------------
 // Purpose: this is the default constructor for the manifest list box
 //-----------------------------------------------------------------------------
-CManifestListBox::CManifestListBox( void ) : 
+CManifestListBox::CManifestListBox( void ) :
 	CListBox()
 {
 	m_Icons.Create( IDB_MANIFEST_ICONS, 16, 1, RGB( 0, 255, 255 ) );
@@ -176,7 +176,7 @@ void CManifestListBox::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	{
 		dc.FillSolidRect( &ItemRect, ::GetSysColor( COLOR_INACTIVECAPTION ) );
 	}
-		
+
 	dc.MoveTo( r.left, r.top );
 	dc.LineTo( r.right, r.top );
 	dc.MoveTo( r.left, r.bottom );
@@ -221,11 +221,6 @@ void CManifestListBox::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 		{
 			m_Icons.Draw( &dc, 2, p, ILD_NORMAL );
 		}
-		else if ( pManifestMap->m_bCheckedOut )
-		{
-			m_Icons.Draw( &dc, 3, p, ILD_NORMAL );
-		}
-
 
 		VisibleRect.left = r.left + 1 + 17;
 		VisibleRect.top = r.top + 2 + 17;
@@ -245,7 +240,7 @@ void CManifestListBox::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 
 		dc.SetTextColor( GetSysColor( iForeIndex ) );
 		dc.SetBkColor( GetSysColor( iBackIndex ) );
-	
+
 		dc.SetBkMode( TRANSPARENT );
 		VisibleRect.left = r.left + 36;
 		VisibleRect.top = r.top + 1;
@@ -337,7 +332,7 @@ void CManifestListBox::OnLButtonDblClk(UINT nFlags, CPoint point)
 
 	m_pTrackerManifestMap = NULL;
 
-//	int index = 
+//	int index =
 		ItemFromPoint( point, bOutside );
 	if ( bOutside == false )
 	{
@@ -408,39 +403,16 @@ void CManifestListBox::OnRButtonUp(UINT nFlags, CPoint point)
 
 	if ( pManifest->GetNumMaps() > 1 )
 	{
-		pWhichMenu->EnableMenuItem( ID_MANIFEST_REMOVE, nEnable );	
+		pWhichMenu->EnableMenuItem( ID_MANIFEST_REMOVE, nEnable );
 	}
 	else
 	{
 		pWhichMenu->EnableMenuItem( ID_MANIFEST_REMOVE, nDisable );
 	}
 
-	pWhichMenu->EnableMenuItem( ID_VERSIONCONTROL_CHECKOUT, nDisable );
-	pWhichMenu->EnableMenuItem( ID_VERSIONCONTROL_CHECKIN, nDisable );
-	pWhichMenu->EnableMenuItem( ID_VERSIONCONTROL_ADD, nDisable );
-
-	if ( p4 && m_pTrackerManifestMap )
-	{
-		if ( m_pTrackerManifestMap->m_bIsVersionControlled )
-		{
-			if ( m_pTrackerManifestMap->m_bCheckedOut )
-			{
-				pWhichMenu->EnableMenuItem( ID_VERSIONCONTROL_CHECKIN, nEnable );
-			}
-			else
-			{
-				pWhichMenu->EnableMenuItem( ID_VERSIONCONTROL_CHECKOUT, nEnable );
-			}
-		}
-		else
-		{
-			pWhichMenu->EnableMenuItem( ID_VERSIONCONTROL_ADD, nEnable );
-		}
-	}
-
 	Invalidate();
 	pWhichMenu->TrackPopupMenu( TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_LEFTALIGN, ptScreen.x, ptScreen.y, this );
-	
+
 	CListBox::OnRButtonUp(nFlags, point);
 }
 
@@ -494,99 +466,6 @@ void CManifestListBox::OnMoveSelectionToNewSubMap()
 		if ( pNewManifestMap )
 		{
 		}
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : 
-// Output : 
-//-----------------------------------------------------------------------------
-void CManifestListBox::OnVersionControlCheckOut()
-{
-	CMapDoc		*activeDoc = CMapDoc::GetActiveMapDoc();
-	if ( !activeDoc || !activeDoc->GetManifest() )
-	{
-		return;
-	}
-	CManifest	*pManifest = activeDoc->GetManifest();
-
-	if ( !p4->OpenFileForEdit( m_pTrackerManifestMap->m_AbsoluteMapFileName ) )
-	{
-		char temp[ 2048 ];
-		
-		sprintf( temp, "Could not check out map: %s", p4->GetLastError() );
-		AfxMessageBox( temp, MB_ICONHAND | MB_OK );
-	}
-	else
-	{
-		pManifest->CheckFileStatus();
-		Invalidate();
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : 
-// Output : 
-//-----------------------------------------------------------------------------
-void CManifestListBox::OnVersionControlCheckIn()
-{
-	CMapDoc	*activeDoc = CMapDoc::GetActiveMapDoc();
-	if ( !activeDoc || !activeDoc->GetManifest() )
-	{
-		return;
-	}
-
-	CManifest		*pManifest = activeDoc->GetManifest();
-
-	pManifest->m_bDefaultCheckin = false;
-	for( int i = 0; i < pManifest->GetNumMaps(); i++ )
-	{
-		CManifestMap	*pManifestMap = pManifest->GetMap( i );
-		pManifestMap->m_bDefaultCheckin = false;
-	}
-	if ( m_pTrackerManifestMap )
-	{
-		m_pTrackerManifestMap->m_bDefaultCheckin = true;
-	}
-
-	CManifestCheckin	ManifestCheckin;
-	if ( ManifestCheckin.DoModal() == IDOK )
-	{
-		pManifest->CheckFileStatus();
-		Invalidate();
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : 
-// Output : 
-//-----------------------------------------------------------------------------
-void CManifestListBox::OnVersionControlAdd()
-{
-	CMapDoc		*activeDoc = CMapDoc::GetActiveMapDoc();
-	if ( !activeDoc || !activeDoc->GetManifest() )
-	{
-		return;
-	}
-	CManifest	*pManifest = activeDoc->GetManifest();
-
-	if ( !p4->OpenFileForAdd( m_pTrackerManifestMap->m_AbsoluteMapFileName ) )
-	{
-		char temp[ 2048 ];
-
-		sprintf( temp, "Could not add map: %s", p4->GetLastError() );
-		AfxMessageBox( temp, MB_ICONHAND | MB_OK );
-	}
-	else
-	{
-		pManifest->CheckFileStatus();
-		Invalidate();
 	}
 }
 
@@ -705,9 +584,6 @@ BEGIN_MESSAGE_MAP(CManifestListBox, CListBox)
 	ON_WM_LBUTTONDBLCLK()
 	ON_COMMAND(ID_MOVESELECTIONTO_SUBMAP, OnMoveSelectionToSubMap)
 	ON_COMMAND(ID_MOVESELECTIONTO_NEWSUBMAP, OnMoveSelectionToNewSubMap)
-	ON_COMMAND(ID_VERSIONCONTROL_CHECKOUT, OnVersionControlCheckOut)
-	ON_COMMAND(ID_VERSIONCONTROL_CHECKIN, OnVersionControlCheckIn)
-	ON_COMMAND(ID_VERSIONCONTROL_ADD, OnVersionControlAdd)
 	ON_COMMAND(ID_INSERT_EMPTYSUBMAP, OnInsertEmptySubMap)
 	ON_COMMAND(ID_INSERT_EXISTINGSUBMAP, OnInsertExistingSubMap)
 	ON_COMMAND(ID_MANIFEST_PROPERTIES, OnManifestProperties)
@@ -717,7 +593,7 @@ END_MESSAGE_MAP()
 
 //-----------------------------------------------------------------------------
 // Purpose: this function will create the hammber bar window
-// Input  : pParentWnd - 
+// Input  : pParentWnd -
 // Output : Returns TRUE on success, FALSE on failure.
 //-----------------------------------------------------------------------------
 BOOL CManifestFilter::Create(CWnd *pParentWnd)
@@ -751,7 +627,7 @@ CManifestFilter::~CManifestFilter()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: this function will update the manifest list ( for when sub maps are added / removed 
+// Purpose: this function will update the manifest list ( for when sub maps are added / removed
 //			or the primary map is changed.
 //-----------------------------------------------------------------------------
 void CManifestFilter::UpdateManifestList( void )
@@ -766,7 +642,7 @@ void CManifestFilter::UpdateManifestList( void )
 		for( int i = 0; i < pManifest->GetNumMaps(); i++ )
 		{
 			CManifestMap	*pManifestMap = pManifest->GetMap( i );
-			
+
 			int index = m_ManifestList.AddString( "Manifest" );
 			m_ManifestList.SetItemData( index, i );
 
@@ -856,7 +732,7 @@ void CManifestFilter::OnLbnDblClkManifestList()
 //-----------------------------------------------------------------------------
 HBRUSH CManifestFilter::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
-	switch (nCtlColor) 
+	switch (nCtlColor)
 	{
 		  case CTLCOLOR_LISTBOX:
 			  pDC->SetTextColor( ::GetSysColor( COLOR_WINDOWTEXT ) );
@@ -881,10 +757,10 @@ void CManifestFilter::OnDestroy()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : nType - 
-//			cx - 
-//			cy - 
+// Purpose:
+// Input  : nType -
+//			cx -
+//			cy -
 //-----------------------------------------------------------------------------
 void CManifestFilter::OnSize(UINT nType, int cx, int cy)
 {
@@ -971,9 +847,9 @@ void CManifestMapDlg::OnOK()
 IMPLEMENT_DYNAMIC(CManifestCheckin, CDialog)
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : 
-// Output : 
+// Purpose:
+// Input  :
+// Output :
 //-----------------------------------------------------------------------------
 CManifestCheckin::CManifestCheckin(CWnd* pParent /*=NULL*/)
 	: CDialog(CManifestCheckin::IDD, pParent)
@@ -983,9 +859,9 @@ CManifestCheckin::CManifestCheckin(CWnd* pParent /*=NULL*/)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : 
-// Output : 
+// Purpose:
+// Input  :
+// Output :
 //-----------------------------------------------------------------------------
 CManifestCheckin::~CManifestCheckin()
 {
@@ -993,9 +869,9 @@ CManifestCheckin::~CManifestCheckin()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : 
-// Output : 
+// Purpose:
+// Input  :
+// Output :
 //-----------------------------------------------------------------------------
 void CManifestCheckin::DoDataExchange(CDataExchange* pDX)
 {
@@ -1011,9 +887,9 @@ END_MESSAGE_MAP()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : 
-// Output : 
+// Purpose:
+// Input  :
+// Output :
 //-----------------------------------------------------------------------------
 BOOL CManifestCheckin::OnInitDialog()
 {
@@ -1028,86 +904,14 @@ BOOL CManifestCheckin::OnInitDialog()
 	m_CheckinListCtrl.InsertColumn( 2, "Name", LVCFMT_LEFT, 100, -1 );
 	m_CheckinListCtrl.InsertColumn( 3, "Folder", LVCFMT_LEFT, 350, -1 );
 
-	if ( p4 == NULL ) 
-	{
-		return TRUE;
-	}
-
-	int nCount = 0;
-
-	CMapDoc	*activeDoc = CMapDoc::GetActiveMapDoc();
-	if ( activeDoc && activeDoc->GetManifest() )
-	{
-		CManifest *pManifest = activeDoc->GetManifest();
-
-		if ( pManifest->m_bCheckedOut )
-		{
-			if ( p4->GetFileInfo( pManifest->GetPathName(), &FileInfo ) == true )
-			{
-				int nIndex = m_CheckinListCtrl.InsertItem( nCount, "" );
-				nCount++;
-				m_CheckinListCtrl.SetItemData( nIndex, ( DWORD_PTR )NULL );
-				switch( FileInfo.m_eOpenState )
-				{	
-					case P4FILE_OPENED_FOR_ADD:
-						m_CheckinListCtrl.SetItemText( nIndex, 1, "Add" );
-						break;
-
-					case P4FILE_OPENED_FOR_EDIT:
-						m_CheckinListCtrl.SetItemText( nIndex, 1, "Edit" );
-						break;
-				}
-				m_CheckinListCtrl.SetItemText( nIndex, 2, p4->String( FileInfo.m_sName ) );
-				m_CheckinListCtrl.SetItemText( nIndex, 3, p4->String( FileInfo.m_sPath ) );
-
-				if ( pManifest->m_bDefaultCheckin )
-				{
-					ListView_SetItemState( m_CheckinListCtrl.m_hWnd, nIndex, INDEXTOSTATEIMAGEMASK( LVIS_SELECTED ), LVIS_STATEIMAGEMASK );
-				}
-			}
-		}
-
-		for( int i = 0; i < pManifest->GetNumMaps(); i++ )
-		{
-			CManifestMap	*pManifestMap = pManifest->GetMap( i );
-
-			if ( pManifestMap->m_bCheckedOut )
-			{
-				if ( p4->GetFileInfo( pManifestMap->m_AbsoluteMapFileName, &FileInfo ) == true )
-				{
-					int nIndex = m_CheckinListCtrl.InsertItem( nCount, "" );
-					nCount++;
-					m_CheckinListCtrl.SetItemData( nIndex, ( DWORD_PTR )pManifestMap );
-					switch( FileInfo.m_eOpenState )
-					{	
-						case P4FILE_OPENED_FOR_ADD:
-							m_CheckinListCtrl.SetItemText( nIndex, 1, "Add" );
-							break;
-
-						case P4FILE_OPENED_FOR_EDIT:
-							m_CheckinListCtrl.SetItemText( nIndex, 1, "Edit" );
-							break;
-					}
-					m_CheckinListCtrl.SetItemText( nIndex, 2, p4->String( FileInfo.m_sName ) );
-					m_CheckinListCtrl.SetItemText( nIndex, 3, p4->String( FileInfo.m_sPath ) );
-
-					if ( pManifestMap->m_bDefaultCheckin )
-					{
-						ListView_SetItemState( m_CheckinListCtrl.m_hWnd, nIndex, INDEXTOSTATEIMAGEMASK( LVIS_SELECTED ), LVIS_STATEIMAGEMASK );
-					}
-				}
-			}
-		}
-	}
-
 	return TRUE;
 }
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : 
-// Output : 
+// Purpose:
+// Input  :
+// Output :
 //-----------------------------------------------------------------------------
 void CManifestCheckin::OnBnClickedOk()
 {

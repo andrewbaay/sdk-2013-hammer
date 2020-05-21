@@ -87,5 +87,4 @@ private:
 	int m_iViewableHeight;
 };
 
-#endif // VMTPANEL_H
-	    
+#endif // VMTPANEL_H	    

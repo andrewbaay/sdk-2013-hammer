@@ -30,6 +30,7 @@
 #include "MapDoc.h"
 #include "MapEntity.h"
 #include "MapWorld.h"
+#include "MapInstance.h"
 #include "ObjectProperties.h"
 #include "OP_Output.h"
 #include "ToolManager.h"
@@ -37,6 +38,8 @@
 #include "utlrbtree.h"
 #include "options.h"
 #include ".\op_output.h"
+#include "hammer.h"
+#include "custommessages.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -49,6 +52,7 @@
 #define ICON_CONN_GOOD		1
 #define ICON_CONN_BAD_GREY	2
 #define ICON_CONN_GOOD_GREY	3
+#define ICON_CONN_GOOD_EXTERNAL		4
 
 
 const char *PARAM_STRING_NONE = "<none>";
@@ -327,8 +331,16 @@ void COP_Output::UpdateItemValidity(int nItem)
 	}
 	else
 	{
-		nIcon = (bShared ? ICON_CONN_BAD : ICON_CONN_BAD_GREY);
-		pOutputConn->m_bIsValid = false;
+		if ( ValidateExternalConnections( pOutputConn, bShowHiddenTargets ) == true )
+		{
+			nIcon = ICON_CONN_GOOD_EXTERNAL;
+			pOutputConn->m_bIsValid = true;
+		}
+		else
+		{
+			nIcon = (bShared ? ICON_CONN_BAD : ICON_CONN_BAD_GREY);
+			pOutputConn->m_bIsValid = false;
+		}
 	}
 	m_ListCtrl.SetItem(nItem,0,LVIF_IMAGE, 0, nIcon, 0, 0, 0 );
 }
@@ -392,6 +404,49 @@ bool COP_Output::ValidateConnections(COutputConnection *pOutputConn, bool bVisib
 			{
 				return false;
 			}
+		}
+	}
+	return true;
+}
+
+
+//------------------------------------------------------------------------------
+// Purpose: Return true if all connections entries are valid for the given
+//			 output connection.  Return false otherwise
+//------------------------------------------------------------------------------
+bool COP_Output::ValidateExternalConnections(COutputConnection *pOutputConn, bool bVisibilityCheck)
+{
+	int nCount = pOutputConn->m_pConnList->Count();
+	for (int i = 0; i < nCount; i++)
+	{
+		CEntityConnection *pConnection = pOutputConn->m_pConnList->Element(i);
+		if (pConnection != NULL)
+		{
+			// Check validity of output for the list of entities
+			if (!CEntityConnection::ValidateOutput(pOutputConn->m_pEntityList,pConnection->GetOutputName()))
+			{
+				return false;
+			}
+
+			POSITION	pos = APP()->pMapDocTemplate->GetFirstDocPosition();
+			while( pos != NULL )
+			{
+				CDocument *pDoc = APP()->pMapDocTemplate->GetNextDoc( pos );
+				CMapDoc *pMapDoc = dynamic_cast< CMapDoc * >( pDoc );
+
+				if ( pMapDoc )
+				{
+					if ( CEntityConnection::ValidateTarget( pMapDoc->GetMapWorld()->EntityList_GetList(), bVisibilityCheck, pConnection->GetTargetName() ) == true )
+					{
+						if ( CEntityConnection::ValidateInput( pConnection->GetTargetName(), pConnection->GetInputName(), bVisibilityCheck, pMapDoc ) == true )
+						{
+							return true;
+						}
+					}
+				}
+			}
+
+			return false;
 		}
 	}
 	return true;
@@ -875,11 +930,19 @@ void COP_Output::OnDelete(void)
 									FOR_EACH_OBJ( *pTargetList, pos2 )
 									{
 										CMapEntity *pEntity = pTargetList->Element( pos2 );
-										pEntity->Upstream_Remove( pConnection );
+
+										// If you hit this assert it means that an entity was deleted but not removed
+										// from this entity's list of targets.
+										ASSERT( pEntity != NULL );
+
+										if ( pEntity )
+										{
+											pEntity->Upstream_Remove( pConnection );
+										}
 									}
 								}
 							}
-							
+
 							delete pConnection;
 						}
 
@@ -888,7 +951,7 @@ void COP_Output::OnDelete(void)
 					pOutputConn->m_pEntityList->RemoveAll();
 					delete pOutputConn->m_pEntityList;
 					delete pOutputConn;
-		
+
 					// Keep track of last item so can set selection focus
 					nLastItem = nItem;
 				}
@@ -916,11 +979,13 @@ void COP_Output::OnDelete(void)
 void COP_Output::OnMark(void)
 {
 	int			nCount	= m_ListCtrl.GetItemCount();
-	CMapDoc*	pDoc	= CMapDoc::GetActiveMapDoc();
+	CMapDoc				*pActiveDoc = CMapDoc::GetActiveMapDoc();
+	CMapDoc				*pExternalDoc = NULL;
+	bool				bMultipleDocs = false;
+	bool				bFoundInActive = false;
+	CEntityConnection	*pConnection = NULL;
 
-	CEntityConnection *pConnection = NULL;
-
-	if (nCount > 0 && pDoc)
+	if ( nCount > 0 )
 	{
 		CMapObjectList Select;
 
@@ -931,29 +996,67 @@ void COP_Output::OnMark(void)
 				COutputConnection *pOutputConn = (COutputConnection *)m_ListCtrl.GetItemData(nItem);
 				pConnection = pOutputConn->m_pConnList->Element(0);
 
-				CMapDoc *pDocActive = CMapDoc::GetActiveMapDoc();
-				if ( pDocActive != NULL)
+				POSITION	pos = APP()->pMapDocTemplate->GetFirstDocPosition();
+				while( pos != NULL )
 				{
-					CMapEntityList Found;
-					pDocActive->FindEntitiesByName(Found, m_ListCtrl.GetItemText(nItem, TARGET_NAME_COLUMN), false);
+					CDocument *pDoc = APP()->pMapDocTemplate->GetNextDoc( pos );
+					CMapDoc *pMapDoc = dynamic_cast< CMapDoc * >( pDoc );
 
-					FOR_EACH_OBJ( Found, pos )
+					if ( pMapDoc )
 					{
-						CMapEntity *pEntity = Found.Element(pos);
-						Select.AddToTail(pEntity);
+						CMapEntityList Found;
+						pMapDoc->FindEntitiesByName(Found, m_ListCtrl.GetItemText(nItem, TARGET_NAME_COLUMN), false);
+
+						FOR_EACH_OBJ( Found, pos )
+						{
+							CMapEntity *pEntity = Found.Element(pos);
+							Select.AddToTail(pEntity);
+
+							if ( pExternalDoc && pExternalDoc != pMapDoc )
+							{
+								bMultipleDocs = true;
+							}
+							if ( pMapDoc == pActiveDoc )
+							{
+								bFoundInActive = true;
+							}
+							pExternalDoc = pMapDoc;
+						}
 					}
 				}
 			}
 		}
-		if (Select.Count()>0)
+
+		if ( bFoundInActive == true )
 		{
-			pDoc->SelectObjectList(&Select);
+			pExternalDoc = pActiveDoc;
+			bMultipleDocs = false;
+		}
+
+		if ( bMultipleDocs == true )
+		{
+			MessageBox( "Entities with same target name exist across multiple documents.", "No Selection Done!", MB_ICONINFORMATION | MB_OK );
+			return;
+		}
+		else if ( Select.Count() > 0 )
+		{
+			pExternalDoc->SelectObjectList( &Select );
 
 			// (a bit squirly way of doing this)
 			if ( Select.Count()==1 )
+			{
 				GetMainWnd()->pObjectProperties->SetPageToInput(pConnection);
+			}
 
-			pDoc->Center2DViewsOnSelection();
+			if ( pExternalDoc != pActiveDoc )
+			{
+				CMapDoc::SetActiveMapDoc( pExternalDoc );
+				CMapDoc::ActivateMapDoc( pExternalDoc );
+				GetMainWnd()->GlobalNotify( WM_MAPDOC_CHANGED );
+				pExternalDoc->UpdateAllViews( MAPVIEW_UPDATE_SELECTION | MAPVIEW_UPDATE_OBJECTS | MAPVIEW_OPTIONS_CHANGED | MAPVIEW_RENDER_NOW );
+			}
+
+			pExternalDoc->Center2DViewsOnSelection();
 		}
 		else
 		{
@@ -970,6 +1073,8 @@ void COP_Output::OnMark(void)
 BOOL COP_Output::OnInitDialog(void)
 {
 	CObjectPage::OnInitDialog();
+
+	m_bIsInstanceIOProxy = false;
 
 	m_ComboOutput.SubclassDlgItem(IDC_EDIT_CONN_OUTPUT, this);
 	m_ComboInput.SubclassDlgItem(IDC_EDIT_CONN_INPUT, this);
@@ -1011,8 +1116,9 @@ BOOL COP_Output::OnInitDialog(void)
 		m_pImageList->Add(pApp->LoadIcon( IDI_OUTPUT ));
 		m_pImageList->Add(pApp->LoadIcon( IDI_OUTPUTBAD_GREY ));
 		m_pImageList->Add(pApp->LoadIcon( IDI_OUTPUT_GREY ));
-
+		m_pImageList->Add(pApp->LoadIcon( IDI_OUTPUT_EXTERNAL ) );
 	}
+
 	m_ListCtrl.SetImageList(m_pImageList, LVSIL_SMALL );
 
 	// Apply the eyedropper image to the picker buttons.
@@ -1912,17 +2018,65 @@ void COP_Output::SetConnection(CEntityConnectionList *pConnectionList)
 //-----------------------------------------------------------------------------
 void COP_Output::AddEntityOutputs(CMapEntity *pEntity)
 {
-	GDclass *pClass = pEntity->GetClass();
-	if (pClass != NULL)
+	m_bIsInstanceIOProxy = false;
+
+	if ( pEntity && stricmp( pEntity->GetClassName(), "func_instance" ) == 0 )
 	{
-		int nCount = pClass->GetOutputCount();
-		for (int i = 0; i < nCount; i++)
+		CMapInstance	*pMapInstance = pEntity->GetChildOfType<CMapInstance>();
+
+		if ( pMapInstance == NULL || pMapInstance->GetInstancedMap() == NULL )
 		{
-			CClassOutput *pOutput = pClass->GetOutput(i);
-			int nIndex = m_ComboOutput.AddString(pOutput->GetName());
-			if (nIndex >= 0)
+			return;
+		}
+
+		CMapEntityList entityList;
+
+		pMapInstance->GetInstancedMap()->FindEntitiesByClassName( entityList, "func_instance_io_proxy", false );
+		if ( entityList.Count() != 1 )
+		{
+			return;
+		}
+
+		CMapEntity *pInstanceParmsEntity = entityList.Element( 0 );
+		const char *pszTargetName = pInstanceParmsEntity->GetKeyValue( "targetname" );
+
+		m_bIsInstanceIOProxy = true;
+
+		const CMapEntityList *pEntityList = pMapInstance->GetInstancedMap()->GetMapWorld()->EntityList_GetList();
+		FOR_EACH_OBJ( *pEntityList, pos2 )
+		{
+			CMapEntity *pTestEntity = pEntityList->Element( pos2 );
+			if (pTestEntity != NULL)
 			{
-				m_ComboOutput.SetItemDataPtr(nIndex, pOutput);
+				int nConnectionsCount = pTestEntity->Connections_GetCount();
+				for (int nConnection = 0; nConnection < nConnectionsCount; nConnection++)
+				{
+					CEntityConnection *pConnection = pTestEntity->Connections_Get( nConnection );
+					if ( strcmpi( pConnection->GetTargetName(), pszTargetName ) == 0 )
+					{
+						char	temp[ 512 ];
+						sprintf( temp, "instance:%s;%s", pTestEntity->GetKeyValue( "targetname" ), pConnection->GetOutputName() );
+
+						m_ComboOutput.AddString( temp );
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		GDclass *pClass = pEntity->GetClass();
+		if (pClass != NULL)
+		{
+			int nCount = pClass->GetOutputCount();
+			for (int i = 0; i < nCount; i++)
+			{
+				CClassOutput *pOutput = pClass->GetOutput(i);
+				int nIndex = m_ComboOutput.AddString(pOutput->GetName());
+				if (nIndex >= 0)
+				{
+					m_ComboOutput.SetItemDataPtr(nIndex, pOutput);
+				}
 			}
 		}
 	}
@@ -1949,57 +2103,77 @@ void COP_Output::FillInputList(void)
 	CUtlRBTree<int,int> classCache;
 	SetDefLessFunc( classCache );
 
-	FOR_EACH_OBJ( *m_pMapEntityList, pos )
+	CMapEntity *pInstanceParmsEntity = GetTargetInstanceIOProxy();
+	if ( pInstanceParmsEntity != NULL )
 	{
-		CMapEntity *pEntity = m_pMapEntityList->Element(pos);
-		Assert(pEntity != NULL);
+		m_bIsInstanceIOProxy = true;
 
-		if (pEntity == NULL)
-			continue;
-
-		//
-		// Get the entity's class, which contains the list of inputs that this entity exposes.
-		//
-		GDclass *pClass = pEntity->GetClass();
-
-        if (pClass == NULL)
-			continue;
-
-		// check if class was already added
-		if ( classCache.Find( (int)pClass ) != -1 )
-			continue;
-
-		classCache.Insert( (int)pClass );
-
-		//
-		// Add this class' inputs to the list.
-		//
-		int nCount = pClass->GetInputCount();
-		for (int i = 0; i < nCount; i++)
+		int nConnectionsCount = pInstanceParmsEntity->Connections_GetCount();
+		for (int nConnection = 0; nConnection < nConnectionsCount; nConnection++)
 		{
-			CClassInput *pInput = pClass->GetInput(i);
-			bool bAddInput = true;
+			CEntityConnection *pConnection = pInstanceParmsEntity->Connections_Get( nConnection );
+
+			char	temp[ 512 ];
+			sprintf( temp, "instance:%s;%s", pConnection->GetTargetName(), pConnection->GetInputName() );
+			m_ComboInput.AddString( temp );
+		}
+	}
+	else
+	{
+		m_bIsInstanceIOProxy = false;
+
+		FOR_EACH_OBJ( *m_pMapEntityList, pos )
+		{
+			CMapEntity *pEntity = m_pMapEntityList->Element(pos);
+			Assert(pEntity != NULL);
+
+			if (pEntity == NULL)
+				continue;
 
 			//
-			// Don't add the input to the combo box if another input with the same name
-			// and type is already there.
+			// Get the entity's class, which contains the list of inputs that this entity exposes.
 			//
-			int nIndex = m_ComboInput.FindStringExact(-1, pInput->GetName());
-			if (nIndex != CB_ERR)
+			GDclass *pClass = pEntity->GetClass();
+
+	        if (pClass == NULL)
+				continue;
+
+			// check if class was already added
+			if ( classCache.Find( (int)pClass ) != -1 )
+				continue;
+
+			classCache.Insert( (int)pClass );
+
+			//
+			// Add this class' inputs to the list.
+			//
+			int nCount = pClass->GetInputCount();
+			for (int i = 0; i < nCount; i++)
 			{
-				CClassInput *pExistingInput = (CClassInput *)m_ComboInput.GetItemDataPtr(nIndex);
-				if (pExistingInput->GetType() == pInput->GetType())
+				CClassInput *pInput = pClass->GetInput(i);
+				bool bAddInput = true;
+
+				//
+				// Don't add the input to the combo box if another input with the same name
+				// and type is already there.
+				//
+				int nIndex = m_ComboInput.FindStringExact(-1, pInput->GetName());
+				if (nIndex != CB_ERR)
 				{
-					bAddInput = false;
+					CClassInput *pExistingInput = (CClassInput *)m_ComboInput.GetItemDataPtr(nIndex);
+					if (pExistingInput->GetType() == pInput->GetType())
+					{
+						bAddInput = false;
+					}
 				}
-			}
 
-			if (bAddInput)
-			{
-				nIndex = m_ComboInput.AddString(pInput->GetName());
-				if (nIndex >= 0)
+				if (bAddInput)
 				{
-					m_ComboInput.SetItemDataPtr(nIndex, pInput);
+					nIndex = m_ComboInput.AddString(pInput->GetName());
+					if (nIndex >= 0)
+					{
+						m_ComboInput.SetItemDataPtr(nIndex, pInput);
+					}
 				}
 			}
 		}
@@ -2132,6 +2306,38 @@ void COP_Output::FilterOutputList(void)
 	// all outputs common to the selected entities.
 }
 
+CMapEntity *COP_Output::GetTargetInstanceIOProxy()
+{
+	char szTarget[MAX_ENTITY_NAME_LEN];
+	CMapEntityList *pTargets = GetTarget(szTarget, sizeof(szTarget));
+
+	if (pTargets != NULL)
+	{
+		if ( pTargets->Count() == 1 )
+		{
+			CMapEntity *pEntity = pTargets->Element( 0 );
+
+			if ( stricmp( pEntity->GetClassName(), "func_instance" ) == 0 )
+			{
+				CMapInstance	*pMapInstance = pEntity->GetChildOfType<CMapInstance>();
+
+				if ( pMapInstance != NULL && pMapInstance->GetInstancedMap() != NULL )
+				{
+					CMapEntityList entityList;
+
+					pMapInstance->GetInstancedMap()->FindEntitiesByClassName( entityList, "func_instance_io_proxy", false );
+					if ( entityList.Count() == 1 )
+					{
+						return entityList.Element( 0 );
+					}
+				}
+			}
+		}
+	}
+
+	return NULL;
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Filters the list of inputs based on the current selected target.
@@ -2149,15 +2355,18 @@ void COP_Output::FilterInputList(void)
 		// 1) Are not compatible with the currently selected output, OR
 		// 2) Are not found in the currently selected targets list.
 		//
-		int nCount = m_ComboInput.GetCount();
-		if (nCount > 0)
+		if ( m_bIsInstanceIOProxy == false )
 		{
-			for (int i = nCount - 1; i >= 0; i--)
+			int nCount = m_ComboInput.GetCount();
+			if (nCount > 0)
 			{
-				CClassInput *pInput = (CClassInput *)m_ComboInput.GetItemDataPtr(i);
-				if (!MapEntityList_HasInput(pTargets, pInput->GetName(), pInput->GetType()))
+				for (int i = nCount - 1; i >= 0; i--)
 				{
-					m_ComboInput.DeleteString(i);
+					CClassInput *pInput = (CClassInput *)m_ComboInput.GetItemDataPtr(i);
+					if (!MapEntityList_HasInput(pTargets, pInput->GetName(), pInput->GetType()))
+					{
+						m_ComboInput.DeleteString(i);
+					}
 				}
 			}
 		}

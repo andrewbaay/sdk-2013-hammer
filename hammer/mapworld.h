@@ -65,6 +65,7 @@ public:
 
 class CMapWorld : public CMapClass, public CEditGameClass
 {
+		void Init();
 	public:
 
 		DECLARE_MAPCLASS(CMapWorld,CMapClass)
@@ -113,6 +114,8 @@ class CMapWorld : public CMapClass, public CEditGameClass
 		ChunkFileResult_t SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo, int saveFlags);
 
 		virtual void UpdateChild(CMapClass *pChild);
+
+		virtual void OnUndoRedo();
 
 		void UpdateAllDependencies( CMapClass *pObject );
 

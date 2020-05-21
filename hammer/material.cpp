@@ -1300,17 +1300,11 @@ static void InitMaterialSystemConfig(MaterialSystem_Config_t& pConfig)
 }
 
 
-static char const *s_rt_names[]={"_rt_albedo","_rt_normal","_rt_position","_rt_flags",
-							   "_rt_accbuf_0","_rt_accbuf_1"};
+static char const *s_rt_names[]={"_rt_albedo","_rt_normal","_rt_position",
+							   "_rt_accbuf" };
 ImageFormat s_rt_formats[]={ IMAGE_FORMAT_RGBA32323232F, IMAGE_FORMAT_RGBA32323232F,
-							 IMAGE_FORMAT_RGBA32323232F, IMAGE_FORMAT_RGBA32323232F,
-							 IMAGE_FORMAT_RGBA16161616F, IMAGE_FORMAT_RGBA16161616F };
-
-// ImageFormat s_rt_formats[]={
-// 	IMAGE_FORMAT_RGBA16161616F, IMAGE_FORMAT_RGBA16161616F,
-// 	IMAGE_FORMAT_RGBA16161616F, IMAGE_FORMAT_RGBA16161616F,
-// 	IMAGE_FORMAT_RGBA16161616F, IMAGE_FORMAT_RGBA16161616F,
-// 	IMAGE_FORMAT_RGBA16161616F, IMAGE_FORMAT_RGBA16161616F };
+							 IMAGE_FORMAT_RGBA32323232F, 
+							 IMAGE_FORMAT_RGBA16161616F };
 
 static CTextureReference sg_ExtraFP16Targets[NELEMS(s_rt_names)];
 

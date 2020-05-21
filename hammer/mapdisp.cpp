@@ -2132,7 +2132,7 @@ void CMapDisp::RenderSurface( CRender3D *pRender, bool bIsSelected, SelectionSta
 	for (int i = 0; i < numVerts; ++i )
 	{
 		meshBuilder.Position3fv( pVert[i].m_Vert.Base() );
-		meshBuilder.Color4ub( color[0], color[1], color[2], 255 - ( unsigned char )( pVert[i].m_Alpha ) );
+		meshBuilder.Color4ub( color[0], color[1], color[2], ( unsigned char )( pVert[i].m_Alpha ) );
 		meshBuilder.Normal3fv( pVert[i].m_Normal.Base() );
 		meshBuilder.TangentS3fv( pVert[i].m_TangentS.Base() );
 		meshBuilder.TangentT3fv( pVert[i].m_TangentT.Base() );

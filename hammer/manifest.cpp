@@ -51,9 +51,6 @@ CManifestMap::CManifestMap( void )
 	m_bPrimaryMap = false;
 	m_bProtected = false;
 	m_bReadOnly = false;
-	m_bIsVersionControlled = false;
-	m_bCheckedOut = false;
-	m_bDefaultCheckin = false;
 	m_bVisible = true;
 	m_Entity = NULL;
 	m_InternalID = 0;
@@ -115,9 +112,6 @@ CManifest::CManifest( void ) :
 	m_pSaveUndo = m_pUndo;
 	m_pSaveRedo = m_pRedo;
 	m_bReadOnly = true;
-	m_bIsVersionControlled = false;
-	m_bCheckedOut = false;
-	m_bDefaultCheckin = false;
 }
 
 
@@ -343,7 +337,7 @@ ChunkFileResult_t CManifest::LoadManifestMapsPrefsCallback( CChunkFile *pFile, C
 ChunkFileResult_t CManifest::LoadManifestCordoningPrefsCallback( CChunkFile *pFile, CManifest *pDoc )
 {
 	CChunkHandlerMap Handlers;
-	Handlers.AddHandler( "cordons", CMapDoc::LoadCordonCallback, pDoc );
+	Handlers.AddHandler( "cordons", CMapDoc::LoadCordonsCallback, pDoc );
 	pFile->PushHandlers(&Handlers);
 
 	ChunkFileResult_t eResult = ChunkFile_Ok;
@@ -365,9 +359,8 @@ bool CManifest::LoadVMFManifest( const char *pszFileName )
 {
 	FILE *fp = fopen( pszFileName, "rb" );
 	if ( !fp )
-	{
 		return false;
-	}
+	fclose( fp );
 
 	V_StripExtension( pszFileName, m_ManifestDir, sizeof( m_ManifestDir ) );
 	strcat( m_ManifestDir, "\\" );
@@ -418,7 +411,7 @@ bool CManifest::LoadVMFManifest( const char *pszFileName )
 	}
 
 	SetActiveMapDoc( this );
-	Postload( pszFileName );
+	PostloadDocument( pszFileName );
 	m_ManifestWorld->PostloadWorld();
 
 	bool bSetIDs = false;
@@ -466,6 +459,8 @@ bool CManifest::LoadVMFManifest( const char *pszFileName )
 
 	GetMainWnd()->m_ManifestFilterControl.UpdateManifestList();
 
+	CheckFileStatus();
+
 	return true;
 }
 
@@ -494,9 +489,8 @@ bool CManifest::LoadVMFManifestUserPrefs( const char *pszFileName )
 
 	FILE *fp = fopen( FileName, "rb" );
 	if ( !fp )
-	{
 		return false;
-	}
+	fclose( fp );
 
 	CChunkFile File;
 	ChunkFileResult_t eResult = File.Open( FileName, ChunkFile_Read );
@@ -778,14 +772,14 @@ bool CManifest::SaveVMFManifestUserPrefs( const char *pszFileName )
 		}
 
 		eResult = File.BeginChunk( "cordoning" );
-		eResult = CordonSaveVMF( &File, NULL );
+		eResult = Cordon_SaveVMF( &File, NULL );
 
 		if ( m_bIsCordoning )
 		{
 			CSaveInfo	SaveInfo;
 
 			SaveInfo.SetVisiblesOnly( false );
-			CMapWorld *pCordonWorld = CordonCreateWorld();
+			CMapWorld *pCordonWorld = Cordon_CreateWorld();
 			eResult = pCordonWorld->SaveSolids( &File, &SaveInfo, 0 );
 		}
 
@@ -1341,84 +1335,16 @@ bool CManifest::RemoveSubMap( CManifestMap *pManifestMap )
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-bool CManifest::CheckOut( )
-{
-	if ( !p4 )
-	{
-		return false;
-	}
-
-	if ( !p4->OpenFileForEdit( GetPathName() ) )
-	{
-		return false;
-	}
-
-	CheckFileStatus();
-
-	return true;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-bool CManifest::AddToVersionControl( )
-{
-	if ( !p4 )
-	{
-		return false;
-	}
-
-	if ( !p4->OpenFileForAdd( GetPathName() ) )
-	{
-		return false;
-	}
-
-	CheckFileStatus();
-
-	return true;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
 void CManifest::CheckFileStatus( void )
 {
 	P4File_t	FileInfo;
 
 	m_bReadOnly = !g_pFullFileSystem->IsFileWritable( GetPathName() );
-	m_bCheckedOut = false;
-	m_bIsVersionControlled = false;
-	if ( p4 != NULL && p4->GetFileInfo( GetPathName(), &FileInfo ) == true )
-	{
-		m_bIsVersionControlled = true;
-		if ( FileInfo.m_eOpenState == P4FILE_OPENED_FOR_ADD || FileInfo.m_eOpenState == P4FILE_OPENED_FOR_EDIT )
-		{
-			m_bCheckedOut = true;
-		}
-	}
 
 	for( int i = 0; i < GetNumMaps(); i++ )
 	{
 		CManifestMap	*pManifestMap = GetMap( i );
-
 		pManifestMap->m_bReadOnly = !g_pFullFileSystem->IsFileWritable( pManifestMap->m_AbsoluteMapFileName );
-		pManifestMap->m_bCheckedOut = false;
-		pManifestMap->m_bIsVersionControlled = false;
-
-		if ( p4 != NULL && p4->GetFileInfo( pManifestMap->m_AbsoluteMapFileName, &FileInfo ) == true )
-		{
-			pManifestMap->m_bIsVersionControlled = true;
-			if ( FileInfo.m_eOpenState == P4FILE_OPENED_FOR_ADD || FileInfo.m_eOpenState == P4FILE_OPENED_FOR_EDIT )
-			{
-				pManifestMap->m_bCheckedOut = true;
-			}
-		}
 	}
 }
 

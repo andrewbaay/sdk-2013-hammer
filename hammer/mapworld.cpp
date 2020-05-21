@@ -27,6 +27,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
 
+#undef GetObject
 
 #pragma warning(disable:4244)
 
@@ -133,18 +134,9 @@ bool BoxesIntersect(Vector const &mins1, Vector const &maxs1, Vector const &mins
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Constructor. Initializes data members.
+// Called from constructors to initialize data members.
 //-----------------------------------------------------------------------------
-CMapWorld::CMapWorld( void )
-{
-
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Constructor. Initializes data members.
-//-----------------------------------------------------------------------------
-CMapWorld::CMapWorld( CMapDoc *pOwningDocument )
+void CMapWorld::Init()
 {
 	//
 	// Make sure subsequent UpdateBounds() will be effective.
@@ -160,7 +152,22 @@ CMapWorld::CMapWorld( CMapDoc *pOwningDocument )
 
 	// create the world displacement manager
 	m_pWorldDispMgr = CreateWorldEditDispMgr();
+}
 
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CMapWorld::CMapWorld( void )
+{
+	Init();
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CMapWorld::CMapWorld( CMapDoc *pOwningDocument )
+{
+	Init();
 	m_pOwningDocument = pOwningDocument;
 }
 
@@ -181,6 +188,19 @@ CMapWorld::~CMapWorld(void)
 	// destroy the world displacement manager
 	DestroyWorldEditDispMgr( &m_pWorldDispMgr );
 }
+
+
+//-----------------------------------------------------------------------------
+// Called by the undo system when this object is restored by undo or redo.
+//-----------------------------------------------------------------------------
+void CMapWorld::OnUndoRedo()
+{
+	BaseClass::OnUndoRedo();
+
+	// The cull tree doesn't get kept by the undo system so we need to rebuild it.
+	CullTree_Build();
+}
+
 
 
 //-----------------------------------------------------------------------------
@@ -483,7 +503,7 @@ void CMapWorld::RemoveChild(CMapClass *pChild, bool bUpdateBounds)
 //			are supplied, the localized matrix will be built.
 // Input  : key - the key field to lookup
 //			value - the value to find
-// Output : returns the entity found 
+// Output : returns the entity found
 //			bIsInInstance - optional parameter to indicate if the found entity is inside of an instance
 //			InstanceMatrix - optional parameter to set the localized matrix of the instance stack
 //-----------------------------------------------------------------------------
@@ -599,11 +619,9 @@ void CMapWorld::GetUsedTextures(CUsedTextureList &List)
 //-----------------------------------------------------------------------------
 void CMapWorld::CullTree_FreeNode(CCullTreeNode *pNode)
 {
-	if ( pNode == NULL )
-	{
-		Assert(pNode != NULL);
+	Assert(pNode != NULL);
+	if ( !pNode )
 		return;
-	}
 
 	int nChildCount = pNode->GetChildCount();
 	if (nChildCount != 0)
@@ -1036,9 +1054,9 @@ void CMapWorld::PresaveWorld(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : 
-// Output : 
+// Purpose:
+// Input  :
+// Output :
 //-----------------------------------------------------------------------------
 ChunkFileResult_t CMapWorld::SaveSolids(CChunkFile *pFile, CSaveInfo *pSaveInfo, int saveFlags)
 {
@@ -1048,6 +1066,37 @@ ChunkFileResult_t CMapWorld::SaveSolids(CChunkFile *pFile, CSaveInfo *pSaveInfo,
 	EnumChildrenRecurseGroupsOnly((ENUMMAPCHILDRENPROC)BuildSaveListsCallback, (DWORD)&SaveLists);
 
 	return SaveObjectListVMF(pFile, pSaveInfo, &SaveLists.Solids, saveFlags);
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+int SortFuncCompareSaveOrder( const CUtlReference<CMapClass> *pClass1, const CUtlReference<CMapClass> *pClass2 )
+{
+	const CMapClass *pObject1 = pClass1->GetObject();
+	const CMapClass *pObject2 = pClass2->GetObject();
+
+	// For all objects that were loaded from the VMF, preserve the load order on save.
+	int nLoadID1 = pObject1->GetLoadID();
+	int nLoadID2 = pObject2->GetLoadID();
+
+	if ( nLoadID1 > nLoadID2 )
+		return 1;
+
+	if ( nLoadID1 < nLoadID2 )
+		return -1;
+
+	// Load IDs are equal. Sort by unique object ID.
+	int nID1 = pObject1->GetID();
+	int nID2 = pObject2->GetID();
+
+	if ( nID1 > nID2 )
+		return 1;
+
+	if ( nID1 < nID2 )
+		return -1;
+
+	return 0;
 }
 
 
@@ -1066,6 +1115,14 @@ ChunkFileResult_t CMapWorld::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo, in
 	//
 	SaveLists_t SaveLists;
 	EnumChildrenRecurseGroupsOnly(BuildSaveListsCallback, &SaveLists);
+
+	// IMPORTANT:
+	// Because UtlReferenceVectors don't preserve order, sort the lists by object ID so that the save
+	// order is the same every time. This makes it possible to get meaningful diffs between versions!
+	//
+	SaveLists.Entities.InPlaceQuickSort( SortFuncCompareSaveOrder );
+	SaveLists.Groups.InPlaceQuickSort( SortFuncCompareSaveOrder );
+	SaveLists.Solids.InPlaceQuickSort( SortFuncCompareSaveOrder );
 
 	//
 	// Begin the world chunk.
@@ -1706,7 +1763,7 @@ void CMapWorld::PostloadVisGroups()
 			int foo = 0;
 		}
 #endif
-		int nConnections = pEntity->Connections_GetCount();
+		int nConnections = pEntity ? pEntity->Connections_GetCount() : 0;
 		for ( int pos2 = 0; pos2 < nConnections; pos2++ )
 		{
 			CEntityConnection	*pEntityConnection = pEntity->Connections_Get(pos2);
@@ -1739,6 +1796,13 @@ CMapEntity *CMapWorld::FindEntityByName( const char *pszName, bool bVisiblesOnly
 	{
 		CMapEntity *pEntity = pList->Element( i );
 
+		// If you hit this assert it means that an entity was deleted
+		// but not removed from the world's entity list.
+		Assert( pEntity != NULL );
+
+		if ( !pEntity )
+			continue;
+
 		if ( pEntity->IsVisible() || !bVisiblesOnly )
 		{
 			if ( pEntity->NameMatches( pszName ) )
@@ -1754,7 +1818,7 @@ CMapEntity *CMapWorld::FindEntityByName( const char *pszName, bool bVisiblesOnly
 		FOR_EACH_OBJ( *pEntities, pos )
 		{
 			CMapEntity *pEntity = dynamic_cast< CMapEntity *>( (*pEntities)[pos] );
-			if ( pEntity->ClassNameMatches( "func_instance" ) == true )
+			if ( pEntity && pEntity->ClassNameMatches( "func_instance" ) )
 			{
 				for ( int j = pEntity->GetFirstKeyValue(); j != pEntity->GetInvalidKeyValue(); j = pEntity->GetNextKeyValue( j ) )
 				{
@@ -1871,7 +1935,7 @@ bool CMapWorld::FindEntitiesByName( CMapEntityList &Found, const char *pszName, 
 	{
 		CMapEntity *pEntity = pList->Element( i );
 
-		if ( pEntity->IsVisible() || !bVisiblesOnly )
+		if ( pEntity && ( pEntity->IsVisible() || !bVisiblesOnly ) )
 		{
 			if ( pEntity->NameMatches( pszName ) )
 			{
@@ -1954,13 +2018,13 @@ void CMapWorld::UpdateAllDependencies( CMapClass *pObject )
 //			or manifest, then it is editable.  Otherwise, it lets the owning document
 //			determine the editing state.
 //-----------------------------------------------------------------------------
-bool CMapWorld::IsEditable( void ) 
+bool CMapWorld::IsEditable( void )
 {
 	if ( !m_pOwningDocument )
 	{
 		return true;
 	}
-	
+
 	return m_pOwningDocument->IsEditable();
 }
 

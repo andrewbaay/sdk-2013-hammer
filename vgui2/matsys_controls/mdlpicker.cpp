@@ -1,17 +1,16 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
-#include "dme_controls/MDLPicker.h"
-#include "tier1/keyvalues.h"
+#include "matsys_controls/mdlpicker.h"
+#include "tier1/KeyValues.h"
 #include "tier1/utldict.h"
 #include "filesystem.h"
 #include "studio.h"
-#include "dme_controls/filtercombobox.h"
 #include "matsys_controls/matsyscontrols.h"
-#include "dme_controls/mdlpanel.h"
+#include "matsys_controls/mdlpanel.h"
 #include "vgui_controls/Splitter.h"
 #include "vgui_controls/ComboBox.h"
 #include "vgui_controls/Button.h"
@@ -19,12 +18,18 @@
 #include "vgui_controls/MessageBox.h"
 #include "vgui_controls/PropertyPage.h"
 #include "vgui_controls/CheckButton.h"
-#include "vgui/ivgui.h"
-#include "vgui/iinput.h"
-#include "vgui/isurface.h"
-#include "vgui/cursor.h"
-#include "datamodel/dmelement.h"
+#include "vgui_controls/DirectorySelectDialog.h"
+#include "vgui/IVGui.h"
+#include "vgui/IInput.h"
+#include "vgui/ISurface.h"
+#include "vgui/Cursor.h"
 #include "matsys_controls/assetpicker.h"
+#include "matsys_controls/colorpickerpanel.h"
+#include "dmxloader/dmxloader.h"
+#include "tier1/utlbuffer.h"
+#include "bitmap/tgawriter.h"
+#include "tier3/tier3.h"
+#include "istudiorender.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -54,10 +59,9 @@ static int __cdecl MDLBrowserSortFunc( vgui::ListPanel *pPanel, const ListPanelI
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CMDLPicker::CMDLPicker( vgui::Panel *pParent, int nFlags ) : 
+CMDLPicker::CMDLPicker( vgui::Panel *pParent, int nFlags ) :
 	BaseClass( pParent, "MDL Files", "mdl", "models", "mdlName" )
 {
-
 	m_hSelectedMDL = MDLHANDLE_INVALID;
 
 	m_nFlags = nFlags;	// remember what we show and what not
@@ -150,7 +154,7 @@ CMDLPicker::CMDLPicker( vgui::Panel *pParent, int nFlags ) :
 		m_pSkinsList->SetSelectIndividualCells( true );
 		m_pSkinsList->SetEmptyListText( "No .MDL file currently selected." );
 		m_pSkinsList->SetDragEnabled( true );
-		m_pSkinsList->SetAutoResize( Panel::PIN_TOPLEFT, Panel::AUTORESIZE_DOWNANDRIGHT, 6, 6, -6, -6 );		
+		m_pSkinsList->SetAutoResize( Panel::PIN_TOPLEFT, Panel::AUTORESIZE_DOWNANDRIGHT, 6, 6, -6, -6 );
 	}
 
 	if ( nFlags & PAGE_INFO )
@@ -172,7 +176,7 @@ CMDLPicker::CMDLPicker( vgui::Panel *pParent, int nFlags ) :
 		pTempCheck->SetDisabledFgColor2( pTempCheck->GetFgColor());
 
 		m_pPropDataList = new vgui::ListPanel( m_pInfoPage, "PropData" );
-		m_pPropDataList->AddColumnHeader( 0, "key", "key", 250, ListPanel::COLUMN_FIXEDSIZE );		
+		m_pPropDataList->AddColumnHeader( 0, "key", "key", 250, ListPanel::COLUMN_FIXEDSIZE );
 		m_pPropDataList->AddColumnHeader( 1, "value", "value", 52, 0 );
 		m_pPropDataList->AddActionSignalTarget( this );
 		m_pPropDataList->SetSelectIndividualCells( false );
@@ -278,22 +282,22 @@ void CMDLPicker::OnAssetSelected( KeyValues *pParams )
 	char pProbeBuf[MAX_PATH];
 	Q_snprintf( pProbeBuf, sizeof(pProbeBuf), "materials/lightprobes/%s", pAsset );
 
-	CDisableUndoScopeGuard sg;
-
-	CDmElement *pLightProbe = NULL; 
-	g_pDataModel->RestoreFromFile( pProbeBuf, "GAME", NULL, &pLightProbe );
-	if ( !pLightProbe )
+	BeginDMXContext();
+	CDmxElement *pLightProbe = NULL;
+	bool bOk = UnserializeDMX( pProbeBuf, "GAME", true, &pLightProbe );
+	if ( !pLightProbe || !bOk )
 	{
 		char pBuf[1024];
-		Q_snprintf( pBuf, sizeof(pBuf), "Error loading lightprobe file '%s'!\n", pProbeBuf ); 
+		Q_snprintf( pBuf, sizeof(pBuf), "Error loading lightprobe file '%s'!\n", pProbeBuf );
 		vgui::MessageBox *pMessageBox = new vgui::MessageBox( "Error Loading File!\n", pBuf, GetParent() );
 		pMessageBox->DoModal( );
+
+		EndDMXContext( true );
 		return;
 	}
 
 	m_pMDLPreview->SetLightProbe( pLightProbe );
-	g_pDataModel->RemoveFileId( pLightProbe->GetFileId() );
-
+	EndDMXContext( true );
 }
 
 
@@ -334,7 +338,7 @@ void CMDLPicker::RefreshActivitiesAndSequencesList()
 	m_pSequencesList->SetEmptyListText(".MDL file contains no sequences");
 
 	studiohdr_t *hdr = vgui::MDLCache()->GetStudioHdr( m_hSelectedMDL );
-	
+
 	CUtlDict<int, unsigned short> activityNames( true, 0, hdr->GetNumSeq() );
 
 	for (int j = 0; j < hdr->GetNumSeq(); j++)
@@ -398,7 +402,7 @@ void CMDLPicker::OnSelectedAssetPicked( const char *pMDLName )
 void CMDLPicker::SelectMDL( const char *pRelativePath )
 {
 	MDLHandle_t hSelectedMDL = pRelativePath ? vgui::MDLCache()->FindMDL( pRelativePath ) : MDLHANDLE_INVALID;
-	 
+
 	// We didn't change models after all...
 	if ( hSelectedMDL == m_hSelectedMDL )
 	{
@@ -469,7 +473,7 @@ void CMDLPicker::GetSelectedMDLName( char *pBuffer, int nMaxLen )
 		pBuffer[0] = 0;
 	}
 }
-	
+
 //-----------------------------------------------------------------------------
 // Gets the selected activity/sequence
 //-----------------------------------------------------------------------------
@@ -516,14 +520,14 @@ const char *CMDLPicker::GetSelectedActivityName()
 int	CMDLPicker::GetSelectedSkin()
 {
 	if ( !m_pSkinsPage )
-		return NULL;
+		return 0;
 
 	int nIndex = m_pSkinsList->GetSelectedItem( 0 );
 	if ( nIndex >= 0 )
 	{
 		return nIndex;
 	}
-	return NULL;
+	return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -572,7 +576,7 @@ void CMDLPicker::SelectSkin( int nSkin )
 	PostActionSignal( new KeyValues( "SkinSelectionChanged", "skin", nSkin));
 }
 
-	
+
 //-----------------------------------------------------------------------------
 // Purpose: Updates preview when an item is selected
 //-----------------------------------------------------------------------------
@@ -603,7 +607,7 @@ void CMDLPicker::OnItemSelected( KeyValues *kv )
 	{
 		int nSelectedSkin = GetSelectedSkin();
 		SelectSkin( nSelectedSkin );
-	
+
 		return;
 	}
 
@@ -628,7 +632,7 @@ void CMDLPicker::OnPageChanged( )
 		}
 		return;
 	}
-	
+
 	if ( m_pActivitiesPage && ( m_pViewsSheet->GetActivePage() == m_pActivitiesPage ) )
 	{
 		m_pActivitiesList->RequestFocus();
@@ -649,7 +653,7 @@ void CMDLPicker::OnPageChanged( )
 // Purpose: Modal picker frame
 //
 //-----------------------------------------------------------------------------
-CMDLPickerFrame::CMDLPickerFrame( vgui::Panel *pParent, const char *pTitle, int nFlags ) : 
+CMDLPickerFrame::CMDLPickerFrame( vgui::Panel *pParent, const char *pTitle, int nFlags ) :
 	BaseClass( pParent )
 {
 	SetAssetPicker( new CMDLPicker( this, nFlags ) );
@@ -691,7 +695,7 @@ int CMDLPicker::UpdateSkinsList()
 			}
 		}
 	}
-		
+
 	return nNumSkins;
 }
 
@@ -700,38 +704,37 @@ void CMDLPicker::UpdateInfoTab()
 	studiohdr_t *hdr = vgui::MDLCache()->GetStudioHdr( m_hSelectedMDL );
 	if ( !hdr )
 		return;
-	
+
 	int nMass = hdr->mass;
 	Panel *pTempPanel = m_pInfoPage->FindChildByName("MassValue");
 	char massBuff[10];
-	itoa( nMass, massBuff, 10);
+	Q_snprintf( massBuff, 10, "%d", nMass );
 	((vgui::Label *)pTempPanel)->SetText( massBuff );
 	bool bIsStatic = hdr->flags & STUDIOHDR_FLAGS_STATIC_PROP;
 	bool bIsPhysics = false;
-	const char* buf = hdr->KeyValueText();
-	Label * pTempLabel = (Label *)m_pInfoPage->FindChildByName("StaticText");
+
+	Label *pTempLabel = (Label *)m_pInfoPage->FindChildByName("StaticText");
 	pTempLabel->SetVisible( false );
-	if( buf )
+
+	KeyValues *pkvModelKeys = new KeyValues( "modelkeys" );
+	pkvModelKeys->LoadFromBuffer( "modelkeys", hdr->KeyValueText() );
+
+	KeyValues *kvPropData = pkvModelKeys->FindKey( "prop_data" );
+	if ( kvPropData )
 	{
-		buf = Q_strstr( buf, "prop_data" );
-		if ( buf )
+		int iPropDataCount = UpdatePropDataList( kvPropData, bIsStatic );
+		if( iPropDataCount )
 		{
-			int iPropDataCount = UpdatePropDataList( buf, bIsStatic );
-			if( iPropDataCount )
-			{
-				bIsPhysics = true;
-			}
-		}
-		else
-		{
-			m_pPropDataList->RemoveAll();
+			bIsPhysics = true;
 		}
 	}
 	else
 	{
 		m_pPropDataList->RemoveAll();
 	}
-	
+
+	pkvModelKeys->deleteThis();
+
 	CheckButton * pTempCheck = (CheckButton *)m_pInfoPage->FindChildByName("StaticObject");
 	pTempCheck->SetCheckButtonCheckable( true );
 	pTempCheck->SetSelected( bIsStatic );
@@ -744,59 +747,39 @@ void CMDLPicker::UpdateInfoTab()
 	pTempCheck->SetCheckButtonCheckable( true );
 	pTempCheck->SetSelected( !bIsPhysics );
 	pTempCheck->SetCheckButtonCheckable( false );
-
-
 }
 
-int CMDLPicker::UpdatePropDataList( const char* pszPropData, bool &bIsStatic )
+
+int CMDLPicker::UpdatePropDataList( KeyValues *pkvPropData, bool &bIsStatic )
 {
-	int iCount = 0;  
+	int iCount = 0;
 
 	if ( m_pPropDataList )
 	{
 		m_pPropDataList->RemoveAll();
 
-		const char * endPropData = strchr( pszPropData, '}' );
-		char keyText[255] = "";
-		char valueText[255] = "";
-		const char *beginChunk = strchr( pszPropData, '\"' );
-		if ( !beginChunk )
+		KeyValues *kvItem = pkvPropData->GetFirstSubKey();
+		while ( kvItem )
 		{
-			return 0;
-		}
-		beginChunk++;
-		const char *endChunk = strchr( beginChunk, '\"' );
-		while( endChunk )
-		{
-			Q_memcpy( keyText, beginChunk, endChunk - beginChunk );
-			beginChunk = endChunk + 1;
-			beginChunk = strchr( beginChunk, '\"' ) + 1;
-			endChunk = strchr( beginChunk, '\"' );
-			Q_memcpy( valueText, beginChunk, endChunk - beginChunk );		
-			if( !Q_strcmp( keyText, "allowstatic" ) && !Q_strcmp( valueText , "1" ) )
+			if ( kvItem->GetDataType() != KeyValues::TYPE_NONE )
 			{
-				if ( !bIsStatic )
-				{					
-					Label * pTempLabel = (Label *)m_pInfoPage->FindChildByName("StaticText");
-					pTempLabel->SetVisible( true );
+				// Special handling for some keys
+				if ( !Q_strcmp( kvItem->GetName(), "allowstatic" ) && !Q_strcmp( kvItem->GetString() , "1" ) )
+				{
+					if ( !bIsStatic )
+					{
+							Label *pTempLabel = (Label *)m_pInfoPage->FindChildByName( "StaticText" );
+						pTempLabel->SetVisible( true );
+					}
+					bIsStatic &= true;
 				}
-				bIsStatic &= true;
+				KeyValues *pkv = new KeyValues("node", "key", kvItem->GetName(), "value", kvItem->GetString() );
+				m_pPropDataList->AddItem( pkv, 0, false, false );
+				iCount++;
 			}
-			KeyValues *pkv = new KeyValues("node", "key", keyText, "value", valueText );
-			m_pPropDataList->AddItem( pkv, 0, false, false );
-			Q_memset( keyText, 0, 255 );
-			Q_memset( valueText, 0, 255 );
-			iCount++;
-			beginChunk = endChunk + 1;
-			beginChunk = strchr( beginChunk, '\"' );
-			if ( !beginChunk || beginChunk > endPropData )
-			{
-				return iCount;
-			}
-			beginChunk++;
-			endChunk = strchr( beginChunk, '\"' );		
+
+			kvItem = kvItem->GetNextKey();
 		}
 	}
 	return iCount;
 }
-

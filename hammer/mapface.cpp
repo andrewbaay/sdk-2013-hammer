@@ -183,6 +183,7 @@ void CMapFace::GetTextureName(char *pszName) const
 }
 
 static char *InvisToolTextures[]={
+	"playerclip",
 	"occluder",
 	"areaportal",
 	"invisible",
@@ -3050,7 +3051,10 @@ bool CMapFace::TraceLine(Vector &HitPos, Vector &HitNormal, Vector const &Start,
 	// Find the point of intersection of the ray with the given plane.
 	//
 	float t = Start.Dot(plane.normal) - plane.dist;
-	t = t / -(End - Start).Dot(plane.normal);
+	float d = -(End - Start).Dot(plane.normal);
+	if ( d == 0.0f )
+		return false;
+	t = t / d;
 
 	HitPos = Start + (t * (End - Start));
 	HitNormal = plane.normal;

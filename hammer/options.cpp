@@ -488,11 +488,6 @@ bool COptions::GetShowHelpers(void)
 	return (general.bShowHelpers == TRUE);
 }
 
-bool COptions::IsVGUIModelBrowserEnabled()
-{
-	return (general.bUseVGUIModelBrowser == TRUE);
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Sets whether helpers should be hidden or shown.
@@ -536,7 +531,6 @@ bool COptions::Read(void)
 	general.iMaxAutosavesPerMap = APP()->GetProfileInt(pszGeneral, "Max Saves Per Map", 5);
 	general.bEnableAutosave = APP()->GetProfileInt(pszGeneral, "Autosaves Enabled", 1);
 	general.bClosedCorrectly = APP()->GetProfileInt(pszGeneral, "Closed Correctly", TRUE);
-	general.bUseVGUIModelBrowser = APP()->GetProfileInt(pszGeneral, "VGUI Model Browser", TRUE);	
 	general.bShowHiddenTargetsAsBroken = APP()->GetProfileInt(pszGeneral, "Show Hidden Targets As Broken", TRUE);	
 	general.bRadiusCulling = APP()->GetProfileInt(pszGeneral, "Use Radius Culling", FALSE);
 	
@@ -758,7 +752,6 @@ void COptions::Write( BOOL fOverwrite, BOOL fSaveConfigs )
 	APP()->WriteProfileInt(pszGeneral, "Closed Correctly", general.bClosedCorrectly);
 	APP()->WriteProfileString(pszGeneral, "Autosave Dir", general.szAutosaveDir);
 	APP()->SetDirectory( DIR_AUTOSAVE, general.szAutosaveDir );
-	APP()->WriteProfileInt(pszGeneral, "VGUI Model Browser", general.bUseVGUIModelBrowser );
 	APP()->WriteProfileInt(pszGeneral, "Show Hidden Targets As Broken", general.bShowHiddenTargetsAsBroken);
 	APP()->WriteProfileInt(pszGeneral, "Use Radius Culling", general.bRadiusCulling);
 
@@ -855,7 +848,6 @@ void COptions::SetDefaults(void)
 	general.iMaxAutosavesPerMap = 5;
 	general.bEnableAutosave = TRUE;
 	general.bClosedCorrectly = TRUE;
-	general.bUseVGUIModelBrowser = TRUE;
 	general.bShowCollisionModels = FALSE;
 	general.bShowDetailObjects = TRUE;
 	general.bShowNoDrawBrushes = TRUE;

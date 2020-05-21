@@ -31,6 +31,7 @@
 #include "ToolSelection.h"
 #include "ToolMagnify.h"
 #include "ToolMaterial.h"
+#include "toolsprinkle.h"
 #include "ChunkFile.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -84,7 +85,7 @@ bool CToolManager::Init( CMapDoc *pDocument )
 	AddTool( new Clipper3D );
 	AddTool( new Cordon3D );
 	AddTool( new CToolOverlay );
-
+	AddTool( new CToolEntitySprinkle );
 
 	return true;
 }

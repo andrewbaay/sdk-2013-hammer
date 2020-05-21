@@ -137,7 +137,7 @@ void CMapView2D::OnInitialUpdate(void)
 	// NOTE: This must occur becore OnInitialUpdate
 	// Other initialization.
 
-	
+
 
 	SetDrawType( GetDrawType() );
 
@@ -150,8 +150,8 @@ void CMapView2D::OnInitialUpdate(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pRender  - 
+// Purpose:
+// Input  : *pRender  -
 //-----------------------------------------------------------------------------
 void CMapView2D::DrawPointFile( CRender2D *pRender )
 {
@@ -177,19 +177,19 @@ void CMapView2D::OnRenderListDirty()
 	m_bUpdateRenderObjects = true;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 // Purpose: Sorts the object to be rendered into one of two groups: normal objects
 //			and selected objects, so that selected objects can be rendered last.
-// Input  : pObject - 
-//			pRenderList - 
+// Input  : pObject -
+//			pRenderList -
 // Output : Returns TRUE on success, FALSE on failure.
 //-----------------------------------------------------------------------------
 void CMapView2D::AddToRenderLists(CMapClass *pObject)
 {
 	if ( !pObject->IsVisible() )
 		return;
-	
+
 	// Don't render groups, render their children instead.
 	if ( !pObject->IsGroup() )
 	{
@@ -198,14 +198,14 @@ void CMapView2D::AddToRenderLists(CMapClass *pObject)
 
 		Vector vecMins, vecMaxs;
 		pObject->GetCullBox( vecMins, vecMaxs );
-		
+
 		if ( IsValidBox( vecMins, vecMaxs ) )
 		{
 			// Make sure the object is in the update region.
 			if ( !IsInClientView(vecMins, vecMaxs) )
-				return; 
+				return;
 		}
-		       	
+
 		m_RenderList.AddToTail(pObject);
 	}
 
@@ -219,8 +219,8 @@ void CMapView2D::AddToRenderLists(CMapClass *pObject)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : rectUpdate - 
+// Purpose:
+// Input  : rectUpdate -
 //-----------------------------------------------------------------------------
 void CMapView2D::Render()
 {
@@ -228,13 +228,14 @@ void CMapView2D::Render()
 	CMapWorld *pWorld = pDoc->GetMapWorld();
 	CManifest	*pManifest = pDoc->GetManifest();
 
+	GetRender()->StartRenderFrame();
+
 	if ( pManifest )
 	{
 		pWorld = pManifest->GetManifestWorld();
 	}
 
-	GetRender()->StartRenderFrame();
-	
+
 	if ( Options.general.bRadiusCulling )
 	{
 		DrawCullingCircleHelper2D( GetRender() );
@@ -251,7 +252,7 @@ void CMapView2D::Render()
 	//
 	if (pWorld == NULL)
 		return;
-	
+
 	// Traverse the entire world, sorting visible elements into two arrays:
 	// Normal objects and selected objects, so that we can render the selected
 	// objects last.
@@ -260,7 +261,7 @@ void CMapView2D::Render()
 	if ( m_bUpdateRenderObjects )
 	{
 		m_RenderList.RemoveAll();
-		
+
 		// fill render lists with visible objects
 		AddToRenderLists( pWorld );
 
@@ -298,7 +299,7 @@ void CMapView2D::Render()
 			pObject->Render2D( GetRender() );
 		}
 	}
-	
+
 	//
 	// Render selected objects in second batch, so they overdraw normal object
 	//
@@ -393,7 +394,7 @@ void CMapView2D::RenderInstanceMapClass_r( CMapClass *pObject )
 			// Make sure the object is in the update region.
 			if ( !IsInClientView( vecExpandedMins, vecExpandedMaxs ) )
 			{
-				return; 
+				return;
 			}
 		}
 
@@ -410,14 +411,14 @@ void CMapView2D::RenderInstanceMapClass_r( CMapClass *pObject )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : m_DrawType - 
-//			bForceUpdate - 
+// Purpose:
+// Input  : m_DrawType -
+//			bForceUpdate -
 //-----------------------------------------------------------------------------
 void CMapView2D::SetDrawType(DrawType_t drawType)
 {
-	Vector vOldView; 
-		
+	Vector vOldView;
+
 	// reset old third axis to selection center level
 	m_pCamera->GetViewPoint( vOldView );
 
@@ -426,7 +427,7 @@ void CMapView2D::SetDrawType(DrawType_t drawType)
 	if ( pDoc && !pDoc->GetSelection()->IsEmpty() )
 	{
 		Vector vCenter;
-		GetMapDoc()->GetSelection()->GetBoundsCenter( vCenter );
+		pDoc->GetSelection()->GetBoundsCenter( vCenter );
 		vOldView[axThird] = vCenter[axThird];
 	}
 	else
@@ -443,7 +444,7 @@ void CMapView2D::SetDrawType(DrawType_t drawType)
 			GetTitleWnd()->SetTitle("top (x/y)");
 		}
 		break;
-	
+
 	case VIEW2D_YZ:
 		SetAxes(AXIS_Y, FALSE, AXIS_Z, TRUE);
 		if ( HasTitleWnd() )
@@ -461,12 +462,12 @@ void CMapView2D::SetDrawType(DrawType_t drawType)
 		break;
 	}
 
-	
+
 
 	m_eDrawType = drawType;
 
 	m_pCamera->SetViewPoint( vOldView );
-	
+
 	UpdateClientView();
 
 	if (m_bLastActiveView && GetMapDoc())
@@ -477,7 +478,7 @@ void CMapView2D::SetDrawType(DrawType_t drawType)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CMapView2D::OnView2dxy(void)
 {
@@ -486,7 +487,7 @@ void CMapView2D::OnView2dxy(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CMapView2D::OnView2dyz(void)
 {
@@ -495,7 +496,7 @@ void CMapView2D::OnView2dyz(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CMapView2D::OnView2dxz(void)
 {
@@ -504,12 +505,12 @@ void CMapView2D::OnView2dxz(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : bActivate - 
-//			pActivateView - 
-//			pDeactiveView - 
+// Purpose:
+// Input  : bActivate -
+//			pActivateView -
+//			pDeactiveView -
 //-----------------------------------------------------------------------------
-void CMapView2D::ActivateView(bool bActivate) 
+void CMapView2D::ActivateView(bool bActivate)
 {
 	CMapView2DBase::ActivateView( bActivate );
 
@@ -529,11 +530,11 @@ void CMapView2D::ActivateView(bool bActivate)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : nID - 
+// Purpose:
+// Input  : nID -
 // Output : Returns TRUE on success, FALSE on failure.
 //-----------------------------------------------------------------------------
-BOOL CMapView2D::OnToolsAlign(UINT nID) 
+BOOL CMapView2D::OnToolsAlign(UINT nID)
 {
 	CMapDoc *pDoc = GetMapDoc();
 	CSelection *pSelection = pDoc->GetSelection();
@@ -553,7 +554,7 @@ BOOL CMapView2D::OnToolsAlign(UINT nID)
 	else if(nID == ID_TOOLS_ALIGNRIGHT && bInvertHorz)
 		nID = ID_TOOLS_ALIGNLEFT;
 
-	// use boundbox of selection - move all objects to match extreme 
+	// use boundbox of selection - move all objects to match extreme
 	// side of all the objects
 	BoundBox box;
 	pSelection->GetBounds(box.bmins, box.bmaxs);
@@ -597,10 +598,10 @@ BOOL CMapView2D::OnToolsAlign(UINT nID)
 //-----------------------------------------------------------------------------
 // Purpose: Flips the selection horizontally or vertically (with respect to the
 //			view orientation.
-// Input  : nID - 
+// Input  : nID -
 // Output : Returns TRUE on success, FALSE on failure.
 //-----------------------------------------------------------------------------
-BOOL CMapView2D::OnFlip(UINT nID) 
+BOOL CMapView2D::OnFlip(UINT nID)
 {
 	CMapDoc *pDoc = GetMapDoc();
 	CSelection *pSelection = pDoc->GetSelection();
@@ -627,7 +628,7 @@ BOOL CMapView2D::OnFlip(UINT nID)
 
 	GetHistory()->MarkUndoPosition( pSelList, "Flip Objects");
 	GetHistory()->Keep(pSelList);
-		
+
 	// do flip
 	for (int i = 0; i < pSelList->Count(); i++)
 	{
@@ -644,14 +645,14 @@ BOOL CMapView2D::OnFlip(UINT nID)
 //-----------------------------------------------------------------------------
 // Purpose: Manages the state of the Copy menu item.
 //-----------------------------------------------------------------------------
-void CMapView2D::OnUpdateEditSelection(CCmdUI *pCmdUI) 
+void CMapView2D::OnUpdateEditSelection(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable((!GetMapDoc()->GetSelection()->IsEmpty()) &&
 					(m_pToolManager->GetActiveToolID() != TOOL_FACEEDIT_MATERIAL) &&
 					!GetMainWnd()->IsShellSessionActive());
 }
 
-void CMapView2D::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
+void CMapView2D::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	if (nChar == VK_TAB)
 	{

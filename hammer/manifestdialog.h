@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -57,7 +57,7 @@ public:
 class CManifestListBox : public CListBox
 {
 public:
-	CManifestListBox( void ); 
+	CManifestListBox( void );
 
 	virtual void DrawItem( LPDRAWITEMSTRUCT lpDrawItemStruct );
 	virtual void MeasureItem( LPMEASUREITEMSTRUCT lpMeasureItemStruct );
@@ -78,9 +78,6 @@ public:
 	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	afx_msg void OnMoveSelectionToSubMap();
 	afx_msg void OnMoveSelectionToNewSubMap();
-	afx_msg void OnVersionControlCheckOut();
-	afx_msg void OnVersionControlCheckIn();
-	afx_msg void OnVersionControlAdd();
 	afx_msg void OnInsertEmptySubMap();
 	afx_msg void OnInsertExistingSubMap();
 	afx_msg void OnManifestProperties();

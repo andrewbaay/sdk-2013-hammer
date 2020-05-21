@@ -803,7 +803,7 @@ LPCTSTR CMapSolid::GetTexture(int iFace)
 int CMapSolid::CreateFromPlanes( DWORD dwFlags )
 {
 	int i, j, k;
-    BOOL useplane[MAPSOLID_MAX_FACES];
+    CUtlVector<bool> useplane;
 
 	m_Render2DBox.SetBounds(Vector(COORD_NOTINIT, COORD_NOTINIT, COORD_NOTINIT),
 							Vector(-COORD_NOTINIT, -COORD_NOTINIT, -COORD_NOTINIT));
@@ -814,6 +814,10 @@ int CMapSolid::CreateFromPlanes( DWORD dwFlags )
 	// Free all points from all faces and assign parentage.
 	//
 	int nFaces = GetFaceCount();
+	Assert( nFaces > 0 );
+
+	useplane.SetCount( nFaces );
+
 	for (i = 0; i < nFaces; i++)
 	{
 		CMapFace *pFace = GetFace(i);
@@ -824,7 +828,7 @@ int CMapSolid::CreateFromPlanes( DWORD dwFlags )
 		pFace->SetRenderColor(r, g, b);
 	}
 
-	memset(useplane, 0, sizeof useplane);
+	memset(useplane.Base(), 0, sizeof(bool) * nFaces);
 
 	//
 	// For every face that is not set to be ignored, check the plane and make sure
@@ -841,7 +845,7 @@ int CMapSolid::CreateFromPlanes( DWORD dwFlags )
         //
         if (VectorCompare(f->normal, vec3_origin))
         {
-            useplane[i] = FALSE;
+            useplane[i] = false;
 			continue;
         }
 
@@ -849,7 +853,7 @@ int CMapSolid::CreateFromPlanes( DWORD dwFlags )
 		// If the plane duplicates another plane, don't use it (assume it is a brush
 		// being edited that will be fixed).
 		//
-		useplane[i] = TRUE;
+		useplane[i] = true;
 		for (j = 0; j < i; j++)
 		{
 			CMapFace *pFaceCheck = GetFace(j);
@@ -862,7 +866,7 @@ int CMapSolid::CreateFromPlanes( DWORD dwFlags )
 			//
 			if ((DotProduct(f1, f2) > 0.999) && (fabs(f->dist - pFaceCheck->plane.dist) < 0.01))
 			{
-				useplane[j] = FALSE;
+				useplane[j] = false;
 				break;
 			}
 		}
@@ -978,8 +982,7 @@ int CMapSolid::CreateFromPlanes( DWORD dwFlags )
 			if ((!useplane[nFace]) || (pFace->GetPointCount() == 0))
 			{
 				DeleteFace(nFace);
-
-				memcpy(useplane + nFace, useplane + nFace + 1, MAPSOLID_MAX_FACES - (nFace + 1));
+				useplane.Remove( nFace );
 			}
 		}
 	}

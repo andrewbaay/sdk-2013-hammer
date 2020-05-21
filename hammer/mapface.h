@@ -177,7 +177,7 @@ public:
 	static void			AddFaceToQueue( CMapFace* pMapFace, IEditorTexture* pTexture, EditorRenderMode_t renderMode, bool selected, SelectionState_t faceSelectionState );
 	static void			PushFaceQueue( void );
 	static void			PopFaceQueue( void );
-	static void RenderOpaqueFaces( CRender3D* pRender );
+	static void			RenderOpaqueFaces( CRender3D* pRender );
 
     void SetParent(CMapAtom* pParent) OVERRIDE;
 

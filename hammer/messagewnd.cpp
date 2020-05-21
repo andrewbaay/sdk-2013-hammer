@@ -239,8 +239,8 @@ void CMessageWnd::CalculateScrollSize()
 	SCROLLINFO si;
 	si.cbSize = sizeof(si);
 	si.fMask = SIF_ALL;
+	GetScrollInfo(SB_VERT, &si);
 	si.nMin = 0;
-	si.nPos = 0;
 
 	CRect clientrect;
 	GetClientRect(clientrect);

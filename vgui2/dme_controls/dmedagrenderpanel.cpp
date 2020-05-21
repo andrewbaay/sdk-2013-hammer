@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2001, Valve LLC, All rights reserved. ============
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================
@@ -46,6 +46,9 @@ CDmeDagRenderPanel::CDmeDagRenderPanel( vgui::Panel *pParent, const char *pName 
 	m_bDrawJointNames = false;
 	m_bDrawJoints = false;
 	m_bDrawGrid = true;
+	m_bDrawAxis = true;
+	m_bModelInEngineCoordinates = false;
+	m_bModelZUp = false;
 
 	// Deal with the default cubemap
 	ITexture *pCubemapTexture = g_pMaterialSystem->FindTexture( "editor/cubemap", NULL, true );
@@ -53,9 +56,13 @@ CDmeDagRenderPanel::CDmeDagRenderPanel( vgui::Panel *pParent, const char *pName 
 	pCubemapTexture = g_pMaterialSystem->FindTexture( "editor/cubemap.hdr", NULL, true );
 	m_DefaultHDREnvCubemap.Init( pCubemapTexture );
 
-	KeyValues *pMaterialKeys = new KeyValues( "Wireframe", "$model", "1" );
-	pMaterialKeys->SetString( "$vertexcolor", "1" );
-	m_Wireframe.Init( "mdlpanelwireframe", pMaterialKeys );
+	if ( g_pMaterialSystem )
+	{
+		KeyValues *pVMTKeyValues = new KeyValues( "wireframe" );
+		pVMTKeyValues->SetInt( "$vertexcolor", 1 );
+		pVMTKeyValues->SetInt( "$ignorez", 1 );
+		m_axisMaterial.Init( "__DmeDagRenderPanelAxis", pVMTKeyValues );
+	}
 
 	m_pDrawSettings = CreateElement< CDmeDrawSettings >( "drawSettings", g_pDataModel->FindOrCreateFileId( "DagRenderPanelDrawSettings" ) );
 	m_hDrawSettings = m_pDrawSettings;
@@ -96,6 +103,10 @@ CDmeDagRenderPanel::CDmeDagRenderPanel( vgui::Panel *pParent, const char *pName 
 //-----------------------------------------------------------------------------
 CDmeDagRenderPanel::~CDmeDagRenderPanel()
 {
+	if ( g_pMaterialSystem )
+	{
+		m_axisMaterial.Shutdown();
+	}
 }
 
 
@@ -115,8 +126,8 @@ void CDmeDagRenderPanel::ApplySchemeSettings( vgui::IScheme *pScheme )
 //-----------------------------------------------------------------------------
 void CDmeDagRenderPanel::SetDmeElement( CDmeDag *pScene )
 {
-	m_pDag = pScene;
-	ComputeDefaultTangentData( m_pDag, false );
+	m_hDag = pScene;
+	ComputeDefaultTangentData( m_hDag, false );
 }
 
 
@@ -129,7 +140,7 @@ void CDmeDagRenderPanel::SetDmeElement( CDmeSourceSkin *pSkin )
 	CDmeMakefile *pSourceMakefile = pSkin->GetDependentMakefile();
 	if ( !pSourceMakefile )
 	{
-		m_pDag = NULL;
+		m_hDag = NULL;
 		return;
 	}
 
@@ -137,13 +148,13 @@ void CDmeDagRenderPanel::SetDmeElement( CDmeSourceSkin *pSkin )
 	CDmElement *pOutput = pSourceMakefile->GetOutputElement( true );
 	if ( !pOutput )
 	{
-		m_pDag = NULL;
+		m_hDag = NULL;
 		return;
 	}
 
 	// Finally, grab the 'skin' attribute of that makefile
-	m_pDag = pOutput->GetValueElement< CDmeDag >( "model" );
-	ComputeDefaultTangentData( m_pDag, false );
+	m_hDag = pOutput->GetValueElement< CDmeDag >( "model" );
+	ComputeDefaultTangentData( m_hDag, false );
 	DrawJoints( false );
 	DrawJointNames( false );
 }
@@ -154,7 +165,7 @@ void CDmeDagRenderPanel::SetDmeElement( CDmeSourceAnimation *pAnimation )
 	CDmeMakefile *pSourceMakefile = pAnimation->GetDependentMakefile();
 	if ( !pSourceMakefile )
 	{
-		m_pDag = NULL;
+		m_hDag = NULL;
 		return;
 	}
 
@@ -162,7 +173,7 @@ void CDmeDagRenderPanel::SetDmeElement( CDmeSourceAnimation *pAnimation )
 	CDmElement *pOutput = pSourceMakefile->GetOutputElement( true );
 	if ( !pOutput )
 	{
-		m_pDag = NULL;
+		m_hDag = NULL;
 		return;
 	}
 
@@ -170,7 +181,7 @@ void CDmeDagRenderPanel::SetDmeElement( CDmeSourceAnimation *pAnimation )
 	CDmeDag *pDag = pOutput->GetValueElement< CDmeDag >( "model" );
 	if ( !pDag )
 	{
-		pDag = pOutput->GetValueElement< CDmeDag >( "skeleton" ); 
+		pDag = pOutput->GetValueElement< CDmeDag >( "skeleton" );
 	}
 	if ( !pDag )
 		return;
@@ -182,8 +193,8 @@ void CDmeDagRenderPanel::SetDmeElement( CDmeSourceAnimation *pAnimation )
 	if ( pAnimationList->FindAnimation( pAnimation->m_SourceAnimationName ) < 0 )
 		return;
 
-	m_pDag = pDag;
-	ComputeDefaultTangentData( m_pDag, false );
+	m_hDag = pDag;
+	ComputeDefaultTangentData( m_hDag, false );
 	m_hAnimationList = pAnimationList;
 	SelectAnimation( pAnimation->m_SourceAnimationName );
 	DrawJoints( true );
@@ -196,7 +207,7 @@ void CDmeDagRenderPanel::SetDmeElement( CDmeDCCMakefile *pDCCMakefile )
 	CDmElement *pOutputElement = pDCCMakefile->GetOutputElement( true );
 	if ( !pOutputElement )
 	{
-		m_pDag = NULL;
+		m_hDag = NULL;
 		return;
 	}
 
@@ -204,15 +215,15 @@ void CDmeDagRenderPanel::SetDmeElement( CDmeDCCMakefile *pDCCMakefile )
 	CDmeDag *pDag = pOutputElement->GetValueElement< CDmeDag >( "model" );
 	if ( !pDag )
 	{
-		pDag = pOutputElement->GetValueElement< CDmeDag >( "skeleton" ); 
+		pDag = pOutputElement->GetValueElement< CDmeDag >( "skeleton" );
 	}
 	if ( !pDag )
 		return;
 
 	CDmeAnimationList *pAnimationList = pOutputElement->GetValueElement< CDmeAnimationList >( "animationList" );
 
-	m_pDag = pDag;
-	ComputeDefaultTangentData( m_pDag, false );
+	m_hDag = pDag;
+	ComputeDefaultTangentData( m_hDag, false );
 	m_hAnimationList = pAnimationList;
 	SelectAnimation( 0 );
 	DrawJoints( pAnimationList != NULL );
@@ -221,7 +232,7 @@ void CDmeDagRenderPanel::SetDmeElement( CDmeDCCMakefile *pDCCMakefile )
 
 CDmeDag *CDmeDagRenderPanel::GetDmeElement()
 {
-	return m_pDag;
+	return m_hDag;
 }
 
 
@@ -230,39 +241,21 @@ CDmeDag *CDmeDagRenderPanel::GetDmeElement()
 //-----------------------------------------------------------------------------
 void CDmeDagRenderPanel::DrawJointNames( CDmeDag *pRoot, CDmeDag *pDag, const matrix3x4_t& parentToWorld )
 {
-	CDmeTransform *pJointTransform = pDag->GetTransform();
-	int nJointIndex = -1;
-
-	CDmeModel *pRootModel = CastElement<CDmeModel>( pRoot );
-	if ( pRootModel )
-	{
-		nJointIndex = pRootModel->GetJointTransformIndex( pJointTransform );
-		if ( nJointIndex < 0 && pRootModel != pDag )
-			return;
-	}
-
 	matrix3x4_t jointToParent, jointToWorld;
-	pJointTransform->GetTransform( jointToParent );
+	pDag->GetTransform()->GetTransform( jointToParent );
 	ConcatTransforms( parentToWorld, jointToParent, jointToWorld );
 
 	CDmeJoint *pJoint = CastElement< CDmeJoint >( pDag );
 	if ( pJoint )
 	{
 		Vector vecJointOrigin;
-		MatrixGetColumn( jointToWorld, 3, &vecJointOrigin );
+		MatrixGetColumn( jointToWorld, 3, vecJointOrigin );
 
 		Vector2D vecPanelPos;
 		ComputePanelPosition( vecJointOrigin, &vecPanelPos );
 
 		char pJointName[512];
-		if ( nJointIndex >= 0 )
-		{
-			Q_snprintf( pJointName, sizeof(pJointName), "%d : %s", nJointIndex, pJoint->GetName() );
-		}
-		else
-		{
-			Q_snprintf( pJointName, sizeof(pJointName), "%s", pJoint->GetName() );
-		}
+		Q_snprintf( pJointName, sizeof(pJointName), "%s", pJoint->GetName() );
 		g_pMatSystemSurface->DrawColoredText( m_hFont, vecPanelPos.x + 5, vecPanelPos.y, 255, 255, 255, 255, pJointName );
 	}
 
@@ -275,6 +268,31 @@ void CDmeDagRenderPanel::DrawJointNames( CDmeDag *pRoot, CDmeDag *pDag, const ma
 
 		DrawJointNames( pRoot, pChild, jointToWorld );
 	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Draw highlight points
+//-----------------------------------------------------------------------------
+void CDmeDagRenderPanel::DrawHighlightPoints()
+{
+	/*if ( !m_pDrawSettings )
+		return;
+
+	const float flPointRadius = m_pDrawSettings->m_flHighlightSize;
+
+	Vector2D vecPanelPos;
+
+	g_pMatSystemSurface->DrawSetColor( m_pDrawSettings->m_cHighlightColor );
+
+	const CUtlVector< Vector > &highLightPoints = m_pDrawSettings->GetHighlightPoints();
+
+	const int nPointCount = highLightPoints.Count();
+	for ( int i = 0; i < nPointCount; ++i )
+	{
+		ComputePanelPosition( highLightPoints[i], &vecPanelPos );
+		g_pMatSystemSurface->DrawFilledRect( vecPanelPos.x - flPointRadius, vecPanelPos.y - flPointRadius, vecPanelPos.x + flPointRadius, vecPanelPos.y + flPointRadius );
+	}*/
 }
 
 
@@ -385,13 +403,20 @@ void CDmeDagRenderPanel::OnGrayShade()
 //-----------------------------------------------------------------------------
 void CDmeDagRenderPanel::OnFrame()
 {
-	if ( !m_pDag )
+	if ( !m_hDag )
 		return;
 
 	float flRadius;
-	Vector vecCenter;
-	m_pDag->GetBoundingSphere( vecCenter, flRadius );
-	LookAt( vecCenter, flRadius );
+	Vector vecCenter, vecWorldCenter;
+	m_hDag->GetBoundingSphere( vecCenter, flRadius );
+
+	matrix3x4_t dmeToEngine;
+	if ( !m_bModelInEngineCoordinates )
+	{
+		//CDmeDag::DmeToEngineMatrix( dmeToEngine, m_bModelZUp );
+	}
+	VectorTransform( vecCenter, dmeToEngine, vecWorldCenter );
+	LookAt( vecWorldCenter, flRadius );
 }
 
 
@@ -470,12 +495,17 @@ void CDmeDagRenderPanel::Paint()
 	BaseClass::Paint();
 
 	// Overlay the joint names
-	if ( m_bDrawJointNames && m_pDag )
+	if ( m_bDrawJointNames && m_hDag )
 	{
 		matrix3x4_t modelToWorld;
-		SetIdentityMatrix( modelToWorld );
-		DrawJointNames( m_pDag, m_pDag, modelToWorld );
+		if ( !m_bModelInEngineCoordinates )
+		{
+			//CDmeDag::DmeToEngineMatrix( modelToWorld, m_bModelZUp );
+		}
+		DrawJointNames( m_hDag, m_hDag, modelToWorld );
 	}
+
+	//DrawHighlightPoints();
 }
 
 
@@ -507,6 +537,33 @@ void CDmeDagRenderPanel::DrawGrid( bool bDrawGrid )
 
 
 //-----------------------------------------------------------------------------
+// Indicate we should draw the coordinate axis
+//-----------------------------------------------------------------------------
+void CDmeDagRenderPanel::DrawAxis( bool bDrawAxis )
+{
+	m_bDrawAxis = bDrawAxis;
+}
+
+
+//-----------------------------------------------------------------------------
+// Indicate whether the model is in engine coordinates already
+//-----------------------------------------------------------------------------
+void CDmeDagRenderPanel::ModelInEngineCoordinates( bool bDrawInEngineCoordinates )
+{
+	m_bModelInEngineCoordinates = bDrawInEngineCoordinates;
+}
+
+
+//-----------------------------------------------------------------------------
+// Indicate whether the model is Z Up
+//-----------------------------------------------------------------------------
+void CDmeDagRenderPanel::ModelZUp( bool bDrawZUp )
+{
+	m_bModelZUp = bDrawZUp;
+}
+
+
+//-----------------------------------------------------------------------------
 // paint it!
 //-----------------------------------------------------------------------------
 void CDmeDagRenderPanel::OnPaint3D()
@@ -524,7 +581,7 @@ void CDmeDagRenderPanel::OnPaint3D()
 
 	if ( m_bDrawGrid )
 	{
-		DrawGrid();
+		BaseClass::DrawGrid();
 	}
 
 	if ( m_bDrawJoints )
@@ -532,10 +589,74 @@ void CDmeDagRenderPanel::OnPaint3D()
 		CDmeJoint::DrawJointHierarchy( true );
 	}
 
-	m_pDrawSettings->DrawDag( m_pDag );
+	pRenderContext->CullMode( MATERIAL_CULLMODE_CW );
+
+	//CDmeDag::DrawUsingEngineCoordinates( !m_bModelInEngineCoordinates );
+	//CDmeDag::DrawZUp( m_bModelZUp );
+
+	m_pDrawSettings->DrawDag( m_hDag );
+
+	//CDmeDag::DrawUsingEngineCoordinates( false );
+	//CDmeDag::DrawZUp( false );
+
+	if ( m_bDrawAxis )
+	{
+		DrawAxis();
+	}
 
 	pRenderContext->Flush();
 	pRenderContext->BindLocalCubemap( pLocalCube );
+}
+
+
+//-----------------------------------------------------------------------------
+// For rendering joints
+//-----------------------------------------------------------------------------
+#define AXIS_SIZE 10.0f
+
+void CDmeDagRenderPanel::DrawAxis( )
+{
+	if ( !g_pMaterialSystem )
+		return;
+
+	CMatRenderContextPtr pRenderContext( g_pMaterialSystem );
+	pRenderContext->MatrixMode( MATERIAL_MODEL );
+
+	pRenderContext->Bind( m_axisMaterial );
+	IMesh *pMesh = pRenderContext->GetDynamicMesh( );
+
+	CMeshBuilder meshBuilder;
+	meshBuilder.Begin( pMesh, MATERIAL_LINES, 3 );
+
+	meshBuilder.Position3f( 0.0f, 0.0f, 0.0f );
+	meshBuilder.Color4ub( 255, 0, 0, 255 );
+	meshBuilder.AdvanceVertexF< VTX_HAVEPOS | VTX_HAVECOLOR, 0 >();
+
+	meshBuilder.Position3f( AXIS_SIZE, 0.0f, 0.0f );
+	meshBuilder.Color4ub( 255, 0, 0, 255 );
+	meshBuilder.AdvanceVertexF< VTX_HAVEPOS | VTX_HAVECOLOR, 0 >();
+
+	meshBuilder.Position3f( 0.0f, 0.0f, 0.0f );
+	meshBuilder.Color4ub( 0, 255, 0, 255 );
+	meshBuilder.AdvanceVertexF< VTX_HAVEPOS | VTX_HAVECOLOR, 0 >();
+
+	meshBuilder.Position3f( 0.0f, AXIS_SIZE, 0.0f );
+	meshBuilder.Color4ub( 0, 255, 0, 255 );
+	meshBuilder.AdvanceVertexF< VTX_HAVEPOS | VTX_HAVECOLOR, 0 >();
+
+	meshBuilder.Position3f( 0.0f, 0.0f, 0.0f );
+	meshBuilder.Color4ub( 0, 0, 255, 255 );
+	meshBuilder.AdvanceVertexF< VTX_HAVEPOS | VTX_HAVECOLOR, 0 >();
+
+	meshBuilder.Position3f( 0.0f, 0.0f, AXIS_SIZE );
+	meshBuilder.Color4ub( 0, 0, 255, 255 );
+	meshBuilder.AdvanceVertexF< VTX_HAVEPOS | VTX_HAVECOLOR, 0 >();
+
+	meshBuilder.End();
+	pMesh->Draw();
+
+	pRenderContext->MatrixMode( MATERIAL_MODEL );
+	pRenderContext->LoadIdentity();
 }
 
 
@@ -561,53 +682,6 @@ void CDmeDagRenderPanel::OnKeyCodePressed( vgui::KeyCode code )
 	{
 		OnFrame();
 	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Draws the grid under the MDL
-//-----------------------------------------------------------------------------
-void CDmeDagRenderPanel::DrawGrid()
-{
-	matrix3x4_t transform;
-
-	SetIdentityMatrix( transform );
-
-	CMatRenderContextPtr pRenderContext( g_pMaterialSystem );
-	pRenderContext->MatrixMode( MATERIAL_MODEL );
-	pRenderContext->LoadMatrix( transform );
-
-	pRenderContext->Bind( m_Wireframe );
-
-	IMesh *pMesh = pRenderContext->GetDynamicMesh();
-
-	int nGridDim = 10;
-	CMeshBuilder meshBuilder;
-	meshBuilder.Begin( pMesh, MATERIAL_LINES, 2 * nGridDim + 2 );
-
-	float bounds = 100.0f;
-	float delta = 2 * bounds / nGridDim;
-	for ( int i = 0; i < nGridDim + 1; ++i )
-	{
-		float xz = -bounds + delta * i;
-
-		meshBuilder.Position3f( xz, 0, -bounds );
-		meshBuilder.Color4ub( 255, 255, 255, 255 );
-		meshBuilder.AdvanceVertex();
-		meshBuilder.Position3f( xz, 0, bounds );
-		meshBuilder.Color4ub( 255, 255, 255, 255 );
-		meshBuilder.AdvanceVertex();
-
-		meshBuilder.Position3f( -bounds, 0, xz );
-		meshBuilder.Color4ub( 255, 255, 255, 255 );
-		meshBuilder.AdvanceVertex();
-		meshBuilder.Position3f( bounds, 0, xz );
-		meshBuilder.Color4ub( 255, 255, 255, 255 );
-		meshBuilder.AdvanceVertex();
-	}
-
-	meshBuilder.End();
-	pMesh->Draw();
 }
 
 

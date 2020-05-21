@@ -13,7 +13,7 @@
 #endif
 
 #include "tier1/utlvector.h"
-#include "dme_controls/SimplePotteryWheelPanel.h"
+#include "vgui_controls/editablepanel.h"
 #include "datamodel/dmehandle.h"
 
 
@@ -31,6 +31,7 @@ class CDmeCombinationOperator;
 class CDmeAnimationListPanel;
 class CBaseAnimationSetEditor;
 class CDmeAnimationSet;
+class CDmeDag;
 
 namespace vgui
 {
@@ -58,7 +59,7 @@ public:
 	virtual void Paint();
 
 	// Sets the current scene + animation list
-	void SetDmeElement( CDmeDag *pScene );
+	virtual void SetDmeElement( CDmeDag *pScene );
 	void SetAnimationList( CDmeAnimationList *pAnimationList );
 	void SetVertexAnimationList( CDmeAnimationList *pAnimationList );
 	void SetCombinationOperator( CDmeCombinationOperator *pComboOp );
@@ -71,7 +72,7 @@ public:
 	void SetDmeElement( CDmeSourceAnimation *pAnimation );
 	void SetDmeElement( CDmeDCCMakefile *pDCCMakefile );
 
-private:
+protected:
 	// Called when the selection changes moves
 	MESSAGE_FUNC( OnPageChanged, "PageChanged" );
 	MESSAGE_FUNC_PARAMS( OnAnimationSelected, "AnimationSelected", kv );

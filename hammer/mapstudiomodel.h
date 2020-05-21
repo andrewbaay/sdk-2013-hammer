@@ -40,6 +40,7 @@ class CMapStudioModel : public CMapHelper
 		DECLARE_MAPCLASS(CMapStudioModel,CMapHelper)
 
 		void CalcBounds(BOOL bFullUpdate = FALSE);
+		float GetBoundingRadius( void );
 
 		virtual CMapClass *Copy(bool bUpdateDependencies);
 		virtual CMapClass *CopyFrom(CMapClass *pFrom, bool bUpdateDependencies);
@@ -68,12 +69,14 @@ class CMapStudioModel : public CMapHelper
 		void AddShadowingTriangles(CUtlVector<Vector>& tri_list);
 
 		int GetFrame(void);
+		int GetMaxFrame(void);
 		void SetFrame(int nFrame);
 
 		int GetSequence(void);
 		int GetSequenceCount(void);
 		void GetSequenceName(int nIndex, char *szName);
 		void SetSequence(int nIndex);
+		const char *GetModelName(void);
 
 		// Returns the index of the sequence (does a case-insensitive search).
 		// Returns -1 if the sequence doesn't exist.
@@ -81,9 +84,12 @@ class CMapStudioModel : public CMapHelper
 
 	protected:
 
-		inline float ComputeFade( CRender3D *pRender ) const;
-		inline float ComputeDistanceFade( CRender3D *pRender ) const;
-		inline float ComputeScreenFade( CRender3D *pRender ) const;
+		float ComputeFade( CRender3D *pRender );
+		float ComputeScreenFade( CRender3D *pRender );
+		float ComputeScreenFade( CRender3D *pRender, float flMinSize, float flMaxSize );
+		float ComputeScreenFadeInternal( CRender3D *pRender, float flMinSize, float flMaxSize );
+		float ComputeDistanceFade( CRender3D *pRender );
+		float ComputeLevelFade( CRender3D *pRender );
 
 		void GetRenderAngles(QAngle &Angles);
 
@@ -101,6 +107,7 @@ class CMapStudioModel : public CMapHelper
 		bool m_bPitchSet;
 
 		int	m_Skin;							// the model skin
+		int m_BodyGroup;					// Bodygroups
 
 		bool m_bOrientedBounds;				// Whether the bounding box should consider the orientation of the model.
 											// Note that this is not a true oriented bounding box, but an axial box
@@ -109,10 +116,10 @@ class CMapStudioModel : public CMapHelper
 		bool m_bReversePitch;				// Lights negate pitch, so models representing light sources in Hammer
 											// must do so as well.
 
-		bool m_bScreenSpaceFade;			// If true, min & max dist are pixel size in screen space.
 		float m_flFadeScale;				// Multiplied by distance to camera before calculating fade.
 		float m_flFadeMinDist;				// The distance/pixels at which this model is fully visible.
 		float m_flFadeMaxDist;				// The distance/pixels at which this model is fully invisible.
+		Color m_ModelRenderColor;
 		int m_iSolid;						// The collision setting of this model: 0 = not solid, 2 = bounding box, 6 = vphysics
 
 		//

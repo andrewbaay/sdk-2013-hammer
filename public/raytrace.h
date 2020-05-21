@@ -121,7 +121,7 @@ struct CacheOptimizedTriangle
 	                                                        // computing intersections.
 
 	int ClassifyAgainstAxisSplit(int split_plane, float split_value); // PLANECHECK_xxx below
-	
+
 };
 
 #define PLANECHECK_POSITIVE 1
@@ -275,6 +275,12 @@ public:
 		Flags=0;
 	}
 
+#if !( defined ( _DEBUG ) && defined ( HAMMER_RAYTRACE ) )
+	inline void* operator new( size_t size ) { MEM_ALLOC_CREDIT_( "RayTracingEnvironment" ); return MemAlloc_AllocAligned( size, 16 ); }
+	inline void* operator new( size_t size, int nBlockUse, const char *pFileName, int nLine ) { MEM_ALLOC_CREDIT_( "RayTracingEnvironment" ); return MemAlloc_AllocAligned( size, 16 ); }
+	inline void  operator delete( void* p ) { MemAlloc_FreeAligned( p ); }
+	inline void  operator delete( void* p, int nBlockUse, const char *pFileName, int nLine ) { MemAlloc_FreeAligned( p ); }
+#endif
 
 	// call AddTriangle to set up the world
 	void AddTriangle(int32 id, const Vector &v1, const Vector &v2, const Vector &v3,
@@ -289,8 +295,8 @@ public:
 				 const Vector &v4,							// specify vertices in cw or ccw order
 				 const Vector &color);
 
-	// for ease of testing. 
-	void AddAxisAlignedRectangularSolid(int id,Vector mincoord, Vector Maxcoord, 
+	// for ease of testing.
+	void AddAxisAlignedRectangularSolid(int id,Vector mincoord, Vector Maxcoord,
 										const Vector &color);
 
 
@@ -318,7 +324,7 @@ public:
 	// buffer, and get a ray traced scene in 32-bit rgba format
 	void RenderScene(int width, int height,					// width and height of desired rendering
 					 int stride,							// actual width in pixels of target buffer
-					 uint32 *output_buffer,					// pointer to destination 
+					 uint32 *output_buffer,					// pointer to destination
 					 Vector CameraOrigin,					// eye position
 					 Vector ULCorner,						// word space coordinates of upper left
 															// monitor corner
@@ -327,7 +333,7 @@ public:
 					 Vector LRCorner,						// lower right
 					 RayTraceLightingMode_t lightmode=DIRECT_LIGHTING);
 
-					 
+
 	/// raytracing stream - lets you trace an array of rays by feeding them to this function.
 	/// results will not be returned until FinishStream is called. This function handles sorting
 	/// the rays by direction, tracing them 4 at a time, and de-interleaving the results.
@@ -349,10 +355,10 @@ public:
 		int split_plane,int32 const *tri_list,int ntris,
 		Vector MinBound,Vector MaxBound, float &split_value,
 		int &nleft, int &nright, int &nboth);
-		
+
 	void RefineNode(int node_number,int32 const *tri_list,int ntris,
 						 Vector MinBound,Vector MaxBound, int depth);
-	
+
 	void CalculateTriangleListBounds(int32 const *tris,int ntris,
 									 Vector &minout, Vector &maxout);
 

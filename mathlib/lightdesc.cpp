@@ -8,6 +8,9 @@
 #include <lightdesc.h>
 #include "mathlib.h"
 
+// NOTE: This has to be the last file included!
+#include "tier0/memdbgon.h"
+
 void LightDesc_t::RecalculateDerivedValues(void)
 {
 	m_Flags = LIGHTTYPE_OPTIMIZATIONFLAGS_DERIVED_VALUES_CALCED;
@@ -66,6 +69,35 @@ void LightDesc_t::ComputeLightAtPointsForDirectional(
 	color.z=AddSIMD(color.z,MulSIMD(strength,ReplicateX4(m_Color.z)));
 }
 
+
+float LightDesc_t::DistanceAtWhichBrightnessIsLessThan( float flAmount ) const
+{
+	float bright = m_Color.Length();
+	if ( bright > 0.0 )
+	{
+		flAmount /= m_Color.Length();
+
+		// calculate terms for quadratic equation
+		float a = flAmount * m_Attenuation2;
+		float b = flAmount * m_Attenuation1;
+		float c = flAmount * m_Attenuation0 - 1;
+
+		float r0, r1;
+		if ( SolveQuadratic( a, b, c, r0, r1 ) )
+		{
+			float rslt = MAX( 0.0f, MAX( r0, r1 ) );
+#ifdef _DEBUG
+			if ( rslt > 0.0f )
+			{
+				float fltest = 1.0f / ( m_Attenuation0 + rslt * m_Attenuation1 + rslt * rslt * m_Attenuation2 );
+				Assert( fabs( fltest - flAmount ) < 0.1f );
+			}
+#endif
+			return rslt;
+		}
+	}
+	return 0;
+}
 
 void LightDesc_t::ComputeLightAtPoints( const FourVectors &pos, const FourVectors &normal,
 										FourVectors &color, bool DoHalfLambert ) const

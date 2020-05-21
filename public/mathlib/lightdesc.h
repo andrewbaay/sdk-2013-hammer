@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //===========================================================================//
 
@@ -31,10 +31,10 @@ enum LightType_OptimizationFlags_t
 	LIGHTTYPE_OPTIMIZATIONFLAGS_DERIVED_VALUES_CALCED = 8,
 };
 
-struct LightDesc_t 
+struct LightDesc_t
 {
     LightType_t m_Type;										//< MATERIAL_LIGHT_xxx
-	Vector m_Color;											//< color+intensity 
+	Vector m_Color;											//< color+intensity
     Vector m_Position;										//< light source center position
     Vector m_Direction;										//< for SPOT, direction it is pointing
     float  m_Range;											//< distance range for light.0=infinite
@@ -42,7 +42,7 @@ struct LightDesc_t
     float m_Attenuation0;									//< constant distance falloff term
     float m_Attenuation1;									//< linear term of falloff
     float m_Attenuation2;									//< quadatic term of falloff
-    float m_Theta;											//< inner cone angle. no angular falloff 
+    float m_Theta;											//< inner cone angle. no angular falloff
 															//< within this cone
     float m_Phi;											//< outer cone angle
 
@@ -69,7 +69,7 @@ public:
 	{
 		InitPoint( pos, color );
 	}
-	
+
 	/// a simple light. cone boundaries in radians. you pass a look_at point and the
 	/// direciton is derived from that.
 	LightDesc_t( const Vector &pos, const Vector &color, const Vector &point_at,
@@ -108,6 +108,8 @@ public:
 	{
 		return OneOver_ThetaDot_Minus_PhiDot;
 	}
+
+	float DistanceAtWhichBrightnessIsLessThan( float flAmount ) const;
 };
 
 

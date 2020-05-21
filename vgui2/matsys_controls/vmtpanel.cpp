@@ -1,19 +1,23 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //===========================================================================//
 
-#include "dme_controls/vmtpanel.h"
+#include "matsys_controls/vmtpanel.h"
 #include "materialsystem/imesh.h"
 #include "materialsystem/imaterial.h"
 #include "materialsystem/itexture.h"
-#include "vguimatsurface/imatsystemsurface.h"
-#include "vgui_controls/scrollbar.h"
+#include "VGuiMatSurface/IMatSystemSurface.h"
+#include "vgui_controls/ScrollBar.h"
 #include "matsys_controls/matsyscontrols.h"
-#include "vgui/ivgui.h"
-#include "vgui_controls/toolwindow.h"
+#include "vgui/IVGui.h"
+#include "vgui_controls/ToolWindow.h"
+#include "tier2/renderutils.h"
+
+// NOTE: This has to be the last file included!
+#include "tier0/memdbgon.h"
 
 
 using namespace vgui;
@@ -307,15 +311,15 @@ void CVMTPanel::RenderSphere( const Vector &vCenter, float flRadius, int nTheta,
 
 			Vector vecPos;
 			vecPos.x = flRadius * sin(phi) * cos(theta);
-			vecPos.y = flRadius * cos(phi);
-			vecPos.z = -flRadius * sin(phi) * sin(theta); 
+			vecPos.y = flRadius * sin(phi) * sin(theta); 
+			vecPos.z = flRadius * cos(phi);
 			    
 			Vector vecNormal = vecPos;
 			VectorNormalize( vecNormal );
 
 			Vector4D vecTangentS;
 			Vector vecTangentT;
-			vecTangentS.Init( vecPos.z, -vecPos.x, 0.0f, 1.0f );
+			vecTangentS.Init( -vecPos.y, vecPos.x, 0.0f, 1.0f );
 			if ( VectorNormalize( vecTangentS.AsVector3D() ) == 0.0f )
 			{
 				vecTangentS.Init( 1.0f, 0.0f, 0.0f, 1.0f );
@@ -353,8 +357,6 @@ void CVMTPanel::RenderSphere( const Vector &vCenter, float flRadius, int nTheta,
 			meshBuilder.TexCoord2f( 2, u2, v2 );
 			meshBuilder.TangentS3fv( vecTangentS.Base() );
 			meshBuilder.TangentT3fv( vecTangentT.Base() );
-			meshBuilder.BoneWeight( 0, 1.0f );
-			meshBuilder.BoneMatrix( 0, 0 );
 			meshBuilder.UserData( vecTangentS.Base() );
 			meshBuilder.AdvanceVertex();
 		}
@@ -415,12 +417,12 @@ void CVMTPanel::OnPaint3D()
 		return;
 
 	// Deal with refraction
+	CMatRenderContextPtr pRenderContext( MaterialSystem() );
 	if ( m_pMaterial->NeedsPowerOfTwoFrameBufferTexture() )
 	{
 		ITexture *pTexture = GetPowerOfTwoFrameBufferTexture();
 		if ( pTexture && !pTexture->IsError() )
 		{
-			CMatRenderContextPtr pRenderContext( MaterialSystem() );
 			pRenderContext->CopyRenderTargetToTexture( pTexture );
 			pRenderContext->SetFrameBufferCopyTexture( pTexture );
 		}
@@ -430,7 +432,7 @@ void CVMTPanel::OnPaint3D()
 
 	// FIXME: Draw the outline of this panel?
 
-//	pRenderContext->CullMode(MATERIAL_CULLMODE_CCW);
+	pRenderContext->CullMode( MATERIAL_CULLMODE_CW );
 
 	RenderSphere( vec3_origin, SPHERE_RADIUS, 20, 20 );
 	/*

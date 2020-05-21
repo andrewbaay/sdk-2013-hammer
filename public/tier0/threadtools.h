@@ -1,7 +1,7 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: A collection of utility classes to simplify thread handling, and
-//			as much as possible contain portability problems. Here avoiding 
+//			as much as possible contain portability problems. Here avoiding
 //			including windows.h.
 //
 //=============================================================================
@@ -93,7 +93,7 @@ PLATFORM_INTERFACE bool ThreadInMainThread();
 PLATFORM_INTERFACE void DeclareCurrentThreadIsMainThread();
 
 // NOTE: ThreadedLoadLibraryFunc_t needs to return the sleep time in milliseconds or TT_INFINITE
-typedef int (*ThreadedLoadLibraryFunc_t)(); 
+typedef int (*ThreadedLoadLibraryFunc_t)();
 PLATFORM_INTERFACE void SetThreadedLoadLibraryFunc( ThreadedLoadLibraryFunc_t func );
 PLATFORM_INTERFACE ThreadedLoadLibraryFunc_t GetThreadedLoadLibraryFunc();
 
@@ -198,7 +198,7 @@ extern "C"
 #pragma intrinsic( _InterlockedCompareExchange )
 #pragma intrinsic( _InterlockedDecrement )
 #pragma intrinsic( _InterlockedExchange )
-#pragma intrinsic( _InterlockedExchangeAdd ) 
+#pragma intrinsic( _InterlockedExchangeAdd )
 #pragma intrinsic( _InterlockedIncrement )
 
 inline long ThreadInterlockedIncrement( long volatile *p )										{ Assert( (size_t)p % 4 == 0 ); return _InterlockedIncrement( p ); }
@@ -234,7 +234,7 @@ inline void const *ThreadInterlockedCompareExchangePointerToConst( void const * 
 inline bool ThreadInterlockedAssignPointerToConstIf( void const * volatile *p, void const *value, void const *comperand )			{ return ThreadInterlockedAssignPointerIf( const_cast < void * volatile * > ( p ), const_cast < void * > ( value ), const_cast < void * > ( comperand ) ); }
 
 #if defined( PLATFORM_64BITS )
-#if defined (_WIN32) 
+#if defined (_WIN32)
 typedef __m128i int128;
 inline int128 int128_zero()	{ return _mm_setzero_si128(); }
 #else
@@ -432,9 +432,9 @@ template <class T = intp>
 
 //-----------------------------------------------------------------------------
 //
-// A super-fast thread-safe integer A simple class encapsulating the notion of an 
-// atomic integer used across threads that uses the built in and faster 
-// "interlocked" functionality rather than a full-blown mutex. Useful for simple 
+// A super-fast thread-safe integer A simple class encapsulating the notion of an
+// atomic integer used across threads that uses the built in and faster
+// "interlocked" functionality rather than a full-blown mutex. Useful for simple
 // things like reference counts, etc.
 //
 //-----------------------------------------------------------------------------
@@ -460,25 +460,33 @@ public:
 	T operator--()					{ return (T)ThreadInterlockedDecrement( (long *)&m_value ); }
 	T operator--(int)				{ return operator--() + 1; }
 
+	// Atomic add is like += except it returns the previous value as its return value
+	T AtomicAdd( T add )			{
+										if ( sizeof(T) == sizeof(int32) )
+											return (T)ThreadInterlockedExchangeAdd( (int32 *)&m_value, (int32)add );
+										else
+											return (T)ThreadInterlockedExchangeAdd64( (int64 *)&m_value, (int64)add );
+									}
+
 	bool AssignIf( T conditionValue, T newValue )	{ return ThreadInterlockedAssignIf( (long *)&m_value, (long)newValue, (long)conditionValue ); }
 
 	T operator=( T newValue )		{ ThreadInterlockedExchange((long *)&m_value, newValue); return m_value; }
 
 	void operator+=( T add )		{ ThreadInterlockedExchangeAdd( (long *)&m_value, (long)add ); }
 	void operator-=( T subtract )	{ operator+=( -subtract ); }
-	void operator*=( T multiplier )	{ 
-		T original, result; 
-		do 
-		{ 
-			original = m_value; 
-			result = original * multiplier; 
+	void operator*=( T multiplier )	{
+		T original, result;
+		do
+		{
+			original = m_value;
+			result = original * multiplier;
 		} while ( !AssignIf( original, result ) );
 	}
-	void operator/=( T divisor )	{ 
-		T original, result; 
-		do 
-		{ 
-			original = m_value; 
+	void operator/=( T divisor )	{
+		T original, result;
+		do
+		{
+			original = m_value;
 			result = original / divisor;
 		} while ( !AssignIf( original, result ) );
 	}
@@ -548,10 +556,10 @@ private:
 };
 
 //-----------------------------------------------------------------------------
-// 
-// Platform independent verification that multiple threads aren't getting into the same code at the same time. 
+//
+// Platform independent verification that multiple threads aren't getting into the same code at the same time.
 // Note: This is intended for use to identify problems, it doesn't provide any sort of thread safety.
-// 
+//
 //-----------------------------------------------------------------------------
 class ReentrancyVerifier
 {
@@ -625,7 +633,7 @@ private:
 #if defined( _WIN32 )
 	// Efficient solution to breaking the windows.h dependency, invariant is tested.
 #ifdef _WIN64
-	#define TT_SIZEOF_CRITICALSECTION 40	
+	#define TT_SIZEOF_CRITICALSECTION 40
 #else
 #ifndef _X360
 	#define TT_SIZEOF_CRITICALSECTION 24
@@ -651,9 +659,9 @@ private:
 
 //-----------------------------------------------------------------------------
 //
-// An alternative mutex that is useful for cases when thread contention is 
+// An alternative mutex that is useful for cases when thread contention is
 // rare, but a mutex is required. Instances should be declared volatile.
-// Sleep of 0 may not be sufficient to keep high priority threads from starving 
+// Sleep of 0 may not be sufficient to keep high priority threads from starving
 // lesser threads. This class is not a suitable replacement for a critical
 // section if the resource contention is high.
 //
@@ -701,8 +709,8 @@ public:
 		return TryLockInline( ThreadGetCurrentId() );
 	}
 
-#ifndef _DEBUG 
-	FORCEINLINE 
+#ifndef _DEBUG
+	FORCEINLINE
 #endif
 	void Lock( unsigned int nSpinSleepTime = 0 ) volatile
 	{
@@ -726,7 +734,7 @@ public:
 	}
 
 #ifndef _DEBUG
-	FORCEINLINE 
+	FORCEINLINE
 #endif
 	void Unlock() volatile
 	{
@@ -1108,7 +1116,7 @@ private:
 #ifdef WIN32
 	CThreadFastMutex m_mutex;
 #else
-	CThreadMutex m_mutex;	
+	CThreadMutex m_mutex;
 #endif
 	CThreadEvent m_CanWrite;
 	CThreadEvent m_CanRead;
@@ -1225,7 +1233,7 @@ public:
 	// Resume a previously suspended thread from the Cooperative call
 	void ResumeCooperative();
 
-	// wait for a thread to execute its SuspendCooperative call 
+	// wait for a thread to execute its SuspendCooperative call
 	void BWaitForThreadSuspendCooperative();
 
 #ifndef LINUX
@@ -1414,7 +1422,7 @@ protected:
 #define __stdcall
 #endif
 	typedef uint32 (__stdcall *WaitFunc_t)( int nEvents, CThreadEvent * const *pEvents, int bWaitAll, uint32 timeout );
-	
+
 	int Call( unsigned, unsigned timeout, bool fBoost, WaitFunc_t = NULL, CFunctor *pParamFunctor = NULL );
 	int WaitForReply( unsigned timeout, WaitFunc_t );
 
@@ -1456,7 +1464,7 @@ public:
 	}
 
 	// check for a message. not 100% reliable - someone could grab the message first
-	bool MessageWaiting( void ) 
+	bool MessageWaiting( void )
 	{
 		return ( Head != NULL );
 	}

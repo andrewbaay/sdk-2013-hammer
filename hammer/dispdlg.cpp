@@ -1236,11 +1236,14 @@ void CPaintSculptDlg::OnClose( )
 void CPaintSculptDlg::OnLButtonUp( UINT nFlags, CPoint point )
 {
 	CToolDisplace *pDispTool = GetDisplacementTool();
-	CSculptPainter *painter = dynamic_cast< CSculptPainter * >( pDispTool->GetSculptPainter() );
-
-	if ( painter )
+	if ( pDispTool != NULL )
 	{
-		painter->OnLButtonUpDialog( nFlags, point );
+		CSculptPainter *painter = dynamic_cast< CSculptPainter * >( pDispTool->GetSculptPainter() );
+
+		if ( painter )
+		{
+			painter->OnLButtonUpDialog( nFlags, point );
+		}
 	}
 
 	__super::OnLButtonUp(nFlags, point);
@@ -1255,11 +1258,14 @@ void CPaintSculptDlg::OnLButtonUp( UINT nFlags, CPoint point )
 void CPaintSculptDlg::OnLButtonDown( UINT nFlags, CPoint point )
 {
 	CToolDisplace *pDispTool = GetDisplacementTool();
-	CSculptPainter *painter = dynamic_cast< CSculptPainter * >( pDispTool->GetSculptPainter() );
-
-	if ( painter )
+	if ( pDispTool != NULL )
 	{
-		painter->OnLButtonDownDialog( nFlags, point );
+		CSculptPainter *painter = dynamic_cast< CSculptPainter * >( pDispTool->GetSculptPainter() );
+
+		if ( painter )
+		{
+			painter->OnLButtonDownDialog( nFlags, point );
+		}
 	}
 
 	__super::OnLButtonDown(nFlags, point);
@@ -1274,13 +1280,14 @@ void CPaintSculptDlg::OnLButtonDown( UINT nFlags, CPoint point )
 void CPaintSculptDlg::OnMouseMove(UINT nFlags, CPoint point)
 {
 	CToolDisplace* pDispTool = GetDisplacementTool();
-	if ( !pDispTool )
-		return;
-	CSculptPainter* painter = dynamic_cast<CSculptPainter*>(pDispTool->GetSculptPainter());
-
-	if (painter)
+	if ( pDispTool != NULL )
 	{
-		painter->OnMouseMoveDialog( nFlags, point );
+		CSculptPainter* painter = dynamic_cast<CSculptPainter*>(pDispTool->GetSculptPainter());
+
+		if (painter)
+		{
+			painter->OnMouseMoveDialog( nFlags, point );
+		}
 	}
 
 	__super::OnMouseMove(nFlags, point);
@@ -1295,6 +1302,16 @@ void CPaintSculptDlg::OnDestroy()
 	// save the current dialog data - window position, effect, etc...
 	//
 	GetWindowRect( &m_DialogPosRect );
+
+	CToolDisplace *pDispTool = GetDisplacementTool();
+	if( pDispTool )
+	{
+		CDialog *painter = dynamic_cast< CDialog * >( pDispTool->GetSculptPainter() );
+		if ( painter )
+		{
+			painter->ShowWindow( SW_HIDE );
+		}
+	}
 
 #if 0
 	CToolDisplace *pTool = GetDisplacementTool();

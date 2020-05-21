@@ -13,6 +13,8 @@
 #include "EditGameClass.h"
 #include "tier1/utlobjectreference.h"
 
+#undef GetClassName
+
 class CMapAnimator;
 class CRender2D;
 class CManifest;
@@ -61,8 +63,8 @@ public:
 		ALIGN_BOTTOM,
 	};
 
-	bool NameMatches(const char *szName);
-	bool ClassNameMatches(const char *szName);
+	bool NameMatches(const char *szName) const;
+	bool ClassNameMatches(const char *szName) const;
 
 	virtual bool ShouldAppearInRaytracedLightingPreview(void)
 	{
@@ -96,7 +98,7 @@ public:
 		}
 	}
 
-	inline BOOL IsPlaceholder(void)
+	inline BOOL IsPlaceholder(void) const
 	{
 		return((flags & flagPlaceholder) ? TRUE : FALSE);
 	}
@@ -106,7 +108,7 @@ public:
 	//
 	// CMapClass overrides.
 	//
-	bool IsCulledByCordon(const Vector &vecMins, const Vector &vecMaxs);
+	virtual bool IsIntersectingCordon(const Vector &vecMins, const Vector &vecMaxs);
 
 	//
 	// Serialization.
@@ -181,11 +183,11 @@ public:
 	void AssignNodeID(void);
 
 	const char* GetDescription();
-	bool IsScaleable() { return !IsPlaceholder(); }
+	bool IsScaleable() const { return !IsPlaceholder(); }
 
 	// animation
 	bool GetTransformMatrix( VMatrix& matrix );
-	BOOL IsAnimationController( void ) { return IsMoveClass(); }
+	bool IsAnimationController() { return IsMoveClass(); }
 
 	//-----------------------------------------------------------------------------
 	// Purpose: If the first child of this entity is of type MapClass, this function

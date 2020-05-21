@@ -22,6 +22,7 @@
 class CChildFrame;
 class CObjectProperties;
 class CTextureBrowser;
+class CModelBrowser;
 class CSearchReplaceDlg;
 class CFaceEditSheet;
 class CMessageWnd;
@@ -62,6 +63,7 @@ public:
 	HACCEL GetAccelTable( void ) { return m_hAccelTable; }
 
 	CFaceSmoothingVisualDlg *GetSmoothingGroupDialog( void )	{ return &m_SmoothingGroupDlg; }
+	CModelBrowser *GetModelBrowser();
 
 	void ResetAutosaveTimer();
 
@@ -141,6 +143,7 @@ protected:
 	afx_msg void OnUpdateEditFunction(CCmdUI *pCmdUI);
 	afx_msg BOOL OnApplicator(UINT nID);
 	afx_msg BOOL OnSoundBrowser(UINT nID);
+	afx_msg void OnModelBrowser();
 	afx_msg BOOL OnReloadSounds(UINT nID);
 	afx_msg void OnUpdateOpaqueMaterials(CCmdUI *pCmdUI);
 	afx_msg void OnOpaqueMaterials();
@@ -169,6 +172,7 @@ private:
 	CMDIClientWnd			wndMDIClient;			// dvs: what in God's name is this for?
 
 	CSearchReplaceDlg		*m_pSearchReplaceDlg;
+	CModelBrowser			*m_pModelBrowser;
 
 	BOOL					m_bUndoActive;
 

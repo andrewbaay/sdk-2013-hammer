@@ -173,6 +173,7 @@ private:
 		int							m_nPointCount;
 		CUtlVector<Vector>			m_aPoints;
 		CUtlVector<Vector>			m_aDispPointUVs;		// z is always 0 (need to be this way to share functions!)
+		CUtlVector<Vector>          m_aNormals;
 		CUtlVector<Vector2D>		m_aTexCoords[NUM_CLIPFACE_TEXCOORDS];
 		CUtlVector<BlendData_t>		m_aBlends;
 		
@@ -187,6 +188,7 @@ private:
 			m_aPoints.Purge(); 
 			m_aDispPointUVs.Purge(); 
 			m_aBlends.Purge();
+			m_aNormals.Purge();
 
 			for ( int iCoord = 0; iCoord < NUM_CLIPFACE_TEXCOORDS; ++iCoord )
 			{

@@ -27,6 +27,7 @@
 #include "camera.h"
 #include "MapWorld.h"
 #include "mapview.h"
+#include "p4lib/ip4.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -75,7 +76,6 @@ void CMapInstance::SetInstancePath( const char *pszInstancePath )
 	V_strlower( m_InstancePath );
 	V_FixSlashes( m_InstancePath );
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: This function will attempt to find a full path given the base and relative names.
@@ -145,7 +145,6 @@ bool CMapInstance::DeterminePath( const char *pszBaseFileName, const char *pszIn
 	return false;
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Constructor.
 //-----------------------------------------------------------------------------
@@ -171,7 +170,8 @@ CMapInstance::CMapInstance( const char *pszBaseFileName, const char *pszInstance
 		CMapDoc	*activeDoc = CMapDoc::GetActiveMapDoc();
 
 		CHammer::SetIsNewDocumentVisible( false );
-		m_pInstancedMap = ( CMapDoc * )APP()->OpenDocumentFile( m_FileName );
+
+		m_pInstancedMap = ( CMapDoc * )APP()->OpenDocumentOrInstanceFile( m_FileName );
 		if ( m_pInstancedMap )
 		{
 			m_pInstancedMap->AddReference();
@@ -253,7 +253,8 @@ void CMapInstance::FindTargetNames( CUtlVector< const char * > &Names )
 		{
 			GDIV_TYPE	FieldType = GetFieldType( pInstanceValue );
 
-			if ( FieldType == ivTargetDest ||
+			if ( FieldType == ivStringInstanced ||
+				 FieldType == ivTargetDest ||
 				FieldType == ivTargetNameOrClass ||
 				FieldType == ivTargetSrc )
 			{
@@ -340,7 +341,8 @@ bool CMapInstance::OnApply( void )
 
 			CHammer::SetIsNewDocumentVisible( false );
 			strcpy( m_FileName, FileName );
-			m_pInstancedMap = ( CMapDoc * )APP()->OpenDocumentFile( m_FileName );
+
+			m_pInstancedMap = ( CMapDoc * )APP()->OpenDocumentOrInstanceFile( m_FileName );
 
 			CHammer::SetIsNewDocumentVisible( bSaveVisible );
 		}

@@ -24,7 +24,7 @@ struct ExportDXFInfo_s;
 //
 #define CREATE_BUILD_PLANE_POINTS		0x0001		// Whether to regenerate the 3 plane points from the generated face points.
 #define CREATE_FROM_PLANES_CLIPPING		0x0002
-#define CREATE_ALREADY_HAS_POINTS 0x0004
+#define CREATE_ALREADY_HAS_POINTS		0x0004
 
 #define MAPSOLID_MAX_FACES				512         // Maximum number of faces a solid can have.
 
@@ -110,7 +110,7 @@ public:
 	inline void SetHL1SolidType(HL1_SolidType_t eSolidType) { m_eSolidType = eSolidType; }
 	HL1_SolidType_t HL1SolidTypeFromTextureName(const char *pszTexture);
 
-	virtual bool IsScaleable(void) { return(true); }
+	virtual bool IsScaleable(void) const { return(true); }
 	virtual bool IsVisualElement(void) { return(true); }
 
 	// Overridden to set the render color of each of our faces.

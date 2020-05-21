@@ -993,6 +993,27 @@ void CTextureSystem::OpenSource( const char *pMaterialName )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Opens explorer dialog and selects the source file
+//-----------------------------------------------------------------------------
+void CTextureSystem::ExploreToSource( const char *pMaterialName )
+{
+	if ( !pMaterialName )
+		return;
+
+	char pRelativePath[MAX_PATH];
+	Q_snprintf( pRelativePath, MAX_PATH, "materials/%s.vmt", pMaterialName );
+
+	char pFullPath[MAX_PATH];
+	if ( g_pFullFileSystem->GetLocalPath( pRelativePath, pFullPath, MAX_PATH ) )
+	{
+		CString strSel = "/select, ";
+		strSel += pFullPath;
+
+		ShellExecute(NULL, "open", "explorer", strSel, NULL, SW_SHOWNORMAL );
+	}
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor.

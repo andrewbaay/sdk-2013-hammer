@@ -749,6 +749,8 @@ void CMapView3D::OnLButtonDblClk(UINT nFlags, CPoint point)
 	//
 	// Pass the message to the active tool.
 	//
+	if ( !m_pToolManager ) 
+		return;
 	CBaseTool *pTool = m_pToolManager->GetActiveTool();
 	if (pTool != NULL)
 	{
@@ -775,13 +777,16 @@ void CMapView3D::OnLButtonDown(UINT nFlags, CPoint point)
     //
 	// Pass the message to the active tool.
     //
-	CBaseTool *pTool = m_pToolManager->GetActiveTool();
-	if (pTool != NULL)
+	if ( m_pToolManager != NULL )
 	{
-		Vector2D vPoint( point.x,point.y);
-		if (pTool->OnLMouseDown3D(this, nFlags, vPoint))
+		CBaseTool *pTool = m_pToolManager->GetActiveTool();
+		if (pTool != NULL)
 		{
-			return;
+			Vector2D vPoint( point.x,point.y);
+			if (pTool->OnLMouseDown3D(this, nFlags, vPoint))
+			{
+				return;
+			}
 		}
 	}
 
@@ -827,13 +832,16 @@ void CMapView3D::OnLButtonUp(UINT nFlags, CPoint point)
 	//
 	// Pass the message to the active tool.
 	//
-	CBaseTool *pTool = m_pToolManager->GetActiveTool();
-	if (pTool != NULL)
+	if ( m_pToolManager != NULL )
 	{
-		Vector2D vPoint( point.x,point.y);
-		if (pTool->OnLMouseUp3D(this, nFlags, vPoint))
+		CBaseTool *pTool = m_pToolManager->GetActiveTool();
+		if (pTool != NULL)
 		{
-			return;
+			Vector2D vPoint( point.x,point.y);
+			if (pTool->OnLMouseUp3D(this, nFlags, vPoint))
+			{
+				return;
+			}
 		}
 	}
 
@@ -1676,13 +1684,16 @@ BOOL CMapView3D::OnMouseWheel(UINT nFlags, short zDelta, CPoint point)
     //
 	// Pass the message to the active tool.
     //
-	CBaseTool *pTool = m_pToolManager->GetActiveTool();
-	if (pTool != NULL)
+	if ( m_pToolManager != NULL )
 	{
-		Vector2D vPoint( point.x,point.y);
-		if (pTool->OnMouseWheel3D(this, nFlags, zDelta, vPoint))
+		CBaseTool *pTool = m_pToolManager->GetActiveTool();
+		if (pTool != NULL)
 		{
-			return(TRUE);
+			Vector2D vPoint( point.x,point.y);
+			if (pTool->OnMouseWheel3D(this, nFlags, zDelta, vPoint))
+			{
+				return(TRUE);
+			}
 		}
 	}
 
@@ -1716,13 +1727,16 @@ void CMapView3D::OnRButtonDown(UINT nFlags, CPoint point)
 	//
 	// Pass the message to the active tool.
 	//
-	CBaseTool *pTool = m_pToolManager->GetActiveTool();
-	if (pTool != NULL)
+	if ( m_pToolManager != NULL )
 	{
-		Vector2D vPoint( point.x,point.y);
-		if (pTool->OnRMouseDown3D( this, nFlags, vPoint ))
+		CBaseTool *pTool = m_pToolManager->GetActiveTool();
+		if (pTool != NULL)
 		{
-			return;
+			Vector2D vPoint( point.x,point.y);
+			if (pTool->OnRMouseDown3D( this, nFlags, vPoint ))
+			{
+				return;
+			}
 		}
 	}
 
@@ -1749,13 +1763,16 @@ void CMapView3D::OnRButtonUp(UINT nFlags, CPoint point)
 	//
 	// Pass the message to the active tool.
 	//
-	CBaseTool *pTool = m_pToolManager->GetActiveTool();
-	if (pTool != NULL)
+	if ( m_pToolManager != NULL )
 	{
-		Vector2D vPoint( point.x,point.y);
-		if (pTool->OnRMouseUp3D( this, nFlags, vPoint ))
+		CBaseTool *pTool = m_pToolManager->GetActiveTool();
+		if (pTool != NULL)
 		{
-			return;
+			Vector2D vPoint( point.x,point.y);
+			if (pTool->OnRMouseUp3D( this, nFlags, vPoint ))
+			{
+				return;
+			}
 		}
 	}
 

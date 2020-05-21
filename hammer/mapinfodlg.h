@@ -36,6 +36,7 @@ class CMapInfoDlg : public CDialog
 		CStatic	m_PointEntities;
 		CStatic	m_TextureMemory;
 		CStatic	m_UniqueTextures;
+		CListBox m_WadsUsed;
 		//}}AFX_DATA
 
 		CMapWorld *pWorld;

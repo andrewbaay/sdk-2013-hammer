@@ -22,6 +22,7 @@
 // Forward declarations
 //-----------------------------------------------------------------------------
 
+class CSheetExtended;
 
 //-----------------------------------------------------------------------------
 //
@@ -38,11 +39,24 @@ public:
 	void SetVMT( const char *pMaterialName );
 	const char *GetVMT() const;
 
+	CSheetExtended* GetSheet();
+	IMaterial* GetMaterial();
+
+	bool VMTUsesSheets();
+	int GetSheetSequenceCount();
+	int GetCurrentSequence();
+	int GetCurrentSecondarySequence();
+	int GetRealSequenceNumber();
+	void SetSheetSequence( int nSequence );
+	void SetSecondarySheetSequence( int nSequence );
+
 	// Paints the texture
 	virtual void Paint( void );
 
 	// View it in 3D or 2D mode
 	void DrawIn3DMode( bool b3DMode );
+
+	void SetSheetPreviewSpeed( float flPreviewSpeed );
 
 private:
 	// Two different preview methods
@@ -63,10 +77,11 @@ private:
 	void RenderSphere( const Vector &vCenter, float flRadius, int nTheta, int nPhi );
 
 	// Draw sprite-card based materials
-	void RenderSpriteCard( const Vector &vCenter, float flRadius );
+	void RenderSheet( const Vector &vCenter, float flRadius );
 
 	CUtlString m_VMTName;
 	CMaterialReference m_Material;
+	CSheetExtended* m_pMaterialSheet;
 	CTextureReference m_pLightmapTexture;
 	CTextureReference m_DefaultEnvCubemap;
 	Vector m_LightDirection;
@@ -75,6 +90,10 @@ private:
 	Vector m_vecCameraDirection;
 	float m_flLastRotationTime;
 	bool m_bDrawIn3DMode;
+	float m_flLastSwitchTime;
+	float m_flSheetPreviewSpeed;
+	int m_nCurrentSheetSequence;
+	int m_nCurrentSecondarySheetSequence;
 };
 
 

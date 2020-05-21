@@ -31,6 +31,8 @@ public:
 	void SetTGA( const char *pFullPath );
 	const char *GetTGA() const;
 
+	virtual void PerformLayout();
+
 private:
 	CUtlString m_TGAName;
 };

@@ -25,7 +25,7 @@ public:
 	COP_Groups();
 	~COP_Groups();
 
-	virtual bool SaveData(void);
+	virtual bool SaveData( SaveData_Reason_t reason );
 	virtual void UpdateData( int Mode, PVOID pData, bool bCanEdit );
 
 	void SetMultiEdit(bool b);
