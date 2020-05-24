@@ -1260,7 +1260,6 @@ void CBaseAssetPicker::AddAssetToList( int nAssetIndex )
 
 	bool bInRootDir = !strchr( info.m_AssetName, '\\' ) && !strchr( info.m_AssetName, '/' );
 
-	Assert( m_pInsertHelper );
 	KeyValuesAD kv( "node" );
 	kv->SetName( info.m_AssetName );
 	kv->SetString( "asset", info.m_AssetName );
