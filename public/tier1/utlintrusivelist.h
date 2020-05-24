@@ -808,7 +808,7 @@ public:
 
 	int NthNode( int n )
 	{
-		return NthNode( m_pHead, n );
+		return IntrusiveList::NthNode( m_pHead, n );
 	}
 
 	// this will kill all elements in a list if

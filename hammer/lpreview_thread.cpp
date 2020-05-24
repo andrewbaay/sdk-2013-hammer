@@ -573,7 +573,7 @@ void CLightingPreviewThread::DoWork()
 		m_bAccStructureBuilt = true;
 		m_pRtEnv->SetupAccelerationStructure();
 	}
-	CLightingPreviewLightDescription* pLightsToRun[8];
+	CLightingPreviewLightDescription* pLightsToRun[64];
 	int nNumLightJobs = 0;
 	int nJobsToDo = s_nNumThreads + 1;
 	if ( m_bFirstWork )
@@ -585,13 +585,13 @@ void CLightingPreviewThread::DoWork()
 	nJobsToDo = 1;
 #endif
 
+	nJobsToDo = Min( nJobsToDo, 64 );
 	for ( int i = 0; i < nJobsToDo; i++ )
 	{
 		CLightingPreviewLightDescription* best_l = NULL;
 		CIncrementalLightInfo* best_l_info = NULL;
 		for ( CLightingPreviewLightDescription* l = m_LightList.Head(); l; l = l->m_pNext )
 		{
-
 			CIncrementalLightInfo* l_info = l->m_pIncrementalInfo;
 			// check if light could influence scene
 			if ( l_info->m_bDisabled )

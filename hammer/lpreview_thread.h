@@ -79,7 +79,7 @@ struct MessageToLPreview
 
 	// this structure uses a fat format for the args instead of separate classes for each
 	// message. the messages are small anyway, since pointers are used for anything of size.
-	FloatBitMap2_t*									m_pDefferedRenderingBMs[4];	// if LPREVIEW_MSG_G_BUFFERS
+	FloatBitMap2_t*									m_pDefferedRenderingBMs[3];	// if LPREVIEW_MSG_G_BUFFERS
 	CUtlIntrusiveList<CLightingPreviewLightDescription> m_LightList;			// if LPREVIEW_MSG_LIGHT_DATA
 	Vector											m_EyePosition;				// for LPREVIEW_MSG_LIGHT_DATA & G_BUFFERS
 	CUtlVector<Vector>*								m_pShadowTriangleList;		// for LPREVIEW_MSG_GEOM_DATA
