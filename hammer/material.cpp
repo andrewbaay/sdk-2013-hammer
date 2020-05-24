@@ -19,6 +19,7 @@
 #include "materialsystem/MaterialSystemUtil.h"
 #include "materialsystem/IMaterial.h"
 #include "materialsystem/imaterialvar.h"
+#include "materialsystem/ishaderapi.h"
 #include "bitmap/imageformat.h" // hack : don't want to include this just for ImageFormat
 #include "FileSystem.h"
 #include "tier1/strtools.h"
@@ -510,7 +511,7 @@ bool CMaterial::InitDirectoryRecursive( char const* pDirectoryName,
 					memcpy( pFileNameWithPath, pWildCard, nPathStrLen );
 					pFileNameWithPath[nPathStrLen] = '\0';
 					Q_strncat( pFileNameWithPath, pFileName, nPathStrLen + fileNameStrLen + 1 );
-	
+
 					if (!InitDirectoryRecursive( pFileNameWithPath, pEnum, nContext, nFlags ))
 						return false;
 				}
@@ -1300,23 +1301,20 @@ static void InitMaterialSystemConfig(MaterialSystem_Config_t& pConfig)
 }
 
 
-static char const *s_rt_names[]={"_rt_albedo","_rt_normal","_rt_position",
-							   "_rt_accbuf" };
+static char const* s_rt_names[] = { "_rt_albedo","_rt_normal","_rt_position", "_rt_accbuf" };
 ImageFormat s_rt_formats[]={ IMAGE_FORMAT_RGBA32323232F, IMAGE_FORMAT_RGBA32323232F,
-							 IMAGE_FORMAT_RGBA32323232F, 
-							 IMAGE_FORMAT_RGBA16161616F };
+							 IMAGE_FORMAT_RGBA32323232F, IMAGE_FORMAT_RGBA16161616F };
 
 static CTextureReference sg_ExtraFP16Targets[NELEMS(s_rt_names)];
 
-
-void AllocateLightingPreviewtextures(void)
+void AllocateLightingPreviewtextures()
 {
 	static bool bHaveAllocated=false;
 	if ( !bHaveAllocated )
 	{
 		bHaveAllocated = true;
 		MaterialSystemInterface()->BeginRenderTargetAllocation();
-		for(int idx=0;idx<NELEMS(sg_ExtraFP16Targets);idx++)
+		for ( int idx = 0; idx < NELEMS( sg_ExtraFP16Targets ); idx++ )
 			sg_ExtraFP16Targets[idx].Init(
 				materials->CreateNamedRenderTargetTextureEx2(
 					s_rt_names[idx],
@@ -1332,12 +1330,53 @@ void AllocateLightingPreviewtextures(void)
 	}
 }
 
+abstract_class IShaderSystem
+{
+public:
+	virtual ShaderAPITextureHandle_t GetShaderAPITextureBindHandle( ITexture *pTexture, int nFrameVar, int nTextureChannel = 0 ) =0;
+
+	// Binds a texture
+	virtual void BindTexture( Sampler_t sampler1, ITexture *pTexture, int nFrameVar = 0 ) = 0;
+	virtual void BindTexture( Sampler_t sampler1, Sampler_t sampler2, ITexture *pTexture, int nFrameVar = 0 ) = 0;
+
+	// Takes a snapshot
+	virtual void TakeSnapshot( ) = 0;
+
+	// Draws a snapshot
+	virtual void DrawSnapshot( bool bMakeActualDrawCall = true ) = 0;
+
+	// Are we using graphics?
+	virtual bool IsUsingGraphics() const = 0;
+
+	// Are we using graphics?
+	virtual bool CanUseEditorMaterials() const = 0;
+};
+
+abstract_class IShaderSystemInternal : public IShaderInit, public IShaderSystem
+{
+public:
+	// Initialization, shutdown
+	virtual void		Init() = 0;
+	virtual void		Shutdown() = 0;
+	virtual void		ModInit() = 0;
+	virtual void		ModShutdown() = 0;
+
+	// Methods related to reading in shader DLLs
+	virtual bool		LoadShaderDLL( const char *pFullPath ) = 0;
+	virtual void		UnloadShaderDLL( const char *pFullPath ) = 0;
+
+	// ...
+};
+
 //-----------------------------------------------------------------------------
 // Purpose:
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CMaterial::Initialize( HWND hwnd )
 {
+	g_pFullFileSystem->AddSearchPath( "hammer", "GAME" );
+	dynamic_cast<IShaderSystemInternal*>( static_cast<IShaderSystem*>( materials->QueryInterface( "ShaderSystem002" ) ) )->LoadShaderDLL( "hammer/bin/hammer_shader_dx9.dll" );
+
 	// NOTE: This gets set to true later upon creating a 3d view.
 	g_materialSystemConfig = materials->GetCurrentConfigForVideoCard();
 	InitMaterialSystemConfig( g_materialSystemConfig );

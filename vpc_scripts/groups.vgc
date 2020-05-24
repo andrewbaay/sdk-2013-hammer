@@ -12,6 +12,7 @@ $Group "hammer"
 {
 	"hammer_launcher"
 	"hammer_dll"
+	"hammer_shader_dx9"
 	"fgdlib"
 	"mathlib"
 	"raytrace"

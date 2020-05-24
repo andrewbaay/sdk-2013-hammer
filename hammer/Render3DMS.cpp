@@ -688,7 +688,6 @@ void CRender3D::StartRenderFrame(void)
 		ITexture *first_rt=SetRenderTargetNamed(0,"_rt_albedo");
 		SetRenderTargetNamed(1,"_rt_normal");
 		SetRenderTargetNamed(2,"_rt_position");
-		SetRenderTargetNamed(3,"_rt_flags");
 		int nTargetWidth = min( width, first_rt->GetActualWidth() );
 		int nTargetHeight = min( height, first_rt->GetActualHeight() );
 		pRenderContext->
@@ -776,13 +775,6 @@ void CRender3D::StartRenderFrame(void)
 	pRenderContext->CullMode( MATERIAL_CULLMODE_CCW );
 
 	Assert( m_TranslucentRenderObjects.Count() == 0 );
-}
-
-
-static void SetNamedMaterialVar(IMaterial *pMat, char const *pVName, float fValue)
-{
-	IMaterialVar *pVar = pMat->FindVar( pVName, NULL );
-	pVar->SetFloatValue( fValue );
 }
 
 class CLightPreview_Light
@@ -1032,9 +1024,7 @@ static bool ParseLightGeneric( CMapEntity *e, CLightingPreviewLightDescription &
 static bool s_bAddedLightEnvironmentAlready;
 
 
-static void AddEntityLightToLightList(
-	CMapEntity *e,
-	CUtlIntrusiveList<CLightingPreviewLightDescription> &listout )
+static void AddEntityLightToLightList( CMapEntity *e, CUtlIntrusiveList<CLightingPreviewLightDescription> &listout )
 {
 	char const *pszClassName=e->GetClassName();
 	if (pszClassName)
@@ -1162,237 +1152,7 @@ void CRender3D::SendLightList( void )
 	}
 }
 
-void DrawScreenSpaceLightRectangle(
-	CMeshBuilder &meshBuilder,
-	int nDestX, int nDestY, int nWidth, int nHeight,	// Rect to draw into in screen space
-	float flSrcTextureX0, float flSrcTextureY0,		// which texel you want to appear at destx/y
-	float flSrcTextureX1, float flSrcTextureY1,		// which texel you want to appear at destx+width-1, desty+height-1
-	int nSrcTextureWidth, int nSrcTextureHeight,		// needed for fixup
-	LightDesc_t const &light,
-	CMatRenderContextPtr &pRenderContext )
-{
-	int nScreenWidth, nScreenHeight;
-	pRenderContext->GetRenderTargetDimensions( nScreenWidth, nScreenHeight );
-	float flLeftX = nDestX - 0.5f;
-	float flRightX = nDestX + nWidth - 0.5f;
-
-	float flTopY = nDestY - 0.5f;
-	float flBottomY = nDestY + nHeight - 0.5f;
-
-	float flSubrectWidth = flSrcTextureX1 - flSrcTextureX0;
-	float flSubrectHeight = flSrcTextureY1 - flSrcTextureY0;
-
-	float flTexelsPerPixelX = ( nWidth > 1 ) ? flSubrectWidth / ( nWidth - 1 ) : 0.0f;
-	float flTexelsPerPixelY = ( nHeight > 1 ) ? flSubrectHeight / ( nHeight - 1 ) : 0.0f;
-
-	float flLeftU = flSrcTextureX0 + 0.5f - ( 0.5f * flTexelsPerPixelX );
-	float flRightU = flSrcTextureX1 + 0.5f + ( 0.5f * flTexelsPerPixelX );
-	float flTopV = flSrcTextureY0 + 0.5f - ( 0.5f * flTexelsPerPixelY );
-	float flBottomV = flSrcTextureY1 + 0.5f + ( 0.5f * flTexelsPerPixelY );
-
-	float flOOTexWidth = 1.0f / nSrcTextureWidth;
-	float flOOTexHeight = 1.0f / nSrcTextureHeight;
-	flLeftU *= flOOTexWidth;
-	flRightU *= flOOTexWidth;
-	flTopV *= flOOTexHeight;
-	flBottomV *= flOOTexHeight;
-
-	// Get the current viewport size
-	int vx, vy, vw, vh;
-	pRenderContext->GetViewport( vx, vy, vw, vh );
-
-	// map from screen pixel coords to -1..1
-	flRightX = FLerp( -1, 1, 0, vw, flRightX );
-	flLeftX = FLerp( -1, 1, 0, vw, flLeftX );
-	flTopY = FLerp( 1, -1, 0, vh ,flTopY );
-	flBottomY = FLerp( 1, -1, 0, vh, flBottomY );
-
-	Vector color_intens = light.m_Color;
-	Vector spot_dir = light.m_Direction;
-	for ( int corner = 0; corner < 4; corner++ )
-	{
-		bool bLeft = (corner==0) || (corner==3);
-		meshBuilder.Position3f( (bLeft) ? flLeftX : flRightX, (corner & 2) ? flBottomY : flTopY, 0.0f );
-		meshBuilder.TexCoord2f( 0, (bLeft) ? flLeftU : flRightU, (corner & 2) ? flBottomV : flTopV );
-		float pdot = light.m_PhiDot;
-		float tdot = light.m_ThetaDot;
-		if ( light.m_Type == MATERIAL_LIGHT_POINT )
-		{
-			// model point light as a spot with infinite inner radius
-			pdot = 1.0e10;
-			tdot = 0.5;
-		}
-		meshBuilder.TexCoord4f( 1, color_intens.x, color_intens.y, color_intens.z, tdot );
-		meshBuilder.TexCoord4f( 2, spot_dir.x, spot_dir.y, spot_dir.z, pdot );
-		meshBuilder.TexCoord3fv( 3, light.m_Position.Base() );
-		meshBuilder.TexCoord4f( 4, light.m_Attenuation2, light.m_Attenuation1, light.m_Attenuation0, 1.0 );
-		meshBuilder.AdvanceVertex();
-	}
-}
-
-#define APPLYSIGN( posneg, incr ) ( ( posneg ) ? ( incr ) : ( - ( incr ) ) )
-
-static int s_CubeIndices[]={
-	5, 4, 6,												// front
-	6, 7, 5,
-	4, 0, 2,												// rside
-	2, 6, 4,
-	2, 0, 1,												// back
-	1, 3, 2,
-	1, 0, 4,												// top
-	4, 5, 1,
-	6, 2, 3,												// bot
-	3, 7, 6,
-	5, 7, 3,												// lside
-	3, 1, 5
-};
-
-int DrawWorldSpaceLightCube(
-	CMeshBuilder &meshBuilder,
-	CMatRenderContextPtr &pRenderContext,
-	LightDesc_t const &light,
-	int nIndex )
-{
-	Vector color_intens = light.m_Color;
-	Vector spot_dir = light.m_Direction;
-	float rad = light.DistanceAtWhichBrightnessIsLessThan( 1.0f / 255 );
-
-	Vector vecProjectionPlane0 = CrossProduct( spot_dir, Vector( 0, 1, 0 ) ) + CrossProduct( spot_dir, Vector( 1, 0, 0 ) );
-	vecProjectionPlane0.NormalizeInPlace();
-	Vector vecProjectionPlane1 = CrossProduct( spot_dir, vecProjectionPlane0 );
-	Assert( fabs( DotProduct( spot_dir, vecProjectionPlane0 ) ) < 0.01 );
-	Assert( fabs( DotProduct( spot_dir, vecProjectionPlane1 ) ) < 0.01 );
-	Assert( fabs( DotProduct( vecProjectionPlane0, vecProjectionPlane1 ) ) < 0.01 );
-
-	for ( int corner = 0; corner < 8; corner++ )
-	{
-		Vector vecPnt = light.m_Position;
-		vecPnt.x += APPLYSIGN( corner & 1, rad );
-		vecPnt.y += APPLYSIGN( corner & 2, rad );
-		vecPnt.z += APPLYSIGN( corner & 4, rad );
-
-		meshBuilder.Position3fv( vecPnt.Base() );
-		//meshBuilder.TexCoord2f( 0, (bLeft) ? flLeftU : flRightU, (corner & 2) ? flBottomV : flTopV );
-		float pdot = light.m_PhiDot;
-		float tdot = light.m_ThetaDot;
-		if ( light.m_Type == MATERIAL_LIGHT_POINT )
-		{
-			// model point light as a spot with infinite inner radius
-			pdot = 1.0e10;
-			tdot = 0.5;
-		}
-		meshBuilder.TexCoord4f( 1, color_intens.x, color_intens.y, color_intens.z, tdot );
-		meshBuilder.TexCoord4f( 2, spot_dir.x, spot_dir.y, spot_dir.z, pdot );
-		meshBuilder.TexCoord3fv( 3, light.m_Position.Base() );
-		meshBuilder.TexCoord4f( 4, light.m_Attenuation2, light.m_Attenuation1, light.m_Attenuation0, 1.0 );
-		meshBuilder.AdvanceVertex();
-	}
-	// now, output indices
-	for( int i = 0; i < ARRAYSIZE( s_CubeIndices ); i++ )
-	{
-		meshBuilder.FastIndex( s_CubeIndices[i] + nIndex );
-	}
-	return 8;
-
-}
-
-int DrawWorldSpaceLightPyramid(
-	CMeshBuilder &meshBuilder,
-	CMatRenderContextPtr &pRenderContext,
-	LightDesc_t const &light,
-	int nIndex )
-{
-	if ( light.m_PhiDot < 0.0001 )
-		return DrawWorldSpaceLightCube( meshBuilder, pRenderContext, light, nIndex );
-	Vector color_intens = light.m_Color;
-	Vector spot_dir = light.m_Direction;
-	// now, we need to find two vectors perpendicular to each other and the ray direction
-	Vector vecProjectionPlane0 = CrossProduct( spot_dir, Vector( 0, 1, 0 ) ) + CrossProduct( spot_dir, Vector( 1, 0, 0 ) );
-	vecProjectionPlane0.NormalizeInPlace();
-	Vector vecProjectionPlane1 = CrossProduct( spot_dir, vecProjectionPlane0 );
-	Assert( fabs( DotProduct( spot_dir, vecProjectionPlane0 ) ) < 0.01 );
-	Assert( fabs( DotProduct( spot_dir, vecProjectionPlane1 ) ) < 0.01 );
-	Assert( fabs( DotProduct( vecProjectionPlane0, vecProjectionPlane1 ) ) < 0.01 );
-
-
-	float dist = light.DistanceAtWhichBrightnessIsLessThan( 1.0/ 255 );
-
-	float flSpreadPerDistance = sqrt( 1.0 / ( light.m_PhiDot * light.m_PhiDot ) -1 );
-
-	float flEndRad = 2.0 * dist * flSpreadPerDistance;
-
-	for ( int corner = 0; corner < 5; corner++ )
-	{
-		Vector vecPnt = light.m_Position;
-		Vector Color(1,1,1);
-		switch( corner )
-		{
-			case 0:
-				vecPnt += dist * spot_dir - flEndRad * vecProjectionPlane0 + flEndRad * vecProjectionPlane1;
-				Color.Init( 1, 0, 0 );
-				break;
-
-			case 1:
-				vecPnt += dist * spot_dir + flEndRad * vecProjectionPlane0 + flEndRad * vecProjectionPlane1;
-				Color.Init( 0, 1, 0 );
-				break;
-
-			case 2:
-				vecPnt += dist * spot_dir - flEndRad * vecProjectionPlane0 - flEndRad * vecProjectionPlane1;
-				Color.Init( 0, 0, 1 );
-				break;
-
-			case 3:
-				vecPnt += dist * spot_dir + flEndRad * vecProjectionPlane0 - flEndRad * vecProjectionPlane1;
-				Color.Init( 1, 0, 1 );
-				break;
-		}
-		meshBuilder.TexCoord3fv( 5, Color.Base() );
-		meshBuilder.Position3fv( vecPnt.Base() );
-		//meshBuilder.TexCoord2f( 0, (bLeft) ? flLeftU : flRightU, (corner & 2) ? flBottomV : flTopV );
-		float pdot = light.m_PhiDot;
-		float tdot = light.m_ThetaDot;
-		if ( light.m_Type == MATERIAL_LIGHT_POINT )
-		{
-			// model point light as a spot with infinite inner radius
-			pdot = 1.0e10;
-			tdot = 0.5;
-		}
-		meshBuilder.TexCoord4f( 1, color_intens.x, color_intens.y, color_intens.z, tdot );
-		meshBuilder.TexCoord4f( 2, spot_dir.x, spot_dir.y, spot_dir.z, pdot );
-		meshBuilder.TexCoord3fv( 3, light.m_Position.Base() );
-		meshBuilder.TexCoord4f( 4, light.m_Attenuation2, light.m_Attenuation1, light.m_Attenuation0, 1.0 );
-		meshBuilder.AdvanceVertex();
-	}
-	meshBuilder.FastIndex( nIndex + 1 );					// top
-	meshBuilder.FastIndex( nIndex + 0 );
-	meshBuilder.FastIndex( nIndex + 4 );
-
-	meshBuilder.FastIndex( nIndex + 2 );					// bottom
-	meshBuilder.FastIndex( nIndex + 3 );
-	meshBuilder.FastIndex( nIndex + 4 );
-
-	meshBuilder.FastIndex( nIndex + 3 );					// right
-	meshBuilder.FastIndex( nIndex + 1 );
-	meshBuilder.FastIndex( nIndex + 4 );
-
-	meshBuilder.FastIndex( nIndex + 0 );					// right
-	meshBuilder.FastIndex( nIndex + 2 );
-	meshBuilder.FastIndex( nIndex + 4 );
-
-
-	meshBuilder.FastIndex( nIndex + 0 );					// end cap
-	meshBuilder.FastIndex( nIndex + 1 );
-	meshBuilder.FastIndex( nIndex + 3 );
-	meshBuilder.FastIndex( nIndex + 3 );
-	meshBuilder.FastIndex( nIndex + 2 );
-	meshBuilder.FastIndex( nIndex + 0 );
-
-	return 5;
-
-}
-
-static Vector s_pCornerPoints[4]={
+static const Vector s_pCornerPoints[4] = {
 	Vector( -1, -1, 0 ),
 	Vector( 1, -1, 0 ),
 	Vector( 1, 1, 0 ),
@@ -1406,26 +1166,25 @@ int DrawWorldSpaceLightFullScreenQuad(
 	LightDesc_t const &light,
 	int nIndex )
 {
-	Vector color_intens = light.m_Color;
-	Vector spot_dir = light.m_Direction;
+	float pdot = light.m_PhiDot;
+	float tdot = light.m_ThetaDot;
+	if ( light.m_Type == MATERIAL_LIGHT_POINT )
+	{
+		// model point light as a spot with infinite inner radius
+		pdot = 1.0e10;
+		tdot = 0.5;
+	}
+
 	for ( int corner = 0; corner < 4; corner++ )
 	{
-		Vector vecPnt = s_pCornerPoints[corner];
-		meshBuilder.Position3fv( vecPnt.Base() );
-		float pdot = light.m_PhiDot;
-		float tdot = light.m_ThetaDot;
-		if ( light.m_Type == MATERIAL_LIGHT_POINT )
-		{
-			// model point light as a spot with infinite inner radius
-			pdot = 1.0e10;
-			tdot = 0.5;
-		}
-		meshBuilder.TexCoord4f( 1, color_intens.x, color_intens.y, color_intens.z, tdot );
-		meshBuilder.TexCoord4f( 2, spot_dir.x, spot_dir.y, spot_dir.z, pdot );
+		meshBuilder.Position3fv( s_pCornerPoints[corner].Base() );
+		meshBuilder.TexCoord4f( 1, light.m_Color.x, light.m_Color.y, light.m_Color.z, tdot );
+		meshBuilder.TexCoord4f( 2, light.m_Direction.x, light.m_Direction.y, light.m_Direction.z, pdot );
 		meshBuilder.TexCoord3fv( 3, light.m_Position.Base() );
 		meshBuilder.TexCoord4f( 4, light.m_Attenuation2, light.m_Attenuation1, light.m_Attenuation0, 1.0 );
 		meshBuilder.AdvanceVertex();
 	}
+
 	// now, output indices
 	meshBuilder.FastIndex( 2 + nIndex );
 	meshBuilder.FastIndex( 1 + nIndex );
@@ -1442,18 +1201,17 @@ void CRender3D::AccumulateLights( CUtlPriorityQueue<CLightPreview_Light> &light_
 								  int nTargetWidth, int nTargetHeight,
 								  ITexture *dest_rt )
 {
+	IMaterial* add_0_to_1 = materials->FindMaterial( "editor/addlights", TEXTURE_GROUP_OTHER, true );
+	static bool first = true;
+	if ( first )
+	{
+		first = false;
+		add_0_to_1->AddRef();
+	}
 
-	IMaterial *add_0_to_1=materials->FindMaterial( "editor/addlight0",
-												   TEXTURE_GROUP_OTHER,true);
+	ITexture* dest_rt_current = materials->FindTexture( "_rt_accbuf", TEXTURE_GROUP_RENDER_TARGET );
 
-	ITexture *dest_rt_current=materials->FindTexture( "_rt_accbuf", TEXTURE_GROUP_RENDER_TARGET );
-
-	pRenderContext->SetRenderTarget( dest_rt_current );
-
-	pRenderContext->ClearColor3ub( 0, 0, 0);
-	pRenderContext->ClearBuffers( true, true );
-//	pRenderContext->Viewport(0, 0, nTargetWidth, nTargetHeight );
-
+	pRenderContext->Viewport(0, 0, dest_rt_current->GetActualWidth(), dest_rt_current->GetActualHeight() );
 
 	pRenderContext->Bind( add_0_to_1 );
 
@@ -1461,45 +1219,24 @@ void CRender3D::AccumulateLights( CUtlPriorityQueue<CLightPreview_Light> &light_
 
 	// now, lets build up a vertex buffer of lights
 	CMeshBuilder meshBuilder;
-	IMesh* pMesh = pRenderContext->GetDynamicMesh( true );
-	meshBuilder.Begin( pMesh, MATERIAL_TRIANGLES, 8 * nlights, 6 * 3 * 2 * nlights );
+	IMesh* pMesh = pRenderContext->GetDynamicMesh();
+	meshBuilder.Begin( pMesh, MATERIAL_TRIANGLES, 4 * nlights, 6 * nlights );
 
 	int nIndex = 0;
-	for(int i=0; i < nlights ; i++)
+	for ( int i = 0; i < nlights; i++ )
 	{
-		LightDesc_t light = light_queue.ElementAtHead().m_Light;
-		light.RecalculateDerivedValues();
+		nIndex += DrawWorldSpaceLightFullScreenQuad( nTargetWidth, nTargetHeight, meshBuilder, pRenderContext, light_queue.ElementAtHead().m_Light, nIndex );
 		light_queue.RemoveAtHead();
-
-		nIndex += DrawWorldSpaceLightFullScreenQuad( nTargetWidth, nTargetHeight,
-													 meshBuilder, pRenderContext, light, nIndex );
-// 		if ( light.m_Type == MATERIAL_LIGHT_SPOT )
-// 			nIndex += DrawWorldSpaceLightPyramid( meshBuilder, pRenderContext, light, nIndex );
-// 		else
-// 			nIndex += DrawWorldSpaceLightCube( meshBuilder, pRenderContext, light, nIndex );
-// 		DrawScreenSpaceLightRectangle(
-// 			meshBuilder,
-// 			0, 0, nTargetWidth, nTargetHeight,
-// 			0,0,
-// 			nTargetWidth - 1, nTargetHeight -1,
-// 			dest_rt->GetActualWidth(),
-// 			dest_rt->GetActualHeight(),
-// 			light,
-// 			pRenderContext
-// 			);
 	}
-	meshBuilder.End();
-	pMesh->Draw();
+	meshBuilder.End( false, true );
 
-	pRenderContext->SetRenderTarget( NULL );
-
+	pRenderContext->Viewport(0, 0, nTargetWidth, nTargetHeight );
 }
 
 void CRender3D::SendGBuffersToLightingThread( int nTargetWidth, int nTargetHeight )
 {
 	CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
-	static char const *rts_to_transmit[]={"_rt_albedo","_rt_normal","_rt_position",
-										  "_rt_flags" };
+	static char const *rts_to_transmit[]={ "_rt_albedo","_rt_normal","_rt_position" };
 	MessageToLPreview Msg(LPREVIEW_MSG_G_BUFFERS);
 	float *pTmpData = new float[ nTargetWidth * nTargetHeight * 4 ];
 	for(int i=0; i < NELEMS( rts_to_transmit ); i++)
@@ -1696,8 +1433,14 @@ void CRender3D::EndRenderFrame(void)
 				// because of no blend support on ati, we have to ping pong. This needs an nvidia-specifc
 				// path for perf
 				AccumulateLights( light_queue, pRenderContext, nTargetWidth, nTargetHeight, dest_rt );
-				IMaterial *sample_last=materials->FindMaterial("editor/sample_result_1",
-															   TEXTURE_GROUP_OTHER,true);
+				IMaterial* sample_last = materials->FindMaterial( "editor/sample_result", TEXTURE_GROUP_OTHER, true );
+				static bool first = true;
+				if ( first )
+				{
+					first = false;
+					sample_last->AddRef();
+				}
+				pRenderContext->SetRenderTarget( nullptr );
 				pRenderContext->DrawScreenSpaceRectangle(
 					sample_last, xl, yl, dest_width, dest_height,
 					0,0,

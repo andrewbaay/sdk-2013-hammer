@@ -461,12 +461,7 @@ public:
 	T operator--(int)				{ return operator--() + 1; }
 
 	// Atomic add is like += except it returns the previous value as its return value
-	T AtomicAdd( T add )			{
-										if ( sizeof(T) == sizeof(int32) )
-											return (T)ThreadInterlockedExchangeAdd( (int32 *)&m_value, (int32)add );
-										else
-											return (T)ThreadInterlockedExchangeAdd64( (int64 *)&m_value, (int64)add );
-									}
+	T AtomicAdd( T add )			{ return (T)ThreadInterlockedExchangeAdd( (int32 *)&m_value, (int32)add ); }
 
 	bool AssignIf( T conditionValue, T newValue )	{ return ThreadInterlockedAssignIf( (long *)&m_value, (long)newValue, (long)conditionValue ); }
 
