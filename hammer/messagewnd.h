@@ -30,6 +30,7 @@ public:
 	void ShowMessageWindow();
 	void ToggleMessageWindow();
 	bool IsVisible();
+	bool IsValid() const { return m_hWnd != nullptr; }
 
 	void Activate();
 

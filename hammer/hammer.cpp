@@ -766,7 +766,12 @@ static SpewRetval_t HammerDbgOutput( SpewType_t spewType, const char* pMsg )
 	// are ones that we really don't care much about.
 	// I'm disabling this for now, we need to decide about what to do with this
 
-	if ( g_pwndMessage )
+	// Ugly message
+	// Too many popups! Rendering will be bad!
+	if ( spewType == SPEW_WARNING && ((int*)pMsg)[0] == ' ooT' && ((int*)pMsg)[1] == 'ynam' && ((int*)pMsg)[2] == 'pop ' && ((int*)pMsg)[3] == '!spu' )
+		return SPEW_CONTINUE;
+
+	if ( g_pwndMessage && g_pwndMessage->IsValid() )
 	{
 		Color clr = *GetSpewOutputColor();
 		if ( clr.GetRawColor() == 0xFFFFFFFF )
