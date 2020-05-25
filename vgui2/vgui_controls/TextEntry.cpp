@@ -4316,3 +4316,9 @@ void TextEntry::SetUseFallbackFont( bool bState, HFont hFallback )
 	m_bUseFallbackFont = bState;
 	m_hFallbackFont = hFallback;
 }
+
+void TextEntry::GetSizerMinimumSize(int &wide, int &tall)
+{
+	tall = 5;
+	wide = 5;
+}

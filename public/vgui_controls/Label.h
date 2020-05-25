@@ -160,6 +160,8 @@ public:
 	void SetAutoTall( bool bTall );
 	void InvalidateLayout( bool layoutNow = false, bool reloadScheme = false ) OVERRIDE;
 
+	virtual void GetSizerMinimumSize(int &wide, int &tall);
+
 	DECLARE_PANEL_SETTINGS();
 
 protected:

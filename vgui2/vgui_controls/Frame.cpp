@@ -1433,6 +1433,11 @@ bool Frame::IsSizeable()
 	return _sizeable;
 }
 
+void Frame::GetSizerClientArea(int &x, int &y, int &wide, int &tall)
+{
+	GetClientArea(x,y,wide,tall);
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Get the size of the panel inside the frame edges.
 //-----------------------------------------------------------------------------

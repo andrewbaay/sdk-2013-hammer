@@ -1088,3 +1088,10 @@ void Button::SizeToContents()
 	GetContentSize(wide, tall);
 	SetSize(wide + Label::Content, tall + Label::Content);
 }
+
+void Button::GetSizerMinimumSize(int &wide, int &tall)
+{
+	GetContentSize(wide, tall);
+	wide += Label::Content;
+	tall += Label::Content;
+}

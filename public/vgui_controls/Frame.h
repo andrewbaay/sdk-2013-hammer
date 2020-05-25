@@ -133,6 +133,8 @@ public:
 	// Temporarily enables or disables the fade effect rather than zeroing the fade times as done in DisableFadeEffect
 	void SetFadeEffectDisableOverride( bool disabled );
 
+	virtual void GetSizerClientArea(int &x, int &y, int &wide, int &tall);
+
 	DECLARE_PANEL_SETTINGS();
 
 protected:

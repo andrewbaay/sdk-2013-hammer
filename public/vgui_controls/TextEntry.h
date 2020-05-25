@@ -237,6 +237,8 @@ public:
 
 	void SetUseFallbackFont( bool bState, HFont hFallback );
 
+	virtual void GetSizerMinimumSize(int &wide, int &tall);
+
 	DECLARE_PANEL_SETTINGS();
 
 protected:

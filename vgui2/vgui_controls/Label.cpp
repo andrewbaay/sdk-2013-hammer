@@ -118,6 +118,11 @@ void Label::SetTextColorState(EColorState state)
 	}
 }
 
+void Label::GetSizerMinimumSize(int &wide, int &tall)
+{
+	GetContentSize(wide,tall);
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Return the full size of the contained content
 //-----------------------------------------------------------------------------

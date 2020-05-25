@@ -170,6 +170,8 @@ public:
 	virtual void NavigateTo();
 	virtual void NavigateFrom();
 
+	virtual void GetSizerMinimumSize(int &wide, int &tall);
+
 	DECLARE_PANEL_SETTINGS();
 
 protected:
