@@ -8,7 +8,7 @@ namespace vgui
 	typedef unsigned long HCursor;
 }
 
-class CVGuiWnd 
+class CVGuiWnd
 {
 
 public:
@@ -17,7 +17,7 @@ public:
 
 public:
 
-	void				SetMainPanel( vgui::EditablePanel * pPanel );
+	void				SetMainPanel( vgui::EditablePanel* pPanel, bool drawPopups = true );
 	vgui::EditablePanel	*GetMainPanel();	// returns VGUI main panel
 	vgui::EditablePanel *CreateDefaultPanel();
 
@@ -29,7 +29,7 @@ public:
 
 	void				SetRepaintInterval( int msecs );
 	int					GetVGuiContext();
-	
+
 	// The Hammer 2D views basically ignore vgui input. They're only there to render on top of.
 	// When we pass true here, CMatSystemSurface::RunFrame ignores all the input events.
 	// If we pass false (as the model browser does), then it does process input events and send them to the vgui panels.
@@ -42,13 +42,14 @@ public:
 protected:
 	void DrawVGuiPanel();  // overridden to draw this view
 	long WindowProcVGui( UINT message, WPARAM wParam, LPARAM lParam ); //
-	
+
 	vgui::EditablePanel	*m_pMainPanel;
 	CWnd		*m_pParentWnd;
 	int			m_hVGuiContext;
 	bool		m_bIsDrawing;
 	Color		m_ClearColor;
 	bool		m_bClearZBuffer;
+	bool		m_bPaintPopups;
 };
 
 class CVGuiPanelWnd: public CWnd, public CVGuiWnd

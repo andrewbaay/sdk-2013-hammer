@@ -46,7 +46,7 @@ LRESULT CVGuiPanelWnd::WindowProc( UINT message, WPARAM wParam, LPARAM lParam )
 	return 1;
 }
 
-BOOL CVGuiPanelWnd::OnEraseBkgnd(CDC* pDC) 
+BOOL CVGuiPanelWnd::OnEraseBkgnd(CDC* pDC)
 {
 	return TRUE;
 }
@@ -63,6 +63,7 @@ CVGuiWnd::CVGuiWnd(void)
 	m_bIsDrawing = false;
 	m_ClearColor.SetColor( 0,0,0,255 );
 	m_bClearZBuffer = true;
+	m_bPaintPopups = true;
 }
 
 CVGuiWnd::~CVGuiWnd(void)
@@ -113,7 +114,7 @@ void CVGuiWnd::SetCursor(const char *filename)
 	m_pMainPanel->SetCursor( hCursor );
 }
 
-void CVGuiWnd::SetMainPanel( vgui::EditablePanel * pPanel )
+void CVGuiWnd::SetMainPanel( vgui::EditablePanel* pPanel, bool drawPopups )
 {
 	Assert( m_pMainPanel == NULL );
 	Assert( m_hVGuiContext == vgui::DEFAULT_VGUI_CONTEXT );
@@ -127,6 +128,7 @@ void CVGuiWnd::SetMainPanel( vgui::EditablePanel * pPanel )
 
 	m_hVGuiContext = vgui::ivgui()->CreateContext();
 	vgui::ivgui()->AssociatePanelWithContext( m_hVGuiContext, m_pMainPanel->GetVPanel() );
+	m_bPaintPopups = drawPopups;
 }
 
 vgui::EditablePanel *CVGuiWnd::CreateDefaultPanel()
@@ -185,7 +187,7 @@ void CVGuiWnd::DrawVGuiPanel()
 
 	HammerVGui()->Simulate();
 
-	vgui::surface()->PaintTraverseEx( m_pMainPanel->GetVPanel(), true );
+	vgui::surface()->PaintTraverseEx( m_pMainPanel->GetVPanel(), m_bPaintPopups );
 
 	g_pStudioRender->EndFrame();
 	MaterialSystemInterface()->EndFrame();

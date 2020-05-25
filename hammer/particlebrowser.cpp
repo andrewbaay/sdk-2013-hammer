@@ -5,6 +5,7 @@
 #include "ParticleBrowser.h"
 #include "matsys_controls/particlepicker.h"
 #include "matsys_controls/matsyscontrols.h"
+#include "vgui/ISurface.h"
 #include "vgui_controls/TextEntry.h"
 #include "vgui_controls/Splitter.h"
 #include "vgui_controls/Button.h"
@@ -67,6 +68,46 @@ public:
 		{
 			m_pBrowser->UpdateStatusLine();
 		}
+	}
+
+	virtual void Paint()
+	{
+		vgui::EditablePanel::Paint();
+
+		static bool fu = false;
+
+		if ( fu )
+			return;
+
+		fu = true;
+
+		float* zpos = reinterpret_cast<float*>( reinterpret_cast<char*>( vgui::surface() ) + 66324 );
+
+		CMatRenderContextPtr pRenderContext( materials );
+		VPROF( "CMatSystemSurface::PaintTraverse popups loop" );
+		int popups = vgui::surface()->GetPopupCount();
+
+		for ( int i = popups - 1; i >= 0; --i )
+		{
+			vgui::VPANEL popupPanel = vgui::surface()->GetPopup( i );
+
+			if ( !popupPanel || !vgui::ipanel()->IsPopup( popupPanel ) )
+				continue;
+
+			if ( !vgui::ipanel()->IsFullyVisible( popupPanel ) )
+				continue;
+
+			// This makes sure the drag/drop helper is always the first thing drawn
+			bool bIsTopmostPopup = vgui::ipanel()->IsTopmostPopup( popupPanel );
+
+			// set our z position
+			pRenderContext->SetStencilReferenceValue( bIsTopmostPopup ? popups : i );
+
+			*zpos = ((float)(i) / (float)popups);
+			vgui::ipanel()->PaintTraverse( popupPanel, true );
+		}
+
+		fu = false;
 	}
 
 	CParticleBrowser *m_pBrowser;
@@ -219,9 +260,9 @@ BOOL CParticleBrowser::OnInitDialog()
 	vgui::EditablePanel *pMainPanel = new CParticleBrowserPanel( this, "ParticleBrowerPanel", HammerVGui()->GetHammerScheme() );
 
 	m_VGuiWindow.SetParentWindow( &m_VGuiWindow );
-	m_VGuiWindow.SetMainPanel( pMainPanel );
+	m_VGuiWindow.SetMainPanel( pMainPanel, false );
 	pMainPanel->MakePopup( false, false );
-    m_VGuiWindow.SetRepaintInterval( 75 );
+    m_VGuiWindow.SetRepaintInterval( 30 );
 
 	m_pPicker->SetParent( pMainPanel );
 	m_pPicker->AddActionSignalTarget( pMainPanel );
