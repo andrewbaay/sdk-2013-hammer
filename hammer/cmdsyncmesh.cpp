@@ -24,6 +24,7 @@
 #include "MainFrm.h"
 #include "GlobalFunctions.h"
 #include "MapDoc.h"
+#include "mapgroup.h"
 #include "MapView.h"
 
 #include "ToolManager.h"
@@ -480,17 +481,37 @@ BOOL CToolHandler_SyncMesh::CanExecute()
 	const CMapObjectList *pList = m_pSelection->GetList();
 	for ( int k = 0; k < pList->Count(); ++ k )
 	{
-		CMapClass *pElem = (CUtlReference< CMapClass >)pList->Element( k );
+		CMapClass *pElem = pList->Element( k );
 
-		MAPCLASSTYPE eType = pElem->GetType();
-		( void ) eType;
-
-		if ( pElem->IsMapClass( MAPCLASS_TYPE( CMapEntity ) ) )
+		if ( !pElem )
+			return FALSE;
+		else if ( pElem->IsMapClass( MAPCLASS_TYPE( CMapEntity ) ) )
 		{
-			if ( !static_cast< CMapEntity * >( pElem )->IsClass( "prop_static" ) )
+			if ( !static_cast<CMapEntity*>( pElem )->IsClass( "prop_static" ) )
 				return FALSE;
 			else
 				continue;
+		}
+		else if ( pElem->IsMapClass( MAPCLASS_TYPE( CMapGroup ) ) )
+		{
+			auto children = pElem->GetChildren();
+			for ( int i = 0; i < children->Count(); i++ )
+			{
+				CMapClass* child = children->Element( i );
+				if ( !child )
+					return FALSE;
+				else if ( child->IsMapClass( MAPCLASS_TYPE( CMapEntity ) ) )
+				{
+					if ( !static_cast<CMapEntity*>( child )->IsClass( "prop_static" ) )
+						return FALSE;
+					else
+						continue;
+				}
+				else if ( child->IsMapClass( MAPCLASS_TYPE( CMapSolid ) ) )
+					continue;
+				else
+					return FALSE;
+			}
 		}
 		else if ( pElem->IsMapClass( MAPCLASS_TYPE( CMapSolid ) ) )
 			 continue;
@@ -819,7 +840,7 @@ BOOL CToolHandler_SyncMesh::DmxDeleteOrigObjects()
 		const CMapObjectList &lst = *m_origSelection.GetList();
 		for ( int k = 0; k < lst.Count(); ++ k )
 		{
-			CMapClass *pObj = (CUtlReference< CMapClass >)lst.Element( k );
+			CMapClass *pObj = lst.Element( k );
 			m_pDoc->DeleteObject( pObj );
 		}
 		m_pSelection->RemoveAll();
