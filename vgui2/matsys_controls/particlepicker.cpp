@@ -862,7 +862,8 @@ void CParticleSnapshotGrid::OnTick()
 {
 	for ( int i = 0; i < m_Panels.Count(); ++i )
 	{
-		m_Panels[i]->Simulate();
+		if ( m_Panels[i]->IsVisible() )
+			m_Panels[i]->Simulate();
 	}
 }
 
