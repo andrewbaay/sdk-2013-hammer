@@ -858,14 +858,12 @@ void CParticleSnapshotGrid::SelectSystem( const char *pSystemName, bool bAddToSe
 	Repaint();
 }
 
-static void ProcessPSystem( CParticleSnapshotPanel *&pPanel )
-{
-	pPanel->Simulate();
-}
-
 void CParticleSnapshotGrid::OnTick()
 {
-	ParallelProcess( "ProcessPSystem", m_Panels.Base(), m_Panels.Count(), ProcessPSystem );
+	for ( int i = 0; i < m_Panels.Count(); ++i )
+	{
+		m_Panels[i]->Simulate();
+	}
 }
 
 void CParticleSnapshotGrid::OnParticleSystemSelected( const char *SystemName )
