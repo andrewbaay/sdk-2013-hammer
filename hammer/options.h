@@ -27,7 +27,7 @@ struct COptionsGeneral
 	BOOL bGroupWhileIgnore;
 	BOOL bStretchArches;
 	BOOL bShowHelpers;
-	BOOL bCheckVisibleMapErrors;	
+	BOOL bCheckVisibleMapErrors;
 	int iTimeBetweenSaves;
 	int iMaxAutosaveSpace;
 	int iMaxAutosavesPerMap;
@@ -39,7 +39,7 @@ struct COptionsGeneral
 	BOOL bEnableAutosave;
 	BOOL bShowHiddenTargetsAsBroken;
 	BOOL bRadiusCulling;
-}; 
+};
 
 
 struct COptionsTextures
@@ -119,9 +119,10 @@ struct COptionsView3D
 	int nTimeToMaxSpeed;	// Time to max forward speed in milliseconds.
 	BOOL bFilterTextures;	// Whether to filter textures.
 	BOOL bReverseSelection;	// Whether to animate studio models.
+	BOOL bInvertDisplacementAlpha; // Whether to invert displacement alpha
 	bool bPreviewModelFade; // Whether to preview model fade in the 3D view.
 	float fFOV;				// FOV of 3D Camera
-	float fLightConeLength;  // Multiplier for light_spot cone length 
+	float fLightConeLength;  // Multiplier for light_spot cone length
 };
 
 

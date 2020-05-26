@@ -929,7 +929,6 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,179,204,10
     CONTROL         "Stretch arches and toruses to fit original bounding rectangle",IDC_STRETCH_ARCH,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,192,203,10
-    CONTROL         "Use VGUI model browser",IDC_VGUI_MODELBROWSER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,205,209,10
     LTEXT           "Max Cameras:",IDC_STATIC,109,159,46,8
     EDITTEXT        IDC_MAX_CAMERAS,158,157,27,14,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "",IDC_UNDOSPIN2,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,186,157,11,14
@@ -1390,12 +1389,13 @@ BEGIN
     LTEXT           "&Time to top speed:",IDC_STATIC,15,164,61,8
     CONTROL         "Slider2",IDC_FORWARD_ACCELERATION,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,90,161,122,15
     LTEXT           "1000",IDC_FORWARD_ACCEL_TEXT,213,162,28,8
-    GROUPBOX        "&General",IDC_STATIC,7,187,242,54
-    CONTROL         "Reverse &selection order",IDC_REVERSE_SELECTION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,202,92,10
-    LTEXT           "Camera FOV (30-100)",IDC_STATIC,127,204,73,8
-    EDITTEXT        IDC_FOV,203,201,40,14,ES_AUTOHSCROLL
-    LTEXT           "Light_spot Cone Multiplier",IDC_STATIC,114,217,93,8
-    EDITTEXT        IDC_LIGHT_CONE_LENGTH,203,216,40,14,ES_AUTOHSCROLL
+    GROUPBOX        "&General",IDC_STATIC,7,184,242,43
+    CONTROL         "Reverse &selection order",IDC_REVERSE_SELECTION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,196,92,10
+    LTEXT           "Camera FOV (30-100)",IDC_STATIC,127,195,73,8
+    EDITTEXT        IDC_FOV,203,192,40,14,ES_AUTOHSCROLL
+    LTEXT           "Light_spot cone multiplier",IDC_STATIC,114,210,93,8
+    EDITTEXT        IDC_LIGHT_CONE_LENGTH,203,208,40,14,ES_AUTOHSCROLL
+    CONTROL         "Invert displacement alpha",IDC_INVERT_DISPLACEMENT_ALPHA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,209,97,10
 END
 
 IDD_EDITPATH DIALOG 0, 0, 228, 90
@@ -3105,6 +3105,11 @@ BEGIN
     0
 END
 
+IDD_OPTIONS_MAIN AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3395,7 +3400,6 @@ BEGIN
     ID_EDIT_APPLYTEXTURE    "Apply current texture to selection\nApply current texture"
     ID_TOOLS_SUBTRACTSELECTION 
                             "Carve using the selected objects\nCarve with selected objects"
-    ID_TOOLS_KEYBINDINGS    "Configure keybindings"
     ID_TOOLS_OPTIONS        "Configuration options"
     ID_TOOLS_GROUP          "Create an associative group with all the selected objects\nGroup selected objects"
     ID_TOOLS_UNGROUP        "Ungroup the selected groups\nUngroup selected groups"
@@ -3407,21 +3411,22 @@ END
 
 STRINGTABLE
 BEGIN
+    ID_MAP_GRIDHIGHER       "Raise the size of the grid\nLarger Grid (right bracket)"
+    ID_TOOLS_KEYBINDINGS    "Configure keybindings"
+    ID_TOOLS_ALIGNLEFT      "Align the selected objects along the leftmost side\nAlign Left"
+    ID_TOOLS_ALIGNRIGHT     "Align the selected objects along the rightmost side\nAlign Right"
+    ID_TOOLS_ALIGNTOP       "Align the selected objects along the topmost side\nAlign Top"
+    ID_TOOLS_ALIGNBOTTOM    "Align the selected objects along the bottom-most side\nAlign Bottom"
+END
+
+STRINGTABLE
+BEGIN
     ID_EDIT_TOENTITY        "Create a new entity using the selected solids\nTie selected to entity"
 END
 
 STRINGTABLE
 BEGIN
     ID_TOOLS_CAMERA         "Camera\nCamera [Shift+C]"
-END
-
-STRINGTABLE
-BEGIN
-    ID_MAP_GRIDHIGHER       "Raise the size of the grid\nLarger Grid (right bracket)"
-    ID_TOOLS_ALIGNLEFT      "Align the selected objects along the leftmost side\nAlign Left"
-    ID_TOOLS_ALIGNRIGHT     "Align the selected objects along the rightmost side\nAlign Right"
-    ID_TOOLS_ALIGNTOP       "Align the selected objects along the topmost side\nAlign Top"
-    ID_TOOLS_ALIGNBOTTOM    "Align the selected objects along the bottom-most side\nAlign Bottom"
 END
 
 STRINGTABLE

@@ -12,7 +12,7 @@
 #include "MapDoc.h"
 #include "hammer.h"
 #include "OPTView3D.h"
-#include "Options.h"	
+#include "Options.h"
 
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -52,8 +52,8 @@ void PASCAL DDV_FOVRange(CDataExchange *pDX, int value)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pDX - 
+// Purpose:
+// Input  : pDX -
 //-----------------------------------------------------------------------------
 void COPTView3D::DoDataExchange(CDataExchange* pDX)
 {
@@ -74,9 +74,10 @@ void COPTView3D::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_USEMOUSELOOK, Options.view3d.bUseMouseLook);
 	DDX_Check(pDX, IDC_ANIMATE_MODELS, Options.view3d.bAnimateModels);
 	DDX_Check(pDX, IDC_REVERSE_SELECTION, Options.view3d.bReverseSelection);
+	DDX_Check(pDX, IDC_INVERT_DISPLACEMENT_ALPHA, Options.view3d.bInvertDisplacementAlpha);
 	DDX_Text(pDX, IDC_FOV, Options.view3d.fFOV);
 	DDX_Text(pDX, IDC_LIGHT_CONE_LENGTH, Options.view3d.fLightConeLength);
-	
+
 	DDV_FOVRange(pDX, Options.view3d.fFOV);
 	//}}AFX_DATA_MAP
 
@@ -95,7 +96,7 @@ void COPTView3D::DoDataExchange(CDataExchange* pDX)
 		Options.view3d.nModelDistance = m_ModelDistance.GetPos();
 		Options.view3d.nDetailDistance = m_DetailDistance.GetPos();
 		Options.view3d.nForwardSpeedMax = m_ForwardSpeedMax.GetPos();
-		Options.view3d.nTimeToMaxSpeed = m_TimeToMaxSpeed.GetPos();	
+		Options.view3d.nTimeToMaxSpeed = m_TimeToMaxSpeed.GetPos();
 	}
 	//
 	// Else going from data to controls.
@@ -142,7 +143,7 @@ void COPTView3D::DoDataExchange(CDataExchange* pDX)
 		m_TimeToMaxSpeed.SetPos(Options.view3d.nTimeToMaxSpeed);
 		int nTime = m_TimeToMaxSpeed.GetPos();
 		str.Format("%.2f sec", (float)nTime / 1000.0f);
-		m_TimeToMaxSpeedText.SetWindowText(str);	
+		m_TimeToMaxSpeedText.SetWindowText(str);
 	}
 }
 
@@ -180,7 +181,7 @@ BOOL COPTView3D::OnApply(void)
 // Purpose: Handles all the sliders in the property page.
 // Input  : Per MFC OnHScroll.
 //-----------------------------------------------------------------------------
-void COPTView3D::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar) 
+void COPTView3D::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
 {
 	//
 	// If it is the back plane scroll bar, update the back plane text.

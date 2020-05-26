@@ -906,6 +906,7 @@
 #define IDC_MANIFEST_PRIMARY            1648
 #define IDC_DO_OPERATION                1648
 #define IDC_SCULPT_PUSH                 1648
+#define IDC_INVERT_DISPLACEMENT_ALPHA   1648
 #define IDC_SIMILARCHECK                1649
 #define IDC_AUTOSAVEDIR                 1649
 #define IDC_SCULPT_CARVE                1649
@@ -920,7 +921,7 @@
 #define ID_DISP_NORAY_COLL              1657
 #define IDC_SPRINKLE_DEFINITION_GRID_SIZE 1657
 #define IDC_FOV                         1659
-#define IDC_LIGHT_CONE_LENGTH			1660
+#define IDC_LIGHT_CONE_LENGTH           1660
 #define IDC_BUTTON2                     1661
 #define IDC_STOPSOUND                   1661
 #define IDC_SCRIPT_LIST_EDIT            1661
@@ -1277,11 +1278,11 @@
 #define ID_COLLAPSE_SELECTION           33278
 #define ID_COLLAPSE_ALL                 33279
 #define ID_INSTANCES_COLLAPSESELECTION  33280
-#define ID_VIEW_QUICKHIDE				33285
-#define ID_VIEW_QUICKHIDEUNSELECTED		33286
-#define ID_VIEW_QUICKUNHIDE				33287
-#define ID_TOGGLE_RADIUSCULLING			33288
-#define ID_VIEW_QUICKHIDEVISGROUP		33289
+#define ID_VIEW_QUICKHIDE               33285
+#define ID_VIEW_QUICKHIDEUNSELECTED     33286
+#define ID_VIEW_QUICKUNHIDE             33287
+#define ID_TOGGLE_RADIUSCULLING         33288
+#define ID_VIEW_QUICKHIDEVISGROUP       33289
 #define ID_HELP_REPORTANISSUE           33290
 #define ID_TOOLS_SPRINKLE               33304
 #define ID_INSTANCES_COLLAPSESELECTIONRECURSIVE 33321
@@ -1353,11 +1354,11 @@
 #define IDC_LPRVWINDOW                  0xf010
 
 // Next default values for new objects
-//
+// 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        354
+#define _APS_NEXT_RESOURCE_VALUE        355
 #define _APS_NEXT_COMMAND_VALUE         33290
 #define _APS_NEXT_CONTROL_VALUE         1696
 #define _APS_NEXT_SYMED_VALUE           116

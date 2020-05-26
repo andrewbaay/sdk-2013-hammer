@@ -30,6 +30,7 @@
 #include "Color.h"
 #include "render2d.h"
 #include "faceeditsheet.h"
+#include "options.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -2129,16 +2130,33 @@ void CMapDisp::RenderSurface( CRender3D *pRender, bool bIsSelected, SelectionSta
 	meshBuilder.Begin( pMesh, MATERIAL_TRIANGLES, numVerts,	numIndices );
 
 	CoreDispVert_t *pVert = m_CoreDispInfo.GetDispVertList();
-	for (int i = 0; i < numVerts; ++i )
+	if ( Options.view3d.bInvertDisplacementAlpha )
 	{
-		meshBuilder.Position3fv( pVert[i].m_Vert.Base() );
-		meshBuilder.Color4ub( color[0], color[1], color[2], ( unsigned char )( pVert[i].m_Alpha ) );
-		meshBuilder.Normal3fv( pVert[i].m_Normal.Base() );
-		meshBuilder.TangentS3fv( pVert[i].m_TangentS.Base() );
-		meshBuilder.TangentT3fv( pVert[i].m_TangentT.Base() );
-		meshBuilder.TexCoord2fv( 0, pVert[i].m_TexCoord.Base() );
-		meshBuilder.TexCoord2fv( 1, pVert[i].m_LuxelCoords[0].Base() );
-		meshBuilder.AdvanceVertex();
+		for ( int i = 0; i < numVerts; ++i )
+		{
+			meshBuilder.Position3fv( pVert[i].m_Vert.Base() );
+			meshBuilder.Color4ub( color[0], color[1], color[2], 255 - (unsigned char)( pVert[i].m_Alpha ) );
+			meshBuilder.Normal3fv( pVert[i].m_Normal.Base() );
+			meshBuilder.TangentS3fv( pVert[i].m_TangentS.Base() );
+			meshBuilder.TangentT3fv( pVert[i].m_TangentT.Base() );
+			meshBuilder.TexCoord2fv( 0, pVert[i].m_TexCoord.Base() );
+			meshBuilder.TexCoord2fv( 1, pVert[i].m_LuxelCoords[0].Base() );
+			meshBuilder.AdvanceVertex();
+		}
+	}
+	else
+	{
+		for ( int i = 0; i < numVerts; ++i )
+		{
+			meshBuilder.Position3fv( pVert[i].m_Vert.Base() );
+			meshBuilder.Color4ub( color[0], color[1], color[2], (unsigned char)( pVert[i].m_Alpha ) );
+			meshBuilder.Normal3fv( pVert[i].m_Normal.Base() );
+			meshBuilder.TangentS3fv( pVert[i].m_TangentS.Base() );
+			meshBuilder.TangentT3fv( pVert[i].m_TangentT.Base() );
+			meshBuilder.TexCoord2fv( 0, pVert[i].m_TexCoord.Base() );
+			meshBuilder.TexCoord2fv( 1, pVert[i].m_LuxelCoords[0].Base() );
+			meshBuilder.AdvanceVertex();
+		}
 	}
 
 	unsigned short *pIndex = m_CoreDispInfo.GetRenderIndexList();
