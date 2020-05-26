@@ -2370,15 +2370,6 @@ bool KeyValues::LoadFromBuffer( char const *resourceName, CUtlBuffer &buf, IBase
 	} while ( buf.IsValid() );
 
 	AppendIncludedKeys( includedKeys );
-	{
-		// delete included keys!
-		int i;
-		for ( i = includedKeys.Count() - 1; i > 0; i-- )
-		{
-			KeyValues *kv = includedKeys[ i ];
-			kv->deleteThis();
-		}
-	}
 
 	MergeBaseKeys( baseKeys );
 	{
