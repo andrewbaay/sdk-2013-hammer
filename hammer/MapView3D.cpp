@@ -430,7 +430,6 @@ void CMapView3D::InitializeKeyMap(void)
 
     BEGIN_KEYMAP("MapView3D")
     {
-
         if (!Options.view2d.bNudge)
         {
             ADD_KEY(LOGICAL_KEY_YAW_LEFT);
@@ -445,7 +444,6 @@ void CMapView3D::InitializeKeyMap(void)
             ADD_KEY(LOGICAL_KEY_UP);
         }
 
-        
         if (Options.view3d.bUseMouseLook)
         {
             ADD_KEY(LOGICAL_KEY_FORWARD);
@@ -458,7 +456,6 @@ void CMapView3D::InitializeKeyMap(void)
             _ADD_KEY("LOGICAL_KEY_FORWARD_NML", LOGICAL_KEY_FORWARD);
             _ADD_KEY("LOGICAL_KEY_BACK_NML", LOGICAL_KEY_BACK);
         }
-
 
         ADD_KEY(LOGICAL_KEY_TOGGLE_MOUSELOOK);
         ADD_KEY(LOGICAL_KEY_BACKPLANE_INCR);
@@ -749,7 +746,7 @@ void CMapView3D::OnLButtonDblClk(UINT nFlags, CPoint point)
 	//
 	// Pass the message to the active tool.
 	//
-	if ( !m_pToolManager ) 
+	if ( !m_pToolManager )
 		return;
 	CBaseTool *pTool = m_pToolManager->GetActiveTool();
 	if (pTool != NULL)
@@ -1524,7 +1521,7 @@ void CMapView3D::ProcessKeys(float fElapsedTime)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CMapView3D::ProcessCulling( void )
 {

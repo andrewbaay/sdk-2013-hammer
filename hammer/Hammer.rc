@@ -326,6 +326,7 @@ BEGIN
     END
     POPUP "&Tools"
     BEGIN
+        MENUITEM "&KeyBindings...",             ID_TOOLS_KEYBINDINGS
         MENUITEM "&Options...",                 ID_TOOLS_OPTIONS
     END
     POPUP "&Help"
@@ -495,6 +496,7 @@ BEGIN
         MENUITEM "C&reate Prefab\tCtrl+R",      ID_TOOLS_CREATEPREFAB
         MENUITEM "Sprinkle...\tCtrl+Alt+S",     ID_TOOLS_SPRINKLE
         MENUITEM SEPARATOR
+        MENUITEM "&KeyBindings...",             ID_TOOLS_KEYBINDINGS
         MENUITEM "&Options...",                 ID_TOOLS_OPTIONS
     END
     POPUP "&Instancing"
@@ -2115,6 +2117,14 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
 END
 
+IDD_KEYBIND_EDITOR DIALOGEX 0, 0, 430, 286
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_WINDOWEDGE
+CAPTION "Keybind Editor"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+END
+
 IDD_DISP_PAINT_SCULPT DIALOGEX 0, 0, 163, 291
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Displacement Sculpt"
@@ -3385,6 +3395,7 @@ BEGIN
     ID_EDIT_APPLYTEXTURE    "Apply current texture to selection\nApply current texture"
     ID_TOOLS_SUBTRACTSELECTION 
                             "Carve using the selected objects\nCarve with selected objects"
+    ID_TOOLS_KEYBINDINGS    "Configure keybindings"
     ID_TOOLS_OPTIONS        "Configuration options"
     ID_TOOLS_GROUP          "Create an associative group with all the selected objects\nGroup selected objects"
     ID_TOOLS_UNGROUP        "Ungroup the selected groups\nUngroup selected groups"

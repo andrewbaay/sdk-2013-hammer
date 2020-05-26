@@ -193,6 +193,7 @@
 #define IDD_ENTITY_SPRINKLE             357
 #define IDD_DIALOG_SYNC_FILE            358
 #define IDD_DIALOG_WITH_CHECKBOX        359
+#define IDD_KEYBIND_EDITOR              360
 #define IDC_BRDLG_FLIPHORIZ             1000
 #define IDC_BRDLG_FLIPVERT              1001
 #define CG_IDC_PROGDLG_PROGRESS         1003
@@ -1057,6 +1058,7 @@
 #define ID_EDIT_LAYERS                  32878
 #define ID_MAP_GRIDLOWER                32879
 #define ID_MAP_GRIDHIGHER               32880
+#define ID_TOOLS_KEYBINDINGS            32881
 #define ID_VIEW_MAXIMIZEPANE            32888
 #define ID_VIEW_MAXIMIZERESTOREACTIVEVIEW 32889
 #define ID_TOOLS_ALIGNLEFT              32891

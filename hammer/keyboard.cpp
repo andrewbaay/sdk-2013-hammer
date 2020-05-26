@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -23,7 +23,7 @@
 //
 // List of allowed modifier keys and their associated bit masks.
 //
-static KeyMap_t ModifierKeyTable[] = 
+static constexpr KeyMap_t ModifierKeyTable[] =
 {
 	{ VK_SHIFT, KEY_MOD_SHIFT, 0 },
 	{ VK_CONTROL, KEY_MOD_CONTROL, 0 },
@@ -36,7 +36,7 @@ static KeyMap_t ModifierKeyTable[] =
 //-----------------------------------------------------------------------------
 CKeyboard::CKeyboard(void)
 {
-	g_uKeyMaps = 0;	
+	g_uKeyMaps = 0;
 }
 
 
@@ -49,7 +49,7 @@ CKeyboard::~CKeyboard(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Adds a key binding to the 
+// Purpose: Adds a key binding to the
 // Input  : uChar - The virtual keycode of the primary key that must be held down.
 //			uModifierKeys - Bitflags specifying which modifier keys must be
 //				held down along with the key specified by uChar.
@@ -146,7 +146,7 @@ float CKeyboard::GetKeyScale(unsigned int uLogicalKey)
 	bool bImpulseUp = (uKeyState & KEYSTATE_IMPULSE_UP) != 0;
 	bool bDown = (uKeyState & KEYSTATE_DOWN) != 0;
 	float fValue = 0;
-	
+
 	//
 	// If we have a leading edge and no trailing edge, the key should be down.
 	//
@@ -218,7 +218,7 @@ float CKeyboard::GetKeyScale(unsigned int uLogicalKey)
 			fValue = 0.25;
 		}
 	}
-	
+
 	return fValue;
 }
 
@@ -349,7 +349,7 @@ void CKeyboard::UpdateLogicalKeys(unsigned int uChar, bool bPressed)
 				{
 					g_uLogicalKeyState[uLogicalKey]--;
 				}
-				
+
 				if (!(g_uLogicalKeyState[uLogicalKey] & KEYSTATE_DOWN))
 				{
 					g_uLogicalKeyState[uLogicalKey] |= KEYSTATE_IMPULSE_UP;
@@ -361,10 +361,10 @@ void CKeyboard::UpdateLogicalKeys(unsigned int uChar, bool bPressed)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Called by the client when a WM_KEYDOWN message is received. 
+// Purpose: Called by the client when a WM_KEYDOWN message is received.
 // Input  : Per CWnd::OnKeyDown.
 //-----------------------------------------------------------------------------
-void CKeyboard::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
+void CKeyboard::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	if ((!(nFlags & 0x4000)) || (!(g_uPhysicalKeyState[nChar] & KEYSTATE_DOWN)))
 	{
@@ -377,10 +377,10 @@ void CKeyboard::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Called by the client when a WM_KEYUP message is received. 
+// Purpose: Called by the client when a WM_KEYUP message is received.
 // Input  : Per CWnd::OnKeyDown.
 //-----------------------------------------------------------------------------
-void CKeyboard::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) 
+void CKeyboard::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	if (g_uPhysicalKeyState[nChar] & KEYSTATE_DOWN)
 	{

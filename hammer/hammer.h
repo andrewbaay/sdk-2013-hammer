@@ -60,15 +60,12 @@ public:
 class CHammerDocTemplate : public CMultiDocTemplate
 {
 public:
-	CHammerDocTemplate( UINT nIDResource, CRuntimeClass* pDocClass, CRuntimeClass* pFrameClass, CRuntimeClass* pViewClass ) :
-	  CMultiDocTemplate( nIDResource, pDocClass, pFrameClass, pViewClass )
-	  {
-	  }
+	CHammerDocTemplate( UINT nIDResource, CRuntimeClass* pDocClass, CRuntimeClass* pFrameClass, CRuntimeClass* pViewClass ) : CMultiDocTemplate( nIDResource, pDocClass, pFrameClass, pViewClass ) {}
 
-	  virtual	CDocument	*OpenDocumentFile( LPCTSTR lpszPathName, BOOL bMakeVisible = TRUE );
-	  virtual	void		CloseAllDocuments( BOOL bEndSession );
-	  virtual	void		InitialUpdateFrame( CFrameWnd* pFrame, CDocument* pDoc, BOOL bMakeVisible = TRUE );
-				void		UpdateInstanceMap( CMapDoc *pInstanceMapDoc );
+	virtual CDocument*	OpenDocumentFile( LPCTSTR lpszPathName, BOOL bMakeVisible = TRUE );
+	virtual void		CloseAllDocuments( BOOL bEndSession );
+	virtual void		InitialUpdateFrame( CFrameWnd* pFrame, CDocument* pDoc, BOOL bMakeVisible = TRUE );
+	void				UpdateInstanceMap( CMapDoc *pInstanceMapDoc );
 };
 
 
@@ -151,6 +148,8 @@ public:
 	CTypedPtrArray<CPtrArray,CCommandSequence*> m_CmdSequences;
 	void SaveSequences();
 	void LoadSequences();
+
+	void EditKeyBindings();
 
 	void Autosave();
 	void LoadLastGoodSave();

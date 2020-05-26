@@ -38,6 +38,7 @@
 #include "ModelBrowser.h"
 #include "cmdhandlers.h"
 #include "matsys_controls/assetpickerdefs.h"
+#include "KeyBinds.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -130,6 +131,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_COMMAND_EX(ID_MODE_APPLICATOR, OnApplicator)
 	ON_COMMAND_EX(ID_TOOLS_SOUND_BROWSER, OnSoundBrowser)
 	ON_COMMAND(ID_TOOLS_MODEL_BROWSER, OnModelBrowser)
+	ON_COMMAND(ID_TOOLS_KEYBINDINGS, OnKeyBindingEditor)
 	ON_COMMAND_EX(ID_FILE_RELOAD_SOUNDS, OnReloadSounds)
     ON_UPDATE_COMMAND_UI(ID_MODE_APPLICATOR, OnUpdateApplicatorUI)
 	ON_COMMAND(ID_HELP_FINDER, CMDIFrameWnd::OnHelpFinder)
@@ -1124,6 +1126,10 @@ void CMainFrame::OnModelBrowser()
 	}
 }
 
+void CMainFrame::OnKeyBindingEditor()
+{
+	APP()->EditKeyBindings();
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Brings up the sound browser
@@ -1881,6 +1887,8 @@ bool CMainFrame::VerifyBarState(void)
 //-----------------------------------------------------------------------------
 void CMainFrame::WinHelp(DWORD dwData, UINT nCmd)
 {
+	if ( g_pKeyBinds->EditingKeybinds() )
+		return;
 	// dvs: HACK: just punt them to the main help page
 	APP()->OpenURL(ID_HELP_TOPICS, m_hWnd);
 }

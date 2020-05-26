@@ -144,6 +144,7 @@ protected:
 	afx_msg BOOL OnApplicator(UINT nID);
 	afx_msg BOOL OnSoundBrowser(UINT nID);
 	afx_msg void OnModelBrowser();
+	afx_msg void OnKeyBindingEditor();
 	afx_msg BOOL OnReloadSounds(UINT nID);
 	afx_msg void OnUpdateOpaqueMaterials(CCmdUI *pCmdUI);
 	afx_msg void OnOpaqueMaterials();

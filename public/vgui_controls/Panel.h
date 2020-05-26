@@ -597,6 +597,7 @@ public:
 	static wchar_t const *KeyCodeModifiersToDisplayString( KeyCode code, int modifiers ); // L"Ctrl+Alt+Shift+Backspace"
 
 	static KeyCode		StringToKeyCode( char const *str );
+	static KeyCode		DisplayStringToKeyCode( char const *str );
 #if defined( VGUI_USEKEYBINDINGMAPS )
 	static KeyBindingContextHandle_t   CreateKeyBindingsContext( char const *filename, char const *pathID = 0 );
 	virtual void		SetKeyBindingsContext( KeyBindingContextHandle_t handle );

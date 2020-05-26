@@ -1087,10 +1087,7 @@ InitReturnVal_t CHammer::HammerInternalInit()
 		RUNTIME_CLASS(CMapView2D));
 	HINSTANCE hInst = AfxFindResourceHandle( MAKEINTRESOURCE( IDR_MAPDOC ), RT_MENU );
 	pManifestDocTemplate->m_hMenuShared = ::LoadMenu( hInst, MAKEINTRESOURCE( IDR_MAPDOC ) );
-	hInst = AfxFindResourceHandle( MAKEINTRESOURCE( IDR_MAPDOC ), RT_ACCELERATOR );
-	pManifestDocTemplate->m_hAccelTable = ::LoadAccelerators( hInst, MAKEINTRESOURCE( IDR_MAPDOC ) );
 	AddDocTemplate(pManifestDocTemplate);
-
 
 	// register shell file types
 	RegisterShellFileTypes();
@@ -1246,6 +1243,25 @@ InitReturnVal_t CHammer::HammerInternalInit()
 	return INIT_OK;
 }
 
+void CHammer::EditKeyBindings()
+{
+	DestroyAcceleratorTable( static_cast<CMainFrame*>( m_pMainWnd )->m_hAccelTable );
+	DestroyAcceleratorTable( pMapDocTemplate->m_hAccelTable );
+	DestroyAcceleratorTable( pManifestDocTemplate->m_hAccelTable );
+
+	pManifestDocTemplate->m_hAccelTable = nullptr;
+	pMapDocTemplate->m_hAccelTable = nullptr;
+	static_cast<CMainFrame*>( m_pMainWnd )->m_hAccelTable = nullptr;
+
+	CKeybindEditor editor( m_pMainWnd );
+	editor.Show();
+	editor.DoModal();
+
+	g_pKeyBinds->GetAccelTableFor( "IDR_MAINFRAME", static_cast<CMainFrame*>( m_pMainWnd )->m_hAccelTable );
+	g_pKeyBinds->GetAccelTableFor( "IDR_MAPDOC", pMapDocTemplate->m_hAccelTable );
+	g_pKeyBinds->GetAccelTableFor( "IDR_MAPDOC", pManifestDocTemplate->m_hAccelTable );
+}
+
 int CHammer::MainLoop()
 {
 	return WrapFunctionWithMinidumpHandler( StaticInternalMainLoop, this, -1 );
@@ -1327,8 +1343,6 @@ int CHammer::InternalMainLoop()
 //-----------------------------------------------------------------------------
 void CHammer::Shutdown()
 {
-    g_pKeyBinds->Shutdown();
-
 	if ( g_LPreviewThread )
 	{
 		MessageToLPreview StopMsg( LPREVIEW_MSG_EXIT );

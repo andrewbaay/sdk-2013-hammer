@@ -2547,6 +2547,18 @@ KeyCode Panel::StringToKeyCode( char const *str )
 	return KEY_NONE;
 }
 
+KeyCode Panel::DisplayStringToKeyCode( char const *str )
+{
+	int c = ARRAYSIZE( g_KeyNames );
+	for ( int i = 0; i < c ; ++i )
+	{
+		if ( !Q_stricmp( str, g_KeyNames[ i ].displaystring ) )
+			return g_KeyNames[ i ].code;
+	}
+
+	return KEY_NONE;
+}
+
 static void WriteKeyBindingToBuffer( CUtlBuffer& buf, int level, const BoundKey_t& binding )
 {
 	BufPrint( buf, level, "\"keycode\"\t\"%s\"\n", Panel::KeyCodeToString( (KeyCode)binding.keycode ) );
