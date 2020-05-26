@@ -839,7 +839,7 @@ static int ToVirtualKey( ButtonCode_t key, bool hasMod, bool& didVirt )
 	didVirt = false;
 	if ( !hasMod && ( ( key >= KEY_0 && key <= KEY_Z ) || ( key >= KEY_LBRACKET && key <= KEY_EQUAL ) ) )
 	{
-		auto code = vgui::Panel::KeyCodeToString( key );
+		auto code = vgui::Panel::KeyCodeToDisplayStringShort( key );
 		if ( *code )
 			return tolower( *code );
 	}

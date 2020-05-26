@@ -593,6 +593,7 @@ public:
 	virtual void OnMouseTriplePressed( MouseCode code );
 
 	static char const	*KeyCodeToString( KeyCode code );
+	static char const	*KeyCodeToDisplayStringShort( KeyCode code );
 	static wchar_t const *KeyCodeToDisplayString( KeyCode code );
 	static wchar_t const *KeyCodeModifiersToDisplayString( KeyCode code, int modifiers ); // L"Ctrl+Alt+Shift+Backspace"
 

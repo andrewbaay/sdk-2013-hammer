@@ -2468,6 +2468,18 @@ char const *Panel::KeyCodeToString( KeyCode code )
 	return "";
 }
 
+char const *Panel::KeyCodeToDisplayStringShort( KeyCode code )
+{
+	int c = ARRAYSIZE( g_KeyNames );
+	for ( int i = 0; i < c ; ++i )
+	{
+		if ( g_KeyNames[ i ].code == code )
+			return g_KeyNames[ i ].displaystring;
+	}
+
+	return "";
+}
+
 wchar_t const *Panel::KeyCodeToDisplayString( KeyCode code )
 {
 	int c = ARRAYSIZE( g_KeyNames );
