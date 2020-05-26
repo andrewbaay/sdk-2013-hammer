@@ -17,7 +17,7 @@ skip_tags: true
 max_jobs: 1
 
 # Build image
-image: Visual Studio 2017
+image: Visual Studio 2019
 
 # Clone the project into this folder
 # You can change me, but make sure to change it for every other part of the build!
@@ -31,9 +31,6 @@ clone_depth: 1
 # Install script is called after cloning the repository
 install:
 
-# Gotta do some fun Registry stuff here for the VPC to work with only 2017 installed.
-  - REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\10.0\Projects\{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}" /v DefaultProjectExtension /t REG_SZ /d vcproj /f
-
 # Let's get into this source directory, where our "creategameprojects" script normally is
 # NOTE: This will change depending on if you've changed the clone directory!
   - cd c:\build
@@ -41,13 +38,6 @@ install:
 # It's important to note that this is what is found inside of createallprojects.bat, but our script pauses
 # to help know if something went wrong with VPC, so we directly call it here instead.
   - devtools\bin\vpc.exe +hammer /mksln hammer.sln
-
-# Another note: VPC is really lame and doesn't spit out the full solution file. The correct file is after you
-# open it in Visual Studio and save it. There's a big chunk missing at the end. Refer to momentum's "sln_fix.txt" file,
-# or push your sln file to your game's repository. You can see how the sln_file got its chunk by opening your project's sln
-# file inside of a text editor and looking near the bottom of the file. We copy that chunk over here.
-# CHANGEME
-  - copy hammer.sln+sln_fix.txt hammer.sln
 
 
 # Build Configuration things
