@@ -178,7 +178,6 @@
 #define IDB_MANIFEST                    340
 #define IDR_MANIFEST                    342
 #define IDD_MANIFEST_MOVE               343
-#define IDD_MANAGE_LIST_DIALOG          344
 #define IDD_PARTICLE_BROWSER            346
 #define IDD_MANIFEST_CONTROL            347
 #define IDB_MANIFEST_ICONS              348
@@ -188,11 +187,9 @@
 #define IDD_DISP_SCULPT_PUSH_OPTIONS    352
 #define IDD_DISP_SCULPT_PROJECT_OPTIONS 353
 #define IDD_DISP_SCULPT_CARVE_OPTIONS   354
-#define IDD_MANIFEST_CHECKIN            355
 #define IDI_OUTPUT_EXTERNAL             356
 #define IDD_ENTITY_SPRINKLE             357
 #define IDD_DIALOG_SYNC_FILE            358
-#define IDD_DIALOG_WITH_CHECKBOX        359
 #define IDD_KEYBIND_EDITOR              360
 #define IDC_BRDLG_FLIPHORIZ             1000
 #define IDC_BRDLG_FLIPVERT              1001
@@ -975,8 +972,6 @@
 #define IDC_REVISION                    1715
 #define IDC_SYNC_ICON                   1716
 #define IDC_DIALOG_ICON                 1717
-#define IDD_MAPDOC_CHECKIN              1723
-#define IDD_MAPDOC_STATUS               1724
 #define IDCHECKOUT                      1725
 #define IDADD                           1726
 #define ID_SUBMIT                       1727
