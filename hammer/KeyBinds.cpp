@@ -269,6 +269,8 @@ static constexpr CommandNames_t s_CommandNamesDoc[] =
 	COM( ID_VIEW_SHOWMODELSIN2D ),
 	COM( ID_VIEW_TEXTUREBROWSER ),
 	COM( ID_VSCALE_TOGGLE ),
+	COM( ID_TOOLS_SPRINKLE ),
+	COM( ID_TOOLS_MODEL_BROWSER ),
 };
 
 int GetIDForCommandStr(const char *pName)
