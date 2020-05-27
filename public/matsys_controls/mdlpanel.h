@@ -86,6 +86,8 @@ private:
 
 	bool	m_bCameraPositionOverrideEnabled;
 	Vector	m_vecCameraPositionOverride;
+
+	CMaterialReference m_modelWireframe;
 };
 
 #endif // MDLPANEL_H

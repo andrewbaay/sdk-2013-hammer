@@ -68,6 +68,7 @@ CRender::CRender(void)
 		m_pFlatNoCull[i] = NULL;
 	}
 
+	m_pModelWireframe = NULL;
 	m_pCurrentMaterial = NULL;
 	m_pBoundMaterial = NULL;
 

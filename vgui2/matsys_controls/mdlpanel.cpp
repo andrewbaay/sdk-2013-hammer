@@ -191,7 +191,6 @@ void CMDLPanel::UpdateStudioRenderConfig( void )
 	s_StudioRenderConfig.drawEntities = r_drawentities.GetInt();
 	s_StudioRenderConfig.bFlex = !!r_flex.GetInt();
 	s_StudioRenderConfig.bEyes = !!r_eyes.GetInt();
-	s_StudioRenderConfig.bWireframe = m_bWireFrame;
 	s_StudioRenderConfig.bDrawNormals = mat_normals.GetBool();
 	s_StudioRenderConfig.skin = r_skin.GetInt();
 	s_StudioRenderConfig.maxDecalsPerModel = r_maxmodeldecal.GetInt();
@@ -339,6 +338,11 @@ void CMDLPanel::OnPaint3D()
 		m_RootMDL.m_MDL.m_vecViewTarget = vecPosition;
 	}
 
+	if ( !m_modelWireframe.IsValid() )
+	{
+		m_modelWireframe.Init( "debug/debugwireframevertexcolor", TEXTURE_GROUP_OTHER );
+	}
+
 	Draw();
 
 	if ( m_bDrawCollisionModel )
@@ -366,10 +370,15 @@ void CMDLPanel::OnModelDrawPassStart( int iPass, CStudioHdr *pStudioHdr, int &nF
 		nFlags |= STUDIORENDER_SHADOWDEPTHTEXTURE;
 	else if ( GetRenderingWithFlashlightConfiguration() )
 		nFlags &=~STUDIORENDER_DRAW_NO_SHADOWS;
+
+	if ( m_bWireFrame && iPass == 0 )
+		StudioRender()->ForcedMaterialOverride( m_modelWireframe );
 }
 
 void CMDLPanel::OnModelDrawPassFinished( int iPass, CStudioHdr *pStudioHdr, int &nFlags )
 {
+	if ( iPass == 0 && m_bWireFrame )
+		StudioRender()->ForcedMaterialOverride( nullptr );
 }
 
 void CMDLPanel::OnPostSetUpBonesPreDraw()
