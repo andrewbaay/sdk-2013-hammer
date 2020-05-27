@@ -151,30 +151,5 @@ public:
 	CStatic m_FullFileNameCtrl;
 };
 
-// CManifestCheckin dialog
-
-class CManifestCheckin : public CDialog
-{
-	DECLARE_DYNAMIC(CManifestCheckin)
-
-public:
-	CManifestCheckin(CWnd* pParent = NULL);   // standard constructor
-	virtual ~CManifestCheckin();
-
-	// Dialog Data
-	enum { IDD = IDD_MANIFEST_CHECKIN };
-
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
-	DECLARE_MESSAGE_MAP()
-public:
-	virtual BOOL OnInitDialog();
-	afx_msg void OnBnClickedOk();
-
-	CListCtrl m_CheckinListCtrl;
-	CEdit m_DescriptionCtrl;
-};
-
 #endif // MANIFESTDIALOG_H
 
