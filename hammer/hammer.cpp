@@ -479,6 +479,7 @@ bool CHammer::Connect( CreateInterfaceFn factory )
     char hammerDir[MAX_PATH];
     V_ComposeFileName(m_szAppDir, "hammer", hammerDir, MAX_PATH);
     g_pFullFileSystem->AddSearchPath(hammerDir, "hammer", PATH_ADD_TO_HEAD);
+    g_pFullFileSystem->AddSearchPath(hammerDir, "SKIN", PATH_ADD_TO_HEAD);
     char hammerPrefabs[MAX_PATH];
     V_ComposeFileName(hammerDir, "prefabs", hammerPrefabs, MAX_PATH);
     g_pFullFileSystem->CreateDirHierarchy("prefabs", "hammer"); // Create the prefabs folder if it doesn't already exist
