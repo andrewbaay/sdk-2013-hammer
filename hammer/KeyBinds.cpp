@@ -591,6 +591,8 @@ void KeyBinds::UpdateBindings( const char* group, const CUtlVector<BindingInfo_t
 			bind->deleteThis();
 			continue;
 		}
+		else if ( !b.keyCode )
+			continue;
 
 		if ( b.virt )
 			bind->SetString( "key", GetStrForKey( b.keyCode ) );
@@ -606,7 +608,7 @@ void KeyBinds::UpdateBindings( const char* group, const CUtlVector<BindingInfo_t
 			bind->RemoveSubKey( mod );
 			mod->deleteThis();
 		}
-		else
+		else if ( b.modifiers )
 		{
 			if ( b.modifiers & vgui::MODIFIER_SHIFT )
 				mod->SetBool( "shift", true );
@@ -1149,7 +1151,6 @@ public:
 		for ( int i = 0 ; i < c; ++i )
 		{
 			CKeyBoardEditorPage* page = static_cast<CKeyBoardEditorPage*>( GetPage( i ) );
-			page->GetName();
 			const auto& cur = page->m_current;
 			const auto& orig = page->m_original;
 
@@ -1157,9 +1158,9 @@ public:
 			outBindings.SetCount( cur.Count() );
 			for ( int j = 0; j < outBindings.Count(); ++j )
 			{
-				auto& out = outBindings[i];
-				auto& c = cur[i];
-				auto& o = orig[i];
+				auto& out = outBindings[j];
+				auto& c = cur[j];
+				auto& o = orig[j];
 
 				out.name = o.name;
 				if ( c.uChar == (unsigned)KEY_NONE )
@@ -1174,7 +1175,9 @@ public:
 				}
 			}
 
-			g_pKeyBinds->UpdateBindings( page->GetName(), outBindings );
+			char name[100];
+			GetTabTitle( i, name, 100 );
+			g_pKeyBinds->UpdateBindings( name, outBindings );
 		}
 		g_pKeyBinds->Save();
 	}
@@ -1195,7 +1198,9 @@ public:
 		for ( int i = 0 ; i < c; ++i )
 		{
 			CKeyBoardEditorPage* page = static_cast<CKeyBoardEditorPage*>( GetPage( i ) );
-			g_pKeyBinds->GetDefaults( page->GetName(), page->m_original );
+			char name[100];
+			GetTabTitle( i, name, 100 );
+			g_pKeyBinds->GetDefaults( name, page->m_original );
 			page->OnUseDefaults();
 		}
 	}
