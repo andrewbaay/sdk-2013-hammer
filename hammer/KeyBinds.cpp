@@ -964,28 +964,7 @@ protected:
 		}
 
 		sorted.RemoveAll();
-
-		bool allDone = false;
-		for ( int j = 0; j < allBindings.Count(); j++ )
-		{
-			auto& all = allBindings[j];
-			for ( int i = 0; i < m_current.Count(); i++ )
-			{
-				auto& c = m_current[i];
-				auto& o = m_original[i];
-				const bool eq = o.name == all.name;
-				if ( !eq )
-					continue;
-				allDone = i == m_current.Count() - 1;
-				all.keyCode = c.uChar;
-				all.modifiers = c.uModifierKeys;
-			}
-
-			if ( allDone )
-				break;
-		}
 	}
-
 
 	void BindKey( vgui::KeyCode code )
 	{
@@ -1079,26 +1058,18 @@ protected:
 			else
 				cur.uChar = KEY_NONE;
 			cur.uModifierKeys = orig.modifiers;
-
-			KeyBinds::BindingInfo_t modInfo;
-
-			modInfo.name = orig.name;
-			modInfo.keyCode = cur.uChar;
-			modInfo.modifiers = cur.uModifierKeys;
-
-			allBindings.AddToTail( modInfo );
 		}
 	}
 
 protected:
-	static CUtlVector<KeyBinds::BindingInfo_t> allBindings; // contains modified keys
 	const KeyBinds::BindingInfo_t* LookupBindingByKeyCode( /*vgui::KeyCode*/unsigned code, unsigned modifiers ) const
 	{
-		for ( int i = 0; i < allBindings.Count(); i++ )
+		for ( int i = 0; i < m_current.Count(); i++ )
 		{
-			auto& cur = allBindings[i];
-			if ( cur.keyCode == code && cur.modifiers == modifiers )
-				return &cur;
+			auto& cur = m_current[i];
+			auto& ori = m_original[i];
+			if ( cur.uChar == code && cur.uModifierKeys == modifiers )
+				return &ori;
 		}
 
 		return nullptr;
@@ -1118,7 +1089,6 @@ protected:
 
 	friend class CKeyBoardEditorSheet;
 };
-CUtlVector<KeyBinds::BindingInfo_t> CKeyBoardEditorPage::allBindings;
 
 //-----------------------------------------------------------------------------
 // Purpose: Dialog for use in editing keybindings
@@ -1131,8 +1101,6 @@ public:
 	CKeyBoardEditorSheet( vgui::Panel* parent ) : BaseClass( parent, "KeyBoardEditorSheet" )
 	{
 		SetSmallTabs( false );
-
-		CKeyBoardEditorPage::allBindings.Purge();
 
 		// Create this sheet and add the subcontrols
 		CUtlVector<KeyBinds::BindingInfo_t> bindList;
