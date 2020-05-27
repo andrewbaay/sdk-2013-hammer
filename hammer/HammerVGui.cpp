@@ -57,7 +57,7 @@ bool CHammerVGui::Init( HWND hWindow )
 	// g_pMatSystemSurface->InstallPlaySoundFunc( VGui_PlaySound );
 
 	// load scheme
-	m_hHammerScheme = vgui::scheme()->LoadSchemeFromFile("//PLATFORM/Resource/SourceScheme.res", "Hammer");
+	m_hHammerScheme = vgui::scheme()->LoadSchemeFromFile("//hammer/Resource/HammerScheme.res", "Hammer");
 	if ( !m_hHammerScheme )
 	{
 		return false;
