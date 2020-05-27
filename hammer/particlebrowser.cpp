@@ -70,7 +70,7 @@ public:
 		}
 	}
 
-	virtual void Paint()
+	/*virtual void Paint()
 	{
 		vgui::EditablePanel::Paint();
 
@@ -108,7 +108,7 @@ public:
 		}
 
 		fu = false;
-	}
+	}*/
 
 	CParticleBrowser *m_pBrowser;
 };
@@ -260,7 +260,7 @@ BOOL CParticleBrowser::OnInitDialog()
 	vgui::EditablePanel *pMainPanel = new CParticleBrowserPanel( this, "ParticleBrowerPanel", HammerVGui()->GetHammerScheme() );
 
 	m_VGuiWindow.SetParentWindow( &m_VGuiWindow );
-	m_VGuiWindow.SetMainPanel( pMainPanel, false );
+	m_VGuiWindow.SetMainPanel( pMainPanel );
 	pMainPanel->MakePopup( false, false );
     m_VGuiWindow.SetRepaintInterval( 30 );
 
