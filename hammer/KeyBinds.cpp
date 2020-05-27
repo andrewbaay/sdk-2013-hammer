@@ -604,7 +604,15 @@ void KeyBinds::UpdateBindings( const char* group, const CUtlVector<BindingInfo_t
 			char key[] = { (char)b.keyCode, 0 };
 			bind->SetString( "key", key );
 		}
-		bind->SetBool( "virtkey", b.virt );
+
+		if ( b.virt )
+			bind->SetBool( "virtkey", true );
+		else if ( KeyValues* m = bind->FindKey( "virtkey" ) )
+		{
+			bind->RemoveSubKey( m );
+			m->deleteThis();
+		}
+
 		KeyValues* mod = bind->FindKey( "modifiers", !!b.modifiers );
 		if ( !b.modifiers && mod )
 		{
