@@ -56,15 +56,16 @@ void CMDL::Draw( const matrix3x4_t& rootToWorld, const matrix3x4_t *pBoneToWorld
 	g_pStudioRender->SetEyeViewTarget( info.m_pStudioHdr, info.m_Body, vecWorldViewTarget );
 
 	CMatRenderContextPtr pRenderContext( g_pMaterialSystem );
-	CMatRenderData< float > rdFlexWeights( pRenderContext );
 
 	// Set default flex values
 	float *pFlexWeights = NULL;
 	const int nFlexDescCount = info.m_pStudioHdr->numflexdesc;
+	CUtlMemory<float> rdFlexWeights;
 	if ( nFlexDescCount )
 	{
 		CStudioHdr cStudioHdr( info.m_pStudioHdr, g_pMDLCache );
-		pFlexWeights = rdFlexWeights.Lock( info.m_pStudioHdr->numflexdesc );
+		rdFlexWeights.EnsureCapacity( nFlexDescCount );
+		pFlexWeights = rdFlexWeights.Base();
 		cStudioHdr.RunFlexRules( m_pFlexControls, pFlexWeights );
 	}
 
@@ -101,6 +102,7 @@ void CMergedMDL::SetMDL( MDLHandle_t handle, void *pProxyData )
 {
 	m_RootMDL.m_MDL.SetMDL( handle );
 	m_RootMDL.m_MDL.m_pProxyData = pProxyData;
+	m_RootMDL.m_MDL.m_Color.SetRawColor( 0xFFFFFFFF );
 
 	Vector vecMins, vecMaxs;
 	GetMDLBoundingBox( &vecMins, &vecMaxs, handle, m_RootMDL.m_MDL.m_nSequence );
@@ -182,8 +184,8 @@ void CMergedMDL::SetupBonesForAttachmentQueries( void )
 	CMatRenderContextPtr pRenderContext( materials );
 
 	CStudioHdr *pRootStudioHdr = new CStudioHdr( g_pMDLCache->GetStudioHdr( m_RootMDL.m_MDL.GetMDL() ), g_pMDLCache );
-	CMatRenderData< matrix3x4_t > rdBoneToWorld( pRenderContext, pRootStudioHdr->numbones() );
-	m_RootMDL.m_MDL.SetUpBones( m_RootMDL.m_MDLToWorld, pRootStudioHdr->numbones(), rdBoneToWorld.Base(), m_PoseParameters, m_SequenceLayers, m_nNumSequenceLayers );
+	matrix3x4_t boneToWorld[MAXSTUDIOBONES];
+	m_RootMDL.m_MDL.SetUpBones( m_RootMDL.m_MDLToWorld, pRootStudioHdr->numbones(), boneToWorld, m_PoseParameters, m_SequenceLayers, m_nNumSequenceLayers );
 
 	delete pRootStudioHdr;
 }
@@ -203,17 +205,17 @@ void CMergedMDL::Draw()
 
 	// Draw the MDL
 	CStudioHdr *pRootStudioHdr = new CStudioHdr( g_pMDLCache->GetStudioHdr( m_RootMDL.m_MDL.GetMDL() ), g_pMDLCache );
-	CMatRenderData< matrix3x4_t > rdBoneToWorld( pRenderContext, pRootStudioHdr->numbones() );
+	matrix3x4_t boneToWorld[MAXSTUDIOBONES];
 	const matrix3x4_t *pRootMergeHdrModelToWorld = &m_RootMDL.m_MDLToWorld;
-	const matrix3x4_t *pFollowBoneToWorld = rdBoneToWorld.Base();
-	m_RootMDL.m_MDL.SetUpBones( m_RootMDL.m_MDLToWorld, pRootStudioHdr->numbones(), rdBoneToWorld.Base(), m_PoseParameters, m_SequenceLayers, m_nNumSequenceLayers );
+	const matrix3x4_t *pFollowBoneToWorld = boneToWorld;
+	m_RootMDL.m_MDL.SetUpBones( m_RootMDL.m_MDLToWorld, pRootStudioHdr->numbones(), boneToWorld, m_PoseParameters, m_SequenceLayers, m_nNumSequenceLayers );
 
 	OnPostSetUpBonesPreDraw();
 
 	int nFlags = STUDIORENDER_DRAW_NO_SHADOWS;
 
 	OnModelDrawPassStart( 0, pRootStudioHdr, nFlags );
-	m_RootMDL.m_MDL.Draw( m_RootMDL.m_MDLToWorld, rdBoneToWorld.Base(), nFlags );
+	m_RootMDL.m_MDL.Draw( m_RootMDL.m_MDLToWorld, boneToWorld, nFlags );
 	OnModelDrawPassFinished( 0, pRootStudioHdr, nFlags );
 
 	// Draw the merge MDLs.
@@ -226,7 +228,7 @@ void CMergedMDL::Draw()
 
 		// Get the merge studio header.
 		CStudioHdr *pMergeHdr = new CStudioHdr( g_pMDLCache->GetStudioHdr( m_aMergeMDLs[iMerge].m_MDL.GetMDL() ), g_pMDLCache );
-		m_aMergeMDLs[iMerge].m_MDL.SetupBonesWithBoneMerge( pMergeHdr, pMergeBoneToWorld, pRootStudioHdr, pFollowBoneToWorld, *pRootMergeHdrModelToWorld );
+		m_aMergeMDLs[iMerge].m_MDL.SetupBonesWithBoneMerge( pMergeHdr, pMergeBoneToWorld, pRootStudioHdr, boneToWorld, *pRootMergeHdrModelToWorld );
 
 		OnModelDrawPassStart( 0, pMergeHdr, nFlags );
 		m_aMergeMDLs[iMerge].m_MDL.Draw( m_aMergeMDLs[iMerge].m_MDLToWorld, pMergeBoneToWorld, nFlags );
@@ -251,7 +253,6 @@ void CMergedMDL::Draw()
 			delete pMergeHdr;
 		}
 	}
-	rdBoneToWorld.Release();
 
 	delete pRootStudioHdr;
 }
