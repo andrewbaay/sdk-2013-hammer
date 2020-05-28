@@ -46,17 +46,6 @@ using namespace vgui;
 
 
 //-----------------------------------------------------------------------------
-// Sort by MDL name
-//-----------------------------------------------------------------------------
-static int __cdecl MDLBrowserSortFunc( vgui::ListPanel *pPanel, const ListPanelItem &item1, const ListPanelItem &item2 )
-{
-	const char *string1 = item1.kv->GetString("mdl");
-	const char *string2 = item2.kv->GetString("mdl");
-	return stricmp( string1, string2 );
-}
-
-
-//-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
 CMDLPicker::CMDLPicker( vgui::Panel *pParent, int nFlags ) :
