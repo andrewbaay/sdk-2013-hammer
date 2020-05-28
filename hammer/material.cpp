@@ -1399,6 +1399,8 @@ bool CMaterial::Initialize( HWND hwnd )
 	g_materialSystemConfig.m_VideoMode.m_RefreshRate = 0;
 	g_materialSystemConfig.SetFlag( MATSYS_VIDCFG_FLAGS_WINDOWED, true );
 	g_materialSystemConfig.SetFlag( MATSYS_VIDCFG_FLAGS_RESIZING, true );
+	g_materialSystemConfig.SetFlag(	MATSYS_VIDCFG_FLAGS_STENCIL, true );
+	g_materialSystemConfig.SetFlag(	MATSYS_VIDCFG_FLAGS_USING_MULTIPLE_WINDOWS, true );
 
 	materials->SetMaterialProxyFactory( GetHammerMaterialProxyFactory() );
 
