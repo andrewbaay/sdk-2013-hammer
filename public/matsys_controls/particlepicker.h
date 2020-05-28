@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -24,7 +24,6 @@ namespace vgui
 	class EditablePanel;
 	class ScrollBar;
 	class IScheme;
-	class IImage;
 }
 
 class CParticleSystemPanel;
@@ -41,7 +40,7 @@ class CParticleSnapshotGrid: public vgui::EditablePanel
 
 public:
 	CParticleSnapshotGrid( vgui::Panel *pParent, const char *pName );
-	
+
 	virtual void PerformLayout();
 	virtual void OnTick();
 	virtual void OnMousePressed(vgui::MouseCode code);
@@ -111,11 +110,6 @@ private:
 
 	bool m_bAllowMultipleSelection;
 	int m_nMostRecentSelectedIndex;
-
-	vgui::IImage *m_pRelativesImgNeither;
-	vgui::IImage *m_pRelativesImgPOnly;
-	vgui::IImage *m_pRelativesImgCOnly;
-	vgui::IImage *m_pRelativesImgBoth;
 
 	CUtlVector< CUtlVector<PSysRelativeInfo_t> > m_ParentsMap;
 	CUtlVector< CUtlVector<PSysRelativeInfo_t> > m_ChildrenMap;

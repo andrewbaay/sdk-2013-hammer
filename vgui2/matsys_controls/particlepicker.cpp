@@ -87,7 +87,7 @@ public:
 
 	void SetPreviewEnabled( bool bEnabled );
 
-	void UpdateRelatives( IImage *pIcon, CUtlVector<CParticleSnapshotGrid::PSysRelativeInfo_t>& sysParents, CUtlVector<CParticleSnapshotGrid::PSysRelativeInfo_t>& sysChildren );
+	void UpdateRelatives( CUtlVector<CParticleSnapshotGrid::PSysRelativeInfo_t>& sysParents, CUtlVector<CParticleSnapshotGrid::PSysRelativeInfo_t>& sysChildren );
 
 protected:
 	CParticleSystemPanel *m_pParticlePanel;
@@ -180,7 +180,7 @@ void CParticleSnapshotPanel::OnSetFocus()
 	BaseClass::OnSetFocus();
 }
 
-void CParticleSnapshotPanel::UpdateRelatives( IImage *pIcon, CUtlVector<CParticleSnapshotGrid::PSysRelativeInfo_t>& sysParents, CUtlVector<CParticleSnapshotGrid::PSysRelativeInfo_t>& sysChildren )
+void CParticleSnapshotPanel::UpdateRelatives( CUtlVector<CParticleSnapshotGrid::PSysRelativeInfo_t>& sysParents, CUtlVector<CParticleSnapshotGrid::PSysRelativeInfo_t>& sysChildren )
 {
 	char countBuf[8];
 
@@ -396,11 +396,6 @@ const int TOOLBAR_HEIGHT = 30;
 CParticleSnapshotGrid::CParticleSnapshotGrid( vgui::Panel *pParent, const char *pName ):
 	BaseClass(pParent,pName)
 {
-	m_pRelativesImgNeither = scheme()->GetImage( "tools/particles/icon_particles_rel_neither", false );
-	m_pRelativesImgPOnly = scheme()->GetImage( "tools/particles/icon_particles_rel_ponly", false );
-	m_pRelativesImgCOnly = scheme()->GetImage( "tools/particles/icon_particles_rel_conly", false );
-	m_pRelativesImgBoth = scheme()->GetImage( "tools/particles/icon_particles_rel_both", false );
-
 	m_pScrollBar = new ScrollBar( this, "ScrollBar", true );
 	m_pScrollBar->SetWide( 16 );
 	m_pScrollBar->SetAutoResize( PIN_TOPRIGHT, AUTORESIZE_DOWN, 0, TOOLBAR_HEIGHT, -16, 0 );
@@ -522,22 +517,7 @@ void CParticleSnapshotGrid::UpdatePanelRelatives( int nIndex )
 	CUtlVector<PSysRelativeInfo_t>& sysParents = m_ParentsMap[nIndex];
 	CUtlVector<PSysRelativeInfo_t>& sysChildren = m_ChildrenMap[nIndex];
 
-	IImage *pImg = m_pRelativesImgNeither;
-
-	if ( sysParents.Count() && sysChildren.Count() )
-	{
-		pImg = m_pRelativesImgBoth;
-	}
-	else if ( sysParents.Count() )
-	{
-		pImg = m_pRelativesImgPOnly;
-	}
-	else if ( sysChildren.Count() )
-	{
-		pImg = m_pRelativesImgCOnly;
-	}
-
-	pPanel->UpdateRelatives( pImg, sysParents, sysChildren );
+	pPanel->UpdateRelatives( sysParents, sysChildren );
 }
 
 void CParticleSnapshotGrid::OnScrollBarSliderMoved()
