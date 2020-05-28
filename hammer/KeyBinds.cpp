@@ -856,7 +856,7 @@ static int ToVirtualKey( ButtonCode_t key, bool hasMod, bool& didVirt )
 	{
 		auto code = vgui::Panel::KeyCodeToDisplayStringShort( key );
 		if ( *code )
-			return tolower( *code );
+			return *code;
 	}
 	didVirt = true;
 	return g_pInputSystem->ButtonCodeToVirtualKey( key );
