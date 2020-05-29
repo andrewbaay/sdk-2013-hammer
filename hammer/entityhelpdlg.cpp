@@ -234,6 +234,10 @@ void CEntityHelpDlg::UpdateHelp(void)
 			b << "\n\n";
 			b << write(*m_pHelpText);
 
+			b << color( RGB( 32, 54, 255 ) );
+			b << "";
+			b << color( RGB( 0, 0, 0 ) );
+
 			//
 			// Keys.
 			//
