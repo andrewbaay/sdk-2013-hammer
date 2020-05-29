@@ -68,6 +68,14 @@ class CEditGameClass
 		static inline int GetInvalidKeyValue()		{ return WCKeyValues::GetInvalidIndex(); }
 
 		//
+		// Interface to flags.
+		//
+		bool GetFlag( const char* flagName, unsigned long nFlag );
+		unsigned long GetFlags( const char* flagName );
+		void SetFlag( const char* flagName, unsigned long nFlag, bool bSet );
+		void SetFlags( const char* flagName, unsigned long nFlags );
+
+		//
 		// Interface to spawnflags.
 		//
 		bool GetSpawnFlag(unsigned long nFlag);

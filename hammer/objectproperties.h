@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -22,13 +22,11 @@ class COP_Output;
 class COP_Input;
 class COP_Model;
 
-enum LayoutType_t;
-
 enum SaveData_Reason_t : char
 {
 	SAVEDATA_CLOSE,				// Dialog is being closed down
 	SAVEDATA_APPLY,				// Apply was hit
-	SAVEDATA_SELECTION_CHANGED,	// Selection was changed but 
+	SAVEDATA_SELECTION_CHANGED,	// Selection was changed but
 	SAVEDATA_TOOL_TRANSFORM,
 };
 
@@ -70,19 +68,19 @@ public:
 	PVOID GetEditObject(CRuntimeClass *pType);
 	PVOID GetEditObjectFromMapObject(CMapClass *pobj, CRuntimeClass *pType);
 	void CopyDataToEditObjects(CMapClass *pobj);
-	
+
 	void SetPageToOutput(CEntityConnection *pConnection);
 	void SetPageToInput(CEntityConnection *pConnection);
 
 	BOOL SetupPages(void);
 	void CreatePages(void);
 	void SaveData( SaveData_Reason_t reason );
-		
+
 	void LoadDataForPages(int iPage = -1);
 
 	void SetObjectList(const CMapObjectList *pObjectList);
 	void MarkDataDirty();
-	
+
 
 	void SetOutputButtonState(int nState);
 	void SetInputButtonState(int nState);
@@ -99,8 +97,8 @@ protected:
 	void AddObjectExpandGroups(CMapClass *pObject);
 	void ReloadData();
 
-	LayoutType_t GetLayout(void);
-	void GetTabsForLayout(LayoutType_t eLayoutType, bool &bEntity, bool &bGroups, bool &bFlags, bool &bModel);
+	unsigned GetTabLayout(void);
+	void GetTabsForLayout(unsigned eLayoutType, bool &bEntity, bool &bGroups, bool &bFlags, bool &bModel);
 
 	void CreateButtons(void);
 
@@ -109,7 +107,7 @@ protected:
 
 	void SaveActivePage(void);
 	void RestoreActivePage(void);
-	
+
 	void UpdateAnchors( CWnd *pPage );
 
 	CAnchorMgr m_AnchorMgr;
@@ -123,6 +121,10 @@ protected:
 	COP_Output *m_pOutput;
 	COP_Input *m_pInput;
 	COP_Model *m_pModel;
+
+	static constexpr unsigned MAX_CUSTOM_FLAGS = 8;
+
+	COP_Flags* m_customFlags[MAX_CUSTOM_FLAGS];
 
 	//
 	// instance button
@@ -140,8 +142,8 @@ protected:
 	HICON m_hIconInputGood;
 	HICON m_hIconInputBad;
 
-	CPropertyPage *m_pDummy;		// 
-	bool m_bDummy;					// 
+	CPropertyPage *m_pDummy;		//
+	bool m_bDummy;					//
 
 	CMapObjectList			m_DstObjects;	// list of objects we work on
 	const CMapObjectList	*m_pOrgObjects;	// list of input object we will work on
@@ -175,7 +177,7 @@ friend CObjectPage;
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 inline void CObjectProperties::UpdateGrouplist(void)
 {

@@ -194,7 +194,9 @@ class COP_Entity : public CObjectPage, CFilteredComboBox::ICallbacks, public CCo
 		//
 		void SetNextVar(int cmd);
 
-		void SetFlagsPage( COP_Flags *pFlagsPage );
+		void SetSpawnFlagsPage( COP_Flags *pFlagsPage );
+		void SetFlagsPage( const char* flagName, COP_Flags *pFlagsPage );
+		void OnUpdateFlags( const char* flagName, unsigned long preserveMask, unsigned long newValues );
 		void OnUpdateSpawnFlags( unsigned long preserveMask, unsigned long newValues );
 
 		//{{AFX_DATA(COP_Entity)
@@ -402,7 +404,8 @@ class COP_Entity : public CObjectPage, CFilteredComboBox::ICallbacks, public CCo
 		CPickEntityTarget m_PickEntityTarget;
 		CPickFaceTarget m_PickFaceTarget;
 
-		COP_Flags *m_pFlagsPage;
+		COP_Flags* m_pSpawnFlagsPage;
+		CUtlMap<CString, COP_Flags*> m_customFlags;
 
 		CSmartControlTargetNameRouter m_SmartControlTargetNameRouter;
 

@@ -696,13 +696,11 @@ ChunkFileResult_t CEditGameClass::LoadConnectionsCallback(CChunkFile *pFile, CEd
 //-----------------------------------------------------------------------------
 // Purpose: Returns all the spawnflags.
 //-----------------------------------------------------------------------------
-unsigned long CEditGameClass::GetSpawnFlags(void)
+unsigned long CEditGameClass::GetFlags( const char* flagName )
 {
-	LPCTSTR pszVal = GetKeyValue("spawnflags");
-	if (pszVal == NULL)
-	{
-		return(0);
-	}
+	LPCTSTR pszVal = GetKeyValue( flagName );
+	if ( pszVal == NULL )
+		return 0;
 
 	unsigned long val = 0;
 	sscanf( pszVal, "%lu", &val );
@@ -713,10 +711,57 @@ unsigned long CEditGameClass::GetSpawnFlags(void)
 //-----------------------------------------------------------------------------
 // Purpose: Returns true if a given spawnflag (or flags) is set, false if not.
 //-----------------------------------------------------------------------------
+bool CEditGameClass::GetFlag( const char* flagName, unsigned long nFlags_ )
+{
+	unsigned long nFlags = GetFlags( flagName );
+	return ( nFlags & nFlags_ ) != 0;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Sets the given spawnflag (or flags) to the given state.
+// Input  : nFlag - Flag values  to set or clear (ie 1, 2, 4, 8, 16, etc.)
+//			bSet - True to set the flags, false to clear them.
+//-----------------------------------------------------------------------------
+void CEditGameClass::SetFlag( const char* flagName, unsigned long nFlags_, bool bSet )
+{
+	unsigned long nFlags = GetFlags( flagName );
+
+	if ( bSet )
+		nFlags |= nFlags_;
+	else
+		nFlags &= ~nFlags_;
+
+	SetFlags( flagName, nFlags );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Sets all the spawnflags at once.
+// Input  : nSpawnFlags - New value for spawnflags.
+//-----------------------------------------------------------------------------
+void CEditGameClass::SetFlags( const char* flagName, unsigned long nFlags )
+{
+	char szValue[80];
+	V_snprintf( szValue, sizeof( szValue ), "%lu", nFlags );
+	SetKeyValue( flagName, nFlags );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns all the spawnflags.
+//-----------------------------------------------------------------------------
+unsigned long CEditGameClass::GetSpawnFlags(void)
+{
+	return GetFlags( "spawnflags" );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns true if a given spawnflag (or flags) is set, false if not.
+//-----------------------------------------------------------------------------
 bool CEditGameClass::GetSpawnFlag(unsigned long nFlags)
 {
-	unsigned long nSpawnFlags = GetSpawnFlags();
-	return((nSpawnFlags & nFlags) != 0);
+	return GetFlag( "spawnflags", nFlags );
 }
 
 
@@ -727,18 +772,7 @@ bool CEditGameClass::GetSpawnFlag(unsigned long nFlags)
 //-----------------------------------------------------------------------------
 void CEditGameClass::SetSpawnFlag(unsigned long nFlags, bool bSet)
 {
-	unsigned long nSpawnFlags = GetSpawnFlags();
-
-	if (bSet)
-	{
-		nSpawnFlags |= nFlags;
-	}
-	else
-	{
-		nSpawnFlags &= ~nFlags;
-	}
-
-	SetSpawnFlags(nSpawnFlags);
+	SetFlag( "spawnflags", nFlags, bSet );
 }
 
 
@@ -748,7 +782,5 @@ void CEditGameClass::SetSpawnFlag(unsigned long nFlags, bool bSet)
 //-----------------------------------------------------------------------------
 void CEditGameClass::SetSpawnFlags(unsigned long nSpawnFlags)
 {
-	char szValue[80];
-	V_snprintf( szValue, sizeof( szValue ), "%lu", nSpawnFlags );
-	SetKeyValue("spawnflags", nSpawnFlags);
+	SetFlags( "spawnflags", nSpawnFlags );
 }

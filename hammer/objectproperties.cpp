@@ -37,20 +37,29 @@
 // Layout types for remembering the last layout of the dialog. We could
 // also remember this as an array of booleans for which pages were visible.
 //
-enum LayoutType_t
-{
-	ltZero,			// Special enums for initialization
-	ltNone,
+constexpr unsigned NO_PAGE   = 0b0000;
+constexpr unsigned ENTITY_PAGE = 0b0001;
+constexpr unsigned GROUPS_PAGE = 0b0010;
+constexpr unsigned FLAGS_PAGE  = 0b0100;
+constexpr unsigned MODEL_PAGE  = 0b1000;
+constexpr unsigned CUSTOM1_PAGE  = 0b000000010000;
+constexpr unsigned CUSTOM2_PAGE  = 0b000000100000;
+constexpr unsigned CUSTOM3_PAGE  = 0b000001000000;
+constexpr unsigned CUSTOM4_PAGE  = 0b000010000000;
+constexpr unsigned CUSTOM5_PAGE  = 0b000100000000;
+constexpr unsigned CUSTOM6_PAGE  = 0b001000000000;
+constexpr unsigned CUSTOM7_PAGE  = 0b010000000000;
+constexpr unsigned CUSTOM8_PAGE  = 0b100000000000;
 
-	ltSolid,		// Enable groups only
-	ltSolidMulti,	// Enable none
-	ltEntity,		// Enable entity, flags, groups
-	ltEntityMulti,	// Enable entity, flags
-	ltWorld,		// Enable entity, flags, groups
-	ltModelEntity,	// Enable entity, flags, groups, model,
-	ltMulti			// Enable none
-};
-
+constexpr unsigned LAYOUT_NONE = NO_PAGE;
+constexpr unsigned LAYOUT_SOLID = GROUPS_PAGE;
+constexpr unsigned LAYOUT_SOLID_MULTI = NO_PAGE;
+constexpr unsigned LAYOUT_ENTITY = ENTITY_PAGE | FLAGS_PAGE | GROUPS_PAGE;
+constexpr unsigned LAYOUT_ENTITY_MULTI = ENTITY_PAGE | FLAGS_PAGE;
+constexpr unsigned LAYOUT_WORLD = ENTITY_PAGE | FLAGS_PAGE | GROUPS_PAGE;
+constexpr unsigned LAYOUT_MODEL = ENTITY_PAGE | FLAGS_PAGE | GROUPS_PAGE | MODEL_PAGE;
+constexpr unsigned LAYOUT_MULTI = NO_PAGE;
+constexpr unsigned LAYOUT_CUSTOM_MASK = ~( ENTITY_PAGE | FLAGS_PAGE | GROUPS_PAGE | MODEL_PAGE );
 
 
 IMPLEMENT_DYNAMIC(CObjectProperties, CPropertySheet)
@@ -155,6 +164,9 @@ CObjectProperties::~CObjectProperties()
 	delete m_pInput;
 	delete m_pModel;
 
+	for ( COP_Flags* flag : m_customFlags )
+		delete flag;
+
 	delete m_pInputButton;
 	delete m_pOutputButton;
 	delete m_pInstanceButton;
@@ -174,12 +186,20 @@ void CObjectProperties::CreatePages(void)
 	m_pEntity = new COP_Entity;
 	m_pEntity->SetObjectList(&m_DstObjects);
 
+	for ( COP_Flags* &flag : m_customFlags )
+	{
+		flag = new COP_Flags;
+		flag->SetObjectList( &m_DstObjects );
+		flag->SetEntityPage( m_pEntity );
+	}
+
 	m_pFlags = new COP_Flags;
+	m_pFlags->SetFlagName( "spawnflags" );
 	m_pFlags->SetObjectList(&m_DstObjects);
 
 	// There are some dependencies between the entity and flags tabs since
 	// they both edit the spawnflags property.
-	m_pEntity->SetFlagsPage( m_pFlags );
+	m_pEntity->SetSpawnFlagsPage( m_pFlags );
 	m_pFlags->SetEntityPage( m_pEntity );
 
 	m_pGroups = new COP_Groups;
@@ -501,60 +521,26 @@ void CObjectProperties::CreateButtons(void)
 //-----------------------------------------------------------------------------
 // Purpose: Returns the appropriate page layout for the current object list.
 //-----------------------------------------------------------------------------
-void CObjectProperties::GetTabsForLayout(LayoutType_t eLayoutType, bool &bEntity, bool &bGroups, bool &bFlags, bool &bModel)
+void CObjectProperties::GetTabsForLayout(unsigned eLayoutType, bool &bEntity, bool &bGroups, bool &bFlags, bool &bModel)
 {
-	//VPROF_BUDGET( "CObjectProperties::GetTabsForLayout", "Object Properties" );
-
-	bEntity = bGroups = bFlags = bModel = false;
-
-	switch (eLayoutType)
-	{
-		case ltEntity:
-		case ltEntityMulti:
-		case ltModelEntity:
-		{
-			bFlags = true;
-			bEntity = true;
-			bGroups = true;
-			bModel = (eLayoutType == ltModelEntity);
-			break;
-		}
-
-		case ltSolid:
-		{
-			bGroups = true;
-			break;
-		}
-
-		case ltWorld:
-		{
-			bEntity = true;
-			break;
-		}
-
-		case ltMulti:
-		case ltSolidMulti:
-		{
-			bGroups = true;
-			break;
-		}
-	}
+	bEntity = eLayoutType & ENTITY_PAGE;
+	bGroups = eLayoutType & GROUPS_PAGE;
+	bFlags = eLayoutType & FLAGS_PAGE;
+	bModel = eLayoutType & MODEL_PAGE;
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose: Returns the appropriate page layout for the current object list.
 //-----------------------------------------------------------------------------
-LayoutType_t CObjectProperties::GetLayout(void)
+unsigned CObjectProperties::GetTabLayout()
 {
 	//VPROF_BUDGET( "CObjectProperties::GetLayout", "Object Properties" );
 
-	LayoutType_t eLayoutType = ltNone;
+	unsigned eLayoutType = LAYOUT_NONE;
 
 	if ((m_DstObjects.Count() == 0) || (CMapDoc::GetActiveMapDoc() == NULL))
-	{
-		eLayoutType = ltNone;
-	}
+		;
 	else
 	{
 		//
@@ -583,36 +569,64 @@ LayoutType_t CObjectProperties::GetLayout(void)
 					if (m_DstObjects.Count() == 1)
 					{
 						if (pEntity->GetChildOfType<CMapStudioModel>())
-						{
-							eLayoutType = ltModelEntity;
-						}
+							eLayoutType = LAYOUT_MODEL;
 						else
-						{
-							eLayoutType = ltEntity;
-						}
+							eLayoutType = LAYOUT_ENTITY;
 					}
 					else
-					{
-						eLayoutType = ltEntityMulti;
-					}
+						eLayoutType = LAYOUT_ENTITY_MULTI;
 				}
-				else if ((ThisType == MAPCLASS_TYPE(CMapSolid)) ||
-						(ThisType == MAPCLASS_TYPE(CMapGroup)))
-				{
-					eLayoutType = (m_DstObjects.Count() == 1) ? ltSolid : ltSolidMulti;
-				}
-				else if (ThisType == MAPCLASS_TYPE(CMapWorld))
-				{
-					eLayoutType = ltWorld;
-				}
+				else if ( ThisType == MAPCLASS_TYPE( CMapSolid ) || ThisType == MAPCLASS_TYPE( CMapGroup ) )
+					eLayoutType = m_DstObjects.Count() == 1 ? LAYOUT_SOLID : LAYOUT_SOLID_MULTI;
+				else if ( ThisType == MAPCLASS_TYPE( CMapWorld ) )
+					eLayoutType = LAYOUT_WORLD;
 			}
-			else if (ThisType != PrevType)
-			{
-				eLayoutType = ltMulti;
-			}
+			else if ( ThisType != PrevType )
+				return LAYOUT_MULTI;
 
 			PrevType = ThisType;
 		}
+	}
+
+	if ( eLayoutType == LAYOUT_MODEL || eLayoutType == LAYOUT_ENTITY || eLayoutType == LAYOUT_ENTITY_MULTI || eLayoutType == LAYOUT_WORLD )
+	{
+		extern GameData* pGD;
+		CMapClass* pEnt = m_DstObjects.Element( 0 );
+
+		GDclass* pClass = pGD->ClassForName( eLayoutType == LAYOUT_WORLD ? ( (CMapWorld*)pEnt )->GetClassName() : ( (CMapEntity*)pEnt )->GetClassName() );
+		if ( !pClass )
+			return eLayoutType;
+
+		int nCurCustom = 0;
+		bool changed = false;
+		int nCount = pClass->GetVariableCount();
+		for ( int i = 0; i < nCount; ++i )
+		{
+			if ( nCurCustom == MAX_CUSTOM_FLAGS )
+				break;
+			GDinputvariable* pVar = pClass->GetVariableAt( i );
+			if ( pVar->GetType() != ivFlags || !stricmp( pVar->GetName(), "spawnflags" ) )
+				continue;
+			++nCurCustom;
+
+			auto& page = m_customFlags[nCurCustom - 1];
+
+			if ( !stricmp( page->GetFlagName(), pVar->GetName() ) )
+				continue;
+
+			auto& psp = page->GetPSP();
+			psp.pszTitle = pVar->GetLongName();
+			psp.dwFlags |= PSP_USETITLE;
+			m_pEntity->SetFlagsPage( page->GetFlagName(), nullptr );
+			page->SetFlagName( pVar->GetName() );
+			m_pEntity->SetFlagsPage( pVar->GetName(), page );
+			changed = true;
+		}
+
+		if ( nCurCustom )
+			eLayoutType |= ( ( 1 << nCurCustom ) - 1 ) << 4;
+		if ( changed )
+			eLayoutType |= ( 1 << 31 );
 	}
 
 	return eLayoutType;
@@ -672,21 +686,19 @@ BOOL CObjectProperties::SetupPages(void)
 	//VPROF_BUDGET( "CObjectProperties::SetupPages", "Object Properties" );
 
 	static bool bFirstTime = true;
-	static LayoutType_t eLastLayoutType = ltZero;
-	static LayoutType_t eLastValidLayoutType = ltZero;
+	static unsigned eLastLayoutType = 1U << 31U;
+	static unsigned eLastValidLayoutType = LAYOUT_NONE;
 
 	//
 	// Save the current active page.
 	//
-	if ((eLastLayoutType != ltZero) && (eLastLayoutType != ltNone))
-	{
+	if ( eLastLayoutType != LAYOUT_NONE && eLastLayoutType != 1U << 31U )
 		SaveActivePage();
-	}
 
 	//
 	// Determine the appropriate layout for the current object list.
 	//
-	LayoutType_t eLayoutType = GetLayout();
+	unsigned eLayoutType = GetTabLayout();
 
 	bool bEntity;
 	bool bGroups;
@@ -704,7 +716,7 @@ BOOL CObjectProperties::SetupPages(void)
 		// activate page zero.
 		//
 		RestoreActivePage();
-		return(FALSE);
+		return FALSE;
 	}
 
 	//
@@ -713,15 +725,15 @@ BOOL CObjectProperties::SetupPages(void)
 	// Don't reset when switching between model entities and non-model entities,
 	// because it's annoying to be switched away from the Outputs tab.
 	//
-	if ((eLayoutType != ltNone) && (eLayoutType != eLastValidLayoutType) &&
-		!((eLayoutType == ltEntity) && (eLastValidLayoutType == ltModelEntity)) &&
-		!((eLayoutType == ltModelEntity) && (eLastValidLayoutType == ltEntity)))
+	if ((eLayoutType != LAYOUT_NONE) && (eLayoutType != eLastValidLayoutType) &&
+		!((eLayoutType & LAYOUT_ENTITY) == LAYOUT_ENTITY && (eLastValidLayoutType & LAYOUT_MODEL) == LAYOUT_MODEL) &&
+		!((eLayoutType & LAYOUT_MODEL) == LAYOUT_MODEL && (eLastValidLayoutType & LAYOUT_ENTITY) == LAYOUT_ENTITY))
 	{
 		m_pLastActivePage = NULL;
-		eLastValidLayoutType = eLayoutType;
+		eLastValidLayoutType = eLayoutType & ~( 1 << 31 );
 	}
 
-	eLastLayoutType = eLayoutType;
+	eLastLayoutType = eLayoutType & ~( 1 << 31 );
 
 	CObjectPage::s_bRESTRUCTURING = TRUE;
 
@@ -748,6 +760,8 @@ BOOL CObjectProperties::SetupPages(void)
 		m_bDummy = false;
 	}
 
+#define CUSTOM_PAGE(p) {false, (eLayoutType & CUSTOM##p##_PAGE) != 0, m_customFlags[p-1]}
+
 	struct
 	{
 		bool m_bIsVisible;
@@ -760,19 +774,30 @@ BOOL CObjectProperties::SetupPages(void)
 		{false, bEntity, m_pInput},
 		{false, bModel, m_pModel},
 		{false, bFlags, m_pFlags},
+		CUSTOM_PAGE(1),
+		CUSTOM_PAGE(2),
+		CUSTOM_PAGE(3),
+		CUSTOM_PAGE(4),
+		CUSTOM_PAGE(5),
+		CUSTOM_PAGE(6),
+		CUSTOM_PAGE(7),
+		CUSTOM_PAGE(8),
 		{false, bGroups, m_pGroups}
 	};
+
+#undef CUSTOM_PAGE
 
 	// First, remove pages that we don't want visible.
 	// Also store if they're visible.
 	for ( int i=0; i < ARRAYSIZE( pages ); i++ )
 	{
-		pages[i].m_bIsVisible = ( GetPageIndex( pages[i].m_pPage ) != -1 );
-		if ( pages[i].m_bIsVisible && !pages[i].m_bWantVisible)
+		auto& page = pages[i];
+		page.m_bIsVisible = page.m_pPage && GetPageIndex( page.m_pPage ) != -1;
+		if ( page.m_bIsVisible && !page.m_bWantVisible )
 		{
 			// It's visible but they don't want it there.
-			RemovePage( pages[i].m_pPage );
-			pages[i].m_bIsVisible = false;
+			RemovePage( page.m_pPage );
+			page.m_bIsVisible = false;
 		}
 	}
 
@@ -785,10 +810,11 @@ BOOL CObjectProperties::SetupPages(void)
 			// Ok, page i needs to be on, so nuke everything to the right of it.
 			for ( int j=i+1; j < ARRAYSIZE( pages ); j++ )
 			{
-				if ( pages[j].m_bIsVisible )
+				auto& page = pages[j];
+				if ( page.m_bIsVisible )
 				{
-					RemovePage( pages[j].m_pPage );
-					pages[j].m_bIsVisible = false;
+					RemovePage( page.m_pPage );
+					page.m_bIsVisible = false;
 				}
 			}
 			break;
@@ -1290,7 +1316,7 @@ void CObjectProperties::ApplyChanges( bool bCalledOnClose )
 	//
 	// Save and reload the data so the GUI updates.
 	//
-	
+
 	SaveData_Reason_t reason = ( bCalledOnClose ) ? SAVEDATA_CLOSE : SAVEDATA_APPLY;
 	SaveData( reason );
 

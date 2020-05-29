@@ -452,7 +452,8 @@ COP_Entity::COP_Entity()
 	m_cClasses( this ),
 	m_SmartControlTargetNameRouter( this ),
 	m_VarList( this ),
-	m_InstanceParmData( CStringLessFunc )
+	m_InstanceParmData( CStringLessFunc ),
+	m_customFlags( CStringLessFunc )
 {
 	//{{AFX_DATA_INIT(COP_Entity)
 		// NOTE: the ClassWizard will add member initialization here
@@ -2725,7 +2726,15 @@ void COP_Entity::OnChangeKeyorValue(void)
 	{
 		unsigned long value;
 		sscanf( szValue, "%lu", &value );
-		m_pFlagsPage->OnUpdateSpawnFlags( value );
+		m_pSpawnFlagsPage->OnUpdateFlags( value );
+	}
+
+	int iCustomFlag = m_customFlags.Find( szKey );
+	if ( iCustomFlag != m_customFlags.InvalidIndex() )
+	{
+		unsigned long value;
+		sscanf( szValue, "%lu", &value );
+		m_customFlags[iCustomFlag]->OnUpdateFlags( value );
 	}
 
 	if (m_bEnableControlUpdate)
@@ -2880,7 +2889,7 @@ void COP_Entity::AssignClassDefaults(GDclass *pClass, GDclass *pOldClass)
 
 				// Notify the flags page so it'll have the right data if they tab to it.
 				// It'll also SAVE the right data when they save.
-				m_pFlagsPage->OnUpdateSpawnFlags( nCurrent );
+				m_pSpawnFlagsPage->OnUpdateFlags( nCurrent );
 			}
 			else
 			{
@@ -3543,11 +3552,18 @@ void COP_Entity::SetNextVar(int cmd)
 //-----------------------------------------------------------------------------
 // Purpose: Set flags page
 //-----------------------------------------------------------------------------
-void COP_Entity::SetFlagsPage( COP_Flags *pFlagsPage )
+void COP_Entity::SetSpawnFlagsPage( COP_Flags *pFlagsPage )
 {
-	m_pFlagsPage = pFlagsPage;
+	m_pSpawnFlagsPage = pFlagsPage;
 }
 
+void COP_Entity::SetFlagsPage( const char* flagName, COP_Flags* pFlagsPage )
+{
+	if ( m_customFlags.Find( flagName ) != m_customFlags.InvalidIndex() && !pFlagsPage )
+		m_customFlags.Remove( flagName );
+	else if ( pFlagsPage )
+		m_customFlags.InsertOrReplace( flagName, pFlagsPage );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Plays the sound
@@ -4090,8 +4106,16 @@ void COP_Entity::OnPaste(void)
 			unsigned long value;
 			sscanf( kvClipboard.GetValue( i ), "%lu", &value );
 			OnUpdateSpawnFlags( 0, value );
-			m_pFlagsPage->OnUpdateSpawnFlags( value );
+			m_pSpawnFlagsPage->OnUpdateFlags( value );
 			continue;
+		}
+
+		int iCustomFlag = m_customFlags.Find( kvClipboard.GetKey( i ) );
+		if ( iCustomFlag != m_customFlags.InvalidIndex() )
+		{
+			unsigned long value;
+			sscanf( kvClipboard.GetValue( i ), "%lu", &value );
+			m_customFlags[iCustomFlag]->OnUpdateFlags( value );
 		}
 
 		m_kv.SetValue( kvClipboard.GetKey( i ), kvClipboard.GetValue( i ) );
@@ -4913,7 +4937,12 @@ bool COP_Entity::CustomDrawItemValue( const LPDRAWITEMSTRUCT p, const RECT *pRec
 //-----------------------------------------------------------------------------
 void COP_Entity::OnUpdateSpawnFlags( unsigned long preserveMask, unsigned long newValues )
 {
-	const char *p = m_kv.GetValue( SPAWNFLAGS_KEYNAME );
+	OnUpdateFlags( SPAWNFLAGS_KEYNAME, preserveMask, newValues );
+}
+
+void COP_Entity::OnUpdateFlags( const char* flagName, unsigned long preserveMask, unsigned long newValues )
+{
+	const char *p = m_kv.GetValue( flagName );
 	if ( !p )
 		return;
 
@@ -4926,9 +4955,9 @@ void COP_Entity::OnUpdateSpawnFlags( unsigned long preserveMask, unsigned long n
 	// if we exceed 1<<31.
 	char str[512];
 	V_snprintf( str, sizeof( str ), "%lu", newValue );
-	m_kv.SetValue( SPAWNFLAGS_KEYNAME, str );
+	m_kv.SetValue( flagName, str );
 
-	RefreshKVListValues( SPAWNFLAGS_KEYNAME );
+	RefreshKVListValues( flagName );
 	OnSelchangeKeyvalues(); // Refresh the control with its value in case it's selected currently.
 }
 

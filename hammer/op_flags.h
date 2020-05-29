@@ -41,6 +41,9 @@ public:
 	COP_Flags();
 	~COP_Flags();
 	
+	void SetFlagName( const char* flagName );
+	const char* GetFlagName() const;
+
 	// This needs to be set because we have to notify the entity page when the value changes.
 	void SetEntityPage( COP_Entity *pEntityPage );
 
@@ -51,7 +54,7 @@ public:
 	void CreateCheckList(void);
 	
 	// Called when the entity tab changes the spawnflags, which renders our data obsolete.
-	void OnUpdateSpawnFlags( unsigned long value );
+	void OnUpdateFlags( unsigned long value );
 	
 	GDclass *pObjClass;
 
@@ -84,6 +87,7 @@ protected:
 
 	CAnchorMgr m_AnchorMgr;
 
+	CString m_flagName;
 	CUtlVector <CheckListItem> m_CheckListItems;
 	int m_nNumSelectedObjects;
 	
