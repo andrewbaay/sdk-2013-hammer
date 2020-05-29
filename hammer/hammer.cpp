@@ -1261,6 +1261,28 @@ void CHammer::EditKeyBindings()
 	g_pKeyBinds->GetAccelTableFor( "IDR_MAINFRAME", static_cast<CMainFrame*>( m_pMainWnd )->m_hAccelTable );
 	g_pKeyBinds->GetAccelTableFor( "IDR_MAPDOC", pMapDocTemplate->m_hAccelTable );
 	g_pKeyBinds->GetAccelTableFor( "IDR_MAPDOC", pManifestDocTemplate->m_hAccelTable );
+
+	CHammerDocTemplate* templates[] = { pMapDocTemplate, pManifestDocTemplate };
+
+	for ( CHammerDocTemplate* pTemplate : templates )
+	{
+		for ( POSITION pos = pTemplate->GetFirstDocPosition(); pos != NULL; )
+		{
+			CDocument* pDoc = pTemplate->GetNextDoc( pos );
+			ASSERT_VALID( pDoc );
+
+			for ( POSITION posView = pDoc->GetFirstViewPosition(); posView != NULL; )
+			{
+				CView* pView = pDoc->GetNextView( posView );
+				ASSERT_VALID( pView );
+
+				CFrameWnd* pFrame = pView->GetParentFrame();
+				ASSERT_VALID( pFrame );
+
+				pFrame->m_hAccelTable = pTemplate->m_hAccelTable;
+			}
+		}
+	}
 }
 
 int CHammer::MainLoop()
