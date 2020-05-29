@@ -16,7 +16,7 @@ class CParticleBrowserPanel;
 class CParticlePicker;
 
 
-class CParticleBrowser : public CDialog
+class CParticleBrowser : public CVguiDialog
 {
 	DECLARE_DYNAMIC(CParticleBrowser)
 
@@ -32,7 +32,7 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	virtual BOOL PreTranslateMessage( MSG* pMsg ); 
+	virtual BOOL PreTranslateMessage( MSG* pMsg );
 
 
 	DECLARE_MESSAGE_MAP()
@@ -45,7 +45,7 @@ public:
 	virtual BOOL OnInitDialog();
 
 	void UpdateStatusLine();
-	void SaveLoadSettings( bool bSave ); 
+	void SaveLoadSettings( bool bSave );
 	void Resize( void );
 
 	CVGuiPanelWnd	m_VGuiWindow;

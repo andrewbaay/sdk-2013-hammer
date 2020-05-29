@@ -63,7 +63,7 @@ private:
 extern KeyBinds* g_pKeyBinds;
 
 
-class CKeybindEditor : public CDialog
+class CKeybindEditor : public CVguiDialog
 {
 	DECLARE_DYNAMIC(CKeybindEditor)
 

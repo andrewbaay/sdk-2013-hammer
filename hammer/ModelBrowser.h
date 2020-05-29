@@ -20,7 +20,7 @@ struct AssetUsageInfo_t;
 #define ID_FIND_ASSET	100
 
 
-class CModelBrowser : public CDialog
+class CModelBrowser : public CVguiDialog
 {
 	DECLARE_DYNAMIC(CModelBrowser)
 

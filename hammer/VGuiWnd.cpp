@@ -20,6 +20,7 @@
 
 
 IMPLEMENT_DYNCREATE(CVGuiPanelWnd, CWnd)
+IMPLEMENT_DYNAMIC(CVguiDialog, CDialog)
 
 #define REPAINT_TIMER_ID	1042 //random value, hopfully no collisions
 

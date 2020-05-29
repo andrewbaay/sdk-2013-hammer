@@ -113,9 +113,9 @@ public:
 	CParticleBrowser *m_pBrowser;
 };
 
-IMPLEMENT_DYNAMIC(CParticleBrowser, CDialog)
+IMPLEMENT_DYNAMIC(CParticleBrowser, CVguiDialog)
 CParticleBrowser::CParticleBrowser(CWnd* pParent /*=NULL*/)
-	: CDialog(CParticleBrowser::IDD, pParent)
+	: CVguiDialog(CParticleBrowser::IDD, pParent)
 {
 	m_pPicker = new CParticlePicker( NULL );
 	m_pStatusLine = new vgui::TextEntry( NULL, "StatusLine" );
@@ -239,7 +239,7 @@ BOOL CParticleBrowser::OnEraseBkgnd(CDC* pDC)
 	return TRUE;
 }
 
-BEGIN_MESSAGE_MAP(CParticleBrowser, CDialog)
+BEGIN_MESSAGE_MAP(CParticleBrowser, CVguiDialog)
 	ON_WM_SIZE()
 	ON_WM_DESTROY()
 	ON_WM_ERASEBKGND()

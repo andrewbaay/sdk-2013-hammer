@@ -1285,9 +1285,9 @@ private:
 	CKeybindEditor* m_pBrowser;
 };
 
-IMPLEMENT_DYNAMIC( CKeybindEditor, CDialog )
+IMPLEMENT_DYNAMIC( CKeybindEditor, CVguiDialog )
 CKeybindEditor::CKeybindEditor( CWnd* pParent /*=NULL*/ )
-	: CDialog( CKeybindEditor::IDD, pParent )
+	: CVguiDialog( CKeybindEditor::IDD, pParent )
 {
 	g_pKeyBinds->m_bEditingKeybinds = true;
 	m_pDialog = new CKeyBoardEditorDialog( NULL );

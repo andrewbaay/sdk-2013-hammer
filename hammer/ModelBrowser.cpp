@@ -79,9 +79,9 @@ public:
 	CModelBrowser *m_pBrowser;
 };
 
-IMPLEMENT_DYNAMIC(CModelBrowser, CDialog)
+IMPLEMENT_DYNAMIC(CModelBrowser, CVguiDialog)
 CModelBrowser::CModelBrowser(CWnd* pParent /*=NULL*/)
-	: CDialog(CModelBrowser::IDD, pParent)
+	: CVguiDialog(CModelBrowser::IDD, pParent)
 {
 	m_pPicker = new CMDLPicker( NULL, CMDLPicker::PAGE_RENDER | CMDLPicker::PAGE_SKINS | CMDLPicker::PAGE_INFO );
 	m_pStatusLine = new vgui::TextEntry( NULL, "StatusLine" );
@@ -230,7 +230,7 @@ void CModelBrowser::OnSize(UINT nType, int cx, int cy)
 }
 
 
-BEGIN_MESSAGE_MAP(CModelBrowser, CDialog)
+BEGIN_MESSAGE_MAP(CModelBrowser, CVguiDialog)
 	ON_WM_SIZE()
 	ON_WM_DESTROY()
 	ON_WM_ERASEBKGND()

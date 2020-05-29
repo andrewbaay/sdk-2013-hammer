@@ -1117,9 +1117,9 @@ int CMapView2DBase::ObjectsAt( const Vector2D &vPoint, HitInfo_t *pHitData, int 
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 // Input  : point - Point in client coordinates.
-//			bMakeFirst - 
+//			bMakeFirst -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 int CMapView2DBase::ObjectsAt( CMapWorld *pWorld, const Vector2D &vPoint, HitInfo_t *pHitData, int nMaxObjects, unsigned int nFlags )
@@ -2042,8 +2042,14 @@ LRESULT CMapView2DBase::WindowProc( UINT message, WPARAM wParam, LPARAM lParam )
 		case WM_PAINT:
 			{
 				CWnd *focusWnd = GetForegroundWindow();
+				CVguiDialog* vguiDialog = dynamic_cast<CVguiDialog*>( focusWnd );
 
-				if ( focusWnd && focusWnd->ContinueModal() )
+				if ( focusWnd && vguiDialog && !focusWnd->ContinueModal() )
+				{
+					// render the view now since were not running the main loop
+                    RenderView();
+				}
+				else if ( focusWnd && !vguiDialog && focusWnd->ContinueModal() )
 				{
 					// render the view now since were not running the main loop
                     RenderView();

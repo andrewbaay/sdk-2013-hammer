@@ -8,6 +8,13 @@ namespace vgui
 	typedef unsigned long HCursor;
 }
 
+class CVguiDialog : public CDialog
+{
+	DECLARE_DYNAMIC(CVguiDialog)
+public:
+	using CDialog::CDialog;
+};
+
 class CVGuiWnd
 {
 
@@ -74,4 +81,3 @@ public:
 
 	DECLARE_MESSAGE_MAP()
 };
-
