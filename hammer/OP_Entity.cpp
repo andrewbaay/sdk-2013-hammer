@@ -2196,7 +2196,7 @@ void COP_Entity::CreateSmartControls_BasicEditControl( GDinputvariable *pVar, CR
 	if ( pValue )
 		pEdit->SetWindowText( pValue );
 
-	if (pVar->IsReadOnly())
+	if (pVar->IsReadOnly() || pVar->GetType() == ivFlags)
 	{
 		pEdit->EnableWindow(FALSE);
 	}
