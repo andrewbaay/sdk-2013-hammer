@@ -122,7 +122,7 @@ protected:
 	COP_Input *m_pInput;
 	COP_Model *m_pModel;
 
-	static constexpr unsigned MAX_CUSTOM_FLAGS = 8;
+	static constexpr unsigned MAX_CUSTOM_FLAGS = 27;
 
 	COP_Flags* m_customFlags[MAX_CUSTOM_FLAGS];
 

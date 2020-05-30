@@ -59,6 +59,13 @@ public:
 	virtual void SetMultiEdit(bool b) { m_bMultiEdit = b; }
 	virtual void OnShowPropertySheet(BOOL bShow, UINT nStatus) {}
 
+	void SetTitle( const char* titleText )
+	{
+		auto& psp = GetPSP();
+		psp.pszTitle = titleText;
+		psp.dwFlags |= PSP_USETITLE;
+	}
+
 	bool IsMultiEdit() { return m_bMultiEdit; }
 
 	CRuntimeClass * GetEditObjectRuntimeClass(void) { return m_pEditObjectRuntimeClass; }

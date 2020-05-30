@@ -42,14 +42,6 @@ constexpr unsigned ENTITY_PAGE = 0b0001;
 constexpr unsigned GROUPS_PAGE = 0b0010;
 constexpr unsigned FLAGS_PAGE  = 0b0100;
 constexpr unsigned MODEL_PAGE  = 0b1000;
-constexpr unsigned CUSTOM1_PAGE  = 0b000000010000;
-constexpr unsigned CUSTOM2_PAGE  = 0b000000100000;
-constexpr unsigned CUSTOM3_PAGE  = 0b000001000000;
-constexpr unsigned CUSTOM4_PAGE  = 0b000010000000;
-constexpr unsigned CUSTOM5_PAGE  = 0b000100000000;
-constexpr unsigned CUSTOM6_PAGE  = 0b001000000000;
-constexpr unsigned CUSTOM7_PAGE  = 0b010000000000;
-constexpr unsigned CUSTOM8_PAGE  = 0b100000000000;
 
 constexpr unsigned LAYOUT_NONE = NO_PAGE;
 constexpr unsigned LAYOUT_SOLID = GROUPS_PAGE;
@@ -59,7 +51,6 @@ constexpr unsigned LAYOUT_ENTITY_MULTI = ENTITY_PAGE | FLAGS_PAGE;
 constexpr unsigned LAYOUT_WORLD = ENTITY_PAGE | FLAGS_PAGE | GROUPS_PAGE;
 constexpr unsigned LAYOUT_MODEL = ENTITY_PAGE | FLAGS_PAGE | GROUPS_PAGE | MODEL_PAGE;
 constexpr unsigned LAYOUT_MULTI = NO_PAGE;
-constexpr unsigned LAYOUT_CUSTOM_MASK = ~( ENTITY_PAGE | FLAGS_PAGE | GROUPS_PAGE | MODEL_PAGE );
 
 
 IMPLEMENT_DYNAMIC(CObjectProperties, CPropertySheet)
@@ -105,6 +96,7 @@ CObjectProperties::CObjectProperties(void) :
 	m_pOrgObjects = NULL;
 	m_bDataDirty = false;
 	m_bCanEdit = false;
+	memset( m_customFlags, 0, sizeof( m_customFlags ) );
 
 	CreatePages();
 }
@@ -125,6 +117,7 @@ CObjectProperties::CObjectProperties(UINT nIDCaption, CWnd* pParentWnd, UINT iSe
 	m_pOutputButton = NULL;
 	m_pInstanceButton = NULL;
 	m_bCanEdit = false;
+	memset( m_customFlags, 0, sizeof( m_customFlags ) );
 
 	CreatePages();
 }
@@ -145,6 +138,7 @@ CObjectProperties::CObjectProperties(LPCTSTR pszCaption, CWnd* pParentWnd, UINT 
 	m_pOutputButton = NULL;
 	m_pInstanceButton = NULL;
 	m_bCanEdit = false;
+	memset( m_customFlags, 0, sizeof( m_customFlags ) );
 
 	CreatePages();
 }
@@ -185,13 +179,6 @@ void CObjectProperties::CreatePages(void)
 
 	m_pEntity = new COP_Entity;
 	m_pEntity->SetObjectList(&m_DstObjects);
-
-	for ( COP_Flags* &flag : m_customFlags )
-	{
-		flag = new COP_Flags;
-		flag->SetObjectList( &m_DstObjects );
-		flag->SetEntityPage( m_pEntity );
-	}
 
 	m_pFlags = new COP_Flags;
 	m_pFlags->SetFlagName( "spawnflags" );
@@ -610,13 +597,21 @@ unsigned CObjectProperties::GetTabLayout()
 			++nCurCustom;
 
 			auto& page = m_customFlags[nCurCustom - 1];
+			if ( !page )
+			{
+				page = new COP_Flags;
+				page->SetObjectList( &m_DstObjects );
+				page->SetEntityPage( m_pEntity );
+				page->SetFlagName( pVar->GetName() );
+				page->SetTitle( pVar->GetLongName() );
+				m_pEntity->SetFlagsPage( pVar->GetName(), page );
+				continue;
+			}
 
 			if ( !stricmp( page->GetFlagName(), pVar->GetName() ) )
 				continue;
 
-			auto& psp = page->GetPSP();
-			psp.pszTitle = pVar->GetLongName();
-			psp.dwFlags |= PSP_USETITLE;
+			page->SetTitle( pVar->GetLongName() );
 			m_pEntity->SetFlagsPage( page->GetFlagName(), nullptr );
 			page->SetFlagName( pVar->GetName() );
 			m_pEntity->SetFlagsPage( pVar->GetName(), page );
@@ -760,7 +755,7 @@ BOOL CObjectProperties::SetupPages(void)
 		m_bDummy = false;
 	}
 
-#define CUSTOM_PAGE(p) {false, (eLayoutType & CUSTOM##p##_PAGE) != 0, m_customFlags[p-1]}
+#define CUSTOM_PAGE(p) {false, (eLayoutType & (1U << (p + 3U))) != 0, m_customFlags[p-1]}
 
 	struct
 	{
@@ -782,6 +777,25 @@ BOOL CObjectProperties::SetupPages(void)
 		CUSTOM_PAGE(6),
 		CUSTOM_PAGE(7),
 		CUSTOM_PAGE(8),
+		CUSTOM_PAGE(9),
+		CUSTOM_PAGE(10),
+		CUSTOM_PAGE(11),
+		CUSTOM_PAGE(12),
+		CUSTOM_PAGE(13),
+		CUSTOM_PAGE(14),
+		CUSTOM_PAGE(15),
+		CUSTOM_PAGE(16),
+		CUSTOM_PAGE(17),
+		CUSTOM_PAGE(18),
+		CUSTOM_PAGE(19),
+		CUSTOM_PAGE(20),
+		CUSTOM_PAGE(21),
+		CUSTOM_PAGE(22),
+		CUSTOM_PAGE(23),
+		CUSTOM_PAGE(24),
+		CUSTOM_PAGE(25),
+		CUSTOM_PAGE(26),
+		CUSTOM_PAGE(27),
 		{false, bGroups, m_pGroups}
 	};
 
