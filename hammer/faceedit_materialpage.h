@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -30,7 +30,7 @@ class CMapSolid;
 
 class CFaceEditMaterialPage : public CPropertyPage
 {
-	
+
 	DECLARE_DYNAMIC( CFaceEditMaterialPage );
 
 public:
@@ -115,7 +115,7 @@ protected:
 
 	//=========================================================================
 	//
-	// Texture Browser/Update 
+	// Texture Browser/Update
 	//
 	void SelectTexture( LPCSTR pszTextureName );
 	void UpdateTexture( void );
@@ -150,6 +150,8 @@ protected:
 	afx_msg void OnChangeTextureGroup( void );
 	afx_msg void OnButtonSmoothingGroups( void );
     afx_msg void OnBnClickedMarkFaces();
+	afx_msg void OnButtonShiftXRandom( void );
+	afx_msg void OnButtonShiftYRandom( void );
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()
