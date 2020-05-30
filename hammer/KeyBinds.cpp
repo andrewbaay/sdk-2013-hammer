@@ -504,17 +504,16 @@ KeyValues* KeyBinds::EnumerateBindings( KeyValues* iter, CUtlVector<BindingInfo_
 		{
 			KeyValues* ownBind = own ? own->FindKey( curMap[i].pKeyName ) : nullptr;
 			KeyValues* bind = iter->FindKey( curMap[i].pKeyName );
-			if ( bind )
+			if ( ownBind )
 			{
-				KeyValues* src = ownBind ? ownBind : bind;
 				// Each key map has a command as its name, and the key, and modifiers
-				const char* pKey = src->GetString( "key", nullptr );
+				const char* pKey = ownBind->GetString( "key", nullptr );
 
 				// If there's no/empty key, keep moving forward
 				if ( !pKey || !pKey[0] )
 					goto noBind;
 
-				bool bVirt = src->GetBool( "virtkey" );
+				bool bVirt = ownBind->GetBool( "virtkey" );
 
 				unsigned potentialKey = bVirt ? GetKeyForStr( pKey ) : pKey[0];
 
@@ -522,7 +521,7 @@ KeyValues* KeyBinds::EnumerateBindings( KeyValues* iter, CUtlVector<BindingInfo_
 				{
 					unsigned mod = 0;
 					// If it doesn't have any modifiers it'll still work
-					KeyValues* pKvModifiers = src->FindKey( "modifiers" );
+					KeyValues* pKvModifiers = ownBind->FindKey( "modifiers" );
 					if ( pKvModifiers )
 					{
 						mod = ( pKvModifiers->GetBool( "shift" ) * vgui::MODIFIER_SHIFT ) |
@@ -530,7 +529,7 @@ KeyValues* KeyBinds::EnumerateBindings( KeyValues* iter, CUtlVector<BindingInfo_
 							( pKvModifiers->GetBool( "alt" ) * vgui::MODIFIER_ALT );
 					}
 
-					list.AddToTail( BindingInfo_t{ curMap[i].pKeyName, potentialKey, mod, bVirt, bind->GetString( "info", nullptr ) } );
+					list.AddToTail( BindingInfo_t{ curMap[i].pKeyName, potentialKey, mod, bVirt, bind ? bind->GetString( "info", nullptr ) : nullptr } );
 					continue;
 				}
 				goto noBind;
@@ -547,16 +546,20 @@ KeyValues* KeyBinds::EnumerateBindings( KeyValues* iter, CUtlVector<BindingInfo_
 		FOR_EACH_TRUE_SUBKEY( iter, pKvKeyMap )
 		{
 			KeyValues* ownBind = own ? own->FindKey( pKvKeyMap->GetName() ) : nullptr;
-			KeyValues* src = ownBind ? ownBind : pKvKeyMap;
+			if ( !ownBind )
+			{
+				list.AddToTail( BindingInfo_t{ pKvKeyMap->GetName(), 0U, 0U, false, pKvKeyMap->GetString( "info", nullptr ) } );
+				continue;
+			}
 
 			// Each key map has a command as its name, and the key, and modifiers
-			const char* pKey = src->GetString( "key", nullptr );
+			const char* pKey = ownBind->GetString( "key", nullptr );
 
 			// If there's no/empty key, keep moving forward
 			if ( !pKey || !pKey[0] )
 				continue;
 
-			bool bVirt = src->GetBool( "virtkey" );
+			bool bVirt = ownBind->GetBool( "virtkey" );
 
 			unsigned potentialKey = bVirt ? GetKeyForStr( pKey ) : pKey[0];
 
@@ -564,7 +567,7 @@ KeyValues* KeyBinds::EnumerateBindings( KeyValues* iter, CUtlVector<BindingInfo_
 			{
 				unsigned mod = 0;
 				// If it doesn't have any modifiers it'll still work
-				KeyValues* pKvModifiers = src->FindKey( "modifiers" );
+				KeyValues* pKvModifiers = ownBind->FindKey( "modifiers" );
 				if ( pKvModifiers )
 				{
 					mod = ( pKvModifiers->GetBool( "shift" ) * vgui::MODIFIER_SHIFT ) |
@@ -572,7 +575,7 @@ KeyValues* KeyBinds::EnumerateBindings( KeyValues* iter, CUtlVector<BindingInfo_
 						( pKvModifiers->GetBool( "alt" ) * vgui::MODIFIER_ALT );
 				}
 
-				list.AddToTail( BindingInfo_t{ src->GetName(), potentialKey, mod, bVirt, pKvKeyMap->GetString( "info", nullptr ) } );
+				list.AddToTail( BindingInfo_t{ ownBind->GetName(), potentialKey, mod, bVirt, pKvKeyMap->GetString( "info", nullptr ) } );
 			}
 		}
 	}
