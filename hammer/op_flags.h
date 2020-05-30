@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $Workfile:     $
 // $Date:         $
@@ -15,7 +15,6 @@
 
 
 #include "ObjectPage.h"
-#include "AnchorMgr.h"
 
 class GDclass;
 class CEditGameClass;
@@ -40,7 +39,7 @@ class COP_Flags : public CObjectPage
 public:
 	COP_Flags();
 	~COP_Flags();
-	
+
 	void SetFlagName( const char* flagName );
 	const char* GetFlagName() const;
 
@@ -52,10 +51,10 @@ public:
 	void UpdateForClass(CEditGameClass* pObj);
 	void MergeForClass(CEditGameClass* pObj);
 	void CreateCheckList(void);
-	
+
 	// Called when the entity tab changes the spawnflags, which renders our data obsolete.
 	void OnUpdateFlags( unsigned long value );
-	
+
 	GDclass *pObjClass;
 
 // Dialog Data
@@ -81,15 +80,12 @@ protected:
 	//{{AFX_MSG(COP_Flags)
 	virtual BOOL OnInitDialog();
 	virtual void OnCheckListChange();
-	afx_msg void OnSize( UINT nType, int cx, int cy );
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
-
-	CAnchorMgr m_AnchorMgr;
 
 	CString m_flagName;
 	CUtlVector <CheckListItem> m_CheckListItems;
 	int m_nNumSelectedObjects;
-	
+
 	COP_Entity *m_pEntityPage;
 };

@@ -42,7 +42,6 @@ BEGIN_MESSAGE_MAP(CProcessWnd, CWnd)
 	ON_BN_CLICKED(IDC_PROCESSWND_COPYALL, OnCopyAll)
 	ON_WM_TIMER()
 	ON_WM_CREATE()
-	ON_WM_SIZE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -150,6 +149,8 @@ int CProcessWnd::Execute(LPCTSTR pszCmd, LPCTSTR pszCmdLine)
 						}
 					}
 					rval = 0;
+					CloseHandle( pi.hProcess );
+					CloseHandle( pi.hThread );
 				}
 				else
 				{
@@ -195,7 +196,7 @@ int CProcessWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	rctEdit = rctClient;
 	rctEdit.bottom = rctClient.bottom - 20;
 
-	Edit.Create(WS_CHILD | WS_BORDER | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN, rctClient, this, IDC_PROCESSWND_EDIT);
+	Edit.Create(WS_CHILD | WS_BORDER | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN, rctEdit, this, IDC_PROCESSWND_EDIT);
 	Edit.SetReadOnly(TRUE);
 	Edit.SetFont(&Font);
 
@@ -206,26 +207,13 @@ int CProcessWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_btnCopyAll.Create("Copy to Clipboard", WS_CHILD | WS_VISIBLE, rctButton, this, IDC_PROCESSWND_COPYALL);
 	m_btnCopyAll.SetButtonStyle(BS_PUSHBUTTON);
 
+	EnableDynamicLayout();
+	auto layout = GetDynamicLayout();
+	layout->Create( this );
+	layout->AddItem( Edit.GetSafeHwnd(), CMFCDynamicLayout::MoveNone(), CMFCDynamicLayout::SizeHorizontalAndVertical( 100, 100 ) );
+	layout->AddItem( m_btnCopyAll.GetSafeHwnd(), CMFCDynamicLayout::MoveVertical( 100 ), CMFCDynamicLayout::SizeHorizontal( 100 ) );
+
 	return 0;
-}
-
-void CProcessWnd::OnSize(UINT nType, int cx, int cy)
-{
-	CWnd::OnSize(nType, cx, cy);
-
-	// create big CEdit in window
-	CRect rctClient;
-	GetClientRect(rctClient);
-
-	CRect rctEdit;
-	rctEdit = rctClient;
-	rctEdit.bottom = rctClient.bottom - 20;
-	Edit.MoveWindow(rctEdit);
-
-	CRect rctButton;
-	rctButton = rctClient;
-	rctButton.top = rctClient.bottom - 20;
-	m_btnCopyAll.MoveWindow(rctButton);
 }
 
 

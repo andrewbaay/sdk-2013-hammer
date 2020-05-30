@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -12,7 +12,6 @@
 #include "ObjectPage.h"
 #include "Resource.h"
 #include "MapEntity.h"
-#include "AnchorMgr.h"
 
 #define OUTPUT_LIST_NUM_COLUMNS		6
 
@@ -61,10 +60,8 @@ class COP_Input : public CObjectPage
 		void UpdateItemValidity(int nItem);
 		bool ValidateConnections(int nItem);
 
-	
+
 	protected:
-	
-		CAnchorMgr m_AnchorMgr;
 
 		CMapEntityList  *m_pEntityList;			// Object list filtered for entities
 		CEditGameClass	*m_pEditGameClass;
@@ -93,7 +90,6 @@ class COP_Input : public CObjectPage
 		// Generated message map functions
 		//{{AFX_MSG(COP_Input)
 		afx_msg void OnMark(void);
-		afx_msg void OnSize( UINT nType, int cx, int cy );
 		virtual BOOL OnInitDialog(void);
 		virtual void OnDestroy(void);
 		//}}AFX_MSG

@@ -62,7 +62,6 @@ BEGIN_MESSAGE_MAP(CObjectProperties, CPropertySheet)
 	ON_WM_ACTIVATE()
 	ON_WM_CLOSE()
 	ON_WM_PAINT()
-	ON_WM_SIZE()
 	ON_WM_SHOWWINDOW()
 	ON_WM_CREATE()
 	ON_COMMAND(IDOK, OnApply )
@@ -201,7 +200,7 @@ void CObjectProperties::CreatePages(void)
 	m_pModel = new COP_Model;
 	m_pModel->SetObjectList(&m_DstObjects);
 
-	m_pDummy = new CPropertyPage(IDD_OBJPAGE_DUMMY);
+	m_pDummy = new CObjectPage(IDD_OBJPAGE_DUMMY);
 
 	m_ppPages = NULL;
 	m_nPages = 0;
@@ -446,20 +445,6 @@ void CObjectProperties::CreateButtons(void)
 {
 	//VPROF_BUDGET( "CObjectProperties::CreateButtons", "Object Properties" );
 
-#if 0
-	// Get the screen location of the hidden apply button(ID_APPLY_NOW)
-	rect	rcButton;
-	pApplyButton->GetWindowRect( &rcButton );
-
-	// Grab, enable and rename the OK button to be Apply
-	// (Because <enter> only accelerates IDOK)
-	// and we dont want "OK" (apply+close) functionality
-	CButton	*pOKButton = reinterpret_cast<CButton *>(GetDlgItem(IDOK));
-	pOKButton->SetWindowTextA("Apply");
-	pOKButton->EnableWindow();
-	pOKButton->ShowWindow(SW_SHOWNA);
-	pOKButton->MoveWindow(&rcButton);
-#else
 	// Grab, enable and DONT show the OK button
 	// (Because <enter> only accelerates IDOK)
 	// and we dont want "OK" (apply+close) functionality
@@ -467,25 +452,7 @@ void CObjectProperties::CreateButtons(void)
 	pOKButton->EnableWindow();
 	// Dont show the window, just make it active to forward <enter> -> IDOK -> OnApply
 
-	// Grab and enable & show the hidden Apply button too
-	CButton *pApplyButton = reinterpret_cast<CButton *>(GetDlgItem(ID_APPLY_NOW));
-	pApplyButton->SetButtonStyle( pApplyButton->GetButtonStyle() | BS_DEFPUSHBUTTON );
-	pApplyButton->EnableWindow();
-	pApplyButton->ShowWindow(SW_SHOWNA);
-#endif
-	// Grab and enable & show the hidden Cancel button too
-	CButton *pCancelButton = reinterpret_cast<CButton *>(GetDlgItem(IDCANCEL));
-	pCancelButton->EnableWindow();
-	pCancelButton->ShowWindow(SW_SHOWNA);
-
-	//
-	// Load Icons
-	//
-	CWinApp *pApp = AfxGetApp();
-	m_hIconOutputGood = pApp->LoadIcon(IDI_OUTPUT);
-	m_hIconOutputBad  = pApp->LoadIcon(IDI_OUTPUTBAD);
-	m_hIconInputGood  = pApp->LoadIcon(IDI_INPUT);
-	m_hIconInputBad   = pApp->LoadIcon(IDI_INPUTBAD);
+	CRect modRect;
 
 	// Create buttons to display connection status icons
 	CRect rect;
@@ -494,14 +461,53 @@ void CObjectProperties::CreateButtons(void)
 	MoveWindow(&rect, FALSE);
 	GetClientRect(&rect);
 
+	// Grab and enable & show the hidden Apply button too
+	CButton *pApplyButton = reinterpret_cast<CButton *>(GetDlgItem(ID_APPLY_NOW));
+	pApplyButton->SetButtonStyle( pApplyButton->GetButtonStyle() | BS_DEFPUSHBUTTON );
+	pApplyButton->EnableWindow();
+	pApplyButton->GetWindowRect( &modRect );
+	ScreenToClient( &modRect );
+	modRect.top -= 4;
+	modRect.bottom -= 4;
+	int width = modRect.right - modRect.left;
+	modRect.right = rect.right - 8;
+	modRect.left = modRect.right - width;
+	pApplyButton->MoveWindow( &modRect, FALSE );
+	pApplyButton->ShowWindow(SW_SHOWNA);
+
+	// Grab and enable & show the hidden Cancel button too
+	CButton *pCancelButton = reinterpret_cast<CButton *>(GetDlgItem(IDCANCEL));
+	pCancelButton->EnableWindow();
+	modRect.right = modRect.left - 4;
+	modRect.left = modRect.right - width;
+	pCancelButton->MoveWindow( &modRect, FALSE );
+	pCancelButton->ShowWindow(SW_SHOWNA);
+
+	//
+	// Load Icons
+	//
+	CWinApp *pApp = AfxGetApp();
+	const int s = 16;
+	m_hIconOutputGood = (HICON)LoadImage(pApp->m_hInstance, MAKEINTRESOURCE(IDI_OUTPUT), IMAGE_ICON, s, s, LR_LOADTRANSPARENT);
+	m_hIconOutputBad  = (HICON)LoadImage(pApp->m_hInstance, MAKEINTRESOURCE(IDI_OUTPUTBAD), IMAGE_ICON, s, s, LR_LOADTRANSPARENT);
+	m_hIconInputGood  = (HICON)LoadImage(pApp->m_hInstance, MAKEINTRESOURCE(IDI_INPUT), IMAGE_ICON, s, s, LR_LOADTRANSPARENT);
+	m_hIconInputBad   = (HICON)LoadImage(pApp->m_hInstance, MAKEINTRESOURCE(IDI_INPUTBAD), IMAGE_ICON, s, s, LR_LOADTRANSPARENT);
+
 	m_pInputButton = new CButton;
-	m_pInputButton->Create(_T("My button"), WS_CHILD|WS_VISIBLE|BS_ICON|BS_FLAT, CRect(6,rect.bottom - 34,38,rect.bottom - 2), this, IDI_INPUT);
+	m_pInputButton->Create(_T("My button"), WS_CHILD|WS_VISIBLE|BS_ICON|BS_FLAT, CRect(6,rect.bottom - 30,32,rect.bottom - 4), this, IDI_INPUT);
 
 	m_pOutputButton = new CButton;
-	m_pOutputButton->Create(_T("My button"), WS_CHILD|WS_VISIBLE|BS_ICON|BS_FLAT, CRect(40,rect.bottom - 34,72,rect.bottom - 2), this, IDI_OUTPUT);
+	m_pOutputButton->Create(_T("My button"), WS_CHILD|WS_VISIBLE|BS_ICON|BS_FLAT, CRect(40,rect.bottom - 30,66,rect.bottom - 4), this, IDI_OUTPUT);
 
 	m_pInstanceButton = new CButton;
-	m_pInstanceButton->Create( _T( "Edit Instance" ), WS_CHILD|WS_VISIBLE|BS_TEXT, CRect( 6, rect.bottom - 28, 140, rect.bottom - 4 ), this, IDD_EDIT_INSTANCE );
+	m_pInstanceButton->Create( _T( "Edit Instance" ), WS_CHILD|WS_VISIBLE|BS_TEXT, CRect( modRect.left - 140, modRect.top, modRect.left - 6, modRect.bottom ), this, IDD_EDIT_INSTANCE );
+
+	auto layout = GetDynamicLayout();
+	layout->AddItem( m_pInputButton->GetSafeHwnd(), CMFCDynamicLayout::MoveVertical( 100 ), CMFCDynamicLayout::SizeNone() );
+	layout->AddItem( m_pOutputButton->GetSafeHwnd(), CMFCDynamicLayout::MoveVertical( 100 ), CMFCDynamicLayout::SizeNone() );
+	layout->AddItem( m_pInstanceButton->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontalAndVertical( 100, 100 ), CMFCDynamicLayout::SizeNone() );
+	layout->AddItem( ID_APPLY_NOW, CMFCDynamicLayout::MoveHorizontalAndVertical( 100, 100 ), CMFCDynamicLayout::SizeNone() );
+	layout->AddItem( IDCANCEL, CMFCDynamicLayout::MoveHorizontalAndVertical( 100, 100 ), CMFCDynamicLayout::SizeNone() );
 }
 
 
@@ -1218,35 +1224,14 @@ BOOL CObjectProperties::OnInitDialog()
 	BOOL b = CPropertySheet::OnInitDialog();
 	SetWindowText("Object Properties");
 
+	if ( !GetDynamicLayout() )
+	{
+		EnableDynamicLayout();
+		GetDynamicLayout()->Create( this );
+	}
 	CreateButtons();
-	UpdateAnchors( NULL );
 
 	return b;
-}
-
-
-void CObjectProperties::UpdateAnchors( CWnd *pPage )
-{
-	if ( !GetSafeHwnd() )
-		return;
-
-	// Anchor stuff.
-	HWND hTab = NULL;
-	if ( GetTabControl() )
-		hTab = GetTabControl()->GetSafeHwnd();
-
-	CAnchorDef anchorDefs[] =
-	{
-		CAnchorDef( IDOK, k_eSimpleAnchorBottomRight ),
-		CAnchorDef( ID_APPLY_NOW, k_eSimpleAnchorBottomRight ),
-		CAnchorDef( IDCANCEL, k_eSimpleAnchorBottomRight ),
-		CAnchorDef( IDI_INPUT, k_eSimpleAnchorBottomRight ),
-		CAnchorDef( IDI_OUTPUT, k_eSimpleAnchorBottomRight ),
-		CAnchorDef( IDD_EDIT_INSTANCE, k_eSimpleAnchorBottomRight ),
-		CAnchorDef( hTab, k_eSimpleAnchorAllSides ),
-		CAnchorDef( pPage ? pPage->GetSafeHwnd() : (HWND)NULL, k_eSimpleAnchorAllSides )
-	};
-	m_AnchorMgr.Init( GetSafeHwnd(), anchorDefs, ARRAYSIZE( anchorDefs ) );
 }
 
 
@@ -1290,13 +1275,6 @@ void CObjectProperties::OnShowWindow(BOOL bShow, UINT nStatus)
 		m_ppPages[i]->OnShowPropertySheet(bShow, nStatus);
 	}
 }
-
-
-void CObjectProperties::OnSize( UINT nType, int cx, int cy )
-{
-	m_AnchorMgr.OnSize();
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Handles the Apply button.

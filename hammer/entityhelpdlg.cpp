@@ -20,7 +20,7 @@ BEGIN_MESSAGE_MAP(CEntityHelpDlg, CDialog)
 	//{{AFX_MSG_MAP(CEntityHelpDlg)
 	ON_WM_DESTROY()
 	ON_WM_CLOSE()
-	ON_WM_SIZE()
+	ON_WM_GETMINMAXINFO()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -176,9 +176,18 @@ BOOL CEntityHelpDlg::OnInitDialog(void)
 	m_pHelpText = new CRichEditCtrlEx;
 	m_pHelpText->SubclassDlgItem(IDC_HELP_TEXT, this);
 	m_pHelpText->enable();
+	EnableDynamicLayout();
+	auto layout = GetDynamicLayout();
+	layout->Create( this );
+	layout->AddItem( m_pHelpText->GetSafeHwnd(), CMFCDynamicLayout::MoveNone(), CMFCDynamicLayout::SizeHorizontalAndVertical( 100, 100 ) );
 	return(TRUE);
 }
 
+void CEntityHelpDlg::OnGetMinMaxInfo( MINMAXINFO* lpMMI )
+{
+	lpMMI->ptMinTrackSize.x = 278;
+	lpMMI->ptMinTrackSize.y = 262;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -372,22 +381,3 @@ void CEntityHelpDlg::UpdateHelp(void)
 		}
 	}
 }
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  : nType -
-//			cx -
-//			cy -
-// Output : afx_msg void
-//-----------------------------------------------------------------------------
-void CEntityHelpDlg::OnSize( UINT nType, int cx, int cy )
-{
-	CDialog::OnSize(nType, cx, cy);
-
-	if (m_pHelpText != NULL)
-	{
-		m_pHelpText->SetWindowPos(NULL, 0, 0, cx - 22, cy - 22, SWP_NOMOVE | SWP_NOZORDER);
-	}
-}
-

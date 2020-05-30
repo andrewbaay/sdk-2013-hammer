@@ -354,7 +354,6 @@ BEGIN_MESSAGE_MAP(COP_Entity, CObjectPage)
 	ON_BN_CLICKED(IDC_COPY, OnCopy)
 	ON_BN_CLICKED(IDC_PASTE, OnPaste)
 	ON_BN_CLICKED(IDC_PICKCOLOR, OnPickColor)
-	ON_WM_SIZE()
 	ON_EN_SETFOCUS(IDC_KEY, OnSetfocusKey)
 	ON_EN_KILLFOCUS(IDC_KEY, OnKillfocusKey)
 	ON_MESSAGE(ABN_CHANGED, OnChangeAngleBox)
@@ -1604,51 +1603,14 @@ BOOL COP_Entity::OnInitDialog(void)
 	dwStyle |= LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDRAWFIXED;
 	SetWindowLong( m_VarList.GetSafeHwnd(), GWL_STYLE, dwStyle );
 
-	m_VarList.SetExtendedStyle( m_VarList.GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES );
+	m_VarList.SetExtendedStyle( m_VarList.GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_DOUBLEBUFFER );
 	m_VarList.InsertColumn(0, "Property Name", LVCFMT_LEFT, 200);
 	m_VarList.InsertColumn(1, "Value", LVCFMT_LEFT, 150);
 
 	m_bWantSmartedit = true;
 	SetSmartedit(false);
 
-	UpdateAnchors();
 	return TRUE;
-}
-
-
-void COP_Entity::UpdateAnchors()
-{
-	CAnchorDef anchorDefs[] =
-	{
-		CAnchorDef( IDC_KEYVALUES, k_eSimpleAnchorAllSides ),
-		CAnchorDef( IDC_SMARTEDIT, k_eSimpleAnchorRightSide ),
-		CAnchorDef( IDC_ENTITY_HELP, k_eSimpleAnchorRightSide ),
-		CAnchorDef( IDC_ANGLES_LABEL, k_eSimpleAnchorRightSide ),
-		CAnchorDef( IDC_ANGLEEDIT, k_eSimpleAnchorRightSide ),
-		CAnchorDef( IDC_ANGLEBOX, k_eSimpleAnchorRightSide ),
-		CAnchorDef( IDC_KEY_LABEL, k_eSimpleAnchorRightSide ),
-		CAnchorDef( IDC_KEY, k_eSimpleAnchorRightSide ),
-		CAnchorDef( IDC_VALUE_LABEL, k_eSimpleAnchorRightSide ),
-		CAnchorDef( IDC_PICKCOLOR, k_eSimpleAnchorRightSide ),
-		CAnchorDef( IDC_SMART_ANGLEEDIT, k_eSimpleAnchorRightSide ),
-		CAnchorDef( IDC_SMART_ANGLEBOX, k_eSimpleAnchorRightSide ),
-		CAnchorDef( IDC_VALUE, k_eSimpleAnchorRightSide ),
-		CAnchorDef( IDC_KEYVALUE_HELP_GROUP, k_eSimpleAnchorRightSide ),
-		CAnchorDef( IDC_KEYVALUE_HELP, k_eAnchorRight, k_eAnchorTop, k_eAnchorRight, k_eAnchorBottom ),
-		CAnchorDef( IDC_COMMENTS_LABEL, k_eSimpleAnchorBottomRight ),
-		CAnchorDef( IDC_ENTITY_COMMENTS, k_eAnchorRight, k_eAnchorBottom, k_eAnchorRight, k_eAnchorBottom ),
-		CAnchorDef( IDC_ADDKEYVALUE, k_eSimpleAnchorRightSide ),
-		CAnchorDef( IDC_REMOVEKEYVALUE, k_eSimpleAnchorRightSide )
-	};
-	CUtlVector<CAnchorDef> defs;
-	defs.CopyArray( anchorDefs, ARRAYSIZE( anchorDefs ) );
-
-	for ( int i=0; i < m_SmartControls.Count(); i++ )
-	{
-		defs.AddToTail( CAnchorDef( m_SmartControls[i]->GetSafeHwnd(), k_eSimpleAnchorRightSide ) );
-	}
-
-	m_AnchorMgr.Init( GetSafeHwnd(), defs.Base(), defs.Count() );
 }
 
 
@@ -1806,8 +1768,6 @@ void COP_Entity::DestroySmartControls(void)
 	m_pEditInstanceVariable = NULL;
 	m_pEditInstanceValue = NULL;
 	m_pComboInstanceParmType = NULL;
-
-	UpdateAnchors();
 }
 
 
@@ -1925,7 +1885,6 @@ void COP_Entity::CreateSmartControls(GDinputvariable *pVar, CUtlVector<const cha
 	m_pSmartControl->SetWindowPos(&m_VarList, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOREDRAW | SWP_NOSIZE);
 
 	m_bIgnoreKVChange = false;
-	UpdateAnchors();
 }
 
 
@@ -1936,13 +1895,13 @@ CRect COP_Entity::CalculateSmartControlRect()
 	GetDlgItem(IDC_KEY)->GetWindowRect(ctrlrect);
 	ScreenToClient(ctrlrect);
 	int nHeight = ctrlrect.Height();
-	int nRight = ctrlrect.right - 10;
+	int nRight = ctrlrect.right;
 
 	// Put it just to the right of the keyvalue list.
 	m_VarList.GetWindowRect(ctrlrect);
 	ScreenToClient(ctrlrect);
 
-	ctrlrect.left = ctrlrect.right + 10;
+	ctrlrect.left = ctrlrect.right + 20;
 	ctrlrect.right = nRight;
 	ctrlrect.bottom = ctrlrect.top + nHeight;
 
@@ -1985,7 +1944,7 @@ void COP_Entity::CreateSmartControls_Angle( GDinputvariable *pVar, CRect &ctrlre
 	// Create an eyedropper button for picking target angles.
 	//
 	CRect ButtonRect;
-	if (bShowSmartAngles)
+	if (*bShowSmartAngles)
 	{
 		CRect rectAngleBox;
 		m_SmartAngle.GetWindowRect(&rectAngleBox);
@@ -2016,6 +1975,8 @@ void COP_Entity::CreateSmartControls_Angle( GDinputvariable *pVar, CRect &ctrlre
 	pButton->SetIcon(hIcon);
 
 	m_SmartControls.AddToTail(pButton);
+	auto layout = GetDynamicLayout();
+	layout->AddItem( pButton->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
 }
 
 
@@ -2146,6 +2107,8 @@ void COP_Entity::CreateSmartControls_Choices( GDinputvariable *pVar, CRect &ctrl
 
 	m_pSmartControl = pCombo;
 	m_SmartControls.AddToTail(pCombo);
+	auto layout = GetDynamicLayout();
+	layout->AddItem( pCombo->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
 }
 
 
@@ -2162,6 +2125,8 @@ void COP_Entity::CreateSmartControls_TargetName( GDinputvariable *pVar, CRect &c
 
 	m_pSmartControl = pCombo;
 	m_SmartControls.AddToTail(m_pSmartControl);
+	auto layout = GetDynamicLayout();
+	layout->AddItem( pCombo->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
 
 	//
 	// Attach the world's entity list to the add dialog.
@@ -2201,6 +2166,7 @@ void COP_Entity::CreateSmartControls_BasicEditControl( GDinputvariable *pVar, CR
 		pEdit->EnableWindow(FALSE);
 	}
 
+	auto layout = GetDynamicLayout();
 	for ( int i = 0; i < pHelperType->Count(); i++ )
 	{
 		if ( !Q_strcmp( pHelperType->Element(i), "sphere" ) )
@@ -2227,11 +2193,13 @@ void COP_Entity::CreateSmartControls_BasicEditControl( GDinputvariable *pVar, CR
 			pButton->SetIcon(hIcon);
 
 			m_SmartControls.AddToTail(pButton);
+			layout->AddItem( pButton->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
 		}
 	}
 
 	m_pSmartControl = pEdit;
 	m_SmartControls.AddToTail(pEdit);
+	layout->AddItem( pEdit->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
 }
 
 
@@ -2255,8 +2223,10 @@ void COP_Entity::CreateSmartControls_BrowseAndPlayButtons( GDinputvariable *pVar
 		GetSafeHwnd(), message);
 	pButton->SendMessage(WM_SETFONT, (WPARAM)hControlFont);
 	m_pSmartBrowseButton = pButton;
+	auto layout = GetDynamicLayout();
 
 	m_SmartControls.AddToTail(pButton);
+	layout->AddItem( pButton->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
 
 	if ( pVar->GetType() == ivSound || pVar->GetType() == ivScene )
 	{
@@ -2270,6 +2240,7 @@ void COP_Entity::CreateSmartControls_BrowseAndPlayButtons( GDinputvariable *pVar
 		pButton->SendMessage(WM_SETFONT, (WPARAM)hControlFont);
 
 		m_SmartControls.AddToTail(pButton);
+		layout->AddItem( pButton->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
 	}
 }
 
@@ -2282,6 +2253,7 @@ void COP_Entity::CreateSmartControls_MarkAndEyedropperButtons( GDinputvariable *
 	CButton *pButton = NULL;
 
 	GDIV_TYPE eType = pVar->GetType();
+	auto layout = GetDynamicLayout();
 
 	if ((eType == ivTargetDest) || (eType == ivTargetNameOrClass) || (eType == ivTargetSrc))
 	{
@@ -2300,6 +2272,8 @@ void COP_Entity::CreateSmartControls_MarkAndEyedropperButtons( GDinputvariable *
 
 		m_SmartControls.AddToTail(pButton);
 
+		layout->AddItem( pButton->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
+
 		//
 		// Create a "Mark+Add" button for finding target entities.
 		//
@@ -2314,6 +2288,8 @@ void COP_Entity::CreateSmartControls_MarkAndEyedropperButtons( GDinputvariable *
 		ButtonRect.left += ButtonRect.Width() + 4;
 
 		m_SmartControls.AddToTail(pButton);
+
+		layout->AddItem( pButton->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
 	}
 
 	//
@@ -2333,6 +2309,8 @@ void COP_Entity::CreateSmartControls_MarkAndEyedropperButtons( GDinputvariable *
 	pButton->SetIcon(hIcon);
 
 	m_SmartControls.AddToTail(pButton);
+
+	layout->AddItem( pButton->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
 }
 
 
@@ -2354,6 +2332,9 @@ void COP_Entity::CreateSmartControls_PickButton( GDinputvariable *pVar, CRect &c
 	pButton->SendMessage(WM_SETFONT, (WPARAM)hControlFont);
 
 	m_SmartControls.AddToTail(pButton);
+
+	auto layout = GetDynamicLayout();
+	layout->AddItem( pButton->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
 }
 
 
@@ -2474,6 +2455,12 @@ void COP_Entity::CreateSmartControls_InstanceVariable( GDinputvariable *pVar, CR
 	m_SmartControls.AddToTail( m_pEditInstanceValue );
 	m_SmartControls.AddToTail( pStaticInstanceVariable );
 	m_SmartControls.AddToTail( pStaticInstanceValue );
+
+	auto layout = GetDynamicLayout();
+	layout->AddItem( m_pEditInstanceVariable->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
+	layout->AddItem( m_pEditInstanceValue->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
+	layout->AddItem( pStaticInstanceVariable->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
+	layout->AddItem( pStaticInstanceValue->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
 }
 
 
@@ -2587,6 +2574,14 @@ void COP_Entity::CreateSmartControls_InstanceParm( GDinputvariable *pVar, CRect 
 	m_SmartControls.AddToTail( pStaticInstanceVariable );
 	m_SmartControls.AddToTail( pStaticInstanceValue );
 	m_SmartControls.AddToTail( pStaticInstanceDefault );
+
+	auto layout = GetDynamicLayout();
+	layout->AddItem( m_pEditInstanceVariable->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
+	layout->AddItem( m_pComboInstanceParmType->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
+	layout->AddItem( m_pEditInstanceDefault->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
+	layout->AddItem( pStaticInstanceVariable->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
+	layout->AddItem( pStaticInstanceValue->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
+	layout->AddItem( pStaticInstanceDefault->GetSafeHwnd(), CMFCDynamicLayout::MoveHorizontal( 100 ), CMFCDynamicLayout::SizeNone() );
 }
 
 
@@ -4960,11 +4955,3 @@ void COP_Entity::OnUpdateFlags( const char* flagName, unsigned long preserveMask
 	RefreshKVListValues( flagName );
 	OnSelchangeKeyvalues(); // Refresh the control with its value in case it's selected currently.
 }
-
-
-void COP_Entity::OnSize( UINT nType, int cx, int cy )
-{
-	m_AnchorMgr.OnSize();
-}
-
-

@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -55,8 +55,7 @@ protected:
 	//{{AFX_MSG(CProcessWnd)
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
-	afx_msg void OnSize(UINT nType, int cx, int cy);
-	afx_msg void CProcessWnd::OnCopyAll();
+	afx_msg void OnCopyAll();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

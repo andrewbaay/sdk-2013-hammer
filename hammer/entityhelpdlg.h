@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -35,7 +35,7 @@ class CEntityHelpDlg : public CDialog
 		static void SetEditGameClass(GDclass *pClass);
 
 	protected:
-		
+
 		void UpdateClass(GDclass *pClass);
 
 		int GetTextWidth(const char *pszText, CDC *pDC = NULL);
@@ -53,7 +53,7 @@ class CEntityHelpDlg : public CDialog
 		virtual BOOL OnInitDialog(void);
 		virtual void OnDestroy(void);
 		virtual void OnClose(void);
-		afx_msg void OnSize( UINT nType, int cx, int cy );
+		afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 		//}}AFX_MSG
 
 		GDclass *m_pClass;

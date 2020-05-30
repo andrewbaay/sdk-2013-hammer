@@ -32,8 +32,8 @@ IMPLEMENT_DYNCREATE(CObjectPage, CPropertyPage)
 //			pData - unused
 //			bCanEdit - the edit state
 //-----------------------------------------------------------------------------
-void CObjectPage::UpdateData( int Mode, PVOID pData, bool bCanEdit ) 
-{ 
+void CObjectPage::UpdateData( int Mode, PVOID pData, bool bCanEdit )
+{
 	m_bCanEdit = bCanEdit;
 }
 
@@ -45,14 +45,17 @@ BOOL CObjectPage::OnSetActive(void)
 {
 	//VPROF_BUDGET( "CObjectPage::OnSetActive", "Object Properties" );
 
-	if (CObjectPage::s_bRESTRUCTURING || !GetActiveWorld())
-	{
-		return CPropertyPage::OnSetActive();
-	}
-
 	CObjectProperties *pParent = (CObjectProperties *)GetParent();
 
-	pParent->UpdateAnchors( this );
+	if (CObjectPage::s_bRESTRUCTURING || !GetActiveWorld())
+	{
+		auto res = CPropertyPage::OnSetActive();
+
+		if ( pParent->GetDynamicLayout() )
+			pParent->GetDynamicLayout()->AddItem( GetSafeHwnd(), CMFCDynamicLayout::MoveNone(), CMFCDynamicLayout::SizeHorizontalAndVertical( 100, 100 ) );
+
+		return res;
+	}
 
 	if (m_bFirstTimeActive)
 	{
@@ -60,7 +63,11 @@ BOOL CObjectPage::OnSetActive(void)
 		pParent->LoadDataForPages(pParent->GetPageIndex(this));
 	}
 
-	return CPropertyPage::OnSetActive();
+	auto res = CPropertyPage::OnSetActive();
+
+	pParent->GetDynamicLayout()->AddItem( GetSafeHwnd(), CMFCDynamicLayout::MoveNone(), CMFCDynamicLayout::SizeHorizontalAndVertical( 100, 100 ) );
+
+	return res;
 }
 
 

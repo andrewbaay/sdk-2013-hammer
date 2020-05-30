@@ -101,8 +101,6 @@ $Project "hammer_dll"
 
 		$File	"ActiveItemList.h"
 		$File	"$SRCDIR\public\tier0\afxmem_override.cpp"
-		$File	"AnchorMgr.cpp"
-		$File	"AnchorMgr.h"
 		$File	"AngleBox.cpp"
 		$File	"AngleBox.h"
 		$File	"AutoSelCombo.cpp"

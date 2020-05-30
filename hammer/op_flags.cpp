@@ -58,7 +58,6 @@ void COP_Flags::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(COP_Flags, CObjectPage)
 	//{{AFX_MSG_MAP(COP_Flags)
 	ON_CLBN_CHKCHANGE(IDC_CHECKLIST, OnCheckListChange)
-	ON_WM_SIZE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -280,12 +279,6 @@ BOOL COP_Flags::OnInitDialog()
 	m_CheckList.SetCheckStyle(BS_AUTOCHECKBOX);
 	m_CheckList.ResetContent();
 
-	CAnchorDef anchorDefs[] =
-	{
-		CAnchorDef( IDC_CHECKLIST, k_eSimpleAnchorAllSides )
-	};
-	m_AnchorMgr.Init( GetSafeHwnd(), anchorDefs, ARRAYSIZE( anchorDefs ) );
-
 	return TRUE;
 }
 
@@ -312,9 +305,4 @@ void COP_Flags::OnCheckListChange()
 	}
 
 	m_pEntityPage->OnUpdateFlags( m_flagName, triStateMask, bitsSet );
-}
-
-void COP_Flags::OnSize( UINT nType, int cx, int cy )
-{
-	m_AnchorMgr.OnSize();
 }

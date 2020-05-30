@@ -14,7 +14,6 @@
 #include "MapEntity.h"
 #include "ToolPickEntity.h"
 #include "AutoSelCombo.h"
-#include "AnchorMgr.h"
 
 
 #define OUTPUT_LIST_NUM_COLUMNS		6
@@ -125,8 +124,6 @@ class COP_Output : public CObjectPage, public CFilteredComboBox::ICallbacks
 
 	protected:
 
-		CAnchorMgr m_AnchorMgr;
-
 		CEditGameClass	*m_pEditGameClass;
 		CMapEntity		*m_pEntity;
 		bool			m_bNoParamEdit;
@@ -203,7 +200,6 @@ class COP_Output : public CObjectPage, public CFilteredComboBox::ICallbacks
 		afx_msg void OnAdd(void);
 		afx_msg void OnCopy(void);
 		afx_msg void OnPaste(void);
-		afx_msg void OnSize( UINT nType, int cx, int cy );
 		afx_msg void OnDelete(void);
 		afx_msg void OnMark(void);
 		afx_msg void OnPickEntity(void);

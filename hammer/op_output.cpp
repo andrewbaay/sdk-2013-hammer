@@ -77,7 +77,6 @@ BEGIN_MESSAGE_MAP(COP_Output, CObjectPage)
 	ON_BN_CLICKED(IDC_ADD,		OnAdd)
 	ON_BN_CLICKED(IDC_DELETE,	OnDelete)
 	ON_BN_CLICKED(IDC_COPY,		OnCopy)
-	ON_WM_SIZE()
 	ON_BN_CLICKED(IDC_PASTE,	OnPaste)
 	ON_BN_CLICKED(IDC_MARK,		OnMark)
 	ON_BN_CLICKED(IDC_PICK_ENTITY, OnPickEntity)
@@ -1079,9 +1078,10 @@ BOOL COP_Output::OnInitDialog(void)
 	m_ComboOutput.SubclassDlgItem(IDC_EDIT_CONN_OUTPUT, this);
 	m_ComboInput.SubclassDlgItem(IDC_EDIT_CONN_INPUT, this);
 	m_ComboTarget.SubclassDlgItem(IDC_EDIT_CONN_TARGET, this);
+	m_ComboTarget.SetItemHeight( -1, 16 );
 	m_CheckBoxFireOnce.SubclassDlgItem(IDC_EDIT_CONN_FIRE_ONCE, this);
 
-	m_ListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_HEADERDRAGDROP);
+	m_ListCtrl.SetExtendedStyle( LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_HEADERDRAGDROP | LVS_EX_DOUBLEBUFFER );
 
 	m_ListCtrl.InsertColumn(ICON_COLUMN, "", LVCFMT_CENTER, 20);
 	m_ListCtrl.InsertColumn(OUTPUT_NAME_COLUMN, "My Output", LVCFMT_LEFT, 70);
@@ -1137,32 +1137,6 @@ BOOL COP_Output::OnInitDialog(void)
 		HICON hIcon = pApp->LoadIcon(IDI_EYEDROPPER);
 		pButton->SetIcon(hIcon);
 	}
-
-	CAnchorDef anchorDefs[] =
-	{
-		CAnchorDef( IDC_LIST, k_eSimpleAnchorAllSides ),
-		CAnchorDef( IDC_OUTPUTS_STATIC_PANEL, k_eAnchorLeft, k_eAnchorBottom, k_eAnchorRight, k_eAnchorBottom ),
-		CAnchorDef( IDC_OUTPUT_LABEL, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_TARGETS_LABEL, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_VIA_INPUT_LABEL, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_PARAMETER_LABEL, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_DELAY_LABEL, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_EDIT_CONN_DELAY, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_EDIT_CONN_FIRE_ONCE, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_EDIT_CONN_PARAM, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_EDIT_CONN_INPUT, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_EDIT_CONN_TARGET, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_EDIT_CONN_OUTPUT, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_PICK_ENTITY, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_PICK_ENTITY_PARAM, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_MARK, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_ADD, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_COPY, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_PASTE, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_DELETE, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_SHOWHIDDENTARGETS, k_eSimpleAnchorBottomRight )
-	};
-	m_AnchorMgr.Init( GetSafeHwnd(), anchorDefs, ARRAYSIZE( anchorDefs ) );
 
 	// Set the last state this was at.
 	m_ctlShowHiddenTargetsAsBroken.SetCheck( ShouldShowHiddenTargets() );
@@ -2721,9 +2695,4 @@ void COP_Output::StopPicking(void)
 			GetDlgItem(IDC_PICK_ENTITY_PARAM)->EnableWindow( m_bEntityParamTarget );
 		}
 	}
-}
-
-void COP_Output::OnSize( UINT nType, int cx, int cy )
-{
-	m_AnchorMgr.OnSize();
 }

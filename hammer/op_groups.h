@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -14,7 +14,6 @@
 #include "resource.h"
 #include "GroupList.h"
 #include "ObjectPage.h"
-#include "AnchorMgr.h"
 
 
 class COP_Groups : public CObjectPage
@@ -31,7 +30,6 @@ public:
 	void SetMultiEdit(bool b);
 	void UpdateGroupList(void);
 
-	CAnchorMgr m_AnchorMgr;
 	CMapClass *pUpdateObject;
 
 	//{{AFX_DATA(COP_Groups)
@@ -54,10 +52,9 @@ protected:
 	afx_msg void OnEditgroups();
 	afx_msg void OnSetFocus(CWnd *pOld);
 	afx_msg LRESULT OnListToggleState(WPARAM wParam, LPARAM lParam);
-	afx_msg void OnSize( UINT nType, int cx, int cy );
 	//}}AFX_MSG
 
-	
+
 	DECLARE_MESSAGE_MAP()
 
 };

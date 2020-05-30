@@ -21,7 +21,6 @@
 #include "ToolPickEntity.h"
 #include "ToolPickFace.h"
 #include "FilteredComboBox.h"
-#include "AnchorMgr.h"
 
 
 class CEditGameClass;
@@ -300,7 +299,6 @@ class COP_Entity : public CObjectPage, CFilteredComboBox::ICallbacks, public CCo
 		afx_msg void OnPickFaces(void);
 		afx_msg void OnPickColor();
 		afx_msg void OnMark();
-		afx_msg void OnSize( UINT nType, int cx, int cy );
 		afx_msg void OnMarkAndAdd();
 		afx_msg void OnEntityHelp(void);
 		afx_msg void OnPickAngles(void);
@@ -328,7 +326,6 @@ class COP_Entity : public CObjectPage, CFilteredComboBox::ICallbacks, public CCo
 
 	private:
 
-		void UpdateAnchors();
 		void AssignClassDefaults(GDclass *pClass, GDclass *pOldClass);
 
 		int GetKeyValueRowByShortName( const char *pShortName );		// Find the row in the listctrl that the var is at. Returns -1 if not found.
@@ -347,8 +344,6 @@ class COP_Entity : public CObjectPage, CFilteredComboBox::ICallbacks, public CCo
 		GDinputvariable *GetVariableAt( int index );
 
 	private:
-
-		CAnchorMgr m_AnchorMgr;
 
 		CString m_szOldKeyName;
 		bool m_bWantSmartedit;

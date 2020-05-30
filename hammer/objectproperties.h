@@ -13,7 +13,6 @@
 #include "EditGameClass.h"
 #include "ObjectPage.h"
 #include "OP_Groups.h"
-#include "AnchorMgr.h"
 
 
 class COP_Entity;
@@ -108,10 +107,6 @@ protected:
 	void SaveActivePage(void);
 	void RestoreActivePage(void);
 
-	void UpdateAnchors( CWnd *pPage );
-
-	CAnchorMgr m_AnchorMgr;
-
 	//
 	// Pages.
 	//
@@ -165,7 +160,6 @@ protected:
 	afx_msg void OnClose();
 	afx_msg void OnPaint();
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
-	afx_msg void OnSize( UINT nType, int cx, int cy );
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	//}}AFX_MSG
 

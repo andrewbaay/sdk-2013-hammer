@@ -40,7 +40,6 @@ IMPLEMENT_DYNCREATE(COP_Input, CObjectPage)
 BEGIN_MESSAGE_MAP(COP_Input, CObjectPage)
 	//{{AFX_MSG_MAP(COP_Input)
 	ON_BN_CLICKED(IDC_MARK, OnMark)
-	ON_WM_SIZE()
 	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
@@ -166,7 +165,7 @@ bool COP_Input::ValidateConnections(int nItem)
 		{
 			return false;
 		}
-		
+
 		// Validate output
 		CMapEntity *pEntity = pInputConn->m_pEntity;
 		if (!CEntityConnection::ValidateOutput(pEntity,pConnection->GetOutputName()))
@@ -198,9 +197,9 @@ void COP_Input::UpdateItemValidity(int nItem)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pEntity - 
-//			bFirst - 
+// Purpose:
+// Input  : pEntity -
+//			bFirst -
 //-----------------------------------------------------------------------------
 void COP_Input::AddEntityConnections(const char *pTargetName, CMapEntity *pTestEntity)
 {
@@ -208,7 +207,7 @@ void COP_Input::AddEntityConnections(const char *pTargetName, CMapEntity *pTestE
 
 	if (nConnCount != 0)
 	{
-		int nItemCount = m_ListCtrl.GetItemCount();	
+		int nItemCount = m_ListCtrl.GetItemCount();
 		m_ListCtrl.SetItemCount(nItemCount + nConnCount);
 
 		for (int i = 0; i < nConnCount; i++)
@@ -229,7 +228,7 @@ void COP_Input::AddEntityConnections(const char *pTargetName, CMapEntity *pTestE
 				m_ListCtrl.SetItemText(nItemCount, OUTPUT_NAME_COLUMN, pConnection->GetOutputName());
 				m_ListCtrl.SetItemText(nItemCount, SOURCE_NAME_COLUMN, pConnection->GetSourceName());
 				m_ListCtrl.SetItemText(nItemCount, INPUT_NAME_COLUMN, pConnection->GetInputName());
-			
+
 				// Build the string for the delay.
 				float fDelay = pConnection->GetDelay();
 				char szTemp[MAX_PATH];
@@ -237,8 +236,8 @@ void COP_Input::AddEntityConnections(const char *pTargetName, CMapEntity *pTestE
 				m_ListCtrl.SetItemText(nItemCount, DELAY_COLUMN, szTemp);
 				m_ListCtrl.SetItemText(nItemCount, ONLY_ONCE_COLUMN, (pConnection->GetTimesToFire() == EVENT_FIRE_ALWAYS) ? "No" : "Yes");
 				m_ListCtrl.SetItemText(nItemCount, PARAMETER_COLUMN, pConnection->GetParam());
-			
-				// Set list ctrl data 
+
+				// Set list ctrl data
 				CInputConnection *pInputConn	= new CInputConnection;
 				pInputConn->m_pConnection		= pConnection;
 				pInputConn->m_pEntity			= pTestEntity;
@@ -252,8 +251,8 @@ void COP_Input::AddEntityConnections(const char *pTargetName, CMapEntity *pTestE
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pDX - 
+// Purpose:
+// Input  : pDX -
 //-----------------------------------------------------------------------------
 void COP_Input::DoDataExchange(CDataExchange *pDX)
 {
@@ -266,7 +265,7 @@ void COP_Input::DoDataExchange(CDataExchange *pDX)
 
 //------------------------------------------------------------------------------
 // Purpose : Take the user to the output page of the selected entity that
-//			 targets me.  
+//			 targets me.
 // Input   :
 // Output  :
 //------------------------------------------------------------------------------
@@ -319,8 +318,8 @@ BOOL COP_Input::OnInitDialog(void)
 {
 	CObjectPage::OnInitDialog();
 
-	m_ListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_HEADERDRAGDROP);
-	
+	m_ListCtrl.SetExtendedStyle( LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_HEADERDRAGDROP | LVS_EX_DOUBLEBUFFER );
+
 	m_ListCtrl.InsertColumn(ICON_COLUMN, "", LVCFMT_CENTER, 20);
 	m_ListCtrl.InsertColumn(SOURCE_NAME_COLUMN, "Source", LVCFMT_LEFT, 70);
 	m_ListCtrl.InsertColumn(OUTPUT_NAME_COLUMN, "Output", LVCFMT_LEFT, 70);
@@ -360,23 +359,15 @@ BOOL COP_Input::OnInitDialog(void)
 	}
 	m_ListCtrl.SetImageList(m_pImageList, LVSIL_SMALL );
 
-	CAnchorDef anchorDefs[] =
-	{
-		CAnchorDef( IDC_LIST, k_eSimpleAnchorAllSides ),
-		CAnchorDef( IDC_MARK, k_eSimpleAnchorBottomSide ),
-		CAnchorDef( IDC_INFO_TEXT, k_eSimpleAnchorBottomSide )
-	};
-	m_AnchorMgr.Init( GetSafeHwnd(), anchorDefs, ARRAYSIZE( anchorDefs ) );
-
 	return(TRUE);
 }
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : wParam - 
-//			lParam - 
-//			pResult - 
+// Purpose:
+// Input  : wParam -
+//			lParam -
+//			pResult -
 // Output : Returns TRUE on success, FALSE on failure.
 //-----------------------------------------------------------------------------
 BOOL COP_Input::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT *pResult)
@@ -408,7 +399,7 @@ BOOL COP_Input::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT *pResult)
 							eSortDirection = Sort_Ascending;
 						}
 					}
-					
+
 					//
 					// Update the sort column and sort the list.
 					//
@@ -446,9 +437,9 @@ void COP_Input::RemoveAllEntityConnections(void)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : Mode - 
-//			pData - 
+// Purpose:
+// Input  : Mode -
+//			pData -
 //-----------------------------------------------------------------------------
 void COP_Input::UpdateData( int Mode, PVOID pData, bool bCanEdit )
 {
@@ -487,9 +478,9 @@ void COP_Input::UpdateData( int Mode, PVOID pData, bool bCanEdit )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : nColumn - 
-//			eDirection - 
+// Purpose:
+// Input  : nColumn -
+//			eDirection -
 //-----------------------------------------------------------------------------
 void COP_Input::SetSortColumn(int nColumn, SortDirection_t eDirection)
 {
@@ -579,7 +570,7 @@ void COP_Input::SortListByColumn(int nColumn, SortDirection_t eDirection)
 //------------------------------------------------------------------------------
 // Purpose : Generates list of map entites that are being edited from the
 //			 m_pObject list
-// Input   : 
+// Input   :
 // Output  :
 //------------------------------------------------------------------------------
 void COP_Input::UpdateEntityList()
@@ -592,7 +583,7 @@ void COP_Input::UpdateEntityList()
 		FOR_EACH_OBJ( *m_pObjectList, pos )
 		{
 			CMapClass *pObject = m_pObjectList->Element(pos);
-	
+
 			if ((pObject != NULL) && (pObject->IsMapClass(MAPCLASS_TYPE(CMapEntity))))
 			{
 				CMapEntity *pEntity = (CMapEntity *)pObject;
@@ -603,7 +594,7 @@ void COP_Input::UpdateEntityList()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void COP_Input::UpdateConnectionList(void)
 {
@@ -612,7 +603,7 @@ void COP_Input::UpdateConnectionList(void)
 	m_bMultipleTargetNames = false;
 
 	const char *pszTargetName = NULL;
-	
+
 	FOR_EACH_OBJ( *m_pEntityList, pos )
 	{
 		CMapEntity *pInEntity = m_pEntityList->Element(pos);
@@ -632,7 +623,7 @@ void COP_Input::UpdateConnectionList(void)
 			CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
 			CMapWorld *pWorld = pDoc->GetMapWorld();
 			const CMapEntityList *pEntityList = pWorld->EntityList_GetList();
-			
+
 			FOR_EACH_OBJ( *pEntityList, pos2 )
 			{
 				CMapEntity *pTestEntity = pEntityList->Element(pos2);
@@ -721,11 +712,11 @@ void COP_Input::SetSelectedConnection(CEntityConnection *pConnection)
 	m_ListCtrl.SetRedraw(FALSE);
 
 	// Set selected item to be active and all others to false
-	int nItemCount = m_ListCtrl.GetItemCount();	
+	int nItemCount = m_ListCtrl.GetItemCount();
 	for (int nItem = 0; nItem < nItemCount; nItem++)
 	{
 		CInputConnection *pOutputConn = (CInputConnection *)m_ListCtrl.GetItemData(nItem);
-		
+
 		if ( pOutputConn->m_pConnection == pConnection)
 		{
 			m_ListCtrl.SetItemState(nItem,LVIS_SELECTED,LVIS_SELECTED);
@@ -738,10 +729,3 @@ void COP_Input::SetSelectedConnection(CEntityConnection *pConnection)
 
 	m_ListCtrl.SetRedraw(TRUE);
 }
-
-void COP_Input::OnSize( UINT nType, int cx, int cy )
-{
-	m_AnchorMgr.OnSize();
-}
-
-
