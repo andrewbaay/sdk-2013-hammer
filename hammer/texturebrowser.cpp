@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -58,8 +58,8 @@ END_MESSAGE_MAP()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pParent - 
+// Purpose:
+// Input  : pParent -
 //-----------------------------------------------------------------------------
 CTextureBrowser::CTextureBrowser(CWnd* pParent)
 	: CDialog(IDD, pParent)
@@ -74,18 +74,18 @@ CTextureBrowser::CTextureBrowser(CWnd* pParent)
 
 //-----------------------------------------------------------------------------
 // Purpose: Handles resize messages. Moves the child windows to the proper positions.
-// Input  : nType - 
-//			cx - 
-//			cy - 
+// Input  : nType -
+//			cx -
+//			cy -
 //-----------------------------------------------------------------------------
-void CTextureBrowser::OnSize(UINT nType, int cx, int cy) 
+void CTextureBrowser::OnSize(UINT nType, int cx, int cy)
 {
 	if (nType == SIZE_MINIMIZED || !IsWindow(m_cTextureWindow.m_hWnd))
 	{
 		CDialog::OnSize(nType, cx, cy);
 		return;
 	}
-	
+
 	// reposition controls
 	CRect clientrect;
 	GetClientRect(&clientrect);
@@ -94,93 +94,21 @@ void CTextureBrowser::OnSize(UINT nType, int cx, int cy)
 	GetDlgItem(IDC_CONTROLHEIGHT)->GetWindowRect(&CtrlRect);
 
 	int iControlHeight = (CtrlRect.bottom - CtrlRect.top);
-	int iThisCtrlHeight;
 
 	//
 	// Resize the texture window.
 	//
 	CtrlRect = clientrect;
-	CtrlRect.bottom -= iControlHeight;
+	CtrlRect.bottom -= iControlHeight + 6;
 	m_cTextureWindow.MoveWindow(CtrlRect);
-
-	clientrect.top = (clientrect.bottom - iControlHeight) + 4;
-
-	//
-	// Move the top row of controls to the correct vertical position,
-	// leaving their horizontal position as it was set up in the dialog.
-	//
-	int iIDList[] = 
-	{
-		IDC_TEXTURESIZE,
-		IDC_SIZEPROMPT,
-		IDC_FILTERPROMPT,
-		IDC_FILTER,
-		IDC_CURNAME,
-		IDC_FILTER_OPAQUE,
-		IDC_FILTER_SELFILLUM,
-		IDC_SHOW_ERROR,
-		IDC_TEXTURES_OPEN_SOURCE,
-		IDC_TEXTURES_EXPLORE_SOURCE,
-		-1
-	};
-
-	for (int i = 0; iIDList[i] != -1; i++)
-	{
-		CWnd *pWnd = GetDlgItem(iIDList[i]);
-		Assert(pWnd != NULL);
-
-		if (pWnd != NULL)
-		{
-			pWnd->GetWindowRect(&CtrlRect);
-			ScreenToClient(CtrlRect);
-			iThisCtrlHeight = CtrlRect.bottom - CtrlRect.top;
-			CtrlRect.top = clientrect.top;
-			CtrlRect.bottom = CtrlRect.top + iThisCtrlHeight;
-			pWnd->MoveWindow(CtrlRect);
-		}
-	}
-
-	//
-	// Move the middle row of controls to the correct vertical position,
-	// leaving their horizontal position as it was set up in the dialog.
-	//
-	int iIDList2[] = 
-	{ 
-		IDC_KEYWORDS_TEXT,
-		IDC_KEYWORDS,
-		IDC_USED,
-		IDC_MARK,
-		IDC_REPLACE,
-		IDC_CURDESCRIPTION,
-		IDC_FILTER_TRANSLUCENT,
-		IDC_FILTER_ENVMASK,
-		IDC_TEXTURES_RELOAD,
-		-1
-	};
-
-	for (int i = 0; iIDList2[i] != -1; i++)
-	{
-		CWnd *pWnd = GetDlgItem(iIDList2[i]);
-		Assert(pWnd != NULL);
-
-		if (pWnd != NULL)
-		{
-			pWnd->GetWindowRect(&CtrlRect);
-			ScreenToClient(CtrlRect);
-			iThisCtrlHeight = CtrlRect.bottom - CtrlRect.top;
-			CtrlRect.top = clientrect.top + iControlHeight / 2 + 2;
-			CtrlRect.bottom = CtrlRect.top + iThisCtrlHeight;
-			pWnd->MoveWindow(CtrlRect);
-		}
-	}
 
 	CDialog::OnSize(nType, cx, cy);
 }
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : bUsed - 
+// Purpose:
+// Input  : bUsed -
 //-----------------------------------------------------------------------------
 void CTextureBrowser::SetUsed(BOOL bUsed)
 {
@@ -211,7 +139,7 @@ void CTextureBrowser::SetUsed(BOOL bUsed)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CTextureBrowser::OnClose(void)
 {
@@ -222,7 +150,7 @@ void CTextureBrowser::OnClose(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CTextureBrowser::OnCancel()
 {
@@ -233,7 +161,7 @@ void CTextureBrowser::OnCancel()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CTextureBrowser::OnUsed()
 {
@@ -245,8 +173,8 @@ void CTextureBrowser::OnUsed()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pszTexture - 
+// Purpose:
+// Input  : pszTexture -
 //-----------------------------------------------------------------------------
 void CTextureBrowser::SetInitialTexture(LPCTSTR pszTexture)
 {
@@ -255,9 +183,9 @@ void CTextureBrowser::SetInitialTexture(LPCTSTR pszTexture)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
-void CTextureBrowser::OnSelendokTexturesize() 
+void CTextureBrowser::OnSelendokTexturesize()
 {
 	// change size of textures the texutre window displays
 	int iCurSel = m_cSizeList.GetCurSel();
@@ -278,9 +206,9 @@ void CTextureBrowser::OnSelendokTexturesize()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
-BOOL CTextureBrowser::OnInitDialog() 
+BOOL CTextureBrowser::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
@@ -292,14 +220,14 @@ BOOL CTextureBrowser::OnInitDialog()
 	//	const char *pszName = pTexture->GetName();
 	//	DBG("%d: %s\n", nTexture, pszName);
 	//}
-	
+
 	m_cSizeList.SubclassDlgItem(IDC_TEXTURESIZE, this);
 	m_cFilter.SubclassDlgItem(IDC_FILTER, this);
 	m_cKeywords.SubclassDlgItem(IDC_KEYWORDS, this);
 	m_cCurName.SubclassDlgItem(IDC_CURNAME, this);
 	m_cCurDescription.SubclassDlgItem(IDC_CURDESCRIPTION, this);
 	m_cUsed.SubclassDlgItem(IDC_USED, this);
-   
+
 	m_FilterOpaque.SubclassDlgItem(IDC_FILTER_OPAQUE, this);
 	m_FilterTranslucent.SubclassDlgItem(IDC_FILTER_TRANSLUCENT, this);
 	m_FilterSelfIllum.SubclassDlgItem(IDC_FILTER_SELFILLUM, this);
@@ -412,7 +340,7 @@ BOOL CTextureBrowser::OnInitDialog()
 //-----------------------------------------------------------------------------
 // Purpose: Called when either the filter combo or the keywords combo text changes.
 //-----------------------------------------------------------------------------
-void CTextureBrowser::OnChangeFilterOrKeywords() 
+void CTextureBrowser::OnChangeFilterOrKeywords()
 {
 	//
 	// Start a timer to repaint the texture window using the new filters.
@@ -423,9 +351,9 @@ void CTextureBrowser::OnChangeFilterOrKeywords()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
-void CTextureBrowser::OnUpdateFiltersNOW() 
+void CTextureBrowser::OnUpdateFiltersNOW()
 {
 	m_uLastFilterChange = time(NULL);
 	m_bFilterChanged = FALSE;
@@ -438,9 +366,9 @@ void CTextureBrowser::OnUpdateFiltersNOW()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
-void CTextureBrowser::OnUpdateKeywordsNOW() 
+void CTextureBrowser::OnUpdateKeywordsNOW()
 {
 	m_uLastFilterChange = time(NULL);
 	m_bFilterChanged = FALSE;
@@ -454,9 +382,9 @@ void CTextureBrowser::OnUpdateKeywordsNOW()
 
 //-----------------------------------------------------------------------------
 // Purpose: Timer used to control updates when the filter terms change.
-// Input  : nIDEvent - 
+// Input  : nIDEvent -
 //-----------------------------------------------------------------------------
-void CTextureBrowser::OnTimer(UINT nIDEvent) 
+void CTextureBrowser::OnTimer(UINT nIDEvent)
 {
 	if (!m_bFilterChanged)
 	{
@@ -487,9 +415,9 @@ void CTextureBrowser::OnTimer(UINT nIDEvent)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : wParam - 
-//			lParam - 
+// Purpose:
+// Input  : wParam -
+//			lParam -
 // Output : LRESULT
 //-----------------------------------------------------------------------------
 LRESULT CTextureBrowser::OnTextureWindowDblClk(WPARAM wParam, LPARAM lParam)
@@ -501,9 +429,9 @@ LRESULT CTextureBrowser::OnTextureWindowDblClk(WPARAM wParam, LPARAM lParam)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : wParam - 
-//			lParam - 
+// Purpose:
+// Input  : wParam -
+//			lParam -
 // Output : LRESULT
 //-----------------------------------------------------------------------------
 LRESULT CTextureBrowser::OnTexturewindowSelchange(WPARAM wParam, LPARAM lParam)
@@ -531,7 +459,7 @@ LRESULT CTextureBrowser::OnTexturewindowSelchange(WPARAM wParam, LPARAM lParam)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CTextureBrowser::WriteSettings()
 {
@@ -547,7 +475,7 @@ void CTextureBrowser::WriteSettings()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CTextureBrowser::SaveAndExit()
 {
@@ -567,7 +495,7 @@ void CTextureBrowser::SaveAndExit()
 		m_FilterHistory.RemoveAt(i);
 		--m_nFilterHistory;
 	}
-	
+
 	m_FilterHistory.InsertAt(0, str);
 	++m_nFilterHistory;
 
@@ -601,36 +529,36 @@ void CTextureBrowser::SetFilter(const char *pszFilter)
 void CTextureBrowser::OnFilterOpaque(void)
 {
 	bool checked = m_FilterOpaque.GetCheck( ) != 0;
-	m_cTextureWindow.SetTypeFilter( CTextureWindow::TYPEFILTER_OPAQUE, checked ); 
+	m_cTextureWindow.SetTypeFilter( CTextureWindow::TYPEFILTER_OPAQUE, checked );
 }
 
 void CTextureBrowser::OnFilterTranslucent(void)
 {
 	bool checked = m_FilterTranslucent.GetCheck( ) != 0;
-	m_cTextureWindow.SetTypeFilter( CTextureWindow::TYPEFILTER_TRANSLUCENT, checked ); 
+	m_cTextureWindow.SetTypeFilter( CTextureWindow::TYPEFILTER_TRANSLUCENT, checked );
 }
 
 void CTextureBrowser::OnFilterSelfIllum(void)
 {
 	bool checked = m_FilterSelfIllum.GetCheck( ) != 0;
-	m_cTextureWindow.SetTypeFilter( CTextureWindow::TYPEFILTER_SELFILLUM, checked ); 
+	m_cTextureWindow.SetTypeFilter( CTextureWindow::TYPEFILTER_SELFILLUM, checked );
 }
 
 void CTextureBrowser::OnFilterEnvmask(void)
 {
 	bool checked = m_FilterEnvMask.GetCheck( ) != 0;
-	m_cTextureWindow.SetTypeFilter( CTextureWindow::TYPEFILTER_ENVMASK, checked ); 
+	m_cTextureWindow.SetTypeFilter( CTextureWindow::TYPEFILTER_ENVMASK, checked );
 }
 
 void CTextureBrowser::OnShowErrors(void)
 {
 	bool checked = m_ShowErrors.GetCheck( ) != 0;
-	m_cTextureWindow.ShowErrors( checked ); 
+	m_cTextureWindow.ShowErrors( checked );
 }
 
 
 //-----------------------------------------------------------------------------
-// Opens the source file: 
+// Opens the source file:
 //-----------------------------------------------------------------------------
 void CTextureBrowser::OnOpenSource()
 {
@@ -641,7 +569,7 @@ void CTextureBrowser::OnOpenSource()
 }
 
 //-----------------------------------------------------------------------------
-// Explores to the source file: 
+// Explores to the source file:
 //-----------------------------------------------------------------------------
 void CTextureBrowser::OnExploreToSource()
 {
@@ -668,7 +596,7 @@ void CTextureBrowser::OnReload()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CTextureBrowser::OnMark(void)
 {
@@ -696,7 +624,7 @@ void CTextureBrowser::OnReplace(void)
 
 	if(dlg.DoModal() != IDOK)
 		return;
-	
+
 	// mark undo position
 	GetHistory()->MarkUndoPosition(pDoc->GetSelection()->GetList(), "Replace Textures");
 
