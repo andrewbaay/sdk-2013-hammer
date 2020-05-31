@@ -1006,6 +1006,7 @@ static SpewOutputFunc_t oldSpewFunc = NULL;
 InitReturnVal_t CHammer::HammerInternalInit()
 {
 	oldSpewFunc = GetSpewOutputFunc();
+	SpewActivate( "console", 1 );
 	SpewOutputFunc( HammerDbgOutput );
 	MathLib_Init();
 	InitReturnVal_t nRetVal = BaseClass::Init();

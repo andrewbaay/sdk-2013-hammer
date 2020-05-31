@@ -66,7 +66,7 @@ protected:
 	virtual ~CMessageWnd();
 
 	void CalculateScrollSize();
-	CArray<MWMSGSTRUCT, MWMSGSTRUCT&> MsgArray;
+	CArray<MWMSGSTRUCT> MsgArray;
 
 	CFont Font;
 	int iCharWidth;	// calculated in first paint
