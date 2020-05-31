@@ -432,7 +432,7 @@ bool KeyBinds::GetAccelTableFor( const char* pMapping, HACCEL& out )
 
 			bool bVirt = pKvKeybind->GetBool( "virtkey" );
 
-			WORD potentialKey = bVirt ? GetKeyForStr( pKey ) : pKey[0];
+			WORD potentialKey = bVirt ? GetKeyForStr( pKey ) : tolower( pKey[0] );
 			WORD potentialID = GetIDForCommandStr( pKvKeybind->GetName() );
 
 			if ( potentialKey && potentialID )
