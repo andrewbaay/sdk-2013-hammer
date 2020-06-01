@@ -24,7 +24,7 @@
 #include "materialsystem/IMaterialVar.h"
 #include "materialsystem/IMaterial.h"
 #include "mapface.h"
-#include "MapDoc.h"	// TERROR
+#include "MapDoc.h"
 #include "camera.h"
 #include "options.h"
 
@@ -480,7 +480,6 @@ void DetailObjects::EmitDetailObjectsOnFace( CMapFace *pMapFace, DetailObject_t&
 	if (nPoints < 3)
 		return;
 
-	// TERROR:
 	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
 	CMapEntityList detailBlockers;
 	pDoc->FindEntitiesByClassName( detailBlockers, "func_detail_blocker", false );
@@ -524,7 +523,7 @@ void DetailObjects::EmitDetailObjectsOnFace( CMapFace *pMapFace, DetailObject_t&
 				// Triangle is out of bounds, flip the coordinates so they are in the near half of the parallelogram
 				u = 1.0f - u;
 				v = 1.0f - v;
-				assert( u + v <= 1.0f );
+				Assert( u + v <= 1.0f );
 			}
 
 			// Compute alpha - assumed to be 1.0 across entire face for non-displacement map faces, since there is no alpha channel
@@ -596,9 +595,8 @@ float DetailObjects::ComputeDisplacementFaceArea( CMapFace *pMapFace )
 void DetailObjects::EmitDetailObjectsOnDisplacementFace( CMapFace *pMapFace,
 						DetailObject_t& detail )
 {
-	assert(pMapFace->GetPointCount() == 4);
+	Assert(pMapFace->GetPointCount() == 4);
 
-	// TERROR:
 	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
 	CMapEntityList detailBlockers;
 	pDoc->FindEntitiesByClassName( detailBlockers, "func_detail_blocker", false );

@@ -173,7 +173,7 @@ public:
 	inline int GetID(void) const;
 	inline int GetHammerID(void) const { return GetID(); }
 	inline void SetID(int nID);
-	inline int GetLoadID() const; 	// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
+	inline int GetLoadID() const;
 	virtual size_t GetSize(void);
 
 	//
@@ -465,7 +465,7 @@ protected:
 	CMapObjectList m_Dependents;	// Objects that this object should notify if it changes.
 
 	int m_nID;						// This object's unique ID.
-	int m_nLoadID;					// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
+	int m_nLoadID;
 
 	bool m_bTemporary;				// Whether to track this object for Undo/Redo.
 	int m_nRenderFrame;				// Frame counter used to avoid rendering the same object twice in a 3D frame.
@@ -506,9 +506,6 @@ void CMapClass::SetID(int nID)
 }
 
 
-//-----------------------------------------------------------------------------
-// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
-//-----------------------------------------------------------------------------
 int CMapClass::GetLoadID() const
 {
 	return m_nLoadID;

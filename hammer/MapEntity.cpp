@@ -710,7 +710,6 @@ ChunkFileResult_t CMapEntity::LoadKeyCallback(const char *szKey, const char *szV
 	{
 		pEntity->SetID(atoi(szValue));
 
-		// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
 		pEntity->m_nLoadID = CMapDoc::GetActiveMapDoc()->GetNextLoadID();
 	}
 	else

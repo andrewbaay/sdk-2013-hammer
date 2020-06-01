@@ -1678,7 +1678,7 @@ void CMapFace::ComputeColor( CRender3D* pRender, bool bRenderAsSelected,
 		}
 
 	default:
-		assert(0);
+		Assert(0);
 		break;
 	}
 }
@@ -2162,8 +2162,8 @@ void CMapFace::RenderFace3D( CRender3D* pRender, EditorRenderMode_t renderMode, 
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : mode - 
+// Purpose:
+// Input  : mode -
 //-----------------------------------------------------------------------------
 static int SortVal(EditorRenderMode_t mode)
 {
@@ -2176,10 +2176,10 @@ static int SortVal(EditorRenderMode_t mode)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : s1 - 
-//			s2 - 
-// Output : 
+// Purpose:
+// Input  : s1 -
+//			s2 -
+// Output :
 //-----------------------------------------------------------------------------
 static bool OpaqueFacesLessFunc( const MapFaceRender_t &s1, const MapFaceRender_t &s2 )
 {
@@ -2221,7 +2221,7 @@ void CMapFace::AddFaceToQueue( CMapFace* pMapFace, IEditorTexture* pTexture, Edi
 
 
 //-----------------------------------------------------------------------------
-// Purpose: this function will add a new face queue to the top of the list and 
+// Purpose: this function will add a new face queue to the top of the list and
 //			make it active
 //-----------------------------------------------------------------------------
 void CMapFace::PushFaceQueue( void )

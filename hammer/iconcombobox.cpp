@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -83,7 +83,7 @@ int CIconComboBox::InsertIcon( LPCTSTR pIconName, int ndx )
 {
 	//
 	// create an icon from file
-	// 
+	//
 	// NULL - no icons in file
 	// 1 - not a proper icon file
 	//
@@ -109,7 +109,7 @@ int CIconComboBox::InsertIcon( LPCTSTR pIconName, int ndx )
 	result = SetItemData( ndx, ( DWORD )hIcon );
 	if( result == CB_ERR )
 		return result;
-	
+
 	// return the icon index
 	return ndx;
 }
@@ -178,7 +178,7 @@ int CIconComboBox::DeleteIcon( int ndx )
 //-----------------------------------------------------------------------------
 int CIconComboBox::AddString( LPCTSTR lpszString )
 {
-	assert( FALSE ); 
+	Assert( FALSE );
 	return CB_ERR;
 }
 
@@ -188,7 +188,7 @@ int CIconComboBox::AddString( LPCTSTR lpszString )
 //-----------------------------------------------------------------------------
 int CIconComboBox::InsertString( int nIndex, LPCTSTR lpszString )
 {
-	assert( FALSE );
+	Assert( FALSE );
 	return CB_ERR;
 }
 
@@ -198,7 +198,7 @@ int CIconComboBox::InsertString( int nIndex, LPCTSTR lpszString )
 //-----------------------------------------------------------------------------
 int CIconComboBox::DeleteString( int nIndex )
 {
-	assert( FALSE );
+	Assert( FALSE );
 	return CB_ERR;
 }
 
@@ -207,7 +207,7 @@ int CIconComboBox::DeleteString( int nIndex )
 // Purpose:
 //-----------------------------------------------------------------------------
 void CIconComboBox::MeasureItem( LPMEASUREITEMSTRUCT lpMeasureItemStruct )
-{ 
+{
 	lpMeasureItemStruct->itemWidth = m_IconSize.cx;
 	lpMeasureItemStruct->itemHeight = m_IconSize.cy + 1;
 }
@@ -235,8 +235,8 @@ void CIconComboBox::DrawItem( LPDRAWITEMSTRUCT lpDrawItemStruct )
 	//
 	// the icon is "selected"
 	//
-	if( ( lpDrawItemStruct->itemState & ODS_SELECTED ) && 
-		( lpDrawItemStruct->itemAction & ( ODA_SELECT | ODA_DRAWENTIRE ) ) ) 
+	if( ( lpDrawItemStruct->itemState & ODS_SELECTED ) &&
+		( lpDrawItemStruct->itemAction & ( ODA_SELECT | ODA_DRAWENTIRE ) ) )
 	{
 		SetSelectedBrushAndPen( lpDrawItemStruct, &pOldBrush, &pOldPen );
 		OnDrawIcon( lpDrawItemStruct );
@@ -246,8 +246,8 @@ void CIconComboBox::DrawItem( LPDRAWITEMSTRUCT lpDrawItemStruct )
 	//
 	// the icon is "un-selected"
 	//
-	if( !( lpDrawItemStruct->itemState & ODS_SELECTED ) && 
-		 ( lpDrawItemStruct->itemAction & ( ODA_SELECT | ODA_DRAWENTIRE ) ) ) 
+	if( !( lpDrawItemStruct->itemState & ODS_SELECTED ) &&
+		 ( lpDrawItemStruct->itemAction & ( ODA_SELECT | ODA_DRAWENTIRE ) ) )
 	{
 		SetUnSelectedBrushAndPen( lpDrawItemStruct, &pOldBrush, &pOldPen );
 		OnDrawIcon( lpDrawItemStruct );
@@ -257,8 +257,8 @@ void CIconComboBox::DrawItem( LPDRAWITEMSTRUCT lpDrawItemStruct )
 	//
     // icon gains focus
 	//
-    if( lpDrawItemStruct->itemAction & ODA_FOCUS ) 
-	{ 
+    if( lpDrawItemStruct->itemAction & ODA_FOCUS )
+	{
 		// get the device context
 		CDC* pDC = CDC::FromHandle( lpDrawItemStruct->hDC );
 
@@ -285,21 +285,21 @@ void CIconComboBox::OnDrawIcon( LPDRAWITEMSTRUCT lpDrawItemStruct )
 		return;
 
 	// calculate the icon's upper left corner
-	int UpperLeftX = lpDrawItemStruct->rcItem.left + 
-		             ( ( lpDrawItemStruct->rcItem.right - lpDrawItemStruct->rcItem.left ) / 2 ) - 
+	int UpperLeftX = lpDrawItemStruct->rcItem.left +
+		             ( ( lpDrawItemStruct->rcItem.right - lpDrawItemStruct->rcItem.left ) / 2 ) -
 			         ( m_IconSize.cx / 2 );
-	int UpperLeftY = lpDrawItemStruct->rcItem.top + 
-		             ( ( lpDrawItemStruct->rcItem.bottom - lpDrawItemStruct->rcItem.top ) / 2 ) - 
+	int UpperLeftY = lpDrawItemStruct->rcItem.top +
+		             ( ( lpDrawItemStruct->rcItem.bottom - lpDrawItemStruct->rcItem.top ) / 2 ) -
 					 ( m_IconSize.cy / 2 );
 
 	// render the icon
 	pDC->DrawIcon( UpperLeftX, UpperLeftY, hIcon );
-}               
+}
 
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void CIconComboBox::ResetBrushAndPen( LPDRAWITEMSTRUCT lpDrawItemStruct, 
+void CIconComboBox::ResetBrushAndPen( LPDRAWITEMSTRUCT lpDrawItemStruct,
 									  CBrush *pBrush, CPen *pPen )
 {
 	// get the device context
@@ -313,7 +313,7 @@ void CIconComboBox::ResetBrushAndPen( LPDRAWITEMSTRUCT lpDrawItemStruct,
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void CIconComboBox::SetDisabledBrushAndPen( LPDRAWITEMSTRUCT lpDrawItemStruct, 
+void CIconComboBox::SetDisabledBrushAndPen( LPDRAWITEMSTRUCT lpDrawItemStruct,
 										    CBrush **ppOldBrush, CPen **ppOldPen )
 {
 	// get the device context
@@ -331,7 +331,7 @@ void CIconComboBox::SetDisabledBrushAndPen( LPDRAWITEMSTRUCT lpDrawItemStruct,
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void CIconComboBox::SetUnSelectedBrushAndPen( LPDRAWITEMSTRUCT lpDrawItemStruct, 
+void CIconComboBox::SetUnSelectedBrushAndPen( LPDRAWITEMSTRUCT lpDrawItemStruct,
 											  CBrush **ppOldBrush, CPen **ppOldPen )
 {
 	// get the device context
@@ -356,7 +356,7 @@ void CIconComboBox::SetUnSelectedBrushAndPen( LPDRAWITEMSTRUCT lpDrawItemStruct,
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void CIconComboBox::SetSelectedBrushAndPen( LPDRAWITEMSTRUCT lpDrawItemStruct, 
+void CIconComboBox::SetSelectedBrushAndPen( LPDRAWITEMSTRUCT lpDrawItemStruct,
 										    CBrush **ppOldBrush, CPen **ppOldPen )
 {
 	// get the device context
@@ -369,7 +369,7 @@ void CIconComboBox::SetSelectedBrushAndPen( LPDRAWITEMSTRUCT lpDrawItemStruct,
 	// set the brush and pen current -- saving the old brush and pen state
 	*ppOldBrush = pDC->SelectObject( &brushSelected );
 	*ppOldPen = pDC->SelectObject( &penSelected );
-	
+
 	//
 	// set some addition render state - background  and text color
 	//

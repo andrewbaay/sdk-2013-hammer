@@ -422,7 +422,7 @@ class CMapDoc : public CDocument
 		inline CHistory *GetDocHistory(void);
 
 		inline int GetNextMapObjectID(void);
-		inline int GetNextLoadID();			// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
+		inline int GetNextLoadID();
 		inline int GetNextNodeID(void);
 		inline void SetNextNodeID(int nID);
 
@@ -695,7 +695,7 @@ class CMapDoc : public CDocument
 		CSelection *m_pSelection;				// object selection list
 
 		int m_nNextMapObjectID;			// The ID that will be assigned to the next CMapClass object in this document.
-		int m_nNextLoadID;				// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
+		int m_nNextLoadID;
 		int m_nNextNodeID;				// The ID that will be assigned to the next "info_node_xxx" object created in this document.
 
 		// Editing prefabs data.
@@ -1019,9 +1019,6 @@ int CMapDoc::GetNextMapObjectID(void)
 }
 
 
-//-----------------------------------------------------------------------------
-// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
-//-----------------------------------------------------------------------------
 int CMapDoc::GetNextLoadID()
 {
 	return m_nNextLoadID++;

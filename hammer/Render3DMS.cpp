@@ -1878,7 +1878,7 @@ void CRender3D::RenderBox(const Vector &Mins, const Vector &Maxs,
 			//
 			unsigned char color[3];
 
-			assert( (eRenderModeThisPass != RENDER_MODE_TEXTURED) &&
+			Assert( (eRenderModeThisPass != RENDER_MODE_TEXTURED) &&
 					(eRenderModeThisPass != RENDER_MODE_TEXTURED_SHADED) &&
 					(eRenderModeThisPass != RENDER_MODE_LIGHT_PREVIEW2) &&
 					(eRenderModeThisPass != RENDER_MODE_LIGHT_PREVIEW_RAYTRACED) &&

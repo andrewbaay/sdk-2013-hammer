@@ -100,7 +100,6 @@ CMapClass::CMapClass(void)
 		m_nID = 0;
 	}
 
-	// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
 	m_nLoadID = 0;
 
 	dwKept = 0;
@@ -1412,7 +1411,6 @@ ChunkFileResult_t CMapClass::LoadEditorKeyCallback(const char *szKey, const char
 	{
 		CChunkFile::ReadKeyValueInt(szValue, pObject->m_nID);
 
-		// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
 		pObject->m_nLoadID = CMapDoc::GetActiveMapDoc()->GetNextLoadID();
 	}
 	else  if (!stricmp(szKey, "comments"))

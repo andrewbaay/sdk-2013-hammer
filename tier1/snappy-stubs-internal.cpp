@@ -32,6 +32,8 @@
 #endif //_WIN32
 #include <string>
 
+#include "tier0/dbg.h"
+
 #include "snappy-stubs-internal.h"
 
 namespace snappy {

@@ -447,7 +447,7 @@ CMapDoc::CMapDoc(void)
 	m_nDocVersion = 0;
 
 	m_nNextMapObjectID = 1;
-	m_nNextLoadID = 1;			// PORTAL2 SHIP: keep track of load order to preserve it on save so that maps can be diffed.
+	m_nNextLoadID = 1;
 	m_nNextNodeID = 1;
 
 	m_pGame = NULL;

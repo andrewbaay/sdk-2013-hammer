@@ -361,7 +361,7 @@ inline int Bits::Log2Floor(uint32 n) {
       log += shift;
     }
   }
-  assert(value == 1);
+  Assert(value == 1);
   return log;
 }
 

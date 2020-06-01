@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -24,10 +24,10 @@
 //         e1
 //     c1------c2
 //     |        |
-//  e0 |        | e2		
+//  e0 |        | e2
 //     |        |
 //     c0------c3
-//         e3 
+//         e3
 //
 // Note: edges refer to internal edge points only, corners "contain" all surfaces
 //       touching the corner (surfaces that only touch the corner, as well as those
@@ -98,7 +98,7 @@ bool PointCompareWithTolerance( Vector const& pt1, Vector const& pt2, float tole
 		if( fabs( pt1[i] - pt2[i] ) > tolerance )
 			return false;
 	}
-	
+
 	return true;
 }
 
@@ -120,7 +120,7 @@ bool EdgeCompare( Vector *pEdgePts1, Vector *pEdgePts2, int &edgeType1, int &edg
 	edge2[0] = pEdgePts2[0];
 	edge2[1] = ( pEdgePts2[0] + pEdgePts2[1] ) * 0.5f;
 	edge2[2] = pEdgePts2[1];
-	
+
 	// assume edge type to be normal (will get overridden if otherwise)
 	edgeType1 = DISPSEW_EDGE_NORMAL;
 	edgeType2 = DISPSEW_EDGE_NORMAL;
@@ -143,8 +143,8 @@ bool EdgeCompare( Vector *pEdgePts1, Vector *pEdgePts2, int &edgeType1, int &edg
 					continue;
 
 				// sanity check
-				assert( overlapCount >= 0 );
-				assert( overlapCount < 2 );
+				Assert( overlapCount >= 0 );
+				Assert( overlapCount < 2 );
 
 				ndxEdge1[overlapCount] = ndx1;
 				ndxEdge2[overlapCount] = ndx2;
@@ -162,17 +162,17 @@ bool EdgeCompare( Vector *pEdgePts1, Vector *pEdgePts2, int &edgeType1, int &edg
 	if( ndxEdge1[0]%2 != 0 )
 	{
 		edgeType1 = DISPSEW_EDGE_TJ;
-		
+
 		if( ndxEdge1[1] == 0 )
 		{
 			edgeType2 = DISPSEW_EDGE_TJSTART;
 		}
 		else if( ndxEdge1[1] == 2 )
 		{
-			edgeType2 = DISPSEW_EDGE_TJEND;			
+			edgeType2 = DISPSEW_EDGE_TJEND;
 		}
 	}
-	else if( ndxEdge1[1]%2 != 0 ) 
+	else if( ndxEdge1[1]%2 != 0 )
 	{
 		edgeType1 = DISPSEW_EDGE_TJ;
 
@@ -200,7 +200,7 @@ bool EdgeCompare( Vector *pEdgePts1, Vector *pEdgePts2, int &edgeType1, int &edg
 			edgeType1 = DISPSEW_EDGE_TJEND;
 		}
 	}
-	else if( ndxEdge2[1]%2 != 0 ) 
+	else if( ndxEdge2[1]%2 != 0 )
 	{
 		edgeType2 = DISPSEW_EDGE_TJ;
 
@@ -214,7 +214,7 @@ bool EdgeCompare( Vector *pEdgePts1, Vector *pEdgePts2, int &edgeType1, int &edg
 		}
 	}
 
-	return true;	
+	return true;
 }
 
 
@@ -316,7 +316,7 @@ void AverageVectorFieldData( CMapDisp *pDisp1, int ndx1, CMapDisp *pDisp2, int n
 	//
 	float dist1 = pDisp1->GetFieldDistance( ndx1 );
 	float dist2 = pDisp2->GetFieldDistance( ndx2 );
-	
+
 	Vector v1, v2;
 	pDisp1->GetFieldVector( ndx1, v1 );
 	pDisp2->GetFieldVector( ndx2, v2 );
@@ -372,7 +372,7 @@ void AverageVectorFieldData( CMapDisp *pDisp1, int ndx1, CMapDisp *pDisp2, int n
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void BlendVectorFieldData( CMapDisp *pDisp1, int ndxSrc1, int ndxDst1, 
+void BlendVectorFieldData( CMapDisp *pDisp1, int ndxSrc1, int ndxDst1,
 						   CMapDisp *pDisp2, int ndxSrc2, int ndxDst2,
 						   float blendFactor )
 {
@@ -383,7 +383,7 @@ void BlendVectorFieldData( CMapDisp *pDisp1, int ndxSrc1, int ndxDst1,
 	//
 	float dist1 = pDisp1->GetFieldDistance( ndxSrc1 );
 	float dist2 = pDisp2->GetFieldDistance( ndxSrc2 );
-	
+
 	Vector v1, v2;
 	pDisp1->GetFieldVector( ndxSrc1, v1 );
 	pDisp2->GetFieldVector( ndxSrc2, v2 );
@@ -507,7 +507,7 @@ void PostFaceListSew( void )
 	{
 		SewTJunc_Destroy( s_TJData.Element( i ) );
 	}
-	
+
 	count = s_EdgeData.Size();
 	for( int i = 0; i < count; i++ )
 	{
@@ -525,7 +525,7 @@ void PostFaceListSew( void )
 
 //-----------------------------------------------------------------------------
 // Purpose: given a face with a displacement surface, "sew" all edges to all
-//          neighboring displacement and non-displacement surfaces 
+//          neighboring displacement and non-displacement surfaces
 //          found in the selection set
 //-----------------------------------------------------------------------------
 void FaceListSewEdges( void )
@@ -786,7 +786,7 @@ void SewCorner_ResolveDisp( SewCornerData_t *pCornerData )
 		EditDispHandle_t dispHandle = pFace->GetDisp();
 		if( dispHandle == EDITDISPHANDLE_INVALID )
 			continue;
-		
+
 		CMapDisp *pDisp = EditDispMgr()->GetDisp( dispHandle );
 
 		// get the corner index
@@ -1365,7 +1365,7 @@ inline int SewEdge_TJIndex( SewEdgeData_t *pEdgeData, int type )
 inline bool SewEdge_IsSolidTJunc( SewEdgeData_t *pEdgeData, int type )
 {
 	for( int i = 0; i < pEdgeData->faceCount; i++ )
-	{	
+	{
 		if( pEdgeData->type[i] != type )
 			continue;
 
@@ -1389,7 +1389,7 @@ bool SewEdge_Add( SewEdgeData_t *pEdgeData, CMapFace *pFace, int ndxEdge, int ty
 	// Add face to edge.
 	pEdgeData->pFaces[pEdgeData->faceCount] = pFace;
 	pEdgeData->ndxEdges[pEdgeData->faceCount] = ndxEdge;
-	pEdgeData->type[pEdgeData->faceCount] = type; 
+	pEdgeData->type[pEdgeData->faceCount] = type;
 	pEdgeData->faceCount++;
 
 	return true;
@@ -1468,11 +1468,11 @@ bool SewEdge_AddToListTJunc( SewEdgeData_t *pEdgeData )
 
 		// get the compare face point count
 		int ptCount2 = pCmpData->pFaces[ndxCmp]->GetPointCount();
-		
+
 		Vector edgePts2[2];
 		GetPointFromSurface( pCmpData->pFaces[ndxCmp], pCmpData->ndxEdges[ndxCmp], edgePts2[0] );
 		GetPointFromSurface( pCmpData->pFaces[ndxCmp], (pCmpData->ndxEdges[ndxCmp]+1)%ptCount2, edgePts2[1] );
-		
+
 		// compare the edges -- return if found
 		int edgeType1, edgeType2;
 		if( EdgeCompare( edgePts, edgePts2, edgeType1, edgeType2 ) )
@@ -1521,7 +1521,7 @@ void SewEdge_AddToListNormal( SewEdgeData_t *pEdgeData )
 			Vector edgePts2[2];
 			GetPointFromSurface( pCmpData->pFaces[j], pCmpData->ndxEdges[j], edgePts2[0] );
 			GetPointFromSurface( pCmpData->pFaces[j], (pCmpData->ndxEdges[j]+1)%ptCount2, edgePts2[1] );
-		
+
 			// compare the edges -- return if found
 			int edgeType1, edgeType2;
 			if( EdgeCompare( edgePts, edgePts2, edgeType1, edgeType2 ) )
@@ -1563,7 +1563,7 @@ void SewEdge_Build( void )
 	CFaceEditSheet *pSheet = GetMainWnd()->GetFaceEditSheet();
 	if( !pSheet )
 		return;
-	
+
 	bool bError = false;
 
 	//
@@ -1718,10 +1718,10 @@ void SewEdge_ResolveDispTJunc( SewEdgeData_t *pEdgeData, int ndxTJ, int ndxTJNei
 			for( int i = 1, j = ratio; i < tjInterval; i++, j += ratio )
 			{
 				int ndxTJPt, ndxEdgePt;
-				
+
 				ndxTJPt = GetEdgePointIndex( pTJEdgeDisp, pEdgeData->ndxEdges[ndxTJ], i, true );
 				ndxEdgePt = GetEdgePointIndex( pEdgeDisp, pEdgeData->ndxEdges[ndxTJNeighbor], j, false );
-				
+
 				// average
 				AverageVectorFieldData( pEdgeDisp, ndxEdgePt, pTJEdgeDisp, ndxTJPt );
 			}
@@ -1748,7 +1748,7 @@ void SewEdge_ResolveDispTJunc( SewEdgeData_t *pEdgeData, int ndxTJ, int ndxTJNei
 				int ndxTJPt, ndxEdgePt;
 				ndxTJPt = GetEdgePointIndex( pTJEdgeDisp, pEdgeData->ndxEdges[ndxTJ], i, true );
 				ndxEdgePt = GetEdgePointIndex( pEdgeDisp, pEdgeData->ndxEdges[ndxTJNeighbor], j, false );
-				
+
 				// average
 				AverageVectorFieldData( pEdgeDisp, ndxEdgePt, pTJEdgeDisp, ndxTJPt );
 			}
@@ -1759,23 +1759,23 @@ void SewEdge_ResolveDispTJunc( SewEdgeData_t *pEdgeData, int ndxTJ, int ndxTJNei
 	// linearly interpolate the "unlike" points
 	//
 	float blendRatio = 1.0f / ratio;
-	
+
 	if( bFlip )
 	{
 		for( int i = 0; i < ( tjWidth - ratio ); i += ratio )
 		{
 			int ndxStart = i;
 			int ndxEnd = ( i + ratio );
-			
+
 			int ndxStartPt = GetEdgePointIndex( pTJEdgeDisp, pEdgeData->ndxEdges[ndxTJ], ndxStart, true );
 			int ndxEndPt = GetEdgePointIndex( pTJEdgeDisp, pEdgeData->ndxEdges[ndxTJ], ndxEnd, true );
-			
+
 			for( int j = ( ndxStart + 1 ); j < ndxEnd; j++ )
 			{
 				float blend = blendRatio * ( j - ndxStart );
-				
+
 				int ndxDst = GetEdgePointIndex( pTJEdgeDisp, pEdgeData->ndxEdges[ndxTJ], j, true );
-				
+
 				BlendVectorFieldData( pTJEdgeDisp, ndxStartPt, ndxDst, pTJEdgeDisp, ndxEndPt, ndxDst, blend );
 			}
 		}
@@ -1786,16 +1786,16 @@ void SewEdge_ResolveDispTJunc( SewEdgeData_t *pEdgeData, int ndxTJ, int ndxTJNei
 		{
 			int ndxStart = i;
 			int ndxEnd = ( i + ratio );
-			
+
 			int ndxStartPt = GetEdgePointIndex( pEdgeDisp, pEdgeData->ndxEdges[ndxTJNeighbor], ndxStart, true );
 			int ndxEndPt = GetEdgePointIndex( pEdgeDisp, pEdgeData->ndxEdges[ndxTJNeighbor], ndxEnd, true );
-			
+
 			for( int j = ( ndxStart + 1 ); j < ndxEnd; j++ )
 			{
 				float blend = blendRatio * ( j - ndxStart );
-				
+
 				int ndxDst = GetEdgePointIndex( pEdgeDisp, pEdgeData->ndxEdges[ndxTJNeighbor], j, true );
-				
+
 				BlendVectorFieldData( pEdgeDisp, ndxStartPt, ndxDst, pEdgeDisp, ndxEndPt, ndxDst, blend );
 			}
 		}
@@ -1811,7 +1811,7 @@ void SewEdge_ResolveSolidTJunc( SewEdgeData_t *pEdgeData, int type, bool bStart 
 	Vector vClear( 0.0f, 0.0f, 0.0f );
 
 	for( int i = 0; i < pEdgeData->faceCount; i++ )
-	{	
+	{
 		if( pEdgeData->type[i] != type )
 			continue;
 
@@ -1839,7 +1839,7 @@ void SewEdge_ResolveSolidTJunc( SewEdgeData_t *pEdgeData, int type, bool bStart 
 				int ndxPt = GetEdgePointIndex( pDisp, pEdgeData->ndxEdges[i], j, true );
 				if( ndxPt == -1 )
 					continue;
-				
+
 				//
 				// reset displacement data (dist, field vector, and offset vector)
 				//
@@ -1867,7 +1867,7 @@ void SewEdge_ResolveSolidTJunc( SewEdgeData_t *pEdgeData, int type, bool bStart 
 					int ndxPt = GetEdgePointIndex( pDisp, pEdgeData->ndxEdges[i], j, true );
 					if( ndxPt == -1 )
 						continue;
-					
+
 					//
 					// reset displacement data (dist, field vector, and offset vector)
 					//
@@ -1886,7 +1886,7 @@ void SewEdge_ResolveSolidTJunc( SewEdgeData_t *pEdgeData, int type, bool bStart 
 					int ndxPt = GetEdgePointIndex( pDisp, pEdgeData->ndxEdges[i], j, true );
 					if( ndxPt == -1 )
 						continue;
-					
+
 					//
 					// reset displacement data (dist, field vector, and offset vector)
 					//
@@ -1916,24 +1916,24 @@ void SewEdge_ResolveDispNormal( SewEdgeData_t *pEdgeData )
 
 	CMapDisp *pEdgeDisp1 = EditDispMgr()->GetDisp( handle1 );
 	CMapDisp *pEdgeDisp2 = EditDispMgr()->GetDisp( handle2 );
-	
+
 	//
 	// sew displacement edges
 	//
-	
+
 	//
 	// find displacement with smallest/largest interval
 	//
 	CMapDisp *pSmDisp, *pLgDisp;
 	int smInterval, lgInterval;
 	int ndxSmEdge, ndxLgEdge;
-	
+
 	if( pEdgeDisp1->GetWidth() > pEdgeDisp2->GetWidth() )
 	{
 		pSmDisp = pEdgeDisp2;
 		ndxSmEdge = pEdgeData->ndxEdges[1];
 		smInterval = pEdgeDisp2->GetWidth();
-		
+
 		pLgDisp = pEdgeDisp1;
 		ndxLgEdge = pEdgeData->ndxEdges[0];
 		lgInterval = pEdgeDisp1->GetWidth();
@@ -1943,15 +1943,15 @@ void SewEdge_ResolveDispNormal( SewEdgeData_t *pEdgeData )
 		pSmDisp = pEdgeDisp1;
 		ndxSmEdge = pEdgeData->ndxEdges[0];
 		smInterval = pEdgeDisp1->GetWidth();
-		
+
 		pLgDisp = pEdgeDisp2;
 		ndxLgEdge = pEdgeData->ndxEdges[1];
 		lgInterval = pEdgeDisp2->GetWidth();
 	}
-	
+
 	// calculate the ratio
 	int ratio = ( lgInterval - 1 ) / ( smInterval - 1 );
-	
+
 	//
 	// average "like" points
 	//
@@ -1959,24 +1959,24 @@ void SewEdge_ResolveDispNormal( SewEdgeData_t *pEdgeData )
 	{
 		int ndxSmPt = GetEdgePointIndex( pSmDisp, ndxSmEdge, ndxSm, true );
 		int ndxLgPt = GetEdgePointIndex( pLgDisp, ndxLgEdge, ndxLg, false );
-		
+
 		// average
 		AverageVectorFieldData( pSmDisp, ndxSmPt, pLgDisp, ndxLgPt );
 	}
-	
+
 	//
 	// linearly interpolate the "unlike" points
 	//
 	float blendRatio = 1.0f / ratio;
-	
+
 	for( int ndxLg = 0; ndxLg < ( lgInterval - 1 ); ndxLg += ratio )
 	{
 		int ndxStart = ndxLg;
 		int ndxEnd = ( ndxLg + ratio );
-		
+
 		int ndxStartPt = GetEdgePointIndex( pLgDisp, ndxLgEdge, ndxStart, true );
 		int ndxEndPt = GetEdgePointIndex( pLgDisp, ndxLgEdge, ndxEnd, true );
-		
+
 		for( int ndx = ( ndxStart + 1 ); ndx < ndxEnd; ndx++ )
 		{
 			float blend = blendRatio * ( ndx - ndxStart );
@@ -2016,7 +2016,7 @@ void SewEdge_ResolveSolidNormal( SewEdgeData_t *pEdgeData )
 			int ndxPt = GetEdgePointIndex( pDisp, pEdgeData->ndxEdges[i], j, true );
 			if( ndxPt == -1 )
 				continue;
-			
+
 			//
 			// reset displacement data (dist, field vector, and offset vector)
 			//
@@ -2070,7 +2070,7 @@ void SewEdge_Resolve( void )
 			{
 				// reset both start and end t-junction edges if they exist
 				if( ndxTJStart != -1 )
-				{	
+				{
 					SewEdge_ResolveSolidTJunc( pEdgeData, DISPSEW_EDGE_TJSTART, false );
 				}
 
@@ -2167,7 +2167,7 @@ public:
 		static DispNodeInfo_t dummy;
 		return dummy;
 	}
-	
+
 public:
 
 	CUtlVector<unsigned short> *m_pIndices;
@@ -2186,8 +2186,8 @@ bool FindEnclosingTri( const Vector2D &vert, CUtlVector<Vector2D> &vertCoords,
 			                    vertCoords[indices[i+2]],
 			                    vert, bcCoords );
 
-		if ( bcCoords[0] >= 0 && bcCoords[0] <= 1 && 
-			 bcCoords[1] >= 0 && bcCoords[1] <= 1 && 
+		if ( bcCoords[0] >= 0 && bcCoords[0] <= 1 &&
+			 bcCoords[1] >= 0 && bcCoords[1] <= 1 &&
 			 bcCoords[2] >= 0 && bcCoords[2] <= 1 )
 		{
 			*pStartVert = i;
@@ -2230,7 +2230,7 @@ void SnapDependentVertsToSurface( CCoreDispInfo *pCoreDisp )
 			vertCoords[iHgt*pCoreDisp->GetWidth()+iWid].Init( iWid, iHgt );
 		}
 	}
-	
+
 	// Now, for each vert not touched, snap its position to the main surface.
 	for ( int iHgt = 0; iHgt < pCoreDisp->GetHeight(); ++iHgt )
 	{
@@ -2254,16 +2254,16 @@ void SnapDependentVertsToSurface( CCoreDispInfo *pCoreDisp )
 				}
 				else
 				{
-					// This shouldn't happen because it would mean that the triangulation that 
+					// This shouldn't happen because it would mean that the triangulation that
 					// disp_tesselation.h produced was missing a chunk of the space that the
-					// displacement covers. 
+					// displacement covers.
 					// It also could indicate a floating-point epsilon error.. check to see if
 					// FindEnclosingTri finds a triangle that -almost- encloses the vert.
 					Assert( false );
 				}
 			}
 		}
-	} 
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -2277,7 +2277,7 @@ void PostPlanarizeDependentVerts( void )
 	{
 		SnapDependentVertsToSurface( m_aCoreDispInfos[iDispCore] );
 	}
-		
+
 	// Clear out the displacement info list.
 	m_aCoreDispInfos.Purge();
 }
