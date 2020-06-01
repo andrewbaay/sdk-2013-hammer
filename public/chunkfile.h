@@ -101,18 +101,18 @@ class CChunkHandlerMap
 		~CChunkHandlerMap(void);
 
 		template <typename T1, typename T2>
-		FORCEINLINE auto AddHandler( const char* pszChunkName, ChunkFileResult_t (*pfnHandler)( CChunkFile*, T1* ), T2* pData ) -> std::enable_if_t<__is_base_of( T1, T2 )>
+		FORCEINLINE auto AddHandler( const char* pszChunkName, ChunkFileResult_t (*pfnHandler)( CChunkFile*, T1* ), T2 pData ) -> std::enable_if_t<std::is_convertible_v<T2, T1*>>
 		{
-			AddHandler( pszChunkName, (ChunkHandler_t)pfnHandler, (void*)dynamic_cast<T1*>( pData ) );
+			AddHandler( pszChunkName, (ChunkHandler_t)pfnHandler, (void*)static_cast<T1*>( pData ) );
 		}
 
 		void AddHandler(const char *pszChunkName, ChunkHandler_t pfnHandler, void *pData);
 		ChunkHandler_t GetHandler(const char *pszChunkName, void **pData);
 
 		template <typename T1, typename T2>
-		FORCEINLINE auto SetErrorHandler( bool (*pfnHandler)( CChunkFile*, const char*, T1* ), T2* pData ) -> std::enable_if_t<__is_base_of( T1, T2 )>
+		FORCEINLINE auto SetErrorHandler( bool (*pfnHandler)( CChunkFile*, const char*, T1* ), T2 pData ) -> std::enable_if_t<std::is_convertible_v<T2, T1*>>
 		{
-			SetErrorHandler( (ChunkErrorHandler_t)pfnHandler, (void*)dynamic_cast<T1*>( pData ) );
+			SetErrorHandler( (ChunkErrorHandler_t)pfnHandler, (void*)static_cast<T1*>( pData ) );
 		}
 
 		void SetErrorHandler(ChunkErrorHandler_t pfnHandler, void *pData);
@@ -159,9 +159,9 @@ class CChunkFile
 		// Functions for reading chunk files.
 		//
 		template <typename T1, typename T2>
-		FORCEINLINE auto ReadChunk( ChunkFileResult_t (*pfnKeyHandler)( const char*, const char*, T1* ), T2* pData ) -> std::enable_if_t<__is_base_of( T1, T2 ), ChunkFileResult_t>
+		FORCEINLINE auto ReadChunk( ChunkFileResult_t (*pfnKeyHandler)( const char*, const char*, T1* ), T2 pData ) -> std::enable_if_t<std::is_convertible_v<T2, T1*>, ChunkFileResult_t>
 		{
-			return ReadChunk( (KeyHandler_t)pfnKeyHandler, (void*)pData );
+			return ReadChunk( (KeyHandler_t)pfnKeyHandler, (void*)static_cast<T1*>( pData ) );
 		}
 
 		ChunkFileResult_t ReadChunk(KeyHandler_t pfnKeyHandler = NULL, void *pData = NULL);
@@ -189,9 +189,9 @@ class CChunkFile
 		void SetDefaultChunkHandler( DefaultChunkHandler_t pHandler, void *pData );
 
 		template <typename T1, typename T2>
-		FORCEINLINE auto SetDefaultChunkHandler( ChunkFileResult_t (*pHandler)( CChunkFile*, T1*, char const* ), T2* pData ) -> std::enable_if_t<__is_base_of( T1, T2 )>
+		FORCEINLINE auto SetDefaultChunkHandler( ChunkFileResult_t (*pHandler)( CChunkFile*, T1*, char const* ), T2 pData ) -> std::enable_if_t<std::is_convertible_v<T2, T1*>>
 		{
-			SetDefaultChunkHandler( (DefaultChunkHandler_t)pHandler, (void*)dynamic_cast<T1*>( pData ) );
+			SetDefaultChunkHandler( (DefaultChunkHandler_t)pHandler, (void*)static_cast<T1*>( pData ) );
 		}
 
 		void PushHandlers(CChunkHandlerMap *pHandlerMap);

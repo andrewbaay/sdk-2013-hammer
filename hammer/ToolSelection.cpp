@@ -491,7 +491,7 @@ void Selection3D::RenderTool3D(CRender3D *pRender)
 			CMapClass *pobj = pSelList->Element(i);
 
 			DrawObject(pobj, pRender);
-			pobj->EnumChildren(DrawObject, (CRender*)pRender);
+			pobj->EnumChildren(DrawObject, pRender);
 		}
 
 		pRender->EndLocalTransfrom();

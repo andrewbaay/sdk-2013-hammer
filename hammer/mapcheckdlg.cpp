@@ -731,7 +731,7 @@ static BOOL FindPlayer(CMapEntity *pObject, DWORD*)
 static void CheckRequirements(CListBox *pList, CMapWorld *pWorld)
 {
 	// ensure there's a player start ..
-	if (pWorld->EnumChildren(FindPlayer, (DWORD*)NULL, MAPCLASS_TYPE(CMapEntity)))
+	if (pWorld->EnumChildren(FindPlayer, nullptr, MAPCLASS_TYPE(CMapEntity)))
 	{
 		// if rvl is !0, it was not stopped prematurely.. which means there is
 		// NO player start.

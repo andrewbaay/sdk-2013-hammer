@@ -331,11 +331,11 @@ public:
 
 	virtual const char* GetDescription() { return ""; }
 
-	template <typename T1, typename T2 = CMapClass>
-	FORCEINLINE auto EnumChildren( BOOL (*pfn)( T2*, T1* ), T1* dwParam, MAPCLASSTYPE Type = NULL ) -> std::enable_if_t<__is_base_of( CMapClass, T2 ), BOOL>
+	template <typename T1, typename T2, typename T3 = CMapClass>
+	FORCEINLINE auto EnumChildren( BOOL (*pfn)( T3*, T1* ), T2 dwParam, MAPCLASSTYPE Type = NULL ) -> std::enable_if_t<std::is_base_of_v<CMapClass, T3> && std::is_convertible_v<T2, T1*>, BOOL>
 	{
-		static_assert( sizeof( unsigned int ) == sizeof( T1* ) );
-		return EnumChildren( (ENUMMAPCHILDRENPROC)pfn, reinterpret_cast<unsigned int>( dwParam ), Type );
+		static_assert( sizeof( unsigned int ) == sizeof( T2 ) );
+		return EnumChildren( (ENUMMAPCHILDRENPROC)pfn, reinterpret_cast<unsigned int>( static_cast<T1*>( dwParam ) ), Type );
 	}
 
 	template <typename T>
