@@ -15,7 +15,6 @@
 #include "ToolPickEntity.h"
 #include "AutoSelCombo.h"
 
-
 #define OUTPUT_LIST_NUM_COLUMNS		6
 
 
@@ -169,7 +168,7 @@ class COP_Output : public CObjectPage, public CFilteredComboBox::ICallbacks
 
 		//{{AFX_DATA(COP_Output)
 		enum { IDD = IDD_OBJPAGE_OUTPUT };
-		CListCtrl m_ListCtrl;
+		CListCtrlEx m_ListCtrl;
 		CAutoSelComboBox	m_ComboOutput;
 		CTargetNameComboBox m_ComboTarget;
 		CAutoSelComboBox	m_ComboInput;

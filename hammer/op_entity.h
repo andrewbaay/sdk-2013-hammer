@@ -34,8 +34,9 @@ class CParticleBrowser;
 // Owner-draw list control that uses cool colors to show
 // the state of items.
 //-----------------------------------------------------------------------------
-class CColoredListCtrl : public CListCtrl
+class CColoredListCtrl : public CListCtrlEx
 {
+	DECLARE_DYNAMIC( CColoredListCtrl )
 public:
 
 	class IItemColorCallback

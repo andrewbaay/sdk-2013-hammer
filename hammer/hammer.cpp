@@ -56,6 +56,7 @@
 #include "fmtstr.h"
 #include "KeyValues.h"
 #include "particles/particles.h"
+#include "afxvisualmanagerwindows.h"
 // #include "vgui/ILocalize.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -512,6 +513,7 @@ bool CHammer::Connect( CreateInterfaceFn factory )
 	m_pszAppName = strdup( "Hammer 2K13" );
 	SetRegistryKey( "Valve" );
 	Options.Init();
+	CMFCVisualManager::SetDefaultManager( RUNTIME_CLASS( CMFCVisualManagerWindows ) );
 	return true;
 }
 

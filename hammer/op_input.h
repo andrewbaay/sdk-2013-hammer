@@ -78,7 +78,7 @@ class COP_Input : public CObjectPage
 
 		//{{AFX_DATA(COP_Input)
 		enum { IDD = IDD_OBJPAGE_INPUT };
-		CListCtrl m_ListCtrl;
+		CListCtrlEx m_ListCtrl;
 		//}}AFX_DATA
 
 		// ClassWizard generate virtual function overrides

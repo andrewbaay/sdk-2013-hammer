@@ -127,6 +127,7 @@ static CString StripDirPrefix( const char *pFilename, const char *pPrefix )
 //-----------------------------------------------------------------------------
 // CColoredListCtrl implementation.
 //-----------------------------------------------------------------------------
+IMPLEMENT_DYNAMIC( CColoredListCtrl, CListCtrlEx )
 
 CColoredListCtrl::CColoredListCtrl( IItemColorCallback *pCallback )
 {
