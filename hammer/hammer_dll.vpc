@@ -707,4 +707,5 @@ $Project "hammer_dll"
 	}
 
 	$File	"whatsnew.txt"
+	$File	"$SRCDIR\source_types.natvis"
 }
