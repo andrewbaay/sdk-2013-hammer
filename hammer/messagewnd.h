@@ -43,10 +43,11 @@ protected:
 
 	struct MWMSGSTRUCT
 	{
-		Color color;
-		TCHAR szMsg[MESSAGE_WND_MESSAGE_LENGTH];
-		int MsgLen;	// length of message w/o 0x0
-	} ;
+		Color	color;
+		TCHAR	szMsg[MESSAGE_WND_MESSAGE_LENGTH];
+		int		MsgLen; // length of message w/o 0x0
+		uint32	repeatCount;
+	};
 
 // Attributes
 public:

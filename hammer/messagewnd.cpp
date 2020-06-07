@@ -10,6 +10,7 @@
 #include "MessageWnd.h"
 #include "mainfrm.h"
 #include "GlobalFunctions.h"
+#include "fmtstr.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -76,61 +77,45 @@ void CMessageWnd::CreateMessageWindow( CMDIFrameWnd *pwndParent, CRect &rect )
 // Emit a message to our messages array.
 // NOTE: During startup the window itself might not exist yet!
 //-----------------------------------------------------------------------------
-void CMessageWnd::AddMsg(MWMSGTYPE type, const TCHAR* msg)
+void CMessageWnd::AddMsg( MWMSGTYPE type, const TCHAR* msg )
 {
-	int iAddAt = iNumMsgs;
-
-	// Don't allow growth after MAX_MESSAGE_WND_LINES
-	if ( iNumMsgs == MAX_MESSAGE_WND_LINES )
-	{
-		MWMSGSTRUCT *p = MsgArray.GetData();
-		memcpy(p, p+1, sizeof(*p) * ( MAX_MESSAGE_WND_LINES - 1 ));
-		iAddAt = MAX_MESSAGE_WND_LINES - 1;
-	}
-	else
-	{
-		++iNumMsgs;
-	}
-
-	// format message
-	MWMSGSTRUCT mws;
-	mws.MsgLen = strlen(msg);
+	Color color;
 	switch ( type )
 	{
 	case mwError:
-		mws.color.SetColor( 255, 10, 10 );
+		color.SetColor( 255, 10, 10 );
 		break;
 	case mwStatus:
-		mws.color.SetColor( 0, 0, 0 );
+		color.SetColor( 0, 0, 0 );
 		break;
 	case mwWarning:
-		mws.color.SetColor( 255, 60, 60 );
+		color.SetColor( 255, 60, 60 );
 		break;
 	}
-	Assert(mws.MsgLen <= (sizeof(mws.szMsg) / sizeof(TCHAR)));
-	mws.MsgLen = Min<int>(mws.MsgLen, sizeof(mws.szMsg));
-	_tcsncpy(mws.szMsg, msg, mws.MsgLen);
 
-	// Add the message, growing the array as necessary
-	MsgArray.SetAtGrow(iAddAt, mws);
-
-	// Don't do stuff that requires the window to exist.
-	if ( m_hWnd == NULL )
-		return;
-
-	CalculateScrollSize();
-	Invalidate();
+	AddMsg( color, msg );
 }
 
 void CMessageWnd::AddMsg( const Color& color, const TCHAR* msg )
 {
+	int len = strlen( msg );
+	if ( iNumMsgs > 0)
+	{
+		auto& lastMsg = MsgArray[iNumMsgs - 1];
+		if ( lastMsg.MsgLen == len && !V_strnicmp( lastMsg.szMsg, msg, lastMsg.MsgLen ) )
+		{
+			++lastMsg.repeatCount;
+			return;
+		}
+	}
+
 	int iAddAt = iNumMsgs;
 
 	// Don't allow growth after MAX_MESSAGE_WND_LINES
 	if ( iNumMsgs == MAX_MESSAGE_WND_LINES )
 	{
-		MWMSGSTRUCT *p = MsgArray.GetData();
-		memcpy(p, p+1, sizeof(*p) * ( MAX_MESSAGE_WND_LINES - 1 ));
+		MWMSGSTRUCT* p = MsgArray.GetData();
+		memcpy( p, p + 1, sizeof( *p ) * ( MAX_MESSAGE_WND_LINES - 1 ) );
 		iAddAt = MAX_MESSAGE_WND_LINES - 1;
 	}
 	else
@@ -140,14 +125,15 @@ void CMessageWnd::AddMsg( const Color& color, const TCHAR* msg )
 
 	// format message
 	MWMSGSTRUCT mws;
-	mws.MsgLen = strlen(msg);
-	mws.color = color;
-	Assert(mws.MsgLen <= (sizeof(mws.szMsg) / sizeof(TCHAR)));
-	mws.MsgLen = Min<int>(mws.MsgLen, sizeof(mws.szMsg));
-	_tcsncpy(mws.szMsg, msg, mws.MsgLen);
+	mws.MsgLen = len;
+	mws.color  = color;
+	Assert( mws.MsgLen <= ( sizeof( mws.szMsg ) / sizeof( TCHAR ) ) );
+	mws.MsgLen = Min<int>( mws.MsgLen, sizeof( mws.szMsg ) );
+	mws.repeatCount = 0U;
+	_tcsncpy( mws.szMsg, msg, mws.MsgLen );
 
 	// Add the message, growing the array as necessary
-	MsgArray.SetAtGrow(iAddAt, mws);
+	MsgArray.SetAtGrow( iAddAt, mws );
 
 	// Don't do stuff that requires the window to exist.
 	if ( m_hWnd == NULL )
@@ -294,10 +280,13 @@ void CMessageWnd::OnPaint()
 			break;
 
 		// color of msg
-		dc.SetTextColor(RGB(mws.color.r(), mws.color.g(), mws.color.b()));
+		dc.SetTextColor( mws.color.GetRawColor() & 0xFFFFFF );
 
 		// draw text
 		dc.TextOut(r.left, r.top, mws.szMsg, mws.MsgLen);
+
+		if ( mws.repeatCount )
+			dc.TextOut( r.right, r.top, CFmtStr( "(x%u)", mws.repeatCount ).Get() );
 
 		// move rect down
 		r.OffsetRect(0, iMsgPtSize + 2);
