@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -43,12 +43,12 @@ public:
 			// helper functions when transforming from a map view input
 			void StartTranslation( CMapView *pView, const Vector2D &vClickPoint, bool bUseDefaultPlane = true );
 			void ProjectTranslation( CMapView *pView, const Vector2D &vPoint, Vector &vTransform, int nFlags = 0);
-			void ProjectOnTranslationPlane( const Vector &vWorld, Vector &vTransform, int nFlags = 0 );
-			void SetTransformationPlane(const Vector &vOrigin, const Vector &vHorz, const Vector &vVert, const Vector &vNormal);
+			void ProjectOnTranslationPlane( const Vector &vWorld, Vector &vTransform, int nFlags = 0, const Vector& base = vec3_origin );
+	virtual void SetTransformationPlane(const Vector &vOrigin, const Vector &vHorz, const Vector &vVert, const Vector &vNormal);
 			bool UpdateTranslation(CMapView *pView, const Vector2D &vPoint, UINT nFlags);
-	
+
 			bool IsTranslating(void) { return m_bIsTranslating; }
-	virtual bool UpdateTranslation(const Vector &vUpdate, UINT flags);	
+	virtual bool UpdateTranslation(const Vector &vUpdate, UINT flags);
 	virtual void TranslatePoint(Vector& vPos);
 	virtual void FinishTranslation(bool bSave);
 

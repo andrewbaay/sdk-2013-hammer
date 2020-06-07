@@ -298,6 +298,18 @@ public:
 		return Base::Element( i );
 	}
 
+	template <typename TMatchFunc>
+	int CountIf( TMatchFunc&& func ) const
+	{
+		int count = 0;
+		for ( const auto& i : *this )
+		{
+			if ( func( i ) )
+				++count;
+		}
+		return count;
+	}
+
 private:
 	//
 	// Disallow methods of CUtlBlockVector that can cause element addresses to change, thus

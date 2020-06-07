@@ -669,9 +669,9 @@ void CMapView3D::OnSize(UINT nType, int cx, int cy)
 //				4 - Negative Y axis.
 //				5 - Negative Z axis.
 //-----------------------------------------------------------------------------
-const Vector&ClosestAxis(const Vector& v)
+Vector ClosestAxis(const Vector& v)
 {
-    static Vector vBestAxis;
+    Vector vBestAxis;
 	float fBestDot = -1;
 	Vector vNormal = v;
 

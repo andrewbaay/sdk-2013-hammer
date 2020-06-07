@@ -1,6 +1,6 @@
 //===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //===========================================================================//
@@ -38,14 +38,17 @@ public:
 	inline bool IsBoxSelecting();
 	inline bool IsLogicalBoxSelecting();
 	void EndBoxSelection();
-	
+
 	// Start, end logical selection
 	void StartLogicalBoxSelection( CMapViewLogical *pView, const Vector &vStart );
 	void EndLogicalBoxSelection( );
 
-	// Tool3D implementation. 
+	// Tool3D implementation.
 	virtual void SetEmpty();
 	virtual bool IsEmpty();
+
+	virtual void SetTransformationPlane( const Vector& vOrigin, const Vector& vHorz, const Vector& vVert, const Vector& vNormal );
+	virtual bool UpdateTranslation( const Vector& vUpdate, UINT uConstraints );
 
 	//
 	// CBaseTool implementation.
@@ -80,7 +83,7 @@ public:
 	void UpdateSelectionBounds();
 
 	bool		m_bBoxSelection;
-	
+
 protected:
 
 	void TransformSelection();
@@ -89,15 +92,15 @@ protected:
 	void FinishTranslation(bool bSave, bool bClone );
 	void StartTranslation(CMapView *pView, const Vector2D &vPoint, const Vector &vHandleOrigin );
 	bool StartBoxSelection( CMapView *pView, const Vector2D &vPoint, const Vector &vStart);
-	
+
 	void UpdateHandleState();
 
 	virtual unsigned int GetConstraints(unsigned int nKeyFlags);
 
 	void NudgeObjects(CMapView *pView, int nChar, bool bSnap, bool bClone);
-	
+
 	GDinputvariable *ChooseEyedropperVar(CMapView *pView, CUtlVector<GDinputvariable *> &VarList);
-	
+
 	CMapEntity *FindEntityInTree(CMapClass *pObject);
 
 	void SelectInBox(CMapDoc *pDoc, bool bInsideOnly);
@@ -123,7 +126,7 @@ protected:
 	void SelectInLogicalBox(CMapDoc *pDoc, bool bInsideOnly);
 
 	CSelection	*m_pSelection;	// the documents selection opject
-	
+
 	bool m_bEyedropper;			// True if we are holding down the eyedropper hotkey.
 
 	bool m_bSelected;			// Did we select an object on left button down?
@@ -142,21 +145,42 @@ protected:
 	bool m_bIsLogicalTranslating;	// true while translation in logical view
 	bool m_bLButtonDown;
 	bool m_bLeftDragged;
+
+	enum EDITOR_SELECTEDAXIS
+	{
+		EDITORAXIS_NONE = 0,
+		EDITORAXIS_X,
+		EDITORAXIS_Y,
+		EDITORAXIS_Z,
+		EDITORAXIS_SCREEN,
+		EDITORAXIS_PLANE_XY,
+		EDITORAXIS_PLANE_XZ,
+		EDITORAXIS_PLANE_YZ,
+
+		EDITORAXIS_COUNT,
+		EDITORAXIS_FIRST = EDITORAXIS_X,
+		EDITORAXIS_FIRST_PLANE = EDITORAXIS_PLANE_XY,
+	};
+
+	bool m_bClickedGizmo;
+	EDITOR_SELECTEDAXIS m_selectedAxis;
+
+	void UpdateCurrentSelectedAxis( CMapView3D* pView, const Vector2D& vPoint );
 };
 
 
 //-----------------------------------------------------------------------------
 // Are we in box selection?
 //-----------------------------------------------------------------------------
-inline bool Selection3D::IsBoxSelecting() 
-{ 
-	return m_bBoxSelection; 
+inline bool Selection3D::IsBoxSelecting()
+{
+	return m_bBoxSelection;
 }
 
-inline bool Selection3D::IsLogicalBoxSelecting() 
-{ 
-	return m_bInLogicalBoxSelection; 
+inline bool Selection3D::IsLogicalBoxSelecting()
+{
+	return m_bInLogicalBoxSelection;
 }
 
-	
+
 #endif // SELECTION3D_H

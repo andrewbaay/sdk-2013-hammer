@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -21,7 +21,7 @@
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 Tool3D::Tool3D(void)
 {
@@ -58,7 +58,7 @@ void Tool3D::StartTranslation( CMapView *pView, const Vector2D &vClickPoint, boo
 bool Tool3D::UpdateTranslation(CMapView *pView, const Vector2D &vPoint, UINT nFlags)
 {
 	Vector vTransform;
-	ProjectTranslation( pView, vPoint, vTransform, 0 );
+	ProjectTranslation( pView, vPoint, vTransform, nFlags );
 	vTransform -= m_vTranslationStart;
 	return UpdateTranslation( vTransform, nFlags );
 }
@@ -76,8 +76,8 @@ bool Tool3D::UpdateTranslation(const Vector &vUpdate, UINT flags /* = 0 */)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : bSave - 
+// Purpose:
+// Input  : bSave -
 //-----------------------------------------------------------------------------
 void Tool3D::FinishTranslation(bool bSave)
 {
@@ -156,7 +156,7 @@ unsigned int Tool3D::GetConstraints(unsigned int nKeyFlags)
 	unsigned int uConstraints = 0;
 
 	bool bDisableSnap = (GetKeyState(VK_MENU) & 0x8000)!=0;
-	
+
 	if ( !bDisableSnap )
 	{
 		uConstraints |= constrainSnap;
@@ -170,7 +170,7 @@ unsigned int Tool3D::GetConstraints(unsigned int nKeyFlags)
 	return uConstraints;
 }
 
-void Tool3D::ProjectOnTranslationPlane( const Vector &vWorld, Vector &vTransform, int nFlags )
+void Tool3D::ProjectOnTranslationPlane( const Vector& vWorld, Vector& vTransform, int nFlags, const Vector& base )
 {
 	if ( !nFlags )
 	{
@@ -206,7 +206,7 @@ void Tool3D::ProjectOnTranslationPlane( const Vector &vWorld, Vector &vTransform
 				vOut.x = rint(vOut.x);
 				vOut.y = rint(vOut.y);
 			}
-			else 
+			else
 			{
 				// snap to user grid
 				float flGridSpacing = m_pDocument->GetGridSpacing();
@@ -215,13 +215,22 @@ void Tool3D::ProjectOnTranslationPlane( const Vector &vWorld, Vector &vTransform
 				{
 					flGridSpacing *= 0.5f;
 				}
-				
+
 				vOut.y = rint(vOut.y / flGridSpacing) * flGridSpacing;
 				vOut.x = rint(vOut.x / flGridSpacing) * flGridSpacing;
 			}
 		}
 
 		vTransform = m_vPlaneOrigin + vOut.x * m_vPlaneHorz + vOut.y * m_vPlaneVert;
+
+		if ( nFlags & constrainNotX )
+			vTransform.x = base.x;
+
+		if ( nFlags & constrainNotY )
+			vTransform.y = base.y;
+
+		if ( nFlags & constrainNotZ )
+			vTransform.z = base.z;
 	}
 }
 
@@ -252,7 +261,7 @@ void Tool3D::ProjectTranslation( CMapView *pView, const Vector2D &vPoint, Vector
 
 	Vector v0 = vStart - m_vPlaneOrigin;
 	Vector vOut;
-	
+
 	if ( !SolveLinearEquation( v0, m_vPlaneHorz, m_vPlaneVert, -vLine, vOut) )
 	{
 		vTransform.Init();
@@ -277,7 +286,7 @@ void Tool3D::ProjectTranslation( CMapView *pView, const Vector2D &vPoint, Vector
 			vOut.x = rint(vOut.x);
 			vOut.y = rint(vOut.y);
 		}
-		else 
+		else
 		{
 			// snap to user grid
 			float flGridSpacing = m_pDocument->GetGridSpacing();
@@ -291,8 +300,17 @@ void Tool3D::ProjectTranslation( CMapView *pView, const Vector2D &vPoint, Vector
 			vOut.x = rint(vOut.x / flGridSpacing) * flGridSpacing;
 		}
 	}
-	
+
 	vTransform = m_vPlaneOrigin + vOut.x * m_vPlaneHorz + vOut.y * m_vPlaneVert;
+
+	if ( nFlags & constrainNotX )
+		vTransform.x = 0;
+
+	if ( nFlags & constrainNotY )
+		vTransform.y = 0;
+
+	if ( nFlags & constrainNotZ )
+		vTransform.z = 0;
 }
 
 bool Tool3D::OnLMouseDown2D( CMapView2D *pView, UINT nFlags, const Vector2D &vPoint )
@@ -428,7 +446,7 @@ void Tool3D::RenderTranslationPlane(CRender *pRender)
 	pRender->SetDrawColor( Color(128,128,128) );
 
 	Vector viewPoint,vOffset;
-	
+
 	ProjectTranslation( pRender->GetView(), m_vMousePos, viewPoint, constrainSnap );
 
 	float fGrid = m_pDocument->GetGridSpacing();
@@ -447,6 +465,6 @@ void Tool3D::RenderTranslationPlane(CRender *pRender)
 		Vector pos = viewPoint + ( m_vPlaneVert * ( fGrid*v ) );
 		pRender->DrawLine( pos+vOffset, pos-vOffset );
 	}
-	
+
 	pRender->PopRenderMode();
 }

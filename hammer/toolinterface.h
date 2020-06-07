@@ -64,6 +64,9 @@ enum
 	constrainHalfSnap	= 0x10, // rounds to half of snap grid
 	constrainCenter		= 0x20,
 	constrainMoveAll	= 0x40, // translate all handles
+	constrainNotY		= 0x80, // only horizontal translations
+	constrainNotX		= 0x100, // only vertical translations
+	constrainNotZ		= 0x200,
 };
 
 

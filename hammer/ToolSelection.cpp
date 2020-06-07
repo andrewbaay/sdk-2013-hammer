@@ -5,7 +5,6 @@
 //===========================================================================//
 
 #include "stdafx.h"
-#include "Gizmo.h"
 #include "GlobalFunctions.h"		// FIXME: For NotifyDuplicates
 #include "History.h"
 #include "MainFrm.h"
@@ -29,6 +28,11 @@
 #include "RenderUtils.h"
 #include "tier0/icommandline.h"
 #include "Manifest.h"
+#include "KeyValues.h"
+#include "materialsystem/MaterialSystemUtil.h"
+#include "trace.h"
+#include "collisionutils.h"
+#include "cmodel.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -66,6 +70,8 @@ Selection3D::Selection3D(void)
 	m_vLDownLogicalClient.Init();
 
 	m_pSelection = NULL;
+	m_bClickedGizmo = false;
+	m_selectedAxis = EDITORAXIS_NONE;
 }
 
 
@@ -436,8 +442,6 @@ void Selection3D::RenderToolLogical( CRender2D *pRender )
 	else if ( !m_pSelection->GetLogicalBounds( vecLogicalMins, vecLogicalMaxs ) )
 		return;
 
-
-
 	Vector mins( vecLogicalMins.x, vecLogicalMins.y, 0.0f );
 	Vector maxs( vecLogicalMaxs.x, vecLogicalMaxs.y, 0.0f );
 
@@ -447,6 +451,18 @@ void Selection3D::RenderToolLogical( CRender2D *pRender )
 	pRender->DrawRectangle( mins, maxs, false, 2 );
 	pRender->PopRenderMode();
 }
+
+
+#define LIGHT_BOX_SIZE 8.0f
+#define LIGHT_BOX_VEC Vector( LIGHT_BOX_SIZE, LIGHT_BOX_SIZE, LIGHT_BOX_SIZE )
+
+#define HELPER_COLOR_MAX 0.8f
+#define HELPER_COLOR_MIN 0.1f
+#define HELPER_COLOR_LOW 0.4f
+#define SELECTED_AXIS_COLOR Vector( HELPER_COLOR_MAX, HELPER_COLOR_MAX, HELPER_COLOR_MIN )
+
+#define SELECTION_PICKER_SIZE 2.0f
+#define SELECTION_PICKER_VEC Vector( SELECTION_PICKER_SIZE, SELECTION_PICKER_SIZE, SELECTION_PICKER_SIZE )
 
 
 //-----------------------------------------------------------------------------
@@ -507,6 +523,368 @@ void Selection3D::RenderTool3D(CRender3D *pRender)
 	if ( m_b3DEditMode )
 	{
 		Box3D::RenderTool3D(pRender);
+
+		if ( IsEmpty() )
+			return;
+
+		if ( pSelList->Count() != pSelList->CountIf( []( CMapClass* pEnt ) { return pEnt->IsMapClass( MAPCLASS_TYPE( CMapEntity ) ) && ( (CMapEntity*)pEnt )->IsPointClass(); } ) )
+			return;
+
+		static CMaterialReference matHelper;
+		if ( !matHelper.IsValid() )
+		{
+			KeyValues* mat = new KeyValues( "UnlitGeneric", "$BaseTexture", "white", "$vertexcolor", "1" );
+			mat->SetString( "$nofog", "1" );
+			mat->SetString( "$translucent", "1" );
+			matHelper.Init( "__matHelper", mat );
+		}
+
+		if ( m_TranslateMode == modeMove )
+		{
+			pRender->PushRenderMode( RENDER_MODE_TEXTURED );
+
+			CMatRenderContextPtr pRenderContext( materials );
+			pRenderContext->Bind( matHelper );
+
+			const int iSubDiv = 16;
+			const float flLengthBase = 16.0f;
+			const float flLengthTip = 8.0f;
+			const float flRadiusBase = 1.2f;
+			const float flRadiusTip = 4.0f;
+			const float flAngleStep = 360.0f / iSubDiv;
+
+			const Vector directions[] = {
+				Vector( 1, 0, 0 ),
+				Vector( 0, 1, 0 ),
+				Vector( 0, 0, 1 ),
+			};
+
+			const Vector colors[] = {
+				Vector( HELPER_COLOR_MAX, HELPER_COLOR_MIN, HELPER_COLOR_MIN ),
+				Vector( HELPER_COLOR_MIN, HELPER_COLOR_MAX, HELPER_COLOR_MIN ),
+				Vector( HELPER_COLOR_MIN, HELPER_COLOR_MIN, HELPER_COLOR_MAX ),
+			};
+
+			const float flColorLowScale = HELPER_COLOR_LOW;
+
+			Vector center;
+			m_pSelection->GetBoundsCenter( center );
+			Vector mins, maxs;
+			m_pSelection->GetBounds( mins, maxs );
+			const Vector& dist = maxs - center;
+
+			for ( int iDir = 0; iDir < 3; iDir++ )
+			{
+				pRender->BeginRenderHitTarget( nullptr, 0x7FFFFFFF - ( iDir + EDITORAXIS_FIRST ) );
+
+				Vector fwd = directions[ iDir ];
+				const float flOffset = dist[iDir];
+				QAngle ang;
+
+				VectorAngles( fwd, ang );
+
+				IMesh *pMesh = pRenderContext->GetDynamicMesh();
+
+				CMeshBuilder mB;
+				mB.Begin( pMesh, MATERIAL_TRIANGLES, 5 * iSubDiv );
+
+				Vector cUp, nUp;
+				Vector pos, tmp0, tmp1, tmp2;
+
+				Vector colHigh = colors[ iDir ];
+
+				if ( m_selectedAxis == EDITORAXIS_FIRST + iDir )
+					colHigh = SELECTED_AXIS_COLOR;
+
+				Vector colLow = colHigh * flColorLowScale;
+
+				for ( int iStep = 0; iStep < iSubDiv; iStep++ )
+				{
+					QAngle angNext( ang );
+					angNext.z += flAngleStep;
+
+					AngleVectors( ang, NULL, NULL, &cUp );
+					AngleVectors( angNext, NULL, NULL, &nUp );
+
+					// disc end
+					pos = center + fwd * flOffset;
+					mB.Position3fv( pos.Base() );
+					mB.TexCoord2f( 0, 0, 0 );
+					mB.Color3fv( colLow.Base() );
+					mB.AdvanceVertex();
+
+					tmp0 = pos + cUp * flRadiusBase;
+					mB.Position3fv( tmp0.Base() );
+					mB.TexCoord2f( 0, 0, 0 );
+					mB.Color3fv( colLow.Base() );
+					mB.AdvanceVertex();
+
+					tmp1 = pos + nUp * flRadiusBase;
+					mB.Position3fv( tmp1.Base() );
+					mB.TexCoord2f( 0, 0, 0 );
+					mB.Color3fv( colLow.Base() );
+					mB.AdvanceVertex();
+
+					// base cylinder
+					mB.Position3fv( tmp1.Base() );
+					mB.TexCoord2f( 0, 0, 0 );
+					mB.Color3fv( colHigh.Base() );
+					mB.AdvanceVertex();
+
+					mB.Position3fv( tmp0.Base() );
+					mB.TexCoord2f( 0, 0, 0 );
+					mB.Color3fv( colHigh.Base() );
+					mB.AdvanceVertex();
+
+					tmp2 = tmp0 + fwd * flLengthBase;
+					mB.Position3fv( tmp2.Base() );
+					mB.TexCoord2f( 0, 0, 0 );
+					mB.Color3fv( colHigh.Base() );
+					mB.AdvanceVertex();
+
+					mB.Position3fv( tmp1.Base() );
+					mB.TexCoord2f( 0, 0, 0 );
+					mB.Color3fv( colHigh.Base() );
+					mB.AdvanceVertex();
+
+					mB.Position3fv( tmp2.Base() );
+					mB.TexCoord2f( 0, 0, 0 );
+					mB.Color3fv( colHigh.Base() );
+					mB.AdvanceVertex();
+
+					tmp1 += fwd * flLengthBase;
+					mB.Position3fv( tmp1.Base() );
+					mB.TexCoord2f( 0, 0, 0 );
+					mB.Color3fv( colHigh.Base() );
+					mB.AdvanceVertex();
+
+					// disc mid
+					pos += fwd * flLengthBase;
+					mB.Position3fv( pos.Base() );
+					mB.TexCoord2f( 0, 0, 0 );
+					mB.Color3fv( colLow.Base() );
+					mB.AdvanceVertex();
+
+					tmp0 = pos + cUp * flRadiusTip;
+					mB.Position3fv( tmp0.Base() );
+					mB.TexCoord2f( 0, 0, 0 );
+					mB.Color3fv( colLow.Base() );
+					mB.AdvanceVertex();
+
+					tmp1 = pos + nUp * flRadiusTip;
+					mB.Position3fv( tmp1.Base() );
+					mB.TexCoord2f( 0, 0, 0 );
+					mB.Color3fv( colLow.Base() );
+					mB.AdvanceVertex();
+
+					// tip
+					mB.Position3fv( tmp1.Base() );
+					mB.TexCoord2f( 0, 0, 0 );
+					mB.Color3fv( colHigh.Base() );
+					mB.AdvanceVertex();
+
+					mB.Position3fv( tmp0.Base() );
+					mB.TexCoord2f( 0, 0, 0 );
+					mB.Color3fv( colHigh.Base() );
+					mB.AdvanceVertex();
+
+					pos += fwd * flLengthTip;
+					mB.Position3fv( pos.Base() );
+					mB.TexCoord2f( 0, 0, 0 );
+					mB.Color3fv( colHigh.Base() );
+					mB.AdvanceVertex();
+
+					ang = angNext;
+				}
+
+				mB.End();
+				pMesh->Draw();
+
+				pRender->EndRenderHitTarget();
+
+				if ( m_selectedAxis == EDITORAXIS_FIRST_PLANE + iDir )
+				{
+					const int index = m_selectedAxis - EDITORAXIS_FIRST_PLANE;
+
+					const int orient[3][2] = {
+						{ 0, 1 },
+						{ 2, 0 },
+						{ 1, 2 },
+					};
+
+					int axis_0 = orient[ index ][ 0 ];
+					int axis_1 = orient[ index ][ 1 ];
+
+					Vector points[4];
+					points[0] = center;
+					points[1] = center;
+					points[2] = center;
+					points[3] = center;
+					const float flPlaneSize1 = dist[axis_0] + 12.0f;
+					const float flPlaneSize2 = dist[axis_1] + 12.0f;
+
+					points[1][axis_0] += flPlaneSize1;
+					points[2][axis_0] += flPlaneSize1;
+					points[2][axis_1] += flPlaneSize2;
+					points[3][axis_1] += flPlaneSize2;
+
+					Vector4D col( SELECTED_AXIS_COLOR, 0.25f );
+
+					pRender->BeginRenderHitTarget( nullptr, 0x7FFFFFFF - ( iDir + EDITORAXIS_FIRST_PLANE ) );
+
+					mB.Begin( pMesh, MATERIAL_QUADS, 2 );
+
+					for ( int i = 3; i >= 0; i-- )
+					{
+						mB.Position3fv( points[i].Base() );
+						mB.Color4fv( col.Base() );
+						mB.TexCoord2f( 0, 0, 0 );
+						mB.AdvanceVertex();
+					}
+
+					col.AsVector3D() *= HELPER_COLOR_LOW;
+
+					for ( int i = 0; i < 4; i++ )
+					{
+						mB.Position3fv( points[i].Base() );
+						mB.Color4fv( col.Base() );
+						mB.TexCoord2f( 0, 0, 0 );
+						mB.AdvanceVertex();
+					}
+
+					mB.End();
+					pMesh->Draw();
+
+					pRender->EndRenderHitTarget();
+				}
+			}
+
+			pRender->PopRenderMode();
+		}
+		else if ( m_TranslateMode == modeRotate )
+		{
+			pRender->PushRenderMode( RENDER_MODE_TEXTURED );
+
+			CMatRenderContextPtr pRenderContext( materials );
+			pRenderContext->Bind( matHelper );
+
+			const int iSubDiv = 64.0f;
+			const float flThickness = 4.0f;
+			const float flRotationStep = 360.0f / iSubDiv;
+
+			Vector center;
+			QAngle orientation;
+			m_pSelection->GetBoundsCenter( center );
+			MatrixAngles( m_TransformMatrix.As3x4(), orientation );
+			Vector mins, maxs;
+			m_pSelection->GetBounds( mins, maxs );
+			const Vector& dist = maxs - center;
+
+			const Vector directions[] = {
+				Vector( 1, 0, 0 ),
+				Vector( 0, 1, 0 ),
+				Vector( 0, 0, 1 ),
+			};
+
+			const Vector colors[] = {
+				Vector( HELPER_COLOR_MAX, HELPER_COLOR_MIN, HELPER_COLOR_MIN ),
+				Vector( HELPER_COLOR_MIN, HELPER_COLOR_MAX, HELPER_COLOR_MIN ),
+				Vector( HELPER_COLOR_MIN, HELPER_COLOR_MIN, HELPER_COLOR_MAX ),
+			};
+			const float flColorLowScale = HELPER_COLOR_LOW;
+
+			Vector colHigh, colLow;
+			Vector tmp[4];
+
+			Vector reinterpretRoll[3];
+
+			AngleVectors( orientation,
+				&reinterpretRoll[0], &reinterpretRoll[1], &reinterpretRoll[2] );
+
+			QAngle angCur, angNext;
+
+			const int iLookup[3][2] = {
+				{ 1, 2 },
+				{ 2, 1 },
+				{ 0, 2 },
+			};
+
+			float flRadius;
+			/*if ( m_pSelection->GetCount() > 1 || !pSelList->Element( 0 )->IsMapClass( MAPCLASS_TYPE( CMapEntity ) ) || !( (CMapEntity*)pSelList->Element( 0 ) )->IsPointClass() )
+				flRadius = 32.0f;
+			else*/
+				flRadius = Max( dist[0], Max( dist[1], dist[2] ) ) + 24.f;
+
+			for ( int iDir = 0; iDir < 3; iDir++ )
+			{
+				pRender->BeginRenderHitTarget( nullptr, 0x7FFFFFFF - ( iDir + EDITORAXIS_FIRST ) );
+
+				colHigh = colors[ iDir ];
+
+				if ( iDir == m_selectedAxis - EDITORAXIS_FIRST )
+					colHigh = SELECTED_AXIS_COLOR;
+
+				colLow = colHigh * flColorLowScale;
+
+				IMesh *pMesh = pRenderContext->GetDynamicMesh( true, NULL, NULL, matHelper );
+
+				CMeshBuilder mB;
+				mB.Begin( pMesh, MATERIAL_QUADS, 2 * iSubDiv );
+
+				VectorAngles( reinterpretRoll[ iLookup[iDir][0] ],
+					reinterpretRoll[ iLookup[iDir][1] ],
+					angCur );
+				angNext = angCur;
+
+				float flCurrentRadius = flRadius - iDir * 0.275f;
+
+				for ( int iStep = 0; iStep < iSubDiv; iStep++ )
+				{
+					angNext.z += flRotationStep;
+
+					Vector cUp, nUp, cFwd;
+
+					AngleVectors( angCur, &cFwd, NULL, &cUp );
+					AngleVectors( angNext, NULL, NULL, &nUp );
+
+					tmp[0] = center
+						+ cUp * flCurrentRadius
+						+ cFwd * flThickness;
+
+					tmp[1] = center
+						+ nUp * flCurrentRadius
+						+ cFwd * flThickness;
+
+					tmp[2] = tmp[1] - cFwd * flThickness * 2;
+					tmp[3] = tmp[0] - cFwd * flThickness * 2;
+
+					for ( int iPoint = 0; iPoint < 4; iPoint++ )
+					{
+						mB.Position3fv( tmp[ iPoint ].Base() );
+						mB.Color3fv( colHigh.Base() );
+						mB.TexCoord2f( 0, 0, 0 );
+						mB.AdvanceVertex();
+					}
+
+					for ( int iPoint = 3; iPoint >= 0; iPoint-- )
+					{
+						mB.Position3fv( tmp[ iPoint ].Base() );
+						mB.Color3fv( colLow.Base() );
+						mB.TexCoord2f( 0, 0, 0 );
+						mB.AdvanceVertex();
+					}
+
+					angCur = angNext;
+				}
+
+				mB.End();
+				pMesh->Draw();
+
+				pRender->EndRenderHitTarget();
+			}
+
+			pRender->PopRenderMode();
+		}
 	}
 }
 
@@ -919,7 +1297,7 @@ bool Selection3D::OnLMouseDown2D(CMapView2D *pView, UINT nFlags, const Vector2D 
 	else if ( IsEmpty() || !HitTest(pView,vPoint, true) )
 	{
 		// start new selection
-		m_TranslateMode = modeScale;
+		m_TranslateMode = modeMove;
 		m_bSelected = pView->SelectAt(vPoint, true, false);
 		UpdateHandleState();
 	}
@@ -1759,41 +2137,59 @@ bool Selection3D::OnLMouseDown3D(CMapView3D *pView, UINT nFlags, const Vector2D 
 		return true;
 	}
 
+	const auto& checkGizmo = [this, pView, vPoint]
+	{
+		HitInfo_t HitData;
+		V_memset( &HitData, 0, sizeof( HitInfo_t ) );
+
+		pView->ObjectsAt( vPoint, &HitData, 1 );
+
+		unsigned i = 0x7FFFFFFF - HitData.uData;
+		if ( !HitData.pObject && i <= EDITORAXIS_COUNT )
+		{
+			m_bClickedGizmo = true;
+			return true;
+		}
+		return false;
+	};
+
 	if (nFlags & MK_CONTROL)
 	{
 		m_bSelected = pView->SelectAt(vPoint, false, false);;
 		UpdateHandleState();
 	}
-	else if ( m_b3DEditMode && HitTest(pView,vPoint, true) )
+	else if ( !checkGizmo() )
 	{
-		// if clicked on handles, never change selection
-		if ( !IsBoxSelecting() && m_LastHitTestHandle == vec3_origin )
+		if ( m_b3DEditMode && HitTest( pView, vPoint, true ) )
 		{
-			//  clicked somewhere on our selection tool but maybe something else is inbetween
-
-			HitInfo_t HitData;
-			V_memset( &HitData, 0, sizeof( HitInfo_t ) );
-
-			m_bDrawAsSolidBox = true;
-
-			pView->ObjectsAt( vPoint, &HitData, 1 );
-
-			if ( HitData.pObject && !HitData.pObject->IsSelected() )
+			// if clicked on handles, never change selection
+			if ( !IsBoxSelecting() && m_LastHitTestHandle == vec3_origin )
 			{
-				m_bSelected = pView->SelectAt(vPoint, true, false);
-				UpdateHandleState();
+				//  clicked somewhere on our selection tool but maybe something else is inbetween
+				HitInfo_t HitData;
+				V_memset( &HitData, 0, sizeof( HitInfo_t ) );
+
+				m_bDrawAsSolidBox = true;
+
+				pView->ObjectsAt( vPoint, &HitData, 1 );
+
+				if ( HitData.pObject && !HitData.pObject->IsSelected() )
+				{
+					m_bSelected = pView->SelectAt( vPoint, true, false );
+					UpdateHandleState();
+				}
+
+				m_bDrawAsSolidBox = false;
+
+				pView->SetCursor( UpdateCursor( pView, m_LastHitTestHandle, m_TranslateMode ) );
 			}
-
-			m_bDrawAsSolidBox = false;
-
-			pView->SetCursor( UpdateCursor( pView, m_LastHitTestHandle, m_TranslateMode ) );
 		}
-	}
-	else
-	{
-		m_TranslateMode = modeScale;
-		m_bSelected = pView->SelectAt(vPoint, true, false);
-		UpdateHandleState();
+		else
+		{
+			m_TranslateMode = modeMove;
+			m_bSelected = pView->SelectAt( vPoint, true, false );
+			UpdateHandleState();
+		}
 	}
 
 	if ( m_bSelected && !m_b3DEditMode )
@@ -1836,7 +2232,7 @@ bool Selection3D::OnLMouseUp3D(CMapView3D *pView, UINT nFlags, const Vector2D &v
 			FinishTranslation( true, bShift );
 		}
 	}
-	else if ( m_b3DEditMode && !m_bSelected && !m_pSelection->IsEmpty() )
+	else if ( m_b3DEditMode && !m_bSelected && !m_pSelection->IsEmpty() && !m_bClickedGizmo )
 	{
 		if ( IsEditable && HitTest(pView, vPoint, false) )
 		{
@@ -1848,6 +2244,7 @@ bool Selection3D::OnLMouseUp3D(CMapView3D *pView, UINT nFlags, const Vector2D &v
 		}
 	}
 
+	m_bClickedGizmo = false;
 	pView->EndPick();
 
 	// we might have removed some stuff that was relevant:
@@ -1856,13 +2253,236 @@ bool Selection3D::OnLMouseUp3D(CMapView3D *pView, UINT nFlags, const Vector2D &v
 	return true;
 }
 
+void Selection3D::UpdateCurrentSelectedAxis( CMapView3D* pView, const Vector2D& vPoint )
+{
+	if ( IsEmpty() || ( m_TranslateMode != modeMove && m_TranslateMode != modeRotate ) )
+	{
+		m_selectedAxis = EDITORAXIS_NONE;
+		return;
+	}
+
+	Vector origin, end;
+	pView->BuildRay( vPoint, origin, end );
+	Vector picker = end - origin;
+
+	Vector center;
+	m_pSelection->GetBoundsCenter( center );
+	QAngle orientation;
+	MatrixAngles( m_TransformMatrix.As3x4(), orientation );
+
+	Ray_t pickerRay;
+	pickerRay.Init( origin, origin + picker * MAX_TRACE_LENGTH );
+
+	Vector mins, maxs;
+	m_pSelection->GetBounds( mins, maxs );
+	const Vector& dist = maxs - center;
+
+	EDITOR_SELECTEDAXIS idealAxis = EDITORAXIS_SCREEN;
+	switch ( m_TranslateMode )
+	{
+	case modeMove:
+	{
+		const float flBoxThick = 4.0f;
+
+		const Vector boxes[3][2] = {
+			{ Vector( dist.x, -flBoxThick, -flBoxThick ), Vector( dist.x + 24.0f, flBoxThick, flBoxThick ) },
+			{ Vector( -flBoxThick, dist.y, -flBoxThick ), Vector( flBoxThick, dist.y + 24.0f, flBoxThick ) },
+			{ Vector( -flBoxThick, -flBoxThick, dist.z ), Vector( flBoxThick, flBoxThick, dist.z + 24.0f ) },
+		};
+
+		float flLastFrac = MAX_TRACE_LENGTH;
+
+		for ( int i = 0; i < 3; i++ )
+		{
+			CBaseTrace trace;
+			if ( IntersectRayWithBox( pickerRay, center + boxes[i][0], center + boxes[i][1], 0.5f, &trace ) )
+			{
+				if ( trace.fraction > flLastFrac )
+					continue;
+
+				flLastFrac = trace.fraction;
+				idealAxis = (EDITOR_SELECTEDAXIS)(EDITORAXIS_FIRST + i);
+			}
+		}
+
+		if ( idealAxis == EDITORAXIS_SCREEN )
+		{
+			const Vector vPlaneSize = dist + Vector( 12.0f );
+
+			const Vector planes[3][2] = {
+				{ Vector( 0, 0, -1 ), Vector( vPlaneSize.x, vPlaneSize.y, 1 ) },
+				{ Vector( 0, -1, 0 ), Vector( vPlaneSize.x, 1, vPlaneSize.z ) },
+				{ Vector( -1, 0, 0 ), Vector( 1, vPlaneSize.y, vPlaneSize.z ) },
+			};
+
+			for ( int i = 0; i < 3; i++ )
+			{
+				CBaseTrace trace;
+				if ( IntersectRayWithBox( pickerRay, center + planes[i][0], center + planes[i][1], 0.5f, &trace ) )
+				{
+					if ( trace.fraction > flLastFrac )
+						continue;
+
+					flLastFrac = trace.fraction;
+					idealAxis = (EDITOR_SELECTEDAXIS)(EDITORAXIS_FIRST_PLANE + i);
+				}
+			}
+		}
+	}
+	break;
+	case modeRotate:
+	{
+		const int iSubDiv = 32.0f;
+		const float flRadius = Max( dist[0], Max( dist[1], dist[2] ) ) + 24.0f;
+		const float flMaxDist = 4.0f * 4.0f;
+		const float flRotationStep = 360.0f / iSubDiv;
+
+		float flBestViewDist = MAX_TRACE_LENGTH;
+
+		Vector reinterpretRoll[3];
+
+		AngleVectors( orientation, &reinterpretRoll[0], &reinterpretRoll[1], &reinterpretRoll[2] );
+
+		QAngle angCur, angNext;
+		const int iLookup[3][2] = {
+			{ 1, 2 },
+			{ 2, 1 },
+			{ 0, 2 },
+		};
+
+		for ( int iDir = 0; iDir < 3; iDir++ )
+		{
+			float flBestDist = MAX_TRACE_LENGTH;
+
+			VectorAngles( reinterpretRoll[iLookup[iDir][0]], reinterpretRoll[iLookup[iDir][1]], angCur );
+			angNext = angCur;
+
+			for ( int iStep = 0; iStep < iSubDiv; iStep++ )
+			{
+				angNext.z += flRotationStep;
+
+				Vector cUp, nUp;
+
+				AngleVectors( angCur, NULL, NULL, &cUp );
+				AngleVectors( angNext, NULL, NULL, &nUp );
+
+				Ray_t ringRay;
+				ringRay.Init( center + cUp * flRadius, center + nUp * flRadius );
+
+				float t = 0, s = 0;
+				IntersectRayWithRay( pickerRay, ringRay, t, s );
+
+				Vector a = pickerRay.m_Start + pickerRay.m_Delta.Normalized() * t;
+				Vector b = ringRay.m_Start + ringRay.m_Delta.Normalized() * s;
+
+				float flDist = ( a - b ).LengthSqr();
+				float flStepLengthSqr = ringRay.m_Delta.LengthSqr();
+
+				if ( flDist < flBestDist && flDist < flMaxDist && s * s < flStepLengthSqr && t > 0 && t < ( flBestViewDist - 7 ) )
+				{
+					flBestDist = flDist;
+					flBestViewDist = t;
+
+					idealAxis = (EDITOR_SELECTEDAXIS)(EDITORAXIS_FIRST + iDir);
+				}
+
+				angCur = angNext;
+			}
+		}
+	}
+	break;
+	}
+
+	m_selectedAxis = idealAxis;
+}
+
+void Selection3D::SetTransformationPlane( const Vector& vOrigin, const Vector& vHorz, const Vector& vVert, const Vector& vNormal )
+{
+	if ( m_bClickedGizmo )
+	{
+		Vector horz, vert, norm;
+
+		if ( m_TranslateMode == modeMove )
+		{
+			switch ( m_selectedAxis )
+			{
+			case EDITORAXIS_X:
+				horz.Init( 1, 0, 0 );
+				vert.Init( 0, 0, 1 );
+				norm.Init( 0, -1, 0 );
+				break;
+			case EDITORAXIS_Y:
+				horz.Init( 0, 0, 1 );
+				vert.Init( 0, 1, 0 );
+				norm.Init( -1, 0, 0 );
+				break;
+			case EDITORAXIS_Z:
+				horz.Init( 1, 0, 0 );
+				vert.Init( 0, 0, 1 );
+				norm.Init( 0, -1, 0 );
+				break;
+			case EDITORAXIS_PLANE_XY:
+				horz.Init( -1, 0, 0 );
+				vert.Init( 0, 1, 0 );
+				norm.Init( 0, 0, -1 );
+				break;
+			case EDITORAXIS_PLANE_XZ:
+				horz.Init( 1, 0, 0 );
+				vert.Init( 0, 0, 1 );
+				norm.Init( 0, -1, 0 );
+				break;
+			case EDITORAXIS_PLANE_YZ:
+				horz.Init( 0, 0, 1 );
+				vert.Init( 0, 1, 0 );
+				norm.Init( -1, 0, 0 );
+				break;
+			default:
+				break;
+			}
+		}
+		else if ( m_TranslateMode == modeRotate )
+		{
+			switch ( m_selectedAxis )
+			{
+			case Selection3D::EDITORAXIS_X:
+				horz.Init( 0, 1, 0 );
+				vert.Init( -1, 0, 0 );
+				norm.Init( 0, 0, -1 );
+				break;
+			case Selection3D::EDITORAXIS_Y:
+				horz.Init( -1, 0, 0 );
+				vert.Init( 0, 0, 1 );
+				norm.Init( 0, -1, 0 );
+				break;
+			case Selection3D::EDITORAXIS_Z:
+				horz.Init( 0, -1, 0 );
+				vert.Init( 0, 0, 1 );
+				norm.Init( 1, 0, 0 );
+				break;
+			default:
+				break;
+			}
+		}
+
+		return Tool3D::SetTransformationPlane( vOrigin, horz, vert, norm );
+	}
+	Tool3D::SetTransformationPlane( vOrigin, vHorz, vVert, vNormal );
+}
+
+bool Selection3D::UpdateTranslation( const Vector& vUpdate, UINT uConstraints )
+{
+	if ( m_TranslateMode != modeRotate || !m_bClickedGizmo )
+		return Box3D::UpdateTranslation( vUpdate, uConstraints );
+
+	return Box3D::UpdateTranslation( vUpdate, uConstraints );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Handles mouse move events in the 3D view.
 // Input  : Per CWnd::OnMouseMove.
 // Output : Returns true if the message was handled, false if not.
 //-----------------------------------------------------------------------------
-bool Selection3D::OnMouseMove3D(CMapView3D *pView, UINT nFlags, const Vector2D &vPoint)
+bool Selection3D::OnMouseMove3D( CMapView3D* pView, UINT nFlags, const Vector2D& vPoint )
 {
 	Tool3D::OnMouseMove3D(pView, nFlags, vPoint);
 
@@ -1870,10 +2490,71 @@ bool Selection3D::OnMouseMove3D(CMapView3D *pView, UINT nFlags, const Vector2D &
 
 	vgui::HCursor hCursor = vgui::dc_arrow;
 
+	if ( !m_bClickedGizmo )
+		UpdateCurrentSelectedAxis( pView, vPoint );
+
 	if ( m_bEyedropper )
 	{
 		SetEyedropperCursor();
 	}
+	else if ( m_bClickedGizmo )
+	{
+		if ( !IsTranslating() && m_b3DEditMode && m_bMouseDragged[MOUSE_LEFT] )
+		{
+			HitInfo_t HitData;
+			V_memset( &HitData, 0, sizeof( HitInfo_t ) );
+
+			pView->ObjectsAt( vPoint, &HitData, 1 );
+
+			unsigned i = 0x7FFFFFFF - HitData.uData;
+			if ( IsEditable && !HitData.pObject && i <= EDITORAXIS_COUNT )
+			{
+				// we selected a handle - start translation the selection
+				StartTranslation( pView, vPoint, vec3_origin );
+
+				hCursor = UpdateCursor( pView, vec3_origin, m_TranslateMode );
+			}
+			goto done;
+		}
+
+		unsigned int uConstraints = GetConstraints(nFlags);
+
+		if ( m_TranslateMode == modeMove )
+		{
+			switch ( m_selectedAxis )
+			{
+			case EDITORAXIS_X:
+				uConstraints |= constrainNotY | constrainNotZ;
+				break;
+			case EDITORAXIS_Y:
+				uConstraints |= constrainNotX | constrainNotZ;
+				break;
+			case EDITORAXIS_Z:
+				uConstraints |= constrainNotX | constrainNotY;
+				break;
+			case EDITORAXIS_PLANE_XY:
+				uConstraints |= constrainNotZ;
+				break;
+			case EDITORAXIS_PLANE_XZ:
+				uConstraints |= constrainNotY;
+				break;
+			case EDITORAXIS_PLANE_YZ:
+				uConstraints |= constrainNotX;
+				break;
+			default:
+				break;
+			}
+		}
+
+		//
+		// If they are dragging with a valid handle, update the views.
+		//
+
+		Tool3D::UpdateTranslation( pView, vPoint, uConstraints );
+
+		hCursor = vgui::dc_none;
+	}
+
 	//
 	// If we are currently dragging the selection (moving, scaling, rotating, or shearing)
 	// update that operation based on the current cursor position and keyboard state.
@@ -1914,6 +2595,7 @@ bool Selection3D::OnMouseMove3D(CMapView3D *pView, UINT nFlags, const Vector2D &
 		}
 	}
 
+done:
 	if ( hCursor != vgui::dc_none )
 		pView->SetCursor( hCursor );
 
