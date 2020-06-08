@@ -286,7 +286,7 @@ void CMessageWnd::OnPaint()
 		dc.TextOut(r.left, r.top, mws.szMsg, mws.MsgLen);
 
 		if ( mws.repeatCount )
-			dc.TextOut( r.right, r.top, CFmtStr( "(x%u)", mws.repeatCount ).Get() );
+			dc.TextOut( r.right, r.top, CFmtStr( "(x%u)", mws.repeatCount + 1U ).Get() );
 
 		// move rect down
 		r.OffsetRect(0, iMsgPtSize + 2);
