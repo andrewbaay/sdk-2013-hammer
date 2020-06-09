@@ -99,9 +99,9 @@ void CMessageWnd::AddMsg( MWMSGTYPE type, const TCHAR* msg )
 void CMessageWnd::AddMsg( const Color& color, const TCHAR* msg )
 {
 	int len = strlen( msg );
-	if ( iNumMsgs > 0)
+	if ( MsgArray.GetCount() > 0 )
 	{
-		auto& lastMsg = MsgArray[iNumMsgs - 1];
+		auto& lastMsg = MsgArray[MsgArray.GetCount() - 1];
 		if ( lastMsg.MsgLen == len && !V_strnicmp( lastMsg.szMsg, msg, lastMsg.MsgLen ) )
 		{
 			++lastMsg.repeatCount;
