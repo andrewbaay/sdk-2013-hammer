@@ -1402,7 +1402,7 @@ bool CMaterial::Initialize( HWND hwnd )
 	g_materialSystemConfig.SetFlag(	MATSYS_VIDCFG_FLAGS_STENCIL, true );
 	g_materialSystemConfig.SetFlag(	MATSYS_VIDCFG_FLAGS_USING_MULTIPLE_WINDOWS, true );
 
-	materials->SetMaterialProxyFactory( GetHammerMaterialProxyFactory() );
+	//materials->SetMaterialProxyFactory( GetHammerMaterialProxyFactory() );
 
 	return materials->SetMode( hwnd, g_materialSystemConfig );
 }
