@@ -1717,14 +1717,12 @@ void CMapFace::DrawFace( Color &pColor, EditorRenderMode_t mode )
 	}
 #endif
 
-
 	// don't draw no draws in ray tracced mode
 	if ( mode == RENDER_MODE_LIGHT_PREVIEW_RAYTRACED )
 	{
 		if ( m_nFaceFlags & FACE_FLAGS_NODRAW_IN_LPREVIEW )
 			return;
 	}
-
 
 	MaterialPrimitiveType_t type = (mode == RENDER_MODE_WIREFRAME) ?
 		MATERIAL_LINE_LOOP : MATERIAL_POLYGON;
@@ -1734,37 +1732,37 @@ void CMapFace::DrawFace( Color &pColor, EditorRenderMode_t mode )
 	IMesh *pMesh = pRenderContext->GetDynamicMesh();
 	meshBuilder.Begin( pMesh, type, nPoints );
 
-    for (int nPoint = 0; nPoint < nPoints; nPoint++)
-    {
-		if (ModeUsesTextureCoords(mode))
+	for (int nPoint = 0; nPoint < nPoints; nPoint++)
+	{
+		if ( ModeUsesTextureCoords( mode ) )
 		{
-			meshBuilder.TexCoord2f( 0, m_pTextureCoords[nPoint][0], m_pTextureCoords[nPoint][1] );
-			meshBuilder.TexCoord2f( 1, m_pLightmapCoords[nPoint][0], m_pLightmapCoords[nPoint][1]);
+			meshBuilder.TexCoord2fv( 0, m_pTextureCoords[nPoint].Base() );
+			meshBuilder.TexCoord2fv( 1, m_pLightmapCoords[nPoint].Base() );
 		}
 
-		meshBuilder.Color4ubv( (byte*)&pColor );
+		meshBuilder.Color4ubv( &pColor[0] );
 
-        // transform into absolute space
-        if ( hasParent )
-        {
-            Vector point;
-            VectorTransform( Points[nPoint], frame.As3x4(), point );
-            meshBuilder.Position3f(point[0], point[1], point[2]);
-        }
-        else
-        {
-            meshBuilder.Position3f(Points[nPoint][0], Points[nPoint][1], Points[nPoint][2]);
-        }
+		// transform into absolute space
+		if ( hasParent )
+		{
+			Vector point;
+			VectorTransform( Points[nPoint], frame.As3x4(), point );
+			meshBuilder.Position3fv( point.Base() );
+		}
+		else
+		{
+			meshBuilder.Position3fv( Points[nPoint].Base() );
+		}
 
 		// FIXME: no smoothing group information
-		meshBuilder.Normal3fv(plane.normal.Base());
+		meshBuilder.Normal3fv( plane.normal.Base() );
 		meshBuilder.TangentS3fv( m_pTangentAxes[nPoint].tangent.Base() );
 		meshBuilder.TangentT3fv( m_pTangentAxes[nPoint].binormal.Base() );
 
 		meshBuilder.AdvanceVertex();
-    }
+	}
 
-    meshBuilder.End();
+	meshBuilder.End();
 	pMesh->Draw();
 }
 
