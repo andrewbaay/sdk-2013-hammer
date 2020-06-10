@@ -190,21 +190,33 @@ void CColoredListCtrl::DrawItem( LPDRAWITEMSTRUCT p )
 
 class CMyEdit : public CEdit
 {
-	public:
-		void SetParentPage(COP_Entity* pPage)
-		{
-			m_pParent = pPage;
-		}
+public:
+	void SetParentPage(COP_Entity* pPage)
+	{
+		m_pParent = pPage;
+	}
 
-		afx_msg void OnChar(UINT, UINT, UINT);
+	~CMyEdit()
+	{
+		if ( m_BkgndClr )
+			DeleteObject( m_BkgndClr );
+	}
 
-		COP_Entity *m_pParent;
-		DECLARE_MESSAGE_MAP()
+	afx_msg void OnChar( UINT, UINT, UINT );
+	afx_msg HBRUSH CtlColor( CDC* pDC, UINT nCtlColor );
+
+	COP_Entity* m_pParent;
+	bool        m_bColor;
+	bool        m_bColor255;
+	HBRUSH      m_BkgndClr = nullptr;
+	COLORREF    m_lastColor = 0;
+	DECLARE_MESSAGE_MAP()
 };
 
 
 BEGIN_MESSAGE_MAP(CMyEdit, CEdit)
 	ON_WM_CHAR()
+	ON_WM_CTLCOLOR_REFLECT()
 END_MESSAGE_MAP()
 
 
@@ -2153,6 +2165,8 @@ void COP_Entity::CreateSmartControls_BasicEditControl( GDinputvariable *pVar, CR
 	//
 	CMyEdit *pEdit = new CMyEdit;
 	pEdit->SetParentPage(this);
+	pEdit->m_bColor = pVar->GetType() == ivColor1 || pVar->GetType() == ivColor255;
+	pEdit->m_bColor255 = pVar->GetType() == ivColor255;
 	ctrlrect.bottom += 2;
 	pEdit->CreateEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_TABSTOP | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL,
 		ctrlrect.left, ctrlrect.top, ctrlrect.Width(), ctrlrect.Height(), GetSafeHwnd(), HMENU(IDC_SMARTCONTROL));
@@ -4626,6 +4640,46 @@ void CMyEdit::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 	}
 }
 
+HBRUSH CMyEdit::CtlColor( CDC* pDC, UINT nCtlColor )
+{
+	if ( !m_bColor || nCtlColor != CTLCOLOR_EDIT )
+		return nullptr;
+
+	char buf[128] = { 0 };
+	GetLine( 0, buf, 128 );
+	if ( *buf )
+	{
+		int r = 0, g = 0, b = 0;
+		if ( m_bColor255 )
+			sscanf( buf, "%d %d %d", &r, &g, &b );
+		else
+		{
+			float fr = 0, fg = 0, fb = 0;
+			sscanf( buf, "%f %f %f", &fr, &fg, &fb );
+			r = (int)( fr * 255.0f );
+			g = (int)( fg * 255.0f );
+			b = (int)( fb * 255.0f );
+		}
+
+		auto col = RGB( r, g, b );
+
+		if ( col != m_lastColor && nCtlColor == CTLCOLOR_EDIT )
+		{
+			if ( m_BkgndClr )
+				DeleteObject( m_BkgndClr );
+			m_lastColor = col;
+			m_BkgndClr  = CreateSolidBrush( col );
+		}
+
+		pDC->SetBkColor( col );
+		const bool black = ( r * 299 + g * 587 + b * 144 ) / 1000 > 125;
+		pDC->SetTextColor( black ? 0 : 0xFFFFFF );
+
+		return m_BkgndClr;
+	}
+
+	return nullptr;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -4911,13 +4965,19 @@ bool COP_Entity::CustomDrawItemValue( const LPDRAWITEMSTRUCT p, const RECT *pRec
 				b = (int)(fb * 255.0);
 			}
 
-			HBRUSH hBrush = CreateSolidBrush( RGB( r, g, b ) );
-			HPEN hPen = CreatePen( PS_SOLID, 0, RGB(0,0,0) );
-			SelectObject( p->hDC, hBrush );
-			SelectObject( p->hDC, hPen );
+			CDC* pDC = CDC::FromHandle( p->hDC );
 
-			RECT rc = *pRect;
-			Rectangle( p->hDC, rc.left+6, rc.top+2, rc.right-6, rc.bottom-2 );
+			pDC->SelectObject( GetStockObject( DC_BRUSH ) );
+			pDC->SelectObject( GetStockObject( DC_PEN ) );
+			pDC->SetDCBrushColor( RGB( r, g, b ) );
+			pDC->SetDCPenColor( RGB( r, g, b ) );
+
+			pDC->Rectangle( pRect->left + 1, pRect->top - 1, pRect->right, pRect->bottom - 1 );
+
+			const bool black = ( r * 299 + g * 587 + b * 144 ) / 1000 > 125;
+			pDC->SetTextColor( black ? 0 : 0xFFFFFF );
+
+			pDC->TextOutA( pRect->left + 3, pRect->top, pValue );
 
 			return true;
 		}
