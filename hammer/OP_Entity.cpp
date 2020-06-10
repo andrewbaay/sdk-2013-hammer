@@ -209,7 +209,7 @@ public:
 	bool        m_bColor;
 	bool        m_bColor255;
 	HBRUSH      m_BkgndClr = nullptr;
-	COLORREF    m_lastColor = 0;
+	COLORREF    m_lastColor = 0xFFFFFFFFUL;
 	DECLARE_MESSAGE_MAP()
 };
 
@@ -4663,7 +4663,7 @@ HBRUSH CMyEdit::CtlColor( CDC* pDC, UINT nCtlColor )
 
 		auto col = RGB( r, g, b );
 
-		if ( col != m_lastColor && nCtlColor == CTLCOLOR_EDIT )
+		if ( col != m_lastColor )
 		{
 			if ( m_BkgndClr )
 				DeleteObject( m_BkgndClr );
