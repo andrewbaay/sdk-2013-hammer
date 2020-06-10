@@ -1,6 +1,6 @@
 //===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //===========================================================================//
@@ -138,7 +138,7 @@ void CSpriteCache::AddRef(CSpriteModel *pSprite)
 			m_Cache[i].nRefCount++;
 			return;
 		}
-	}	
+	}
 }
 
 
@@ -181,14 +181,14 @@ void CSpriteCache::Release(CSpriteModel *pSprite)
 
 			break;
 		}
-	}	
+	}
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor.
 //-----------------------------------------------------------------------------
-CSpriteModel::CSpriteModel(void) : 
+CSpriteModel::CSpriteModel(void) :
 	m_pMaterial(0), m_NumFrames(-1), m_fScale(1.0), m_Origin(0,0,0), m_UL(0,0), m_LR(0,0), m_TexUL(0,1), m_TexLR(1,0), m_bInvert(false)
 {
 	m_Normal = Vector( 0, 0, 1 );
@@ -219,14 +219,14 @@ void CSpriteModel::SetRenderMode( const int mode )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pEntity - 
-//			type - 
-//			forward - 
-//			right - 
-//			up - 
+// Purpose:
+// Input  : pEntity -
+//			type -
+//			forward -
+//			right -
+//			up -
 //-----------------------------------------------------------------------------
-void CSpriteModel::GetSpriteAxes(QAngle& Angles, int type, Vector& forward, Vector& right, Vector& up, Vector& ViewUp, Vector& ViewRight, Vector& ViewForward)
+void CSpriteModel::GetSpriteAxes( const QAngle& Angles, int type, Vector& forward, Vector& right, Vector& up, const Vector& ViewUp, const Vector& ViewRight, const Vector& ViewForward )
 {
 	int				i;
 	float			dot, angle, sr, cr;
@@ -286,7 +286,7 @@ void CSpriteModel::GetSpriteAxes(QAngle& Angles, int type, Vector& forward, Vect
 			}
 			break;
 		}
-	
+
 		case SPR_VP_PARALLEL_UPRIGHT:
 		{
 			// generate the sprite's axes, with vup straight up in worldspace, and
@@ -299,11 +299,11 @@ void CSpriteModel::GetSpriteAxes(QAngle& Angles, int type, Vector& forward, Vect
 									//  r_spritedesc.vup is 0, 0, 1
 			if ((dot > 0.999848) || (dot < -0.999848))	// cos(1 degree) = 0.999848
 				return;
-			
+
 			up[0] = 0;
 			up[1] = 0;
 			up[2] = 1;
-			
+
 			right[0] = ViewForward[1];
 			right[1] = -ViewForward[0];
 			right[2] = 0;
@@ -314,7 +314,7 @@ void CSpriteModel::GetSpriteAxes(QAngle& Angles, int type, Vector& forward, Vect
 			forward[2] = 0;
 			break;
 		}
-	
+
 		case SPR_ORIENTED:
 		{
 			// generate the sprite's axes, according to the sprite's world orientation
@@ -427,15 +427,14 @@ void CSpriteModel::DrawSprite3D( CRender3D *pRender, unsigned char color[3]  )
 
 	VectorMA( m_Origin, ul.x, spritex, corner );
 	VectorMA( corner, lr.y, spritey, corner );
-	spritex *= (lr.x - ul.x);
-	spritey *= (ul.y - lr.y);
+	spritex *= lr.x - ul.x;
+	spritey *= ul.y - lr.y;
 
 	Vector2D texul, texlr;
 	texul.x = m_TexUL.x;
 	texul.y = m_bInvert ? m_TexLR.y : m_TexUL.y;
 	texlr.x = m_TexLR.x;
 	texlr.y = m_bInvert ? m_TexUL.y : m_TexLR.y;
-
 
 	CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
 	pRender->BindTexture( m_pMaterial );
@@ -444,30 +443,30 @@ void CSpriteModel::DrawSprite3D( CRender3D *pRender, unsigned char color[3]  )
 	CMeshBuilder meshBuilder;
 	meshBuilder.Begin( pMesh, m_MaterialPrimitiveType, 4 );
 
-	meshBuilder.Position3fv(corner.Base());
-	meshBuilder.TexCoord2f(0, texul.x, texul.y);
-	meshBuilder.Color3ub( color[0], color[1], color[2] );
+	meshBuilder.Position3fv( corner.Base() );
+	meshBuilder.TexCoord2fv( 0, texul.Base() );
+	meshBuilder.Color3ubv( color );
 	meshBuilder.Normal3fv( m_Normal.Base() );
 	meshBuilder.AdvanceVertex();
 
 	corner += spritey;
-	meshBuilder.Position3fv(corner.Base());
-	meshBuilder.TexCoord2f(0, texul.x, texlr.y);
-	meshBuilder.Color3ub( color[0], color[1], color[2] );
+	meshBuilder.Position3fv( corner.Base() );
+	meshBuilder.TexCoord2f( 0, texul.x, texlr.y );
+	meshBuilder.Color3ubv( color );
 	meshBuilder.Normal3fv( m_Normal.Base() );
 	meshBuilder.AdvanceVertex();
 
 	corner += spritex;
-	meshBuilder.Position3fv(corner.Base());
-	meshBuilder.TexCoord2f(0, texlr.x, texlr.y);
-	meshBuilder.Color3ub( color[0], color[1], color[2] );
+	meshBuilder.Position3fv( corner.Base() );
+	meshBuilder.TexCoord2fv( 0, texlr.Base() );
+	meshBuilder.Color3ubv( color );
 	meshBuilder.Normal3fv( m_Normal.Base() );
 	meshBuilder.AdvanceVertex();
 
 	corner -= spritey;
-	meshBuilder.Position3fv(corner.Base());
-	meshBuilder.TexCoord2f(0, texlr.x, texul.y);
-	meshBuilder.Color3ub( color[0], color[1], color[2] );
+	meshBuilder.Position3fv( corner.Base() );
+	meshBuilder.TexCoord2f( 0, texlr.x, texul.y );
+	meshBuilder.Color3ubv( color );
 	meshBuilder.Normal3fv( m_Normal.Base() );
 	meshBuilder.AdvanceVertex();
 
@@ -493,7 +492,7 @@ CSpriteDataCache* LookupSpriteDataCache( const char *pSpritePath )
 	char filename[MAX_PATH];
 	V_strncpy( filename, pSpritePath, sizeof( filename ) );
 	V_FixSlashes( filename );
-	
+
 	CSpriteDataCache *pData;
 	int i = g_SpriteDataCache.Find( filename );
 	if ( i == g_SpriteDataCache.InvalidIndex() )
@@ -508,25 +507,25 @@ CSpriteDataCache* LookupSpriteDataCache( const char *pSpritePath )
 			bool bFound;
 			pData->m_Width = pData->m_pMaterial->GetWidth();
 			pData->m_Height = pData->m_pMaterial->GetHeight();
-			pData->m_pFrameVar = pData->m_pMaterial->GetMaterial()->FindVar( "$spriteFrame", &bFound );
+			pData->m_pFrameVar = pData->m_pMaterial->GetMaterial()->FindVar( "$spriteFrame", &bFound, false );
 			if ( !bFound )
 			{
 				pData->m_pFrameVar = NULL;
 			}
-			pData->m_pRenderModeVar = pData->m_pMaterial->GetMaterial()->FindVar( "$spriterendermode", &bFound );
+			pData->m_pRenderModeVar = pData->m_pMaterial->GetMaterial()->FindVar( "$spriterendermode", &bFound, false );
 			if ( !bFound )
 			{
 				pData->m_pRenderModeVar = NULL;
 			}
 			pData->m_pOrientationVar = pData->m_pMaterial->GetMaterial()->FindVar( "$spriteOrientation", &pData->m_bOrientationVarFound, false );
-			pData->m_pOriginVar = pData->m_pMaterial->GetMaterial()->FindVar( "$spriteorigin", &pData->m_bOriginVarFound );
+			pData->m_pOriginVar = pData->m_pMaterial->GetMaterial()->FindVar( "$spriteorigin", &pData->m_bOriginVarFound, false );
 		}
 	}
 	else
 	{
 		pData = g_SpriteDataCache[i];
 	}
-	
+
 	return pData;
 }
 
@@ -535,14 +534,14 @@ CSpriteDataCache* LookupSpriteDataCache( const char *pSpritePath )
 
 //-----------------------------------------------------------------------------
 // Purpose: Loads a sprite material.
-// Input  : pszSpritePath - 
+// Input  : pszSpritePath -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 
 bool CSpriteModel::LoadSprite(const char *pszSpritePath)
 {
 	CSpriteDataCache *pCache = LookupSpriteDataCache( pszSpritePath );
-	
+
 	m_pMaterial = pCache->m_pMaterial;
 	if( m_pMaterial && m_pMaterial->GetMaterial() )
 	{
@@ -583,7 +582,7 @@ bool CSpriteModel::LoadSprite(const char *pszSpritePath)
 		m_LR.y = origin[1] - m_Height;
 		m_UL.x = origin[0];
 		m_LR.x = m_Width + origin[0];
-	
+
 		return true;
 	}
 	else

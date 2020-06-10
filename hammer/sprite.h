@@ -1,6 +1,6 @@
 //===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
-// Purpose: 
+// Purpose:
 //
 // $Workfile:     $
 // $Date:         $
@@ -22,8 +22,8 @@ class CRender3D;
 // must match definition in modelgen.h
 enum synctype_t
 {
-	ST_SYNC=0, 
-	ST_RAND 
+	ST_SYNC=0,
+	ST_RAND
 };
 
 #define SPR_VP_PARALLEL_UPRIGHT		0
@@ -48,7 +48,7 @@ public:
 
 	CSpriteModel(void);
 	~CSpriteModel(void);
-		
+
 	bool LoadSprite(const char *pszSpritePath);
 
 	int GetFrameCount(void);
@@ -71,7 +71,7 @@ public:
 	void DrawSprite3D( CRender3D *pRender, unsigned char color[3] );
 
 protected:
-	void GetSpriteAxes(QAngle& Angles, int type, Vector& forward, Vector& right, Vector& up, Vector& ViewUp, Vector& ViewRight, Vector& ViewForward);
+	void GetSpriteAxes( const QAngle& Angles, int type, Vector& forward, Vector& right, Vector& up, const Vector& ViewUp, const Vector& ViewRight, const Vector& ViewForward );
 
 	Vector			m_Origin;
 	Vector          m_Normal;								// for lpreview, etc
