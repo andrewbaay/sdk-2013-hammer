@@ -1534,7 +1534,7 @@ void CRender::SetRenderMode(EditorRenderMode_t eRenderMode, bool bForce)
 		)
 		pRenderContext->SetIntRenderingParameter(INT_RENDERPARM_ENABLE_FIXED_LIGHTING,2);
 
-	m_pMesh = pRenderContext->GetDynamicMesh( true, NULL, NULL, m_pCurrentMaterial );
+	m_pMesh = pRenderContext->GetDynamicMesh();
 
 	Assert( m_pMesh );
 
