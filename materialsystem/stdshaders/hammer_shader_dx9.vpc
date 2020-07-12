@@ -50,6 +50,16 @@ $Project "Shaders (Hammer)"
 {
 	$Folder	"Source Files"
 	{
+		$Folder "ShaderLib"
+		{
+			$File "BaseShader.cpp"
+			$File "ShaderDLL.cpp"
+			$File "ShaderlibCvar.cpp"
+			$File "IShaderSystem.h"
+			$File "ShaderDLL_Global.h"
+			$File "ShaderlibCvar.h"
+		}
+
 		$File	"screenspace_special.cpp"
 		$File	"sprite_dx9.cpp"
 		$File	"shader_dll_verify.cpp"
