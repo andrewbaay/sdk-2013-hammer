@@ -23,6 +23,7 @@
 #include "bitmap/imageformat.h" // hack : don't want to include this just for ImageFormat
 #include "FileSystem.h"
 #include "tier1/strtools.h"
+#include "tier1/fmtstr.h"
 #include "tier0/dbg.h"
 #include "TextureSystem.h"
 #include "materialproxyfactory_wc.h"
@@ -1363,10 +1364,17 @@ public:
 
 	// Methods related to reading in shader DLLs
 	virtual bool		LoadShaderDLL( const char *pFullPath ) = 0;
-	virtual void		UnloadShaderDLL( const char *pFullPath ) = 0;
+	virtual void		UnloadShaderDLL( const char* pFullPath ) = 0;
 
 	// ...
 };
+
+abstract_class ILoadShader
+{
+public:
+	virtual void LoadShaderDll( const char* fullDllPath ) = 0;
+};
+
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -1374,8 +1382,43 @@ public:
 //-----------------------------------------------------------------------------
 bool CMaterial::Initialize( HWND hwnd )
 {
-	g_pFullFileSystem->AddSearchPath( "hammer", "GAME" );
-	dynamic_cast<IShaderSystemInternal*>( static_cast<IShaderSystem*>( materials->QueryInterface( "ShaderSystem002" ) ) )->LoadShaderDLL( "hammer/bin/hammer_shader_dx9.dll" );
+	{
+		auto shaderSystem = dynamic_cast<IShaderSystemInternal*>( static_cast<IShaderSystem*>( materials->QueryInterface( "ShaderSystem002" ) ) );
+		char szGameDir[_MAX_PATH], szBaseDir[_MAX_PATH];
+		APP()->GetDirectory( DIR_MOD, szGameDir );
+
+		V_strcat_safe( szGameDir, "\\bin" );
+		V_FixSlashes( szGameDir );
+		V_FixDoubleSlashes( szGameDir );
+		V_strcpy_safe( szBaseDir, szGameDir );
+		V_strcat_safe( szGameDir, "\\*.dll" );
+
+		FileFindHandle_t find = 0;
+
+		CSysModule* module = nullptr;
+		ILoadShader* load = nullptr;
+		Sys_LoadInterface( "hammer/bin/hammer_shader_dx9.dll", "ILoadShaderDll001", &module, reinterpret_cast<void**>( &load ) );
+
+		for ( const char* name = g_pFullFileSystem->FindFirstEx( szGameDir, nullptr, &find ); name; name = g_pFullFileSystem->FindNext( find ) )
+		{
+			if ( !V_stristr( name, "shader" ) )
+				continue;
+
+			CFmtStrN<MAX_PATH> path( "%s\\%s", szBaseDir, name );
+
+			if ( Sys_LoadModule( path, SYS_NOLOAD ) )
+				continue;
+
+			load->LoadShaderDll( path );
+		}
+
+		g_pFullFileSystem->FindClose( find );
+
+		g_pFullFileSystem->AddSearchPath( "hammer", "GAME" );
+		shaderSystem->LoadShaderDLL( "hammer/bin/hammer_shader_dx9.dll" );
+
+		Sys_UnloadModule( module ); // decrement ref
+	}
 
 	// NOTE: This gets set to true later upon creating a 3d view.
 	g_materialSystemConfig = materials->GetCurrentConfigForVideoCard();
@@ -1404,7 +1447,11 @@ bool CMaterial::Initialize( HWND hwnd )
 
 	//materials->SetMaterialProxyFactory( GetHammerMaterialProxyFactory() );
 
-	return materials->SetMode( hwnd, g_materialSystemConfig );
+	bool res = materials->SetMode( hwnd, g_materialSystemConfig );
+
+	materials->ReloadMaterials();
+
+	return res;
 }
 
 

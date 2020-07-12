@@ -71,6 +71,5 @@ $Project "Shaders (Hammer)"
 	$Folder "Link Libraries"
 	{
 		$Lib	mathlib
-		$Lib	shaderlib
 	}
 }
