@@ -21,7 +21,7 @@ class BoundBox
 
 		BoundBox(void);
 		BoundBox(const Vector &mins, const Vector &maxs);
-		
+
 		void ResetBounds(void);
 		inline void SetBounds(const Vector &mins, const Vector &maxs);
 
@@ -31,7 +31,7 @@ class BoundBox
 		void GetBoundsCenter(Vector& ptdest);
 		inline void GetBounds(Vector& Mins, Vector& Maxs) const;
 
-		virtual bool IsIntersectingBox(const Vector& pfMins, const Vector& pfMaxs) const;
+		bool IsIntersectingBox(const Vector& pfMins, const Vector& pfMaxs) const;
 		bool IsInsideBox(const Vector& pfMins, const Vector& pfMaxs) const;
 		bool ContainsPoint(const Vector& pt) const;
 		bool IsValidBox(void) const;
@@ -41,7 +41,7 @@ class BoundBox
 
 		Vector bmins;
 		Vector bmaxs;
-}; 
+};
 
 
 //-----------------------------------------------------------------------------

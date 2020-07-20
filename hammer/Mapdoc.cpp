@@ -2691,10 +2691,10 @@ CMapWorld *CMapDoc::Cordon_AddTempObjectsToWorld( CMapObjectList &CordonList )
 {
 	CMapWorld *pCordonWorld = Cordon_CreateWorld();
 
-	const CMapObjectList *pChildren = pCordonWorld->GetChildren();
-	FOR_EACH_OBJ( *pChildren, pos )
+	CMapObjectList pChildren;
+	pChildren = *pCordonWorld->GetChildren(); // copy
+	for ( CMapClass* pChild : pChildren )
 	{
-		CMapClass *pChild = (CUtlReference< CMapClass >)pChildren->Element(pos);
 		pChild->SetTemporary(TRUE);
 		m_pWorld->AddObjectToWorld(pChild);
 
@@ -10062,13 +10062,15 @@ CMapWorld *CMapDoc::Cordon_CreateWorld()
     CUtlVector<CMapSolid *> innerSolids;
 	for ( int i = 0; i < m_Cordons.Count(); i++ )
 	{
-		if ( !m_Cordons[i].m_bActive )
+		auto& cordon = m_Cordons[i];
+		if ( !cordon.m_bActive )
 			continue;
 
-		for ( int j = 0; j < m_Cordons[i].m_Boxes.Count(); j++ )
+		for ( int j = 0; j < cordon.m_Boxes.Count(); j++ )
 		{
 			CMapSolid *pSolid = new CMapSolid;
-			box.SetFromBox( &m_Cordons[i].m_Boxes[j] );
+			pSolid->SetCordonBrush( true );
+			box.SetFromBox( &cordon.m_Boxes[j] );
 		    box.CreateMapSolid( pSolid, Options.GetTextureAlignment() );
 
 			innerSolids.AddToTail( pSolid );
@@ -10218,10 +10220,10 @@ bool CMapDoc::SaveVMF(const char *pszFileName, int saveFlags )
 				//
 				pCordonWorld = Cordon_CreateWorld();
 
-				const CMapObjectList *pChildren = pCordonWorld->GetChildren();
-				FOR_EACH_OBJ( *pChildren, pos )
+				CMapObjectList pChildren;
+				pChildren = *pCordonWorld->GetChildren(); // do copy
+				for ( CMapClass* pChild : pChildren )
 				{
-					CMapClass *pChild = pChildren->Element(pos);
 					pChild->SetTemporary(TRUE);
 					m_pWorld->AddObjectToWorld(pChild);
 					CordonList.AddToTail(pChild);
@@ -10275,11 +10277,10 @@ bool CMapDoc::SaveVMF(const char *pszFileName, int saveFlags )
 				{
 					CMapClass *pobj = CordonList.Element(pos);
 					m_pWorld->RemoveObjectFromWorld(pobj, true);
+
+					delete (CMapSolid*)pobj; // delete here, since it is now orphaned
 				}
 
-				//
-				// The cordon objects will be deleted in the cordon world's destructor.
-				//
 				delete pCordonWorld;
 			}
 

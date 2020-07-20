@@ -232,7 +232,7 @@ public:
 
 	int Find( T* src ) const
 	{
-		return FindMatch( [&src]( const CUtlReference<T> & ref ) -> bool { return ref.GetObject() == src; } );
+		return FindMatch( [src]( const CUtlReference<T> & ref ) -> bool { return ref.GetObject() == src; } );
 	}
 
 	void FastRemove( int elem )
