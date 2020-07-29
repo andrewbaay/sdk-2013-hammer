@@ -17,7 +17,7 @@
 #include "utlntree.h"
 #include <istudiorender.h>
 
-static LPCTSTR pszIniSection = "Model Browser";
+static constexpr LPCTSTR pszIniSection = "Model Browser";
 
 // CModelBrowser dialog
 

@@ -1451,12 +1451,6 @@ void CRender3D::EndRenderFrame(void)
 		}
 		MaterialSystemInterface()->SwapBuffers();
 
-		if ( (m_eCurrentRenderMode == RENDER_MODE_LIGHT_PREVIEW_RAYTRACED) && g_pLPreviewOutputBitmap )
-		{
-			// remember that we blitted it
-			m_pView->m_nLastRaytracedBitmapRenderTimeStamp = GetUpdateCounter( EVTYPE_BITMAP_RECEIVED_FROM_LPREVIEW );
-		}
-
 		if (g_bShowStatistics)
 		{
 			//
@@ -1664,13 +1658,6 @@ void CRender3D::Render(void)
 		 ( new_vp != m_LastLPreviewCameraPos ) ||
 		 (pCamera->GetZoom() != m_fLastLPreviewZoom ) )
 		view_changed = true;
-
-	if ( (m_eCurrentRenderMode == RENDER_MODE_LIGHT_PREVIEW_RAYTRACED) &&
-		 g_pLPreviewOutputBitmap &&
-		 (! view_changed ) )
-	{
-		m_pView->m_nLastRaytracedBitmapRenderTimeStamp = GetUpdateCounter( EVTYPE_BITMAP_RECEIVED_FROM_LPREVIEW );
-	}
 
 	StartRenderFrame();
 

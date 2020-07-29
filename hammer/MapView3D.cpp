@@ -125,8 +125,6 @@ CMapView3D::CMapView3D(void)
 	m_ptLastMouseMovement.x = 0;
 	m_ptLastMouseMovement.y = 0;
 
-	m_nLastRaytracedBitmapRenderTimeStamp = -1;
-
 	m_bCameraPosChanged = false;
 	m_bClippingChanged = false;
 }

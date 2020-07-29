@@ -14,7 +14,7 @@
 #include "texturesystem.h"
 #include "HammerVGui.h"
 
-static LPCTSTR pszIniSection = "Particle Browser";
+static constexpr LPCTSTR pszIniSection = "Particle Browser";
 
 // CParticleBrowser dialog
 

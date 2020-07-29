@@ -22,7 +22,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
 
-static LPCTSTR pszIniSection = "Texture Browser";
+static constexpr LPCTSTR pszIniSection = "Texture Browser";
 
 
 CStringArray CTextureBrowser::m_FilterHistory;

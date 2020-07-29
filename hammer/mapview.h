@@ -105,8 +105,6 @@ public:
 	unsigned int	m_dwTimeLastRender;
 	CCamera			*m_pCamera;			// Defines the camera position and settings for this view.
 	CToolManager	*m_pToolManager;	// tool manager for this view
-	int				m_nRenderedFrames;
-	int m_nLastRaytracedBitmapRenderTimeStamp;
 
 };
 

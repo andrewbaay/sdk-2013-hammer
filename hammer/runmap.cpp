@@ -12,7 +12,7 @@
 #include <tier0/memdbgon.h>
 
 
-static LPCTSTR pszSection = "Run Map";
+static constexpr LPCTSTR pszSection = "Run Map";
 
 
 CRunMap::CRunMap(CWnd* pParent /*=NULL*/)
@@ -76,13 +76,13 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CRunMap message handlers
 
-void CRunMap::OnExpert() 
+void CRunMap::OnExpert()
 {
 	m_bSwitchMode = TRUE;
 	EndDialog(IDOK);
 }
 
-BOOL CRunMap::OnInitDialog() 
+BOOL CRunMap::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	return TRUE;
