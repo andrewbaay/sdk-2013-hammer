@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -63,9 +63,9 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 	afx_msg void OnCancel();
+	afx_msg void OnOK();
 
 	static CStringArray m_FilterHistory;
-	static int m_nFilterHistory;
 	static char m_szLastKeywords[MAX_PATH];	// The text in the keywords combo when the user last exited the browser.
 
 	CComboBox m_cSizeList;

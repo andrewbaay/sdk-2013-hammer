@@ -738,6 +738,11 @@ BOOL CHammer::WriteProfileStringA( LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTS
 	return true;
 }
 
+KeyValues* CHammer::GetProfileKeyValues( LPCTSTR lpszSection )
+{
+	return m_pConfig->FindKey( lpszSection, true );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose:
 // Input  : *pszURL -

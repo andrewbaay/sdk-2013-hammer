@@ -22,6 +22,9 @@
 #include "tier1/utldict.h"
 #include "FaceEditSheet.h"
 
+#include "tier1/KeyValues.h"
+#include "tier1/fmtstr.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
 
@@ -240,6 +243,15 @@ bool CTextureSystem::Initialize(HWND hwnd)
 //-----------------------------------------------------------------------------
 void CTextureSystem::ShutDown(void)
 {
+	if ( m_pActiveContext )
+	{
+		KeyValuesAD history( "Texture History" );
+		CNumStr n;
+		for ( int i = 0; i < m_pActiveContext->MRU.Count(); i++ )
+			history->SetString( ( n.SetInt32( i ), n.String() ), m_pActiveContext->MRU[i]->GetFileName() );
+		*APP()->GetProfileKeyValues( "Texture Browser" )->FindKey( "Texture History", true ) = *history;
+	}
+
 	CMaterial::ShutDown();
 	FreeAllTextures();
 }
@@ -434,6 +446,15 @@ void CTextureSystem::SetActiveConfig(CGameConfig *pConfig)
 	{
 		m_pActiveContext = pContext;
 		m_pActiveGroup = m_pActiveContext->pAllGroup;
+
+		if ( auto history = APP()->GetProfileKeyValues( "Texture Browser" )->FindKey( "Texture History" ); m_pActiveContext && history )
+		{
+			CUtlVector<const char*> names;
+			FOR_EACH_SUBKEY( history, i )
+				names.AddToTail( i->GetString() );
+			for ( int i = names.Count() - 1; i >= 0; i-- )
+				AddMRU( FindActiveTexture( names[i] ) );
+		}
 	}
 	else
 	{
@@ -1097,7 +1118,7 @@ IEditorTexture* CTextureGroup::FindTextureByName( const char *pName, int *piInde
 	{
 		return NULL;
 	}
-    
+
     return m_Textures[ m_TextureNameMap[iMapEntry] ];
 }
 

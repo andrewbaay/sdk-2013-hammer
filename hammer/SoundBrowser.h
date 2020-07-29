@@ -93,7 +93,6 @@ private:
 	int m_nVolume;
 
 	static CStringArray m_FilterHistory;
-	static int m_nFilterHistory;
 };
 
 //{{AFX_INSERT_LOCATION}}

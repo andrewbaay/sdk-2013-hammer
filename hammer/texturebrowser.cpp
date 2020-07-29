@@ -19,6 +19,9 @@
 #include "hammer.h"
 #include "Selection.h"
 
+#include "tier1/KeyValues.h"
+#include "tier1/fmtstr.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
 
@@ -26,7 +29,6 @@ static constexpr LPCTSTR pszIniSection = "Texture Browser";
 
 
 CStringArray CTextureBrowser::m_FilterHistory;
-int CTextureBrowser::m_nFilterHistory;
 char CTextureBrowser::m_szLastKeywords[MAX_PATH];
 
 
@@ -159,6 +161,13 @@ void CTextureBrowser::OnCancel()
 	CDialog::OnCancel();
 }
 
+void CTextureBrowser::OnOK()
+{
+	WriteSettings();
+	SaveAndExit();
+	CDialog::OnOK();
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -250,10 +259,20 @@ BOOL CTextureBrowser::OnInitDialog()
 	// Show everything initially
 	m_cTextureWindow.SetTypeFilter( ~0, true );
 
+	if ( auto values = APP()->GetProfileKeyValues( pszIniSection )->FindKey( "Filter History" ) )
+	{
+		m_FilterHistory.RemoveAll();
+		FOR_EACH_SUBKEY( values, i )
+			m_FilterHistory.Add( i->GetString() );
+	}
+
+	CWinApp *pApp = AfxGetApp();
+	V_strcpy_safe( m_szLastKeywords, pApp->GetProfileString( pszIniSection, "Keywords", "" ) );
+
 	//
 	// Add latest history to the filter combo.
 	//
-	for (int i = 0; i < m_nFilterHistory; i++)
+	for (int i = 0; i < m_FilterHistory.GetSize(); i++)
 	{
 		m_cFilter.AddString(m_FilterHistory[i]);
 	}
@@ -284,7 +303,7 @@ BOOL CTextureBrowser::OnInitDialog()
 	// Add the global list of keywords to the keywords combo.
 	for( int i=0; i< g_Textures.GetNumKeywords(); i++ )
 	{
-		m_cKeywords.AddString( g_Textures.GetKeyword(i) );
+		m_cKeywords.AddString( g_Textures.GetKeyword( i ) );
 	}
 
 	//
@@ -301,7 +320,6 @@ BOOL CTextureBrowser::OnInitDialog()
 		SetUsed(TRUE);
 	}
 
-	CWinApp *pApp = AfxGetApp();
 	CString str = pApp->GetProfileString(pszIniSection, "Position");
 	if (!str.IsEmpty())
 	{
@@ -484,22 +502,29 @@ void CTextureBrowser::SaveAndExit()
 	m_cFilter.GetWindowText(str);
 
 	int i;
-	for(i = 0; i < m_nFilterHistory; i++)
+	for(i = 0; i < m_FilterHistory.GetSize(); i++)
 	{
 		if(!m_FilterHistory[i].CompareNoCase(str))
 			break;
 	}
 
-	if(i != m_nFilterHistory)	// delete first
+	if(i != m_FilterHistory.GetSize())	// delete first
 	{
 		m_FilterHistory.RemoveAt(i);
-		--m_nFilterHistory;
 	}
 
 	m_FilterHistory.InsertAt(0, str);
-	++m_nFilterHistory;
 
 	m_cKeywords.GetWindowText(m_szLastKeywords, sizeof(m_szLastKeywords));
+
+	KeyValuesAD values( "Filter History" );
+
+	CNumStr n;
+	for ( int i = 0; i < m_FilterHistory.GetSize(); i++ )
+		values->SetString( ( n.SetInt32( i ), n.String() ), m_FilterHistory[i] );
+
+	*APP()->GetProfileKeyValues( pszIniSection )->FindKey( "Filter History", true ) = *values;
+	AfxGetApp()->WriteProfileString( pszIniSection, "Keywords", m_szLastKeywords );
 
 	EndDialog(IDOK);
 }

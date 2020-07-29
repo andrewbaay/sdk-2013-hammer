@@ -126,6 +126,8 @@ public:
 	BOOL WriteProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nValue) override;
 	BOOL WriteProfileStringA(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszValue) override;
 
+	KeyValues* GetProfileKeyValues( LPCSTR section );
+
 	void OnActivateApp(bool bActive);
 	bool IsActiveApp();
 

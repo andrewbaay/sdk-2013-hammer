@@ -9,12 +9,14 @@
 #include "SoundBrowser.h"
 #include "mmsystem.h"
 
+#include "tier1/KeyValues.h"
+#include "tier1/fmtstr.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
 
 static constexpr LPCTSTR s_pszSection = "SoundBrowser";
 CStringArray CSoundBrowser::m_FilterHistory;
-int CSoundBrowser::m_nFilterHistory;
 
 /////////////////////////////////////////////////////////////////////////////
 // CSoundBrowser dialog
@@ -35,6 +37,13 @@ CSoundBrowser::CSoundBrowser( const char *pCurrentSoundName, CWnd* pParent /*=NU
 	m_nVolume = AfxGetApp()->GetProfileInt(s_pszSection, "Sound Volume", 100);
 	Q_strncpy(m_szFilter, (LPCSTR)(AfxGetApp()->GetProfileString(s_pszSection, "Sound Filter", "")), 256 );
 	m_nSelectedSoundIndex = -1;
+
+	auto values = APP()->GetProfileKeyValues( s_pszSection )->FindKey( "Filter History" );
+	if ( !values )
+		return;
+	m_FilterHistory.RemoveAll();
+	FOR_EACH_SUBKEY( values, i )
+		m_FilterHistory.Add( i->GetString() );
 }
 
 void CSoundBrowser::SaveValues()
@@ -91,7 +100,7 @@ BOOL CSoundBrowser::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	m_cFilter.SubclassDlgItem(IDC_SOUND_FILTER, this);
-	for ( int i = 0; i < m_nFilterHistory; ++i )
+	for ( int i = 0; i < m_FilterHistory.GetSize(); ++i )
 	{
 		m_cFilter.AddString( m_FilterHistory[i] );
 	}
@@ -135,23 +144,29 @@ void CSoundBrowser::Shutdown()
 
 	// save current filter string
 	int i;
-	for (i = 0; i < m_nFilterHistory; i++)
+	for (i = 0; i < m_FilterHistory.GetSize(); i++)
 	{
 		if (!m_FilterHistory[i].CompareNoCase(m_szFilter))
 			break;
 	}
 
-	if(i != m_nFilterHistory)	// delete first
+	if(i != m_FilterHistory.GetSize())	// delete first
 	{
 		m_FilterHistory.RemoveAt(i);
-		--m_nFilterHistory;
 	}
 
 	if ( m_szFilter[0] )
 	{
 		m_FilterHistory.InsertAt(0, m_szFilter);
-		++m_nFilterHistory;
 	}
+
+	KeyValuesAD values( "Filter History" );
+
+	CNumStr n;
+	for ( int i = 0; i < m_FilterHistory.GetSize(); i++ )
+		values->SetString( ( n.SetInt32( i ), n.String() ), m_FilterHistory[i] );
+
+	*APP()->GetProfileKeyValues( s_pszSection )->FindKey( "Filter History", true ) = *values;
 }
 
 
