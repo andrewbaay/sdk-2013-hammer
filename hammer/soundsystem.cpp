@@ -15,18 +15,60 @@
 #include "ScenePreviewDlg.h"
 #include "soundchars.h"
 
+#include "fmod/fmod.hpp"
+#include "fmod/fmod_errors.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
 
+#pragma comment(lib, "fmod_vc.lib")
 
 // FIXME: Put gamesounds parsing into shared code somewhere
 #define MANIFEST_FILE			"scripts/game_sounds_manifest.txt"
 #define SOUNDGENDER_MACRO		"$gender"
 #define SOUNDGENDER_MACRO_LENGTH 7		// Length of above including $
 
+static void* F_CALL FmodAlloc( unsigned int size, FMOD_MEMORY_TYPE, const char* )
+{
+	return MemAlloc_AllocAligned( size, 16 );
+}
 
-// Sounds we're playing are loaded into here for Windows to access while playing them.
-CUtlVector<char> g_SoundPlayData;
+static void* F_CALL FmodRealloc( void* ptr, unsigned int size, FMOD_MEMORY_TYPE, const char* )
+{
+	return MemAlloc_ReallocAligned( ptr, size, 16 );
+}
+
+static void F_CALL FmodFree( void* ptr, FMOD_MEMORY_TYPE, const char* )
+{
+	MemAlloc_FreeAligned( ptr );
+}
+
+static FMOD_RESULT F_CALL FmodOpen( const char* name, unsigned int* filesize, void** handle, void* )
+{
+	*handle = g_pFullFileSystem->Open( name, "rb" );
+	if ( !*handle )
+		return FMOD_ERR_FILE_NOTFOUND;
+	*filesize = g_pFullFileSystem->Size( *handle );
+	return FMOD_OK;
+}
+
+static FMOD_RESULT F_CALL FmodClose( void* handle, void* )
+{
+	g_pFullFileSystem->Close( handle );
+	return FMOD_OK;
+}
+
+static FMOD_RESULT F_CALL FmodRead( void* handle, void* buffer, unsigned int sizebytes, unsigned int* bytesread, void* )
+{
+	*bytesread = g_pFullFileSystem->Read( buffer, sizebytes, handle );
+	return *bytesread < sizebytes ? FMOD_ERR_FILE_EOF : FMOD_OK;
+}
+
+static FMOD_RESULT F_CALL FmodSeek( void* handle, unsigned int pos, void* )
+{
+	g_pFullFileSystem->Seek( handle, pos, FILESYSTEM_SEEK_HEAD );
+	return g_pFullFileSystem->IsOk( handle ) ? FMOD_OK : FMOD_ERR_FILE_COULDNOTSEEK;
+}
 
 
 //-----------------------------------------------------------------------------
@@ -40,6 +82,10 @@ CSoundSystem g_Sounds;
 //-----------------------------------------------------------------------------
 CSoundSystem::CSoundSystem()
 {
+	m_pSystem = nullptr;
+	m_pLastSound = nullptr;
+	m_pLastChannel = nullptr;
+	m_flVolume = 1.0f;
 }
 
 CSoundSystem::~CSoundSystem()
@@ -62,6 +108,22 @@ bool CSoundSystem::Initialize( )
 			return false;
 	}
 
+	if ( FMOD::Memory_Initialize( nullptr, 0, FmodAlloc, FmodRealloc, FmodFree ) != FMOD_OK )
+		return false;
+
+	if ( FMOD::System_Create( &m_pSystem ) != FMOD_OK )
+		return false;
+
+	if ( m_pSystem->setFileSystem( FmodOpen, FmodClose, FmodRead, FmodSeek, nullptr, nullptr, -1 ) != FMOD_OK )
+		return false;
+
+	if ( m_pSystem->init( 2, FMOD_INIT_NORMAL, nullptr ) != FMOD_OK )
+		return false;
+
+	constexpr FMOD_REVERB_PROPERTIES prop FMOD_PRESET_OFF;
+	if ( m_pSystem->setReverbProperties( 0, &prop ) != FMOD_OK )
+		return false;
+
 	return true;
 }
 
@@ -71,6 +133,13 @@ void CSoundSystem::ShutDown(void)
 	{
 		CleanupSoundList( (SoundType_t)i );
 	}
+
+	if ( !m_pSystem )
+		return;
+	StopSound();
+	m_pSystem->close();
+	m_pSystem->release();
+	m_pSystem = nullptr;
 }
 
 
@@ -116,7 +185,7 @@ CSoundSystem::StringCache_t *CSoundSystem::CreateStringCache( CSoundSystem::Stri
 	StringCache_t *pCache = new StringCache_t;
 	pCache->m_nTailIndex = 0;
 	pCache->m_pNext = pPrevious;
-	return pCache; 
+	return pCache;
 }
 
 void CSoundSystem::DestroyStringCache( CSoundSystem::StringCache_t *pCache )
@@ -155,7 +224,7 @@ char *CSoundSystem::AddStringToCache( SoundType_t type, const char *pString )
 	return pDest;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 // Adds a sound to a sound list
 //-----------------------------------------------------------------------------
@@ -165,8 +234,8 @@ void CSoundSystem::AddSoundToList( SoundType_t type, const char *pSoundName, con
 	int i = m_SoundList[type].m_Sounds.AddToTail();
 	SoundInfo_t &info = m_SoundList[type].m_Sounds[i];
 
-	info.m_pSoundName = AddStringToCache( type, pSoundName ); 
-	
+	info.m_pSoundName = AddStringToCache( type, pSoundName );
+
 	if ( type == SOUND_TYPE_RAW )
 	{
 		info.m_pSoundFile = info.m_pSoundName;
@@ -174,7 +243,7 @@ void CSoundSystem::AddSoundToList( SoundType_t type, const char *pSoundName, con
 	}
 	else
 	{
-		info.m_pSoundFile = AddStringToCache( type, pActualFile ); 
+		info.m_pSoundFile = AddStringToCache( type, pActualFile );
 		info.m_pSourceFile = pSourceFile;
 	}
 }
@@ -201,13 +270,13 @@ void CSoundSystem::BuildFileListInDirectory( char const* pDirectoryName, const c
 		// Strip off the 'sound/' part of the sound name.
 		int nAllocSize = nDirectoryNameLen + Q_strlen(pFileName) + 2;
 		char *pFileNameWithPath = (char *)stackalloc( nAllocSize );
-		
+
 		const char *pStartPos = max( strchr( pDirectoryName, '/' ), strchr( pDirectoryName, '\\' ) );
 		if ( pStartPos )
-			Q_snprintf(	pFileNameWithPath, nAllocSize, "%s%c%s", pStartPos+1, CORRECT_PATH_SEPARATOR, pFileName ); 
+			Q_snprintf(	pFileNameWithPath, nAllocSize, "%s%c%s", pStartPos+1, CORRECT_PATH_SEPARATOR, pFileName );
 		else
 			V_strncpy( pFileNameWithPath, pFileName, nAllocSize );
-		
+
 		Q_strnlwr( pFileNameWithPath, nAllocSize );
 		AddSoundToList( soundType, pFileNameWithPath, pFileNameWithPath, NULL );
 	}
@@ -359,7 +428,7 @@ void CSoundSystem::AddGameSoundToList( const char *pGameSound, char const *pFile
 }
 
 //-----------------------------------------------------------------------------
-// Load all game sounds from a particular file 
+// Load all game sounds from a particular file
 //-----------------------------------------------------------------------------
 void CSoundSystem::AddGameSoundsFromFile( const char *pFileName )
 {
@@ -440,7 +509,7 @@ bool CSoundSystem::FindSoundByName( const char *pFilename, SoundType_t *type, in
 	char searchStr[MAX_PATH];
 	V_strncpy( searchStr, pFilename, sizeof( searchStr ) );
 	V_FixSlashes( searchStr );
-	
+
 	for ( int i = SOUND_TYPE_COUNT; --i >= 0; )
 	{
 		for ( int j = SoundCount( (SoundType_t)i ); --j >= 0; )
@@ -453,7 +522,7 @@ bool CSoundSystem::FindSoundByName( const char *pFilename, SoundType_t *type, in
 			}
 		}
 	}
-	
+
 	return false;
 }
 
@@ -465,7 +534,7 @@ bool CSoundSystem::PlayScene( const char *pFileName )
 	CChoreoScene *pScene = HammerLoadScene( fullFilename );
 	if ( !pScene )
 		return false;
-		
+
 	CScenePreviewDlg dlg( pScene, pFileName );
 	dlg.DoModal();
 	return true;
@@ -498,17 +567,11 @@ bool CSoundSystem::Play( SoundType_t type, int nIndex )
 	StopSound();
 
 	// We used to use GetLocalPath, but that doesn't work under Steam.
-	FileHandle_t fp = g_pFileSystem->Open( pRelativePath, "rb" );
-	if ( fp )
-	{
-		g_SoundPlayData.SetSize( g_pFileSystem->Size( fp ) );
-		if ( g_pFileSystem->Read( g_SoundPlayData.Base(), g_SoundPlayData.Count(), fp ) == g_SoundPlayData.Count() )
-		{
-			return (PlaySound( g_SoundPlayData.Base(), NULL, SND_ASYNC | SND_MEMORY ) != FALSE);
-		}
-		g_pFileSystem->Close( fp );
-	}
-	return false;
+	m_pSystem->createStream( pRelativePath, FMOD_LOOP_OFF | FMOD_2D | FMOD_IGNORETAGS | FMOD_VIRTUAL_PLAYFROMSTART, nullptr, &m_pLastSound );
+	if ( m_pSystem->playSound( m_pLastSound, nullptr, false, &m_pLastChannel ) != FMOD_OK )
+		return false;
+	m_pLastChannel->setVolume( m_flVolume );
+	return true;
 }
 
 
@@ -517,7 +580,17 @@ bool CSoundSystem::Play( SoundType_t type, int nIndex )
 //-----------------------------------------------------------------------------
 void CSoundSystem::StopSound()
 {
-	PlaySound( NULL, NULL, SND_ASYNC | SND_MEMORY );
+	if ( bool playing = false; m_pLastChannel && m_pLastChannel->isPlaying( &playing ) == FMOD_OK )
+	{
+		if ( playing )
+			m_pLastChannel->stop();
+		m_pLastChannel = nullptr;
+	}
+	if ( m_pLastSound )
+	{
+		m_pLastSound->release();
+		m_pLastSound = nullptr;
+	}
 }
 
 
@@ -543,3 +616,9 @@ void CSoundSystem::OpenSource( SoundType_t type, int nIndex )
 	}
 }
 
+void CSoundSystem::SetVolume( float volume )
+{
+	if ( m_pLastChannel )
+		m_pLastChannel->setVolume( volume );
+	m_flVolume = volume;
+}

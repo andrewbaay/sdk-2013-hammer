@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -66,6 +66,7 @@ protected:
 	afx_msg void OnRefreshSounds();
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnOpenSource();
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
@@ -87,6 +88,9 @@ private:
 	char m_szFilter[256];			// Name filter, space, comma, or semicolon delimited.
 	int m_nFilters;					// The number of names that were parsed out of the name filter.
 	char *m_Filters[64];			// The individual name filters.
+
+	CSliderCtrl m_volumeControl;
+	int m_nVolume;
 
 	static CStringArray m_FilterHistory;
 	static int m_nFilterHistory;

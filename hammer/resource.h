@@ -957,6 +957,8 @@
 #define IDC_CHECK2                      1693
 #define ID_DISP_TAG_REMOVE              1694
 #define IDC_CHECKIN_LIST                1695
+#define IDC_SLIDER1                     1696
+#define IDC_VOLUME                      1696
 #define IDC_CHECKIN_STATUS              1702
 #define IDC_SPRINKLE_DENSITY            1703
 #define IDC_SPRINKLE_MODE               1704
@@ -1353,9 +1355,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        355
+#define _APS_NEXT_RESOURCE_VALUE        356
 #define _APS_NEXT_COMMAND_VALUE         33290
-#define _APS_NEXT_CONTROL_VALUE         1696
+#define _APS_NEXT_CONTROL_VALUE         1697
 #define _APS_NEXT_SYMED_VALUE           116
 #endif
 #endif

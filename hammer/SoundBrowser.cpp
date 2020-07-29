@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -32,7 +32,8 @@ CSoundBrowser::CSoundBrowser( const char *pCurrentSoundName, CWnd* pParent /*=NU
 	m_SoundNameSelected = pCurrentSoundName;
 	m_SoundType = AfxGetApp()->GetProfileInt(s_pszSection, "Sound Type", 0);
 	m_Autoplay = AfxGetApp()->GetProfileInt(s_pszSection, "Sound Autoplay", 0);
-	Q_strncpy(m_szFilter, (LPCSTR)(AfxGetApp()->GetProfileString(s_pszSection, "Sound Filter", "")), 256 ); 
+	m_nVolume = AfxGetApp()->GetProfileInt(s_pszSection, "Sound Volume", 100);
+	Q_strncpy(m_szFilter, (LPCSTR)(AfxGetApp()->GetProfileString(s_pszSection, "Sound Filter", "")), 256 );
 	m_nSelectedSoundIndex = -1;
 }
 
@@ -40,6 +41,7 @@ void CSoundBrowser::SaveValues()
 {
 	AfxGetApp()->WriteProfileInt(s_pszSection, "Sound Type", m_SoundType);
 	AfxGetApp()->WriteProfileInt(s_pszSection, "Sound Autoplay", m_Autoplay);
+	AfxGetApp()->WriteProfileInt(s_pszSection, "Sound Volume", m_nVolume);
 	AfxGetApp()->WriteProfileString(s_pszSection, "Sound Filter", m_szFilter);
 }
 
@@ -53,7 +55,12 @@ void CSoundBrowser::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_AUTOPLAY, m_Autoplay);
 	DDX_Text(pDX, IDC_SOUND_FILE, m_SoundFile);
 	DDX_Text(pDX, IDC_SOUND_SOURCE_FILE, m_SoundSource);
+	DDX_Control(pDX, IDC_VOLUME, m_volumeControl);
 	//}}AFX_DATA_MAP
+
+	m_volumeControl.SetRange(0, 100, TRUE);
+	m_volumeControl.SetPos(m_nVolume);
+	g_Sounds.SetVolume(m_nVolume / 100.f);
 }
 
 
@@ -71,13 +78,15 @@ BEGIN_MESSAGE_MAP(CSoundBrowser, CDialog)
 	ON_BN_CLICKED(IDC_REFRESH_SOUNDS, OnRefreshSounds)
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_OPEN_SOURCE, OnOpenSource)
+
+	ON_WM_HSCROLL()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CSoundBrowser message handlers
 
-BOOL CSoundBrowser::OnInitDialog() 
+BOOL CSoundBrowser::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
@@ -99,8 +108,8 @@ BOOL CSoundBrowser::OnInitDialog()
 		m_SoundList.SetCurSel( nIndex );
 		m_nSelectedSoundIndex = nIndex;
 		int nSoundIndex = m_SoundList.GetItemData(nIndex);
-		m_SoundFile = g_Sounds.SoundFile( GetSoundType(), nSoundIndex ); 
-		m_SoundSource = g_Sounds.SoundSourceFile( GetSoundType(), nSoundIndex ); 
+		m_SoundFile = g_Sounds.SoundFile( GetSoundType(), nSoundIndex );
+		m_SoundSource = g_Sounds.SoundSourceFile( GetSoundType(), nSoundIndex );
 		UpdateData( FALSE );
 	}
 
@@ -122,7 +131,7 @@ void CSoundBrowser::OnClose(void)
 void CSoundBrowser::Shutdown()
 {
 	SaveValues();
-	PlaySound( NULL, NULL, SND_FILENAME | SND_NODEFAULT); 
+	g_Sounds.StopSound();
 
 	// save current filter string
 	int i;
@@ -137,7 +146,7 @@ void CSoundBrowser::Shutdown()
 		m_FilterHistory.RemoveAt(i);
 		--m_nFilterHistory;
 	}
-	
+
 	if ( m_szFilter[0] )
 	{
 		m_FilterHistory.InsertAt(0, m_szFilter);
@@ -192,7 +201,7 @@ void CSoundBrowser::PopulateSoundList()
 
 
 //-----------------------------------------------------------------------------
-// Sound type 
+// Sound type
 //-----------------------------------------------------------------------------
 SoundType_t CSoundBrowser::GetSoundType() const
 {
@@ -207,7 +216,7 @@ SoundType_t CSoundBrowser::GetSoundType() const
 
 
 //-----------------------------------------------------------------------------
-// Sound name 
+// Sound name
 //-----------------------------------------------------------------------------
 void CSoundBrowser::CopySoundNameToSelected()
 {
@@ -218,8 +227,8 @@ void CSoundBrowser::CopySoundNameToSelected()
 	{
 		int nSoundIndex = m_SoundList.GetItemData(nIndex);
 		m_SoundNameSelected = g_Sounds.SoundName( GetSoundType(), nSoundIndex );
-		m_SoundFile = g_Sounds.SoundFile( GetSoundType(), nSoundIndex ); 
-		m_SoundSource = g_Sounds.SoundSourceFile( GetSoundType(), nSoundIndex ); 
+		m_SoundFile = g_Sounds.SoundFile( GetSoundType(), nSoundIndex );
+		m_SoundSource = g_Sounds.SoundSourceFile( GetSoundType(), nSoundIndex );
 		m_nSelectedSoundIndex = nSoundIndex;
 		UpdateData( FALSE );
 	}
@@ -227,7 +236,7 @@ void CSoundBrowser::CopySoundNameToSelected()
 
 
 //-----------------------------------------------------------------------------
-// Update the filter: 
+// Update the filter:
 //-----------------------------------------------------------------------------
 void CSoundBrowser::OnFilterChanged( const char *pFilter )
 {
@@ -235,19 +244,19 @@ void CSoundBrowser::OnFilterChanged( const char *pFilter )
 	m_nFilters = 0;
 	char *p = strtok(m_szFilter, " ,;");
 	while (p != NULL)
-	{	
+	{
 		m_Filters[m_nFilters++] = p;
 		p = strtok(NULL, " ,;");
 	}
-	PopulateSoundList();	
+	PopulateSoundList();
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose: Timer used to control updates when the filter terms change.
-// Input  : nIDEvent - 
+// Input  : nIDEvent -
 //-----------------------------------------------------------------------------
-void CSoundBrowser::OnTimer(UINT nIDEvent) 
+void CSoundBrowser::OnTimer(UINT nIDEvent)
 {
 	if (!m_bFilterChanged)
 		return;
@@ -267,10 +276,19 @@ void CSoundBrowser::OnTimer(UINT nIDEvent)
 	CDialog::OnTimer(nIDEvent);
 }
 
+void CSoundBrowser::OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar )
+{
+	if ( pScrollBar->m_hWnd == m_volumeControl.m_hWnd )
+	{
+		m_nVolume = m_volumeControl.GetPos();
+		g_Sounds.SetVolume( m_nVolume / 100.f );
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Called when either the filter combo or the keywords combo text changes.
 //-----------------------------------------------------------------------------
-void CSoundBrowser::OnChangeFilter() 
+void CSoundBrowser::OnChangeFilter()
 {
 	// Start a timer to repaint the texture window using the new filters.
 	m_uLastFilterChange = time(NULL);
@@ -279,9 +297,9 @@ void CSoundBrowser::OnChangeFilter()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
-void CSoundBrowser::OnUpdateFilterNOW() 
+void CSoundBrowser::OnUpdateFilterNOW()
 {
 	m_uLastFilterChange = time(NULL);
 	m_bFilterChanged = FALSE;
@@ -296,15 +314,15 @@ void CSoundBrowser::OnUpdateFilterNOW()
 //-----------------------------------------------------------------------------
 // Sound type changed
 //-----------------------------------------------------------------------------
-void CSoundBrowser::OnSelchangeSoundType() 
+void CSoundBrowser::OnSelchangeSoundType()
 {
 	UpdateData( TRUE );
-	PopulateSoundList();	
+	PopulateSoundList();
 }
 
 
 //-----------------------------------------------------------------------------
-// Selected sound 
+// Selected sound
 //-----------------------------------------------------------------------------
 const char *CSoundBrowser::GetSelectedSound()
 {
@@ -312,7 +330,7 @@ const char *CSoundBrowser::GetSelectedSound()
 }
 
 
-void CSoundBrowser::OnSelchangeSoundList() 
+void CSoundBrowser::OnSelchangeSoundList()
 {
 	CopySoundNameToSelected();
 	if ( m_Autoplay )
@@ -321,13 +339,13 @@ void CSoundBrowser::OnSelchangeSoundList()
 	}
 }
 
-void CSoundBrowser::OnDblclkSoundList() 
+void CSoundBrowser::OnDblclkSoundList()
 {
 	CopySoundNameToSelected();
 	OnOK();
 }
 
-void CSoundBrowser::OnPreview() 
+void CSoundBrowser::OnPreview()
 {
 	if ( m_nSelectedSoundIndex >= 0 )
 	{
@@ -335,7 +353,7 @@ void CSoundBrowser::OnPreview()
 	}
 }
 
-void CSoundBrowser::OnAutoplay() 
+void CSoundBrowser::OnAutoplay()
 {
 	UpdateData( TRUE );
 }
@@ -347,22 +365,22 @@ void CSoundBrowser::OnRefreshSounds()
 	newTitle.LoadString( IDS_REFRESHING_SOUNDS );
 	GetWindowText( oldTitle );
 	SetWindowText( newTitle );
-	
+
 	g_Sounds.Initialize();
 	PopulateSoundList();
-	
+
 	// Restore the title.
 	SetWindowText( oldTitle );
 }
 
-int CSoundBrowser::DoModal() 
-{	
+int CSoundBrowser::DoModal()
+{
 	int nRet = CDialog::DoModal();
 	Shutdown();
 	return nRet;
 }
 
-void CSoundBrowser::OnOpenSource() 
+void CSoundBrowser::OnOpenSource()
 {
 	if ( m_nSelectedSoundIndex >= 0 )
 	{
@@ -372,5 +390,5 @@ void CSoundBrowser::OnOpenSource()
 
 void CSoundBrowser::OnBnClickedStopsound()
 {
-	g_Sounds.StopSound(); 
+	g_Sounds.StopSound();
 }
