@@ -231,6 +231,8 @@ protected:
 	void ComputeFrustumRenderGeometry(CCamera * pCamera);
 	void RenderFrustum();
 
+	void RenderSkybox();
+
 	float m_fFrameRate;					// Framerate in frames per second, calculated once per second.
 	int m_nFramesThisSample;			// Number of frames rendered in the current sample period.
 	DWORD m_dwTimeLastSample;			// Time when the framerate was last calculated.
@@ -262,6 +264,9 @@ protected:
 	IMaterial* m_pVertexColor[2];		// for selecting actual textures
 
 	bool m_bLightingPreview;
+
+	IMaterial* m_pSkyboxMaterials[6];
+	CString m_lastSky;
 
 	// for debugging... render the view frustum
 #ifdef _DEBUG

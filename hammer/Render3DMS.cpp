@@ -142,14 +142,7 @@ bool GetRequiredMaterial( const char *pName, IMaterial* &pMaterial )
 //-----------------------------------------------------------------------------
 float CRender3D::LightPlane(Vector& Normal)
 {
-	static Vector Light( 1.0f, 2.0f, 3.0f );
-	static bool bFirst = true;
-
-	if (bFirst)
-	{
-		VectorNormalize(Light);
-		bFirst = false;
-	}
+	static const Vector Light = Vector( 1.0f, 2.0f, 3.0f ).Normalized();
 
 	float fShade = 0.65f + (0.35f * DotProduct(Normal, Light));
 
@@ -192,6 +185,8 @@ CRender3D::CRender3D(void) :
 		m_pVertexColor[i] = 0;
 	}
 	m_bLightingPreview = false;
+
+	memset(m_pSkyboxMaterials, 0, sizeof(m_pSkyboxMaterials));
 
 	m_TranslucentRenderObjects.SetLessFunc( TranslucentObjectsLessFunc );
 #ifdef _DEBUG
@@ -645,6 +640,193 @@ static ITexture *SetRenderTargetNamed(int nWhichTarget, char const *pRtName)
 	return dest_rt;
 }
 
+static void MakeSkyVec( float s, float t, int axis, float zFar, const Vector& origin, Vector& position, Vector2D& texCoord )
+{
+	constexpr int st_to_vec[6][3] =
+	{
+		{3,-1,2},
+		{-3,1,2},
+
+		{1,3,2},
+		{-1,-3,2},
+
+		{-2,-1,3},		// 0 degrees yaw, look straight up
+		{2,-1,-3}		// look straight down
+	};
+
+
+	if ( s < -1 )
+		s = -1;
+	else if ( s > 1 )
+		s = 1;
+	if ( t < -1 )
+		t = -1;
+	else if ( t > 1 )
+		t = 1;
+
+	Vector v;
+	const float width = zFar * 0.57735f;
+	Vector b{ s * width, t * width, width };
+	for ( int j = 0; j < 3; j++ )
+	{
+		int k = st_to_vec[axis][j];
+		if (k < 0)
+			v[j] = -b[-k - 1];
+		else
+			v[j] = b[k - 1];
+		v[j] += origin[j];
+	}
+
+	// avoid bilerp seam
+	s = ( s + 1 ) * 0.5f;
+	t = ( t + 1 ) * 0.5f;
+
+	if ( s < 1.0f / 512 )
+		s = 1.0f / 512;
+	else if ( s > 511.0f / 512 )
+		s = 511.0f / 512;
+	if ( t < 1.0f / 512 )
+		t = 1.0f / 512;
+	else if ( t > 511.0f / 512 )
+		t = 511.0f / 512;
+
+	position = v;
+	texCoord[0] = s;
+	texCoord[1] = 1.0f - t;
+}
+
+static bool LoadSky( const char *skyname, IMaterial* skyboxMaterials[6] )
+{
+	char name[256];
+	IMaterial* skies[6];
+	bool success = true;
+	constexpr const char* skyboxsuffix[6] = { "rt", "bk", "lf", "ft", "up", "dn" };
+
+	for ( int i = 0; i < 6; i++ )
+	{
+		V_sprintf_safe( name, "skybox/%s%s", skyname, skyboxsuffix[i] );
+		skies[i] = materials->FindMaterial( name, TEXTURE_GROUP_SKYBOX );
+		if( !IsErrorMaterial( skies[i] ) )
+			continue;
+
+		success = false;
+		break;
+	}
+
+	if ( !success )
+		return false;
+
+	// Increment references
+	for ( int i = 0; i < 6; i++ )
+	{
+		// Unload any old skybox
+		if ( skyboxMaterials[i] )
+		{
+			skyboxMaterials[i]->DecrementReferenceCount();
+			skyboxMaterials[i] = NULL;
+		}
+
+		// Use the new one
+		Assert( skies[i] );
+		skyboxMaterials[i] = skies[i];
+		skyboxMaterials[i]->IncrementReferenceCount();
+	}
+
+	return true;
+}
+
+void CRender3D::RenderSkybox()
+{
+	if ( m_eCurrentRenderMode < RENDER_MODE_TEXTURED_SHADED && m_eCurrentRenderMode != RENDER_MODE_TEXTURED )
+		return;
+
+	CString curSky = GetView()->GetMapDoc()->GetMapWorld()->GetKeyValue( "skyname" );
+	if ( m_lastSky != curSky )
+	{
+		m_lastSky = curSky;
+		LoadSky( m_lastSky, m_pSkyboxMaterials );
+	}
+
+	constexpr int gFakePlaneType[6] = { 1, -1, 2, -2, 3, -3 };
+	constexpr int skytexorder[6] = { 0, 2, 1, 3, 4, 5 };
+
+	CCamera* pCamera = GetCamera();
+	Vector fwd, origin;
+	pCamera->GetViewForward( fwd );
+	pCamera->GetViewPoint( origin );
+	float zFar = pCamera->GetFarClip();
+
+	CMatRenderContextPtr pRenderContext( materials );
+
+	Vector normal{ 0.0f };
+	for ( int i = 0; i < 6; i++ )
+	{
+		normal.Init();
+		switch ( gFakePlaneType[i] )
+		{
+		case 1:
+			normal[0] = 1;
+			break;
+
+		case -1:
+			normal[0] = -1;
+			break;
+
+		case 2:
+			normal[1] = 1;
+			break;
+
+		case -2:
+			normal[1] = -1;
+			break;
+
+		case 3:
+			normal[2] = 1;
+			break;
+
+		case -3:
+			normal[2] = -1;
+			break;
+		}
+
+		if ( DotProduct( fwd, normal ) < -0.29289f )
+			continue;
+
+		Vector positionArray[4];
+		Vector2D texCoordArray[4];
+		if ( m_pSkyboxMaterials[skytexorder[i]] )
+		{
+			pRenderContext->Bind( m_pSkyboxMaterials[skytexorder[i]] );
+
+			MakeSkyVec( -1.0f, -1.0f, i, zFar, origin, positionArray[0], texCoordArray[0] );
+			MakeSkyVec( -1.0f, 1.0f, i, zFar, origin, positionArray[1], texCoordArray[1] );
+			MakeSkyVec( 1.0f, 1.0f, i, zFar, origin, positionArray[2], texCoordArray[2] );
+			MakeSkyVec( 1.0f, -1.0f, i, zFar, origin, positionArray[3], texCoordArray[3] );
+
+			IMesh* pMesh = pRenderContext->GetDynamicMesh();
+
+			CMeshBuilder meshBuilder;
+			meshBuilder.Begin( pMesh, MATERIAL_TRIANGLES, 4, 6 );
+
+			// meshbuilder Begin can fail if dynamic mesh is not available (eg, alt-tabbed away)
+			if ( meshBuilder.BaseVertexData() == NULL )
+				continue;
+
+			for ( int j = 0; j < 4; ++j )
+			{
+				meshBuilder.Position3fv( positionArray[j].Base() );
+				meshBuilder.TexCoord2fv( 0, texCoordArray[j].Base() );
+				meshBuilder.AdvanceVertex();
+			}
+			CIndexBuilder& indexBuilder = meshBuilder;
+			indexBuilder.FastQuad( 0 );
+
+			meshBuilder.End();
+			pMesh->Draw();
+		}
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
@@ -657,7 +839,7 @@ void CRender3D::StartRenderFrame(void)
 	//
 	// Determine the elapsed time since the last frame was rendered.
 	//
-	DWORD dwTimeNow = timeGetTime();
+	DWORD dwTimeNow = Plat_MSTime();
 	if (m_dwTimeLastFrame == 0)
 	{
 		m_dwTimeLastFrame = dwTimeNow;
@@ -728,6 +910,7 @@ void CRender3D::StartRenderFrame(void)
 		//
 		pRenderContext->ClearColor3ub( 0,0,0 );
 		pRenderContext->ClearBuffers( true, true, true );
+		RenderSkybox();
 	}
 
 	//
@@ -1458,11 +1641,11 @@ void CRender3D::EndRenderFrame(void)
 			//
 			if (m_dwTimeLastSample != 0)
 			{
-				DWORD dwTimeNow = timeGetTime();
+				DWORD dwTimeNow = Plat_MSTime();
 				DWORD dwTimeElapsed = dwTimeNow - m_dwTimeLastSample;
 				if ((dwTimeElapsed > 1000) && (m_nFramesThisSample > 0))
 				{
-					float fTimeElapsed = (float)dwTimeElapsed / 1000.0;
+					float fTimeElapsed = dwTimeElapsed / 1000.0f;
 					m_fFrameRate = m_nFramesThisSample / fTimeElapsed;
 					m_nFramesThisSample = 0;
 					m_dwTimeLastSample = dwTimeNow;
@@ -1470,7 +1653,7 @@ void CRender3D::EndRenderFrame(void)
 			}
 			else
 			{
-				m_dwTimeLastSample = timeGetTime();
+				m_dwTimeLastSample = Plat_MSTime();
 			}
 
 			m_nFramesThisSample++;
@@ -2801,6 +2984,13 @@ void CRender3D::ShutDown(void)
 	{
 		m_WinData.hDC = NULL;
 	}
+
+	for ( IMaterial* &sky : m_pSkyboxMaterials )
+		if ( sky )
+		{
+			sky->Release();
+			sky = nullptr;
+		}
 }
 
 

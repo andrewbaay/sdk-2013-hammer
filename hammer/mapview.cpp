@@ -74,32 +74,7 @@ void CMapView::ActivateView(bool bActivate)
 //-----------------------------------------------------------------------------
 bool CMapView::ShouldRender()
 {
-	DWORD dwTimeNow = timeGetTime();
-
-	if (m_dwTimeLastRender != 0)
-	{
-		DWORD dwTimeElapsed = dwTimeNow - m_dwTimeLastRender;
-
-		if ( dwTimeElapsed <= 0 )
-			return false;
-
-		float flFrameRate = (1000.0f / dwTimeElapsed);
-
-		if (flFrameRate > 100.0f)
-		{
-			// never update view faster then 100Hz
-			return false;
-		}
-	}
-
-	// update view if needed
-	if ( m_bUpdateView )
-	{
-		m_dwTimeLastRender = dwTimeNow;
-		return true;
-	}
-
-	return false;
+	return m_bUpdateView;
 }
 
 //-----------------------------------------------------------------------------
