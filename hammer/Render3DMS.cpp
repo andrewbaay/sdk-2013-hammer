@@ -1206,8 +1206,6 @@ static bool s_bAddedLightEnvironmentAlready;
 
 void CRender3D::AddEntityLightToLightList( CMapEntity* e, CUtlIntrusiveList<CLightingPreviewLightDescription>& listout ) const
 {
-	constexpr float LIGHT_LOW_RES_DIST_SQR = 2048.f * 2048.f;
-
 	char const *pszClassName=e->GetClassName();
 	if (pszClassName)
 	{
@@ -1225,7 +1223,6 @@ void CRender3D::AddEntityLightToLightList( CMapEntity* e, CUtlIntrusiveList<CLig
 				sqrt( AMBIENT_LIGHT_DISTANCE * AMBIENT_LIGHT_DISTANCE * 2 * M_PI / N_FAKE_LIGHTS_FOR_AMBIENT );
 			// lets add the sun to the list!
 			new_l.m_Type = MATERIAL_LIGHT_DIRECTIONAL;
-			new_l.m_bLowRes = false;
 			if ( ParseLightGeneric(e, new_l) )
 			{
 				new_l.m_Position = new_l.m_Direction * AMBIENT_LIGHT_DISTANCE;
@@ -1266,10 +1263,6 @@ void CRender3D::AddEntityLightToLightList( CMapEntity* e, CUtlIntrusiveList<CLig
 			new_l.m_Type = MATERIAL_LIGHT_POINT;
 			if ( ParseLightGeneric(e,new_l) )
 			{
-				Vector origin;
-				GetCamera()->GetViewPoint( origin );
-				new_l.m_bLowRes = origin.DistToSqr( new_l.m_Position ) > LIGHT_LOW_RES_DIST_SQR;
-
 				new_l.RecalculateDerivedValues();
 				CLightingPreviewLightDescription *pNew = new CLightingPreviewLightDescription;
 				*pNew = new_l;
@@ -1282,10 +1275,6 @@ void CRender3D::AddEntityLightToLightList( CMapEntity* e, CUtlIntrusiveList<CLig
 			new_l.m_Type = MATERIAL_LIGHT_SPOT;
 			if ( ParseLightGeneric(e,new_l) )
 			{
-				Vector origin;
-				GetCamera()->GetViewPoint( origin );
-				new_l.m_bLowRes = origin.DistToSqr( new_l.m_Position ) > LIGHT_LOW_RES_DIST_SQR;
-
 				new_l.RecalculateDerivedValues();
 				CLightingPreviewLightDescription *pNew = new CLightingPreviewLightDescription;
 				*pNew = new_l;

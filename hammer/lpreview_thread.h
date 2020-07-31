@@ -36,7 +36,7 @@ public:
 	CLightingPreviewLightDescription( void )
 	{
 		m_flJitterAmount = 0;
-		m_bLowRes = true;
+		m_bLowRes = false;
 		m_bDidIndirect = false;
 	}
 

@@ -1310,6 +1310,7 @@ static CTextureReference sg_ExtraFP16Targets[NELEMS(s_rt_names)];
 
 void AllocateLightingPreviewtextures()
 {
+	constexpr int RT_SIZE = 1024;
 	static bool bHaveAllocated=false;
 	if ( !bHaveAllocated )
 	{
@@ -1319,8 +1320,8 @@ void AllocateLightingPreviewtextures()
 			sg_ExtraFP16Targets[idx].Init(
 				materials->CreateNamedRenderTargetTextureEx2(
 					s_rt_names[idx],
-					1024, 1024, RT_SIZE_DEFAULT, s_rt_formats[idx],
-					MATERIAL_RT_DEPTH_SHARED,
+					RT_SIZE, RT_SIZE, RT_SIZE_LITERAL,
+					s_rt_formats[idx], idx % 3 ? MATERIAL_RT_DEPTH_NONE : MATERIAL_RT_DEPTH_SEPARATE,
 					TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT,
 					CREATERENDERTARGETFLAGS_HDR )
 				);

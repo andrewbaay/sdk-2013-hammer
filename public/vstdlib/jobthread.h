@@ -537,22 +537,23 @@ private:
 // Utility for managing multiple jobs
 //-----------------------------------------------------------------------------
 
-class CJobSet
+template <size_t N>
+class CJobSetN
 {
 public:
-	CJobSet( CJob* pJob = nullptr )
+	CJobSetN( CJob* pJob = nullptr )
 	{
 		if ( pJob )
 			m_jobs.AddToTail( pJob );
 	}
 
-	CJobSet( CJob** ppJobs, int nJobs )
+	CJobSetN( CJob** ppJobs, int nJobs )
 	{
 		if ( ppJobs )
 			m_jobs.AddMultipleToTail( nJobs, ppJobs );
 	}
 
-	~CJobSet()
+	~CJobSetN()
 	{
 		for ( int i = 0; i < m_jobs.Count(); i++ )
 			m_jobs[i]->Release();
@@ -621,8 +622,9 @@ public:
 	}
 
 private:
-	CUtlVectorFixed<CJob*, 16> m_jobs;
+	CUtlVectorFixed<CJob*, N> m_jobs;
 };
+using CJobSet = CJobSetN<16>;
 
 //-----------------------------------------------------------------------------
 // Job helpers

@@ -39,9 +39,9 @@ static int s_nNumThreads;
 enum IncrementalLightState
 {
 	INCR_STATE_NO_RESULTS = 0,							// we threw away the results for this light
-	INCR_STATE_PARTIAL_RESULTS = 1,							// have done some but not all
-	INCR_STATE_NEW = 2,										// we know nothing about this light
-	INCR_STATE_HAVE_FULL_RESULTS = 3,							// we are done
+	INCR_STATE_PARTIAL_RESULTS = 1,						// have done some but not all
+	INCR_STATE_NEW = 2,									// we know nothing about this light
+	INCR_STATE_HAVE_FULL_RESULTS = 3,					// we are done
 };
 
 
@@ -84,25 +84,28 @@ public:
 
 	CIncrementalLightInfo()
 	{
-		m_bDisabled = false;
-		m_bCreatedIndirectLights = false;
-		m_nObjectID = - 1;
 		m_pNext = NULL;
-		m_eIncrState = INCR_STATE_NEW;
-		m_fTotalContribution = 0.;
-		m_flLastContribution = 0.;
+		m_pLight = NULL;
+		m_nObjectID = -1;
 		m_nNumLinesCalculated = 0;
+		m_eIncrState = INCR_STATE_NEW;
+		m_fTotalContribution = 0.f;
+		m_flLastContribution = 0.f;
+		m_nBitmapGenerationCounter = 0;
+		m_fDistanceToEye = 0.f;
 		m_nMostRecentNonZeroContributionTimeStamp = 0;
+		memset( m_nCalculationLevel, 0, sizeof( m_nCalculationLevel ) );
 		m_nMaxCalculatedLine = -1;
 		m_nFirstCalculatedLine = INT_MAX;
-		memset( m_nCalculationLevel, 0, sizeof( m_nCalculationLevel ) );
+		m_bCreatedIndirectLights = false;
+		m_bDisabled = false;
 	}
 
 	float PredictedContribution() const;
 
 	void SetContributionSize( int nWidth, int nHeight )
 	{
-		if ( ( m_CalculatedContribution.NumCols() != nWidth ) || ( m_CalculatedContribution.NumRows() != nHeight ) )
+		if ( m_CalculatedContribution.NumCols() != nWidth || m_CalculatedContribution.NumRows() != nHeight )
 		{
 			m_CalculatedContribution.Purge();
 			if ( nWidth && nHeight )
@@ -137,16 +140,13 @@ public:
 	{
 		if ( m_bDisabled )
 			return false;
-		return ( m_eIncrState != INCR_STATE_HAVE_FULL_RESULTS );
+		return m_eIncrState != INCR_STATE_HAVE_FULL_RESULTS;
 	}
 
 	bool IsLowerPriorityThan( CLightingPreviewThread* pLPV, CIncrementalLightInfo const& other ) const;
 
 	bool IsHighPriority( CLightingPreviewThread* pLPV ) const;
 };
-
-#define N_INCREMENTAL_STEPS 32
-
 
 class CLightingPreviewThread
 {
@@ -177,13 +177,15 @@ public:
 
 	CLightingPreviewThread()
 	{
-		m_nBitmapGenerationCounter = - 1;
 		m_pRtEnv = NULL;
-		m_bAccStructureBuilt = false;
 		m_pIncrementalLightInfoList = NULL;
-		m_fLastSendTime = - 1.0e6;
+		m_bAccStructureBuilt = false;
+		m_LastEyePosition.Init();
 		m_bResultChangedSinceLastSend = false;
+		m_fLastSendTime = - 1.0e6;
+		m_nBitmapGenerationCounter = -1;
 		m_nContributionCounter = 1000000;
+		m_MinViewCoords.Init();
 		m_bFirstWork = true;
 	}
 
@@ -193,7 +195,7 @@ public:
 		m_LightList.Purge();
 		while ( m_pIncrementalLightInfoList )
 		{
-			CIncrementalLightInfo * n = m_pIncrementalLightInfoList->m_pNext;
+			CIncrementalLightInfo* n = m_pIncrementalLightInfoList->m_pNext;
 			delete m_pIncrementalLightInfoList;
 			m_pIncrementalLightInfoList = n;
 		}
@@ -247,6 +249,8 @@ public:
 				l_info->m_fDistanceToEye = 0;			// high priority
 			else
 				l_info->m_fDistanceToEye = m_LastEyePosition.DistTo( l->m_Position );
+			if ( l_info->m_pLight->m_Type != MATERIAL_LIGHT_DIRECTIONAL )
+				l_info->m_pLight->m_bLowRes = l_info->m_fDistanceToEye > 2048.0f;
 		}
 		m_bResultChangedSinceLastSend = true;
 		m_fLastSendTime = Plat_FloatTime() - 12;				// force send
@@ -264,8 +268,7 @@ public:
 
 	Vector EstimatedUnshotAmbient()
 	{
-//		return Vector( 1,1,1 );
-		float sum_weights = 0.0001;
+		const float sum_weights = 0.0001f;
 		Vector sum_colors( sum_weights, sum_weights, sum_weights );
 		// calculate an ambient color based on light calculcated so far
 		for ( CLightingPreviewLightDescription* l = m_LightList.Head(); l; l = l->m_pNext )
@@ -274,7 +277,6 @@ public:
 			if ( l_info && ( l_info->m_eIncrState == INCR_STATE_HAVE_FULL_RESULTS || l_info->m_eIncrState == INCR_STATE_PARTIAL_RESULTS ) )
 			{
 				float flPredictedContribution = l_info->PredictedContribution();
-				sum_weights += flPredictedContribution;
 				sum_colors.x += flPredictedContribution * l->m_Color.x;
 				sum_colors.y += flPredictedContribution * l->m_Color.y;
 				sum_colors.z += flPredictedContribution * l->m_Color.z;
@@ -306,9 +308,9 @@ bool CIncrementalLightInfo::IsLowerPriorityThan( CLightingPreviewThread* pLPV, C
 	bool highpriority = IsHighPriority( pLPV );
 	bool other_highpriority = other.IsHighPriority( pLPV );
 
-	if ( highpriority && ( ! other_highpriority ) )
+	if ( highpriority && !other_highpriority )
 		return false;
-	if ( other_highpriority && ( ! highpriority ) )
+	if ( other_highpriority && !highpriority )
 		return true;
 
 	int state_combo = m_eIncrState + 16 * other.m_eIncrState;
@@ -317,13 +319,13 @@ bool CIncrementalLightInfo::IsLowerPriorityThan( CLightingPreviewThread* pLPV, C
 		case INCR_STATE_NEW + 16 * INCR_STATE_NEW:
 		{
 			// if both are new, closest to eye is best
-			return ( m_fDistanceToEye > other.m_fDistanceToEye );
+			return m_fDistanceToEye > other.m_fDistanceToEye;
 		}
 
 		case INCR_STATE_NEW + 16 * INCR_STATE_NO_RESULTS:
 		{
 			// new loses to something we know is probably going to contribute light
-			return ( other.m_fTotalContribution > 0 );
+			return other.m_fTotalContribution > 0;
 		}
 
 		case INCR_STATE_NEW + 16 * INCR_STATE_PARTIAL_RESULTS:
@@ -339,15 +341,15 @@ bool CIncrementalLightInfo::IsLowerPriorityThan( CLightingPreviewThread* pLPV, C
 		case INCR_STATE_NO_RESULTS + 16 * INCR_STATE_NEW:
 		{
 			// partial or discarded with no brightness loses to new
-			return ( m_fTotalContribution == 0 );
+			return m_fTotalContribution == 0;
 		}
 
 
 		case INCR_STATE_PARTIAL_RESULTS + 16 * INCR_STATE_PARTIAL_RESULTS:
 		{
 			// if incrmental vs incremental, and no light from either, do most recently lit one
-			if ( ( m_fTotalContribution == 0.0 ) && ( other.m_fTotalContribution == 0.0 ) &&
-				( other.m_nMostRecentNonZeroContributionTimeStamp > m_nMostRecentNonZeroContributionTimeStamp ) )
+			if ( m_fTotalContribution == 0.0f && other.m_fTotalContribution == 0.0f &&
+				other.m_nMostRecentNonZeroContributionTimeStamp > m_nMostRecentNonZeroContributionTimeStamp )
 				return true;
 
 			int nMaxLines = max( m_nNumLinesCalculated, other.m_nNumLinesCalculated );
@@ -356,15 +358,15 @@ bool CIncrementalLightInfo::IsLowerPriorityThan( CLightingPreviewThread* pLPV, C
 			// if other is black, and ratios aren't extremely far off, keep this one
 			if ( nMaxLines <= 16 * nMinLines )
 			{
-				if ( ( other.m_fTotalContribution == 0.0 ) && ( m_fTotalContribution > 0 ) )
+				if ( other.m_fTotalContribution == 0.0f && m_fTotalContribution > 0 )
 					return false;
-				if ( ( m_fTotalContribution == 0.0 ) && ( other.m_fTotalContribution > 0 ) )
+				if ( m_fTotalContribution == 0.0f && other.m_fTotalContribution > 0 )
 					return true;
 			}
 
 			// if incremental states are close, do brightest
 			if ( nMaxLines <= 2 * nMinLines )
-				return ( PredictedContribution() < other.PredictedContribution() );
+				return PredictedContribution() < other.PredictedContribution();
 
 			// else do least refined
 			return ( m_nNumLinesCalculated > other.m_nNumLinesCalculated );
@@ -373,33 +375,28 @@ bool CIncrementalLightInfo::IsLowerPriorityThan( CLightingPreviewThread* pLPV, C
 		{
 			if ( other.m_fTotalContribution )
 				return true;
-			if ( ( m_fTotalContribution == 0.0 ) && ( other.m_fTotalContribution == 0.0 ) )
-				return ( other.m_nMostRecentNonZeroContributionTimeStamp > m_nMostRecentNonZeroContributionTimeStamp );
-			return ( PredictedContribution() < other.PredictedContribution() );
+			if ( m_fTotalContribution == 0.0f && other.m_fTotalContribution == 0.0f )
+				return other.m_nMostRecentNonZeroContributionTimeStamp > m_nMostRecentNonZeroContributionTimeStamp;
+			return PredictedContribution() < other.PredictedContribution();
 		}
 		case INCR_STATE_NO_RESULTS + 16 * INCR_STATE_PARTIAL_RESULTS:
 		{
 			if ( m_fTotalContribution )
 				return false;
-			if ( ( m_fTotalContribution == 0.0 ) && ( other.m_fTotalContribution == 0.0 ) )
-				return ( other.m_nMostRecentNonZeroContributionTimeStamp > m_nMostRecentNonZeroContributionTimeStamp );
-			return ( PredictedContribution() < other.PredictedContribution() );
+			if ( m_fTotalContribution == 0.0f && other.m_fTotalContribution == 0.0f )
+				return other.m_nMostRecentNonZeroContributionTimeStamp > m_nMostRecentNonZeroContributionTimeStamp;
+			return PredictedContribution() < other.PredictedContribution();
 		}
 		case INCR_STATE_NO_RESULTS * 16 + INCR_STATE_NO_RESULTS:
 		{
 			// if incrmental vs discarded, brightest or most recently bright wins
-			if ( ( m_fTotalContribution == 0.0 ) && ( other.m_fTotalContribution == 0.0 ) )
-				return ( other.m_nMostRecentNonZeroContributionTimeStamp > m_nMostRecentNonZeroContributionTimeStamp );
-			return ( PredictedContribution() < other.PredictedContribution() );
+			if ( m_fTotalContribution == 0.0f && other.m_fTotalContribution == 0.0f )
+				return other.m_nMostRecentNonZeroContributionTimeStamp > m_nMostRecentNonZeroContributionTimeStamp;
+			return PredictedContribution() < other.PredictedContribution();
 		}
 	}
 	return false;
 }
-
-
-float cg[3]={ 1, 0, 0};
-float cr[3]={ 0, 1, 0 };
-float cb[3]={ 0, 0, 1 };
 
 void CLightingPreviewThread::HandleGeomMessage( MessageToLPreview& msg_in )
 {
@@ -409,29 +406,21 @@ void CLightingPreviewThread::HandleGeomMessage( MessageToLPreview& msg_in )
 		m_pRtEnv = NULL;
 	}
 	CUtlVector<Vector>& tris = *msg_in.m_pShadowTriangleList;
-	if ( tris.Count() )
+	if ( !tris.IsEmpty() )
 	{
-//		FILE *fp = fopen( "c:\\gl.out", "w" );
 		m_pRtEnv = new RayTracingEnvironment;
 		for ( int i = 0; i < tris.Count(); i += 3 )
-		{
-//			fprintf(fp,"3\n");
-// 			for (int j=0;j<3;j++)
-// 				fprintf( fp,"%f %f %f %f %f %f\n", tris[j+i].x,tris[j+i].y,tris[j+i].z, cr[j],cg[j],cb[j] );
-			m_pRtEnv->AddTriangle( i, tris[i], tris[1 + i], tris[2 + i], Vector( .5, .5, .5 ) );
-		}
-//		fclose( fp );
+			m_pRtEnv->AddTriangle( i, tris[i], tris[1 + i], tris[2 + i], vec3_origin, RTE_FLAGS_DONT_STORE_TRIANGLE_COLORS | RTE_FLAGS_DONT_STORE_TRIANGLE_MATERIALS, 0 );
 	}
 	delete msg_in.m_pShadowTriangleList;
 	m_bAccStructureBuilt = false;
-	DiscardResults();
 }
 
 
 float CIncrementalLightInfo::PredictedContribution() const
 {
-	if ( ( m_fTotalContribution == 0 ) || ( ! m_nNumLinesCalculated ) )
-		return 0.;
+	if ( m_fTotalContribution == 0 || !m_nNumLinesCalculated )
+		return 0.f;
 	else
 		return m_fTotalContribution * ( m_CalculatedContribution.NumRows() * ( 1.0f / m_nNumLinesCalculated ) );
 }
@@ -481,7 +470,7 @@ void CLightingPreviewThread::UpdateIncrementalForNewLightList()
 				break;
 			}
 		}
-		if ( ! l->m_pIncrementalInfo )
+		if ( !l->m_pIncrementalInfo )
 		{
 			l->m_pIncrementalInfo = new CIncrementalLightInfo;
 			l->m_pIncrementalInfo->m_nObjectID = l->m_nObjectID;
@@ -500,8 +489,7 @@ void CLightingPreviewThread::Run()
 	bool should_quit = false;
 	while ( !should_quit )
 	{
-		while ( !should_quit &&
-			( !AnyUsefulWorkToDo() || g_HammerToLPreviewMsgQueue.MessageWaiting() ) )
+		while ( !should_quit && ( !AnyUsefulWorkToDo() || g_HammerToLPreviewMsgQueue.MessageWaiting() ) )
 			should_quit |= HandleAMessage();
 		if ( !should_quit && AnyUsefulWorkToDo() )
 			DoWork();
@@ -561,11 +549,6 @@ bool CLightingPreviewThread::AnyUsefulWorkToDo()
 	return false;
 }
 
-static void s_CalculateForLight( CLightingPreviewLightDescription* &pLight )
-{
-	s_pThis->CalculateForLight( pLight );
-}
-
 void CLightingPreviewThread::DoWork()
 {
 	if ( m_pRtEnv && !m_bAccStructureBuilt )
@@ -589,7 +572,6 @@ void CLightingPreviewThread::DoWork()
 	for ( int i = 0; i < nJobsToDo; i++ )
 	{
 		CLightingPreviewLightDescription* best_l = NULL;
-		CIncrementalLightInfo* best_l_info = NULL;
 		for ( CLightingPreviewLightDescription* l = m_LightList.Head(); l; l = l->m_pNext )
 		{
 			CIncrementalLightInfo* l_info = l->m_pIncrementalInfo;
@@ -598,7 +580,7 @@ void CLightingPreviewThread::DoWork()
 				continue;								// this light can't effect the visible scene
 			if ( l->m_Type != MATERIAL_LIGHT_DIRECTIONAL )
 			{
-				float lrad = l->DistanceAtWhichBrightnessIsLessThan( 1.0 / 500.0 );
+				float lrad = l->DistanceAtWhichBrightnessIsLessThan( 1.0f / 500.0f );
 				if ( !l->m_Position.WithinAABox( m_MinViewCoords - ReplicateToVector( lrad ), m_MaxViewCoords + ReplicateToVector( lrad ) ) )
 					l_info->m_bDisabled = true;
 			}
@@ -613,10 +595,7 @@ void CLightingPreviewThread::DoWork()
 			if ( !bHaveit && l_info->HasWorkToDo() )
 			{
 				if ( !best_l || best_l->m_pIncrementalInfo->IsLowerPriorityThan( this, *l_info ) )
-				{
-					best_l_info = l_info;
 					best_l = l;
-				}
 			}
 		}
 		if ( best_l )
@@ -625,13 +604,19 @@ void CLightingPreviewThread::DoWork()
 	// now, process in parallel
 	if ( nNumLightJobs )
 	{
-#if LPREVIEW_MULTITHREAD
-		ParallelProcess( "CalculateForLight", s_pThreadPool, pLightsToRun, nNumLightJobs, s_CalculateForLight );
+#if LPREVIEW_MULTITHREAD == 1
+		{
+			CJobSetN<64> jobs;
+			for ( int i = 0; i < nNumLightJobs; i++ )
+				jobs += s_pThreadPool->QueueCall( this, &CLightingPreviewThread::CalculateForLight, pLightsToRun[i] );
+
+			jobs.WaitForFinish( s_pThreadPool );
+		}
 #else
 		for ( int i = 0; i < nNumLightJobs; i++ )
 		{
 			Warning( "process light %p lnum=%d contribution = %f predicted = %f\n", pLightsToRun[i], pLightsToRun[i]->m_pIncrementalInfo->m_nNumLinesCalculated, pLightsToRun[i]->m_pIncrementalInfo->m_fTotalContribution, pLightsToRun[i]->m_pIncrementalInfo->PredictedContribution() );
-			s_CalculateForLight( pLightsToRun[i] );
+			CalculateForLight( pLightsToRun[i] );
 		}
 #endif
 		// now, some lights may have created lights for indirect light. We must move these to the global list.
@@ -667,14 +652,11 @@ void CLightingPreviewThread::HandleGBuffersMessage( MessageToLPreview& msg_in )
 	m_GBuffer.AllocateData( msg_in.m_pDefferedRenderingBMs[0]->NumCols(),
 							msg_in.m_pDefferedRenderingBMs[0]->NumRows() );
 
-	m_GBuffer.PackScalarAttributesToVectorAttribute( msg_in.m_pDefferedRenderingBMs[0],
-													 GBUFFER_ATTR_ALBEDO,
+	m_GBuffer.PackScalarAttributesToVectorAttribute( msg_in.m_pDefferedRenderingBMs[0], GBUFFER_ATTR_ALBEDO,
 													 FBM_ATTR_RED, FBM_ATTR_GREEN, FBM_ATTR_BLUE );
-	m_GBuffer.PackScalarAttributesToVectorAttribute( msg_in.m_pDefferedRenderingBMs[1],
-													 GBUFFER_ATTR_NORMAL,
+	m_GBuffer.PackScalarAttributesToVectorAttribute( msg_in.m_pDefferedRenderingBMs[1], GBUFFER_ATTR_NORMAL,
 													 FBM_ATTR_RED, FBM_ATTR_GREEN, FBM_ATTR_BLUE );
-	m_GBuffer.PackScalarAttributesToVectorAttribute( msg_in.m_pDefferedRenderingBMs[2],
-													 GBUFFER_ATTR_POSITION,
+	m_GBuffer.PackScalarAttributesToVectorAttribute( msg_in.m_pDefferedRenderingBMs[2], GBUFFER_ATTR_POSITION,
 													 FBM_ATTR_RED, FBM_ATTR_GREEN, FBM_ATTR_BLUE );
 
 	m_GBufferLowRes.Purge();
@@ -682,7 +664,7 @@ void CLightingPreviewThread::HandleGBuffersMessage( MessageToLPreview& msg_in )
 	m_GBufferLowRes.SetAttributeType( GBUFFER_ATTR_ALBEDO, ATTRDATATYPE_4V );
 	m_GBufferLowRes.SetAttributeType( GBUFFER_ATTR_NORMAL, ATTRDATATYPE_4V );
 	m_GBufferLowRes.AllocateData( msg_in.m_pDefferedRenderingBMs[0]->NumCols() / 4,
-							msg_in.m_pDefferedRenderingBMs[0]->NumRows() / 4 );
+								  msg_in.m_pDefferedRenderingBMs[0]->NumRows() / 4 );
 
 	// now, downsample
 	m_GBufferLowRes.ResampleAttribute( m_GBuffer, GBUFFER_ATTR_POSITION );
@@ -696,7 +678,6 @@ void CLightingPreviewThread::HandleGBuffersMessage( MessageToLPreview& msg_in )
 	n_gbufs_queued--;
 	m_nBitmapGenerationCounter = msg_in.m_nBitmapGenerationCounter;
 	CalculateSceneBounds();
-
 }
 
 
@@ -808,14 +789,6 @@ void CLightingPreviewThread::AccumulateOuput( int nLineMask, CSOAContainer* rslt
 	}
 }
 
-static CSOAContainer* s_pResultBuffer;
-static CSOAContainer* s_pResultBuffer1;
-
-void s_AccumulateOutput( int& nLineMask )
-{
-	s_pThis->AccumulateOuput( nLineMask, s_pResultBuffer, s_pResultBuffer1 );
-}
-
 FORCEINLINE void RotateLeftDoubleSIMD( fltx4& a, fltx4& b )
 {
 	a = SetWSIMD( RotateLeft( a ), SplatXSIMD( b ) );
@@ -840,7 +813,7 @@ FORCEINLINE void RotateLeftDoubleSIMD( fltx4& a, fltx4& b )
 		base##FFFF.z = SplatYSIMD( base##ShiftRegister1.z );						\
 		RotateLeftDoubleSIMD( base##ShiftRegister1.x, base##ShiftRegister1a.x );	\
 		RotateLeftDoubleSIMD( base##ShiftRegister1.y, base##ShiftRegister1a.y );	\
-		RotateLeftDoubleSIMD( base##ShiftRegister1.z, base##ShiftRegister1a.z );
+		RotateLeftDoubleSIMD( base##ShiftRegister1.z, base##ShiftRegister1a.z )
 
 void CLightingPreviewThread::AddLowresResultToHires( CSOAContainer& lores, CSOAContainer& hires )
 {
@@ -909,13 +882,13 @@ void CLightingPreviewThread::AddLowresResultToHires( CSOAContainer& lores, CSOAC
 			GRAB4PIXELS( pos );
 
 			// we should now be ready to filter. We will take the 4 pixels we have, and produce 4 output pixels
-			FourVectors dNorm = *pDestNormal++;
+			const FourVectors& dNorm = *pDestNormal++;
 			fltx4 fl4ADot = MaxSIMD( Four_Epsilons, MulSIMD( fl4NormalFactorScale, AddSIMD( fl4NormalBias, dNorm * normAAAA ) ) );
 			fltx4 fl4BDot = MaxSIMD( Four_Epsilons, MulSIMD( fl4NormalFactorScale, AddSIMD( fl4NormalBias, dNorm * normBBBB ) ) );
 			fltx4 fl4EDot = MaxSIMD( Four_Epsilons, MulSIMD( fl4NormalFactorScale, AddSIMD( fl4NormalBias, dNorm * normEEEE ) ) );
 			fltx4 fl4FDot = MaxSIMD( Four_Epsilons, MulSIMD( fl4NormalFactorScale, AddSIMD( fl4NormalBias, dNorm * normFFFF ) ) );
 
-			FourVectors fl4Pos = *pDestPos++;
+			const FourVectors& fl4Pos = *pDestPos++;
 			FourVectors v4Delta = posAAAA;
 			v4Delta -= fl4Pos;
 			fltx4 fl4WA = MulSIMD( fl4ADot, ReciprocalEstSIMD( AddSIMD( Four_Ones, MulSIMD( v4Delta.length(), fl4DistanceScale ) ) ) );
@@ -966,7 +939,6 @@ void CLightingPreviewThread::SendResult()
 		rsltBuffer.SetAttributeType( RSLT_BUFFER_RSLT_RGB, ATTRDATATYPE_4V );
 		rsltBuffer.AllocateData( m_GBuffer.NumCols(), m_GBuffer.NumRows() );
 		rsltBuffer.FillAttr( RSLT_BUFFER_RSLT_RGB, EstimatedUnshotAmbient() );
-		s_pResultBuffer = &rsltBuffer;
 
 		bool bDidLoRes = false;
 		for ( CLightingPreviewLightDescription* l = m_LightList.Head(); l; l = l->m_pNext )
@@ -977,12 +949,14 @@ void CLightingPreviewThread::SendResult()
 		rsltBuffer1.SetAttributeType( RSLT_BUFFER_RSLT_RGB, ATTRDATATYPE_4V );
 		rsltBuffer1.AllocateData( m_GBufferLowRes.NumCols(), m_GBufferLowRes.NumRows() );
 		if ( bDidLoRes )
-			rsltBuffer1.FillAttr( RSLT_BUFFER_RSLT_RGB, Vector( 0, 0, 0 ) );
-		s_pResultBuffer1 = &rsltBuffer1;
-		int nProcessMasks[32];
-		for ( int i = 0; i < 32; i++ )
-			nProcessMasks[i] = ( 1 << i );
-		ParallelProcess( "AccumulateOutput", s_pThreadPool, nProcessMasks, 32, s_AccumulateOutput );
+			rsltBuffer1.FillAttr( RSLT_BUFFER_RSLT_RGB, vec3_origin );
+
+		{
+			CJobSetN<32> jobs;
+			for ( int i = 0; i < 32; i++ )
+				jobs += s_pThreadPool->QueueCall( this, &CLightingPreviewThread::AccumulateOuput, 1 << i, &rsltBuffer, &rsltBuffer1 );
+			jobs.WaitForFinish( s_pThreadPool );
+		}
 
 		if ( bDidLoRes )
 			AddLowresResultToHires( rsltBuffer1, rsltBuffer );
@@ -1012,9 +986,11 @@ int InsideOut( int nTotal, int nCounter )
 			m = ( m + 1 ) >> 1;
 		}
 	}
-	Assert( ( b >= 0 ) && ( b < nTotal ) );
+	Assert( b >= 0 && b < nTotal );
 	return b;
 }
+
+#pragma optimize( "", off )
 
 void CLightingPreviewThread::CalculateForLightTask( int nLineStart, int nLineEnd, CLightingPreviewLightDescription* l, float* fContributionOut, CIncrementalLightInfo* pLInfo )
 {
@@ -1111,12 +1087,11 @@ void CLightingPreviewThread::CalculateForLightTask( int nLineStart, int nLineEnd
 	*fContributionOut = lmag.m128_f32[0]+ lmag.m128_f32[1]+ lmag.m128_f32[2]+ lmag.m128_f32[3];
 }
 
-
 #define N_FAKE_LIGHTS_FOR_INDIRECT 50
 
 void CLightingPreviewThread::CalculateForLight( CLightingPreviewLightDescription* l )
 {
-	if ( ! l->m_bDidIndirect )
+	if ( !l->m_bDidIndirect )
 	{
 		// create a bunch of pseudo lights for this light
 		float lrad = l->DistanceAtWhichBrightnessIsLessThan( 1.0f / 500.0f );
@@ -1162,6 +1137,7 @@ void CLightingPreviewThread::CalculateForLight( CLightingPreviewLightDescription
 					pNew->m_Attenuation1 = 0;
 					pNew->m_Attenuation2 = 1;
 					pNew->m_bDidIndirect = true;
+					pNew->m_bLowRes = l->m_bLowRes;
 					l->m_TempChildren.AddToTail( pNew );
 				}
 			}
@@ -1199,6 +1175,8 @@ void CLightingPreviewThread::CalculateForLight( CLightingPreviewLightDescription
 		l_info->m_eIncrState = INCR_STATE_PARTIAL_RESULTS;
 }
 
+#pragma optimize( "", on )
+
 void CLightingPreviewThread::SendResultRendering( CSOAContainer& rsltBuffer )
 {
 	Bitmap_t* ret_bm = new Bitmap_t;
@@ -1212,8 +1190,8 @@ void CLightingPreviewThread::SendResultRendering( CSOAContainer& rsltBuffer )
 			Vector color( pRGBData[0], pRGBData[4], pRGBData[8] );
 			unsigned char* pPixel = ret_bm->GetPixel( x, y );
 			pPixel[0] = (uint8)min( 255.f, 255.0f * pow( color.z, 1 / 2.2f ) );
-			pPixel[1] = ( uint8 ) min( 255.f, 255.0f * pow( color.y, 1 / 2.2f ) );
-			pPixel[2] = ( uint8 ) min( 255.f, 255.0f * pow( color.x, 1 / 2.2f ) );
+			pPixel[1] = (uint8)min( 255.f, 255.0f * pow( color.y, 1 / 2.2f ) );
+			pPixel[2] = (uint8)min( 255.f, 255.0f * pow( color.x, 1 / 2.2f ) );
 			pPixel[3] = 0;
 			pRGBData++;
 			if ( ( x & 3 ) == 3 )
@@ -1242,7 +1220,7 @@ unsigned LightingPreviewThreadFN( void* )
 	ThreadPoolStartParams_t startParams;
 	startParams.nThreads = pCPUInfo->m_nPhysicalProcessors - 1;
 	s_nNumThreads = startParams.nThreads;
-	startParams.nStackSize = 1024*1024;
+	startParams.nStackSize = 4*1024*1024;
 	startParams.fDistribute = TRS_TRUE;
 	startParams.iThreadPriority = -2;
 	s_pThreadPool->Start( startParams );
@@ -1265,7 +1243,7 @@ void HandleLightingPreview()
 	{
 		MessageFromLPreview msg;
 		g_LPreviewToHammerMsgQueue.WaitMessage( &msg );
-		switch( msg.m_MsgType )
+		switch ( msg.m_MsgType )
 		{
 			case LPREVIEW_MSG_DISPLAY_RESULT:
 			{
@@ -1319,5 +1297,3 @@ void HandleLightingPreview()
 		}
 	}
 }
-
-
