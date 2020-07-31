@@ -43,24 +43,24 @@ public:
 	{
 		// ret= rand[k]+rand[j]
 		fltx4 retval=AddSIMD( *m_pRand_K, *m_pRand_J );
-		
+
 		// if ( ret>=1.0) ret-=1.0
 		fltx4 overflow_mask=CmpGeSIMD( retval, Four_Ones );
 		retval=SubSIMD( retval, AndSIMD( Four_Ones, overflow_mask ) );
-		
+
 		*m_pRand_K = retval;
-		
+
 		// update pointers w/ wrap-around
 		if ( --m_pRand_J < m_RandY )
 			m_pRand_J=m_RandY+54;
 		if ( --m_pRand_K < m_RandY )
 			m_pRand_K=m_RandY+54;
-		
+
 		return retval;
 	}
 };
 
-#define MAX_SIMULTANEOUS_RANDOM_STREAMS 32
+#define MAX_SIMULTANEOUS_RANDOM_STREAMS 64
 
 static SIMDRandStreamContext s_SIMDRandContexts[MAX_SIMULTANEOUS_RANDOM_STREAMS];
 
