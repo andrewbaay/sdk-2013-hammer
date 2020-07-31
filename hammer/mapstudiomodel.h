@@ -27,7 +27,7 @@ class CMapStudioModel : public CMapHelper
 		// Factories.
 		//
 		static CMapClass *CreateMapStudioModel(CHelperInfo *pHelperInfo, CMapEntity *pParent);
-		static CMapStudioModel *CreateMapStudioModel(const char *pszModelPath, bool bOrientedBBox, bool bReversePitch);
+		static CMapStudioModel *CreateMapStudioModel(const char *pszModelPath, bool bOrientedBBox, bool bReversePitch, bool bRotateExtra);
 
 		static void AdvanceAnimation(float flInterval);
 
@@ -121,6 +121,8 @@ class CMapStudioModel : public CMapHelper
 		float m_flFadeMaxDist;				// The distance/pixels at which this model is fully invisible.
 		Color m_ModelRenderColor;
 		int m_iSolid;						// The collision setting of this model: 0 = not solid, 2 = bounding box, 6 = vphysics
+
+		bool m_bExtraRotation;
 
 		//
 		// Data that is common to all studio models.

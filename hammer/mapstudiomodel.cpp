@@ -64,8 +64,8 @@ CMapClass *CMapStudioModel::CreateMapStudioModel(CHelperInfo *pHelperInfo, CMapE
 	if (pszModel != NULL)
 	{
 		bool bLightProp = !stricmp(pHelperInfo->GetName(), "lightprop");
-		bool bOrientedBounds = (bLightProp | !stricmp(pHelperInfo->GetName(), "studioprop"));
-		return CreateMapStudioModel(pszModel, bOrientedBounds, bLightProp);
+		bool bOrientedBounds = (bLightProp || !stricmp(pHelperInfo->GetName(), "studioprop"));
+		return CreateMapStudioModel(pszModel, bOrientedBounds, bLightProp, pHelperInfo->GetParameter(0) != nullptr);
 	}
 
 	return(NULL);
@@ -80,7 +80,7 @@ CMapClass *CMapStudioModel::CreateMapStudioModel(CHelperInfo *pHelperInfo, CMapE
 //			bOrientedBounds - Whether the bounding box should consider the orientation of the model.
 // Output : Returns a pointer to the newly created CMapStudioModel object.
 //-----------------------------------------------------------------------------
-CMapStudioModel *CMapStudioModel::CreateMapStudioModel(const char *pszModelPath, bool bOrientedBounds, bool bReversePitch)
+CMapStudioModel *CMapStudioModel::CreateMapStudioModel(const char *pszModelPath, bool bOrientedBounds, bool bReversePitch, bool bRotateExtra)
 {
 	CMapStudioModel *pModel = new CMapStudioModel;
 	pModel->m_pStudioModel = CStudioModelCache::CreateModel(pszModelPath);
@@ -88,6 +88,7 @@ CMapStudioModel *CMapStudioModel::CreateMapStudioModel(const char *pszModelPath,
 	{
 		pModel->SetOrientedBounds(bOrientedBounds);
 		pModel->ReversePitch(bReversePitch);
+		pModel->m_bExtraRotation = bRotateExtra;
 
 		pModel->CalcBounds();
 	}
@@ -905,9 +906,12 @@ void CMapStudioModel::AddShadowingTriangles( CUtlVector<Vector>& tri_list )
 		Vector origin;
 		QAngle angles;
 		GetOrigin( origin );
-		GetAngles( angles );
+		GetRenderAngles( angles );
+
 		VMatrix transform;
 		transform.SetupMatrixOrgAngles( origin, angles );
+		if ( m_bExtraRotation )
+			RotateAroundAxis( transform, 90, 2 );
 		const studiohdr_t* pHdr = m_pStudioModel->GetStudioHdr()->GetRenderHdr();
 		studiomeshdata_t *pStudioMeshes = m_pStudioModel->GetHardwareData()->m_pLODs[0].m_pMeshData;
 		for ( int i = 0; i < pHdr->numbodyparts; ++i )

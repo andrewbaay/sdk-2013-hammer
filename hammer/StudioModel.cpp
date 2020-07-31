@@ -145,6 +145,9 @@ StudioModel *CStudioModelCache::CreateModel(const char *pszModelPath)
 	//
 	// If it isn't there, try to create one.
 	//
+	if ( auto found = FindModel( pszModelPath ) )
+		return found;
+
 	StudioModel *pModel = new StudioModel;
 
 	if (pModel != NULL)
@@ -191,7 +194,7 @@ BOOL CStudioModelCache::AddModel(StudioModel *pModel, const char *pszModelPath)
 		// Copy the model pointer.
 		//
 		m_Cache[m_nItems].pModel = pModel;
-	
+
 		//
 		// Allocate space for and copy the model path.
 		//
@@ -204,11 +207,11 @@ BOOL CStudioModelCache::AddModel(StudioModel *pModel, const char *pszModelPath)
 		{
 			return(FALSE);
 		}
-	
+
 		m_Cache[m_nItems].nRefCount = 1;
-	
+
 		m_nItems++;
-	
+
 		return(TRUE);
 	}
 
@@ -376,7 +379,7 @@ void CStudioFileChangeWatcher::Update()
 			g_pMDLCache->ResetErrorModelStatus( hModel );
 
 			// Find all studio models and refresh their data
-			CStudioModelCache::ReloadModel( pName );			
+			CStudioModelCache::ReloadModel( pName );
 		}
 
 		m_ChangedModels.Purge();
@@ -607,7 +610,7 @@ void StudioModel::DrawModel3D( CRender3D *pRender, const Color &color, float flA
 		Vector orgOrigin = m_origin;
 		QAngle orgAngles = m_angles;
 
-		VMatrix matrix; 
+		VMatrix matrix;
 		pRender->GetLocalTranform(matrix);
 
 		// baseclass rotates the origin
