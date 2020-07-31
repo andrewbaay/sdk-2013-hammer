@@ -972,9 +972,6 @@ bool CompareLightPreview_Lights(CLightPreview_Light const &a, CLightPreview_Ligh
 	return (a.m_flDistanceToEye > b.m_flDistanceToEye);
 }
 
-#define MAX_PREVIEW_LIGHTS 75								// max # of lights to process.
-
-
 void CRender3D::SendShadowTriangles( void )
 {
 	static int LastSendTimeStamp=-1;
@@ -1207,8 +1204,10 @@ static bool ParseLightGeneric( CMapEntity *e, CLightingPreviewLightDescription &
 static bool s_bAddedLightEnvironmentAlready;
 
 
-static void AddEntityLightToLightList( CMapEntity *e, CUtlIntrusiveList<CLightingPreviewLightDescription> &listout )
+void CRender3D::AddEntityLightToLightList( CMapEntity* e, CUtlIntrusiveList<CLightingPreviewLightDescription>& listout ) const
 {
+	constexpr float LIGHT_LOW_RES_DIST_SQR = 2048.f * 2048.f;
+
 	char const *pszClassName=e->GetClassName();
 	if (pszClassName)
 	{
@@ -1217,8 +1216,8 @@ static void AddEntityLightToLightList( CMapEntity *e, CUtlIntrusiveList<CLightin
 		e->GetOrigin( new_l.m_Position );
 		new_l.m_Range = 0;
 
-		if ( (! s_bAddedLightEnvironmentAlready ) &&
-			 (! stricmp( pszClassName, "light_environment" ) ))
+		if ( !s_bAddedLightEnvironmentAlready &&
+			 !stricmp( pszClassName, "light_environment" ) )
 		{
 			const int N_FAKE_LIGHTS_FOR_AMBIENT = 100.0;
 			const float AMBIENT_LIGHT_DISTANCE = 100000;
@@ -1226,6 +1225,7 @@ static void AddEntityLightToLightList( CMapEntity *e, CUtlIntrusiveList<CLightin
 				sqrt( AMBIENT_LIGHT_DISTANCE * AMBIENT_LIGHT_DISTANCE * 2 * M_PI / N_FAKE_LIGHTS_FOR_AMBIENT );
 			// lets add the sun to the list!
 			new_l.m_Type = MATERIAL_LIGHT_DIRECTIONAL;
+			new_l.m_bLowRes = false;
 			if ( ParseLightGeneric(e, new_l) )
 			{
 				new_l.m_Position = new_l.m_Direction * AMBIENT_LIGHT_DISTANCE;
@@ -1266,6 +1266,10 @@ static void AddEntityLightToLightList( CMapEntity *e, CUtlIntrusiveList<CLightin
 			new_l.m_Type = MATERIAL_LIGHT_POINT;
 			if ( ParseLightGeneric(e,new_l) )
 			{
+				Vector origin;
+				GetCamera()->GetViewPoint( origin );
+				new_l.m_bLowRes = origin.DistToSqr( new_l.m_Position ) > LIGHT_LOW_RES_DIST_SQR;
+
 				new_l.RecalculateDerivedValues();
 				CLightingPreviewLightDescription *pNew = new CLightingPreviewLightDescription;
 				*pNew = new_l;
@@ -1278,6 +1282,10 @@ static void AddEntityLightToLightList( CMapEntity *e, CUtlIntrusiveList<CLightin
 			new_l.m_Type = MATERIAL_LIGHT_SPOT;
 			if ( ParseLightGeneric(e,new_l) )
 			{
+				Vector origin;
+				GetCamera()->GetViewPoint( origin );
+				new_l.m_bLowRes = origin.DistToSqr( new_l.m_Position ) > LIGHT_LOW_RES_DIST_SQR;
+
 				new_l.RecalculateDerivedValues();
 				CLightingPreviewLightDescription *pNew = new CLightingPreviewLightDescription;
 				*pNew = new_l;
@@ -1398,18 +1406,32 @@ void CRender3D::AccumulateLights( CUtlPriorityQueue<CLightPreview_Light> &light_
 
 	pRenderContext->Bind( add_0_to_1 );
 
-	int nlights = min( MAX_PREVIEW_LIGHTS, light_queue.Count() );
+	int nlights = light_queue.Count();
 
 	// now, lets build up a vertex buffer of lights
 	CMeshBuilder meshBuilder;
 	IMesh* pMesh = pRenderContext->GetDynamicMesh();
-	meshBuilder.Begin( pMesh, MATERIAL_TRIANGLES, 4 * nlights, 6 * nlights );
+	int maxVerts, maxIndices;
+	pRenderContext->GetMaxToRender( pMesh, false, &maxVerts, &maxIndices );
+	maxVerts /= 4;
+	maxVerts *= 4;
+	maxIndices /= 6;
+	maxIndices *= 6;
+	meshBuilder.Begin( pMesh, MATERIAL_TRIANGLES, Min( 4 * nlights, maxVerts ), Min( 6 * nlights, maxIndices ) );
 
-	int nIndex = 0;
+	int nIndex = 0, nVert = 0;
 	for ( int i = 0; i < nlights; i++ )
 	{
+		if ( nIndex >= maxIndices || nVert >= maxVerts )
+		{
+			meshBuilder.End( false, true );
+			meshBuilder.Begin( pMesh, MATERIAL_TRIANGLES, Min( 4 * nlights, maxVerts ), Min( 6 * nlights, maxIndices ) );
+			nIndex = 0;
+			nVert = 0;
+		}
 		nIndex += DrawWorldSpaceLightFullScreenQuad( nTargetWidth, nTargetHeight, meshBuilder, pRenderContext, light_queue.ElementAtHead().m_Light, nIndex );
 		light_queue.RemoveAtHead();
+		nVert += 4;
 	}
 	meshBuilder.End( false, true );
 

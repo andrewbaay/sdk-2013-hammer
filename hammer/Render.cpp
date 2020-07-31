@@ -1039,7 +1039,7 @@ void CRender::DrawHandle( const Vector &vCenter, const Vector2D *vOffset )
 		EndClientSpace();
 }
 
-CCamera *CRender::GetCamera()
+CCamera *CRender::GetCamera() const
 {
 	return m_pView->GetCamera();
 }

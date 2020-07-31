@@ -268,6 +268,8 @@ protected:
 	IMaterial* m_pSkyboxMaterials[6];
 	CString m_lastSky;
 
+	void AddEntityLightToLightList( CMapEntity* e, CUtlIntrusiveList<CLightingPreviewLightDescription>& listout ) const;
+
 	// for debugging... render the view frustum
 #ifdef _DEBUG
 	Vector m_FrustumRenderPoint[8];

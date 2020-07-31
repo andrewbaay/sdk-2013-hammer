@@ -149,7 +149,7 @@ public:
 	virtual bool SetView( CMapView *pView );
 
 	CMapView	*GetView() { return m_pView; }
-	CCamera		*GetCamera();// { return m_pView->GetCamera(); }
+	CCamera		*GetCamera() const;// { return m_pView->GetCamera(); }
 	bool		IsActiveView();
 
 	// begin/end single render frame, sets up camera etc
