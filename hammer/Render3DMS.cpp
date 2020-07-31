@@ -1599,6 +1599,7 @@ void CRender3D::EndRenderFrame(void)
 						light_queue.Insert(tmplight);
 					}
 				}
+				lightList.Purge();
 				if ( light_queue.Count() == 0 )
 				{
 					// no lights for gpu preview? lets add a fake one
