@@ -737,7 +737,7 @@ static bool LoadSky( const char *skyname, IMaterial* skyboxMaterials[6] )
 
 void CRender3D::RenderSkybox()
 {
-	if ( m_eCurrentRenderMode < RENDER_MODE_TEXTURED_SHADED && m_eCurrentRenderMode != RENDER_MODE_TEXTURED )
+	if ( m_eCurrentRenderMode != RENDER_MODE_TEXTURED_SHADED && m_eCurrentRenderMode != RENDER_MODE_TEXTURED )
 		return;
 
 	CString curSky = GetView()->GetMapDoc()->GetMapWorld()->GetKeyValue( "skyname" );
@@ -1226,7 +1226,7 @@ static void AddEntityLightToLightList( CMapEntity *e, CUtlIntrusiveList<CLightin
 				sqrt( AMBIENT_LIGHT_DISTANCE * AMBIENT_LIGHT_DISTANCE * 2 * M_PI / N_FAKE_LIGHTS_FOR_AMBIENT );
 			// lets add the sun to the list!
 			new_l.m_Type = MATERIAL_LIGHT_DIRECTIONAL;
-			if ( ParseLightGeneric(e,new_l) )
+			if ( ParseLightGeneric(e, new_l) )
 			{
 				new_l.m_Position = new_l.m_Direction * AMBIENT_LIGHT_DISTANCE;
 				new_l.RecalculateDerivedValues();
@@ -1289,7 +1289,7 @@ static void AddEntityLightToLightList( CMapEntity *e, CUtlIntrusiveList<CLightin
 }
 
 
-CUtlIntrusiveList<CLightingPreviewLightDescription> CRender3D::BuildLightList( void  ) const
+CUtlIntrusiveList<CLightingPreviewLightDescription> CRender3D::BuildLightList( void ) const
 {
 	CUtlIntrusiveList<CLightingPreviewLightDescription> pRet;
 	CMapDoc *pDoc = m_pView->GetMapDoc();
@@ -1325,7 +1325,7 @@ void CRender3D::SendLightList( void )
 			delete g_pLPreviewOutputBitmap;
 		g_pLPreviewOutputBitmap = NULL;
 		// now, get list of lights
-		CUtlIntrusiveList<CLightingPreviewLightDescription> pList = BuildLightList( );
+		CUtlIntrusiveList<CLightingPreviewLightDescription> pList = BuildLightList();
 		MessageToLPreview Msg( LPREVIEW_MSG_LIGHT_DATA );
 		Msg.m_LightList = pList;								// thread deletes
 		CCamera *pCamera = GetCamera();
