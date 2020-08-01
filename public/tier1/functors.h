@@ -99,8 +99,10 @@ public:
 
 	T* operator->() { return *m_ppObject; }
 	T& operator *() { return **m_ppObject; }
-	operator T*() const { return (T*)( *m_ppObject ); }
+	operator T*() const { return (T*)*m_ppObject; }
 	operator void* () { return *m_ppObject; }
+	bool operator==( std::nullptr_t ) const { return *m_ppObject == nullptr; }
+	bool operator!=( std::nullptr_t ) const { return *m_ppObject != nullptr; }
 
 private:
 	T **m_ppObject;
@@ -135,9 +137,10 @@ public:
 //-----------------------------------------------------------------------------
 
 #include "tier0/memdbgon.h"
-#include "tier0/valve_minmax_off.h"
+#pragma push_macro( "_malloc_dbg" )
+#undef _malloc_dbg
 #include <tuple>
-#include "tier0/valve_minmax_on.h"
+#pragma pop_macro( "_malloc_dbg" )
 
 typedef CRefCounted1<CFunctor, CRefCountServiceMT> CFunctorBase;
 
@@ -208,36 +211,36 @@ private:
 //
 //-----------------------------------------------------------------------------
 
-template <typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-inline auto CreateFunctor( FUNCTION_RETTYPE( *pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
+template <typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+inline CFunctor* CreateFunctor( FUNCTION_RETTYPE( *pfnProxied )( FuncArgs... ), Args&&... args )
 {
 	typedef FUNCTION_RETTYPE( *Func_t )( FuncArgs... );
 	return new CFunctorI<Func_t, CFunctorBase, Args...>( pfnProxied, std::forward<Args>( args )... );
 }
 
-template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-inline auto CreateFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_base_of<FUNCTION_CLASS, std::remove_pointer_t<OBJECT_TYPE_PTR>>::value && std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
+template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+inline auto CreateFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>, CFunctor*>
 {
 	using Func_t = FUNCTION_RETTYPE( FUNCTION_CLASS::* )( FuncArgs... );
 	return new CMemberFunctorI<OBJECT_TYPE_PTR, Func_t, CFunctorBase, CFuncMemPolicyNone, Args...>( pObject, pfnProxied, std::forward<Args>( args )... );
 }
 
-template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-inline auto CreateFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_base_of<FUNCTION_CLASS, std::remove_pointer_t<OBJECT_TYPE_PTR>>::value && std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
+template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+inline auto CreateFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>, CFunctor*>
 {
 	using Func_t = FUNCTION_RETTYPE( FUNCTION_CLASS::* )( FuncArgs... ) const;
 	return new CMemberFunctorI<OBJECT_TYPE_PTR, Func_t, CFunctorBase, CFuncMemPolicyNone, Args...>( pObject, pfnProxied, std::forward<Args>( args )... );
 }
 
-template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-inline auto CreateRefCountingFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_base_of<FUNCTION_CLASS, std::remove_pointer_t<OBJECT_TYPE_PTR>>::value && std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
+template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+inline auto CreateRefCountingFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>, CFunctor*>
 {
 	using Func_t = FUNCTION_RETTYPE( FUNCTION_CLASS::* )( FuncArgs... );
 	return new CMemberFunctorI<OBJECT_TYPE_PTR, Func_t, CFunctorBase, CFuncMemPolicyRefCount<OBJECT_TYPE_PTR>, Args...>( pObject, pfnProxied, std::forward<Args>( args )... );
 }
 
-template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-inline auto CreateRefCountingFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_base_of<FUNCTION_CLASS, std::remove_pointer_t<OBJECT_TYPE_PTR>>::value && std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
+template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+inline auto CreateRefCountingFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>, CFunctor*>
 {
 	using Func_t = FUNCTION_RETTYPE( FUNCTION_CLASS::* )( FuncArgs... ) const;
 	return new CMemberFunctorI<OBJECT_TYPE_PTR, Func_t, CFunctorBase, CFuncMemPolicyRefCount<OBJECT_TYPE_PTR>, Args...>( pObject, pfnProxied, std::forward<Args>( args )... );
@@ -249,25 +252,23 @@ inline auto CreateRefCountingFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE(
 //
 //-----------------------------------------------------------------------------
 
-template <typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-inline auto FunctorDirectCall( FUNCTION_RETTYPE( *pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value>
+template <typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+inline void FunctorDirectCall( FUNCTION_RETTYPE( *pfnProxied )( FuncArgs... ), Args&&... args )
 {
 	( *pfnProxied )( std::forward<Args>( args )... );
 }
 
-template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-inline auto FunctorDirectCall( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_base_of<FUNCTION_CLASS, std::remove_pointer_t<OBJECT_TYPE_PTR>>::value && std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value>
+template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+inline auto FunctorDirectCall( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>>
 {
 	( ( *pObject ).*pfnProxied )( std::forward<Args>( args )... );
 }
 
-template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-inline auto FunctorDirectCall( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_base_of<FUNCTION_CLASS, std::remove_pointer_t<OBJECT_TYPE_PTR>>::value && std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value>
+template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+inline auto FunctorDirectCall( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>>
 {
 	( ( *pObject ).*pfnProxied )( std::forward<Args>( args )... );
 }
-
-#include "tier0/memdbgoff.h"
 
 //-----------------------------------------------------------------------------
 // Factory class useable as templated traits
@@ -276,41 +277,43 @@ inline auto FunctorDirectCall( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTI
 class CDefaultFunctorFactory
 {
 public:
-	template <typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	inline auto CreateFunctor( FUNCTION_RETTYPE( *pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
+	template <typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	inline CFunctor* CreateFunctor( FUNCTION_RETTYPE( *pfnProxied )( FuncArgs... ), Args&&... args )
 	{
 		typedef FUNCTION_RETTYPE( *Func_t )( FuncArgs... );
 		return new CFunctorI<Func_t, CFunctorBase, Args...>( pfnProxied, std::forward<Args>( args )... );
 	}
 
-	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	inline auto CreateFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_base_of<FUNCTION_CLASS, std::remove_pointer_t<OBJECT_TYPE_PTR>>::value && std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
+	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	inline auto CreateFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>, CFunctor*>
 	{
 		using Func_t = FUNCTION_RETTYPE(FUNCTION_CLASS::*)( FuncArgs... );
 		return new CMemberFunctorI<OBJECT_TYPE_PTR, Func_t, CFunctorBase, CFuncMemPolicyNone, Args...>( pObject, pfnProxied, std::forward<Args>( args )... );
 	}
 
-	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	inline auto CreateFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_base_of<FUNCTION_CLASS, std::remove_pointer_t<OBJECT_TYPE_PTR>>::value && std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
+	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	inline auto CreateFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>, CFunctor*>
 	{
 		using Func_t = FUNCTION_RETTYPE(FUNCTION_CLASS::*)( FuncArgs... ) const;
 		return new CMemberFunctorI<OBJECT_TYPE_PTR, Func_t, CFunctorBase, CFuncMemPolicyNone, Args...>( pObject, pfnProxied, std::forward<Args>( args )... );
 	}
 
-	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	inline auto CreateRefCountingFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_base_of<FUNCTION_CLASS, std::remove_pointer_t<OBJECT_TYPE_PTR>>::value && std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
+	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	inline auto CreateRefCountingFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>, CFunctor*>
 	{
 		using Func_t = FUNCTION_RETTYPE(FUNCTION_CLASS::*)( FuncArgs... );
 		return new CMemberFunctorI<OBJECT_TYPE_PTR, Func_t, CFunctorBase, CFuncMemPolicyRefCount<OBJECT_TYPE_PTR>, Args...>( pObject, pfnProxied, std::forward<Args>( args )... );
 	}
 
-	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	inline auto CreateRefCountingFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_base_of<FUNCTION_CLASS, std::remove_pointer_t<OBJECT_TYPE_PTR>>::value && std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
+	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	inline auto CreateRefCountingFunctor( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>, CFunctor*>
 	{
 		using Func_t = FUNCTION_RETTYPE(FUNCTION_CLASS::*)( FuncArgs... ) const;
 		return new CMemberFunctorI<OBJECT_TYPE_PTR, Func_t, CFunctorBase, CFuncMemPolicyRefCount<OBJECT_TYPE_PTR>, Args...>( pObject, pfnProxied, std::forward<Args>( args )... );
 	}
 };
+
+#include "tier0/memdbgoff.h"
 
 template <class CAllocator, class CCustomFunctorBase = CFunctorBase>
 class CCustomizedFunctorFactory
@@ -321,53 +324,53 @@ public:
 		m_pAllocator = pAllocator;
 	}
 
-	template <typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	inline auto CreateFunctor( FUNCTION_RETTYPE (*pfnProxied)( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
+	template <typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	inline CFunctor* CreateFunctor( FUNCTION_RETTYPE (*pfnProxied)( FuncArgs... ), Args&&... args )
 	{
 		using Func_t = FUNCTION_RETTYPE( * )( FuncArgs... );
 		using Functor_t = CFunctorI<Func_t, CCustomFunctorBase, Args...>;
 		return new ( m_pAllocator->Alloc( sizeof( Functor_t ) ) ) Functor_t( pfnProxied, std::forward<Args>( args )... );
-		}
+	}
 
 	//-------------------------------------
 
-	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	inline auto CreateFunctor(OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE ( FUNCTION_CLASS::*pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_base_of<FUNCTION_CLASS, std::remove_pointer_t<OBJECT_TYPE_PTR>>::value && std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
+	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	inline auto CreateFunctor(OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE ( FUNCTION_CLASS::*pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>, CFunctor*>
 	{
 		using Func_t = FUNCTION_RETTYPE( FUNCTION_CLASS::* )( FuncArgs... );
 		using Functor_t = CMemberFunctorI<OBJECT_TYPE_PTR, Func_t, CCustomFunctorBase, CFuncMemPolicyNone, Args...>;
 		return new ( m_pAllocator->Alloc( sizeof( Functor_t ) ) ) Functor_t( pObject, pfnProxied, std::forward<Args>( args )... );
-		}
+	}
 
 	//-------------------------------------
 
-	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	inline auto CreateFunctor(OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE ( FUNCTION_CLASS::*pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_base_of<FUNCTION_CLASS, std::remove_pointer_t<OBJECT_TYPE_PTR>>::value && std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
+	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	inline auto CreateFunctor(OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE ( FUNCTION_CLASS::*pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>, CFunctor*>
 	{
 		using Func_t = FUNCTION_RETTYPE( FUNCTION_CLASS::* )( FuncArgs... ) const;
 		using Functor_t = CMemberFunctorI<OBJECT_TYPE_PTR, Func_t, CCustomFunctorBase, CFuncMemPolicyNone, Args...>;
 		return new ( m_pAllocator->Alloc( sizeof( Functor_t ) ) ) Functor_t( pObject, pfnProxied, std::forward<Args>( args )... );
-		}
+	}
 
 	//-------------------------------------
 
-	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	inline auto CreateRefCountingFunctor(OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE ( FUNCTION_CLASS::*pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_base_of<FUNCTION_CLASS, std::remove_pointer_t<OBJECT_TYPE_PTR>>::value && std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
+	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	inline auto CreateRefCountingFunctor(OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE ( FUNCTION_CLASS::*pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>, CFunctor*>
 	{
 		using Func_t = FUNCTION_RETTYPE( FUNCTION_CLASS::* )( FuncArgs... );
 		using Functor_t = CMemberFunctorI<OBJECT_TYPE_PTR, Func_t, CCustomFunctorBase, CFuncMemPolicyRefCount<OBJECT_TYPE_PTR>, Args...>;
 		return new ( m_pAllocator->Alloc( sizeof( Functor_t ) ) ) Functor_t( pObject, pfnProxied, std::forward<Args>( args )... );
-		}
+	}
 
 	//-------------------------------------
 
-	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	inline auto CreateRefCountingFunctor(OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE ( FUNCTION_CLASS::*pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_base_of<FUNCTION_CLASS, std::remove_pointer_t<OBJECT_TYPE_PTR>>::value && std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value, CFunctor*>
+	template <typename OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	inline auto CreateRefCountingFunctor(OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE ( FUNCTION_CLASS::*pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>, CFunctor*>
 	{
 		using Func_t = FUNCTION_RETTYPE( FUNCTION_CLASS::* )( FuncArgs... ) const;
 		using Functor_t = CMemberFunctorI<OBJECT_TYPE_PTR, Func_t, CCustomFunctorBase, CFuncMemPolicyRefCount<OBJECT_TYPE_PTR>, Args...>;
 		return new ( m_pAllocator->Alloc( sizeof( Functor_t ) ) ) Functor_t( pObject, pfnProxied, std::forward<Args>( args )... );
-		}
+	}
 
 	//-------------------------------------
 

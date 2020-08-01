@@ -77,7 +77,7 @@ public:
 
 	void ParallelCallQueued( IThreadPool *pPool = NULL )
 	{
-		if ( ! pPool )
+		if ( !pPool )
 		{
 			pPool = g_pThreadPool;
 		}
@@ -117,32 +117,32 @@ public:
 		}
 	}
 
-	template <typename RetType, typename... FuncArgs, typename... Args>
-	auto QueueCall( RetType( *pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value>
+	template <typename RetType, typename... FuncArgs, typename... Args, typename = decltype(std::declval<RetType(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	void QueueCall( RetType( *pfnProxied )( FuncArgs... ), Args&&... args )
 	{
 		QueueFunctorInternal( CreateFunctor( pfnProxied, std::forward<Args>( args )... ) );
 	}
 
-	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	auto QueueCall( OBJECT_TYPE_PTR* pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value>
+	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	auto QueueCall( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>>
 	{
 		QueueFunctorInternal( CreateFunctor( pObject, pfnProxied, std::forward<Args>( args )... ) );
 	}
 
-	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	auto QueueCall( OBJECT_TYPE_PTR* pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value>
+	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	auto QueueCall( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>>
 	{
 		QueueFunctorInternal( CreateFunctor( pObject, pfnProxied, std::forward<Args>( args )... ) );
 	}
 
-	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	auto QueueRefCall( OBJECT_TYPE_PTR* pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value>
+	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	auto QueueRefCall( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>>
 	{
 		QueueFunctorInternal( CreateRefCountingFunctor( pObject, pfnProxied, std::forward<Args>( args )... ) );
 	}
 
-	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	auto QueueRefCall( OBJECT_TYPE_PTR* pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value>
+	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	auto QueueRefCall( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>>
 	{
 		QueueFunctorInternal( CreateRefCountingFunctor( pObject, pfnProxied, std::forward<Args>( args )... ) );
 	}
@@ -191,32 +191,32 @@ public:
 		QueueFunctorInternal( RetAddRef( pFunctor ) );
 	}
 
-	template <typename RetType, typename... FuncArgs, typename... Args>
-	auto QueueCall( RetType( *pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value>
+	template <typename RetType, typename... FuncArgs, typename... Args, typename = decltype(std::declval<RetType(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	void QueueCall( RetType( *pfnProxied )( FuncArgs... ), Args&&... args )
 	{
 		QueueFunctorInternal( CreateFunctor( pfnProxied, std::forward<Args>( args )... ) );
 	}
 
-	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	auto QueueCall( OBJECT_TYPE_PTR* pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value>
+	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	auto QueueCall( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>>
 	{
 		QueueFunctorInternal( CreateFunctor( pObject, pfnProxied, std::forward<Args>( args )... ) );
 	}
 
-	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	auto QueueCall( OBJECT_TYPE_PTR* pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value>
+	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	auto QueueCall( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>>
 	{
 		QueueFunctorInternal( CreateFunctor( pObject, pfnProxied, std::forward<Args>( args )... ) );
 	}
 
-	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	auto QueueRefCall( OBJECT_TYPE_PTR* pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value>
+	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	auto QueueRefCall( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ), Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>>
 	{
 		QueueFunctorInternal( CreateRefCountingFunctor( pObject, pfnProxied, std::forward<Args>( args )... ) );
 	}
 
-	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args>
-	auto QueueRefCall( OBJECT_TYPE_PTR* pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_same<detail::param_pack<std::decay_t<Args>...>, detail::param_pack<std::decay_t<FuncArgs>...>>::value>
+	template <class OBJECT_TYPE_PTR, typename FUNCTION_CLASS, typename FUNCTION_RETTYPE, typename... FuncArgs, typename... Args, typename = decltype(std::declval<FUNCTION_RETTYPE(*)(FuncArgs...)>()(std::declval<Args>()...))>
+	auto QueueRefCall( OBJECT_TYPE_PTR pObject, FUNCTION_RETTYPE( FUNCTION_CLASS::* pfnProxied )( FuncArgs... ) const, Args&&... args ) -> std::enable_if_t<std::is_convertible_v<OBJECT_TYPE_PTR, FUNCTION_CLASS*>>
 	{
 		QueueFunctorInternal( CreateRefCountingFunctor( pObject, pfnProxied, std::forward<Args>( args )... ) );
 	}
