@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -11,7 +11,7 @@
 #include "stdafx.h"
 #include "hammer.h"
 #include "OPTView2D.h"
-#include "Options.h"	
+#include "Options.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -41,8 +41,6 @@ void COPTView2D::DoDataExchange(CDataExchange* pDX)
 
 	m_cGridIntensity.SetRange(10, 100, TRUE);
 
-	DDX_Check(pDX, IDC_CROSSHAIRS, Options.view2d.bCrosshairs);
-	DDX_Check(pDX, IDC_GROUPCARVE, Options.view2d.bGroupCarve);
 	DDX_Check(pDX, IDC_ROTATECONSTRAIN, Options.view2d.bRotateConstrain);
 	DDX_Check(pDX, IDC_SCROLLBARS, Options.view2d.bScrollbars);
 	DDX_Check(pDX, IDC_DRAWVERTICES, Options.view2d.bDrawVertices);
@@ -85,7 +83,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // COPTView2D message handlers
 
-BOOL COPTView2D::OnInitDialog() 
+BOOL COPTView2D::OnInitDialog()
 {
 	CWnd *pwnd = GetDlgItem(IDC_GRIDHIGH1024);
 	if (pwnd != NULL)
@@ -98,8 +96,8 @@ BOOL COPTView2D::OnInitDialog()
 	return TRUE;
 }
 
-BOOL COPTView2D::OnApply() 
+BOOL COPTView2D::OnApply()
 {
-	Options.PerformChanges(COptions::secView2D);	
+	Options.PerformChanges(COptions::secView2D);
 	return CPropertyPage::OnApply();
 }

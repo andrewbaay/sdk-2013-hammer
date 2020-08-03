@@ -81,8 +81,6 @@ struct COptionsColors
 
 struct COptionsView2D
 {
-	BOOL bCrosshairs;
-	BOOL bGroupCarve;
 	BOOL bScrollbars;
 	BOOL bRotateConstrain;
 	BOOL bDrawVertices;
@@ -108,7 +106,6 @@ struct COptionsView2D
 
 struct COptionsView3D
 {
-	BOOL bHardware;			// Whether to use hardware acceleration (disabled for OpenGL).
 	BOOL bReverseY;			// Wether to reverse the mouse's Y axis when mouse looking.
 	BOOL bUseMouseLook;		// Whether to use the engine's default movement controls.
 	int iBackPlane;			// Distance to far clipping plane in world units.

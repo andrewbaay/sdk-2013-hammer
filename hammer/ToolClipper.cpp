@@ -556,7 +556,7 @@ void Clipper3D::RenderTool2D(CRender2D *pRender)
 		return;
 
     // check flag for rendering vertices
-    bool bDrawVerts = ( bool )( Options.view2d.bDrawVertices == TRUE );
+    bool bDrawVerts = Options.view2d.bDrawVertices;
 
     // setup the line to use
 

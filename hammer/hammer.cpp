@@ -717,10 +717,10 @@ CString CHammer::GetProfileStringA( LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCT
 //-----------------------------------------------------------------------------
 // Purpose: Returns a color from the application configuration storage.
 //-----------------------------------------------------------------------------
-COLORREF CHammer::GetProfileColor(const char *pszSection, const char *pszKey, int r, int g, int b)
+COLORREF CHammer::GetProfileColor(LPCTSTR lpszSection, LPCTSTR lpszEntry, int r, int g, int b)
 {
-	KeyValues* data = m_pConfig->FindKey( pszSection, true );
-	const Color& color = data->GetColor( pszKey, Color( r, g, b ) );
+	KeyValues* data = m_pConfig->FindKey( lpszSection, true );
+	const Color& color = data->GetColor( lpszEntry, Color( r, g, b ) );
 	return COLORREF( RGB( color.r(), color.g(), color.b() ) );
 }
 
@@ -736,6 +736,14 @@ BOOL CHammer::WriteProfileStringA( LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTS
 	KeyValues* data = m_pConfig->FindKey( lpszSection, true );
 	data->SetString( lpszEntry, lpszValue );
 	return true;
+}
+
+void CHammer::WriteProfileColor( LPCTSTR lpszSection, LPCTSTR lpszEntry, COLORREF clr )
+{
+	KeyValues* data = m_pConfig->FindKey( lpszSection, true );
+	Color c{};
+	c.SetRawColor( clr );
+	data->SetColor( lpszEntry, c );
 }
 
 KeyValues* CHammer::GetProfileKeyValues( LPCTSTR lpszSection )

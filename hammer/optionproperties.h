@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -17,6 +17,7 @@
 #include "OPTTextures.h"
 #include "OPTConfigs.h"
 #include "OPTBuild.h"
+#include "OPTColor.h"
 
 class COptionProperties : public CPropertySheet
 {
@@ -35,6 +36,7 @@ public:
 	COPTTextures Textures;
 	COPTConfigs Configs;
 	COPTBuild Build;
+	COPTColor Color;
 
 // Operations
 public:

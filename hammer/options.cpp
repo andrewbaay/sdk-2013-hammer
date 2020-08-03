@@ -18,10 +18,10 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
 
-static const char *pszGeneral = "General";
-static const char *pszView2D = "2D Views";
-static const char *pszView3D = "3D Views";
-static const char *g_szColors = "Custom2DColors";
+static constexpr const char *pszGeneral = "General";
+static constexpr const char *pszView2D = "2D Views";
+static constexpr const char *pszView3D = "3D Views";
+static constexpr const char *pszColors = "Custom2DColors";
 
 const int iThisVersion = 2;
 
@@ -545,8 +545,6 @@ bool COptions::Read(void)
 	APP()->SetDirectory( DIR_AUTOSAVE, general.szAutosaveDir );
 
 	// read view2d
-	view2d.bCrosshairs = APP()->GetProfileInt(pszView2D, "Crosshairs", FALSE);
-	view2d.bGroupCarve = APP()->GetProfileInt(pszView2D, "GroupCarve", TRUE);
 	view2d.bScrollbars = APP()->GetProfileInt(pszView2D, "Scrollbars", TRUE);
 	view2d.bRotateConstrain = APP()->GetProfileInt(pszView2D, "RotateConstrain", FALSE);
 	view2d.bDrawVertices = APP()->GetProfileInt(pszView2D, "Draw Vertices", TRUE);
@@ -569,7 +567,6 @@ bool COptions::Read(void)
 	view2d.bUsegroupcolors = APP()->GetProfileInt(pszView2D, "Usegroupcolors", TRUE);
 
 	// read view3d
-	view3d.bHardware = APP()->GetProfileInt(pszView3D, "Hardware", FALSE);
 	view3d.bReverseY = APP()->GetProfileInt(pszView3D, "Reverse Y", TRUE);
 	view3d.iBackPlane = APP()->GetProfileInt(pszView3D, "BackPlane", 5000);
 	view3d.bUseMouseLook = APP()->GetProfileInt(pszView3D, "UseMouseLook", TRUE);
@@ -581,8 +578,33 @@ bool COptions::Read(void)
 	view3d.bFilterTextures = APP()->GetProfileInt(pszView3D, "FilterTextures", TRUE);
 	view3d.bReverseSelection = APP()->GetProfileInt(pszView3D, "ReverseSelection", FALSE);
 	view3d.bInvertDisplacementAlpha = APP()->GetProfileInt(pszView3D, "InvertDisplacementAlpha", TRUE);
-	view3d.fFOV = 90;
-	view3d.fLightConeLength = 10;
+	view3d.fFOV = APP()->GetProfileInt(pszView3D, "FOV", 90);
+	view3d.fLightConeLength = APP()->GetProfileInt(pszView3D, "LightConeLength", 10);
+
+	// read color
+	colors.bUseCustom = APP()->GetProfileInt(pszColors, "UseCustom", 0) != 0;
+	colors.clrAxis = APP()->GetProfileColor(pszColors, "Grid0", 0 , 100, 100);
+	colors.bScaleAxisColor = (APP()->GetProfileInt(pszColors, "ScaleGrid0", 0) != 0);
+	colors.clrGrid = APP()->GetProfileColor(pszColors, "Grid", 50 , 50, 50);
+	colors.bScaleGridColor = (APP()->GetProfileInt(pszColors, "ScaleGrid", 1) != 0);
+	colors.clrGrid10 = APP()->GetProfileColor(pszColors, "Grid10", 40 , 40, 40);
+	colors.bScaleGrid10Color = (APP()->GetProfileInt(pszColors, "ScaleGrid10", 1) != 0);
+	colors.clrGrid1024 = APP()->GetProfileColor(pszColors, "Grid1024", 40 , 40, 40);
+	colors.bScaleGrid1024Color = (APP()->GetProfileInt(pszColors, "ScaleGrid1024", 1) != 0);
+	colors.clrGridDot = APP()->GetProfileColor(pszColors, "GridDot", 128, 128, 128);
+	colors.bScaleGridDotColor = (APP()->GetProfileInt(pszColors, "ScaleGridDot", 1) != 0);
+
+	colors.clrBrush = APP()->GetProfileColor(pszColors, "LineColor", 0, 0, 0);
+	colors.clrEntity = APP()->GetProfileColor(pszColors, "Entity", 220, 30, 220);
+	colors.clrVertex = APP()->GetProfileColor(pszColors, "Vertex", 0, 0, 0);
+	colors.clrBackground = APP()->GetProfileColor(pszColors, "Background", 0, 0, 0);
+	colors.clrToolHandle = APP()->GetProfileColor(pszColors, "HandleColor", 0, 0, 0);
+	colors.clrToolBlock = APP()->GetProfileColor(pszColors, "BoxColor", 0, 0, 0);
+	colors.clrToolSelection = APP()->GetProfileColor(pszColors, "ToolSelect", 0, 0, 0);
+	colors.clrToolMorph = APP()->GetProfileColor(pszColors, "Morph", 255, 0, 0);
+	colors.clrToolPath = APP()->GetProfileColor(pszColors, "Path", 255, 0, 0);
+	colors.clrSelection = APP()->GetProfileColor(pszColors, "Selection", 220, 0, 0);
+	colors.clrToolDrag = APP()->GetProfileColor(pszColors, "ToolDrag", 255, 255, 0);
 
 	ReadColorSettings();
 
@@ -646,33 +668,7 @@ bool COptions::RunConfigurationDialog()
 //-----------------------------------------------------------------------------
 void COptions::ReadColorSettings(void)
 {
-	colors.bUseCustom = (APP()->GetProfileInt(g_szColors, "UseCustom", 0) != 0);
-	if (colors.bUseCustom)
-	{
-		colors.clrAxis = APP()->GetProfileColor(g_szColors, "Grid0", 0 , 100, 100);
-		colors.bScaleAxisColor = (APP()->GetProfileInt(g_szColors, "ScaleGrid0", 0) != 0);
-		colors.clrGrid = APP()->GetProfileColor(g_szColors, "Grid", 50 , 50, 50);
-		colors.bScaleGridColor = (APP()->GetProfileInt(g_szColors, "ScaleGrid", 1) != 0);
-		colors.clrGrid10 = APP()->GetProfileColor(g_szColors, "Grid10", 40 , 40, 40);
-		colors.bScaleGrid10Color = (APP()->GetProfileInt(g_szColors, "ScaleGrid10", 1) != 0);
-		colors.clrGrid1024 = APP()->GetProfileColor(g_szColors, "Grid1024", 40 , 40, 40);
-		colors.bScaleGrid1024Color = (APP()->GetProfileInt(g_szColors, "ScaleGrid1024", 1) != 0);
-		colors.clrGridDot = APP()->GetProfileColor(g_szColors, "GridDot", 128, 128, 128);
-		colors.bScaleGridDotColor = (APP()->GetProfileInt(g_szColors, "ScaleGridDot", 1) != 0);
-
-		colors.clrBrush = APP()->GetProfileColor(g_szColors, "LineColor", 0, 0, 0);
-		colors.clrEntity = APP()->GetProfileColor(g_szColors, "Entity", 220, 30, 220);
-		colors.clrVertex = APP()->GetProfileColor(g_szColors, "Vertex", 0, 0, 0);
-		colors.clrBackground = APP()->GetProfileColor(g_szColors, "Background", 0, 0, 0);
-		colors.clrToolHandle = APP()->GetProfileColor(g_szColors, "HandleColor", 0, 0, 0);
-		colors.clrToolBlock = APP()->GetProfileColor(g_szColors, "BoxColor", 0, 0, 0);
-		colors.clrToolSelection = APP()->GetProfileColor(g_szColors, "ToolSelect", 0, 0, 0);
-		colors.clrToolMorph = APP()->GetProfileColor(g_szColors, "Morph", 255, 0, 0);
-		colors.clrToolPath = APP()->GetProfileColor(g_szColors, "Path", 255, 0, 0);
-		colors.clrSelection = APP()->GetProfileColor(g_szColors, "Selection", 220, 0, 0);
-		colors.clrToolDrag = APP()->GetProfileColor(g_szColors, "ToolDrag", 255, 255, 0);
-	}
-	else
+	if (!colors.bUseCustom)
 	{
 		if (Options.view2d.bWhiteOnBlack)
 		{
@@ -759,8 +755,6 @@ void COptions::Write( BOOL fOverwrite, BOOL fSaveConfigs )
 
 
 	// write view2d
-	APP()->WriteProfileInt(pszView2D, "Crosshairs", view2d.bCrosshairs);
-	APP()->WriteProfileInt(pszView2D, "GroupCarve", view2d.bGroupCarve);
 	APP()->WriteProfileInt(pszView2D, "Scrollbars", view2d.bScrollbars);
 	APP()->WriteProfileInt(pszView2D, "RotateConstrain", view2d.bRotateConstrain);
 	APP()->WriteProfileInt(pszView2D, "Draw Vertices", view2d.bDrawVertices);
@@ -783,7 +777,6 @@ void COptions::Write( BOOL fOverwrite, BOOL fSaveConfigs )
 	APP()->WriteProfileInt(pszView2D, "Usegroupcolors", view2d.bUsegroupcolors);
 
 	// write view3d
-	APP()->WriteProfileInt(pszView3D, "Hardware", view3d.bHardware);
 	APP()->WriteProfileInt(pszView3D, "Reverse Y", view3d.bReverseY);
 	APP()->WriteProfileInt(pszView3D, "BackPlane", view3d.iBackPlane);
 	APP()->WriteProfileInt(pszView3D, "UseMouseLook", view3d.bUseMouseLook);
@@ -795,10 +788,33 @@ void COptions::Write( BOOL fOverwrite, BOOL fSaveConfigs )
 	APP()->WriteProfileInt(pszView3D, "FilterTextures", view3d.bFilterTextures);
 	APP()->WriteProfileInt(pszView3D, "ReverseSelection", view3d.bReverseSelection);
 	APP()->WriteProfileInt(pszView3D, "InvertDisplacementAlpha", view3d.bInvertDisplacementAlpha);
+	APP()->WriteProfileInt(pszView3D, "FOV", view3d.fFOV);
+	APP()->WriteProfileInt(pszView3D, "LightConeLength", view3d.fLightConeLength);
 
-	//
-	// We don't write custom color settings because there is no GUI for them yet.
-	//
+	// write color
+	APP()->WriteProfileInt(pszColors, "UseCustom", colors.bUseCustom);
+	APP()->WriteProfileColor(pszColors, "Grid0", colors.clrAxis);
+	APP()->WriteProfileInt(pszColors, "ScaleGrid0", colors.bScaleAxisColor);
+	APP()->WriteProfileColor(pszColors, "Grid", colors.clrGrid);
+	APP()->WriteProfileInt(pszColors, "ScaleGrid", colors.bScaleGridColor);
+	APP()->WriteProfileColor(pszColors, "Grid10", colors.clrGrid10);
+	APP()->WriteProfileInt(pszColors, "ScaleGrid10", colors.bScaleGrid10Color);
+	APP()->WriteProfileColor(pszColors, "Grid1024", colors.clrGrid1024);
+	APP()->WriteProfileInt(pszColors, "ScaleGrid1024", colors.bScaleGrid1024Color);
+	APP()->WriteProfileColor(pszColors, "GridDot", colors.clrGridDot);
+	APP()->WriteProfileInt(pszColors, "ScaleGridDot", colors.bScaleGridDotColor);
+
+	APP()->WriteProfileColor(pszColors, "LineColor", colors.clrBrush);
+	APP()->WriteProfileColor(pszColors, "Entity", colors.clrEntity);
+	APP()->WriteProfileColor(pszColors, "Vertex", colors.clrVertex);
+	APP()->WriteProfileColor(pszColors, "Background", colors.clrBackground);
+	APP()->WriteProfileColor(pszColors, "HandleColor", colors.clrToolHandle);
+	APP()->WriteProfileColor(pszColors, "BoxColor", colors.clrToolBlock);
+	APP()->WriteProfileColor(pszColors, "ToolSelect", colors.clrToolSelection);
+	APP()->WriteProfileColor(pszColors, "Morph", colors.clrToolMorph);
+	APP()->WriteProfileColor(pszColors, "Path", colors.clrToolPath);
+	APP()->WriteProfileColor(pszColors, "Selection", colors.clrSelection);
+	APP()->WriteProfileColor(pszColors, "ToolDrag", colors.clrToolDrag);
 
 	// Write out the game configurations
 	if ( fSaveConfigs )
@@ -855,8 +871,6 @@ void COptions::SetDefaults(void)
 	general.bShowNoDrawBrushes = TRUE;
 
 	// view2d
-	view2d.bCrosshairs = FALSE;
-	view2d.bGroupCarve = TRUE;
 	view2d.bScrollbars = TRUE;
 	view2d.bRotateConstrain = FALSE;
 	view2d.bDrawVertices = TRUE;
@@ -880,7 +894,6 @@ void COptions::SetDefaults(void)
 
 	// view3d
 	view3d.bUseMouseLook = TRUE;
-	view3d.bHardware = FALSE;
 	view3d.bReverseY = FALSE;
 	view3d.iBackPlane = 5000;
 	view3d.nModelDistance = 400;
@@ -892,6 +905,8 @@ void COptions::SetDefaults(void)
 	view3d.bReverseSelection = FALSE;
 	view3d.bInvertDisplacementAlpha = TRUE;
 	view3d.bPreviewModelFade = false;
+	view3d.fFOV = 90;
+	view3d.fLightConeLength = 10;
 
 	if ( bWrite )
 	{

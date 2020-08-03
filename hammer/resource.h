@@ -188,6 +188,7 @@
 #define IDD_DISP_SCULPT_PROJECT_OPTIONS 353
 #define IDD_DISP_SCULPT_CARVE_OPTIONS   354
 #define IDI_OUTPUT_EXTERNAL             356
+#define IDD_OPTIONS_COLOR               356
 #define IDD_ENTITY_SPRINKLE             357
 #define IDD_DIALOG_SYNC_FILE            358
 #define IDD_KEYBIND_EDITOR              360
@@ -289,6 +290,7 @@
 #define IDC_AUTOSAVESPACE               1010
 #define IDC_LOAD_IMAGE                  1010
 #define IDC_SPRINKLE_GRID_SIZE_X        1010
+#define IDC_COLOR_AXIS                  1010
 #define IDC_REVERT                      1011
 #define IDC_TMOVEDOWN                   1011
 #define IDC_FILTER_GROUPS               1011
@@ -300,6 +302,7 @@
 #define IDC_LOOKIN                      1011
 #define IDC_MAPITERATIONS               1011
 #define IDC_SCULPT_PUSH_OPTION_OFFSET_AMOUNT 1011
+#define IDC_COLOR_GRID                  1011
 #define IDC_VISGROUP_MOVEUP             1012
 #define IDC_TDELETE                     1012
 #define IDC_BROWSE_BSP                  1012
@@ -308,13 +311,16 @@
 #define ID_SG_VISUAL_2                  1012
 #define IDC_UNDOSPIN2                   1012
 #define IDC_SCULPT_PUSH_OPTION_SMOOTH_AMOUNT 1012
+#define IDC_COLOR_DOT_GRID              1012
 #define IDC_TNEW                        1013
 #define IDC_PARMS_BSP                   1013
 #define ID_SG_VISUAL_3                  1013
 #define IDC_SCULPT_PUSH_OPTION_FALLOFF_POSITION 1013
+#define IDC_COLOR_10_GRID               1013
 #define IDC_SOLIDWINDOW                 1014
 #define IDC_BROWSE_LIGHT                1014
 #define ID_SG_VISUAL_4                  1014
+#define IDC_COLOR_1024_GRID             1014
 #define IDC_APPLY                       1015
 #define IDC_SOLIDWINDOW2                1015
 #define IDC_PARMS_LIGHT                 1015
@@ -322,24 +328,38 @@
 #define ID_SG_VISUAL_5                  1015
 #define IDC_SCULPT_PUSH_OPTION_SMOOTH_AMOUNT3 1015
 #define IDC_SCULPT_PUSH_OPTION_FALLOFF_FINAL 1015
+#define IDC_COLOR_BACKGROUND            1015
 #define IDC_BROWSE_VIS                  1016
 #define ID_SG_VISUAL_6                  1016
+#define IDC_COLOR_TOOL_DRAG             1016
 #define IDC_PARMS_VIS                   1017
 #define ID_SG_VISUAL_7                  1017
+#define IDC_BUTTON10                    1017
+#define IDC_COLOR_WIREFRAME_NS          1017
 #define IDC_BROWSE_BSPDIR               1018
 #define ID_SG_VISUAL_8                  1018
+#define IDC_COLOR_WIREFRAME             1018
 #define ID_SG_VISUAL_9                  1019
+#define IDC_COLOR_BRUSH                 1019
 #define ID_SG_VISUAL_10                 1020
+#define IDC_COLOR_ENTITY                1020
 #define ID_SG_VISUAL_11                 1021
+#define IDC_COLOR_SELECTION             1021
 #define ID_SG_VISUAL_12                 1022
+#define IDC_COLOR_VERTEX                1022
 #define IDC_ROTATE                      1023
 #define ID_SG_VISUAL_13                 1023
+#define IDC_COLOR_TOOL_HANDLE           1023
 #define IDC_KEYVALUES                   1024
 #define ID_SG_VISUAL_14                 1024
+#define IDC_COLOR_TOOL_BLOCK            1024
 #define ID_SG_VISUAL_15                 1025
+#define IDC_COLOR_TOOL_SELECTION        1025
 #define ID_SG_VISUAL_16                 1026
+#define IDC_COLOR_TOOL_MORPH            1026
 #define IDC_TEXTURESIZE                 1027
 #define ID_SG_VISUAL_17                 1027
+#define IDC_COLOR_TOOL_PATH             1027
 #define IDC_BROWSERDUMMY                1028
 #define ID_SG_VISUAL_18                 1028
 #define ID_SG_VISUAL_19                 1029
@@ -904,6 +924,7 @@
 #define IDC_DO_OPERATION                1648
 #define IDC_SCULPT_PUSH                 1648
 #define IDC_INVERT_DISPLACEMENT_ALPHA   1648
+#define IDC_COLOR_ENABLE                1648
 #define IDC_SIMILARCHECK                1649
 #define IDC_AUTOSAVEDIR                 1649
 #define IDC_SCULPT_CARVE                1649
@@ -917,6 +938,7 @@
 #define IDC_CHECK3                      1657
 #define ID_DISP_NORAY_COLL              1657
 #define IDC_SPRINKLE_DEFINITION_GRID_SIZE 1657
+#define IDC_SCALE_GRID                  1657
 #define IDC_FOV                         1659
 #define IDC_LIGHT_CONE_LENGTH           1660
 #define IDC_BUTTON2                     1661
@@ -955,10 +977,14 @@
 #define IDC_PROJECT_SIZE_NUM            1690
 #define IDC_CARVE_BRUSH                 1692
 #define IDC_CHECK2                      1693
+#define IDC_SCALE_AXIS                  1693
 #define ID_DISP_TAG_REMOVE              1694
 #define IDC_CHECKIN_LIST                1695
 #define IDC_SLIDER1                     1696
 #define IDC_VOLUME                      1696
+#define IDC_SCALE_DOT_GRID              1697
+#define IDC_SCALE_10_GRID               1698
+#define IDC_SCALE_1024_GRID             1699
 #define IDC_CHECKIN_STATUS              1702
 #define IDC_SPRINKLE_DENSITY            1703
 #define IDC_SPRINKLE_MODE               1704
@@ -1355,9 +1381,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        356
+#define _APS_NEXT_RESOURCE_VALUE        358
 #define _APS_NEXT_COMMAND_VALUE         33290
-#define _APS_NEXT_CONTROL_VALUE         1697
+#define _APS_NEXT_CONTROL_VALUE         1700
 #define _APS_NEXT_SYMED_VALUE           116
 #endif
 #endif

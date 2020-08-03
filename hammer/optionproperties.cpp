@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -54,9 +54,10 @@ void COptionProperties::DoStandardInit()
 	AddPage(&View3D);
 	AddPage(&Textures);
 	AddPage(&Build);
+	AddPage(&Color);
 }
 
-void COptionProperties::OnClose() 
+void COptionProperties::OnClose()
 {
 	CPropertySheet::OnClose();
 }

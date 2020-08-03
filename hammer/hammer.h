@@ -121,10 +121,11 @@ public:
 
 	UINT GetProfileIntA(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault) override;
 	CString GetProfileStringA(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszDefault = NULL) override;
-	COLORREF GetProfileColor(const char *pszSection, const char *pszKey, int r, int g, int b);
+	COLORREF GetProfileColor(LPCTSTR lpszSection, LPCTSTR lpszEntry, int r, int g, int b );
 
 	BOOL WriteProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nValue) override;
 	BOOL WriteProfileStringA(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszValue) override;
+	void WriteProfileColor(LPCTSTR lpszSection, LPCTSTR lpszEntry, COLORREF clr);
 
 	KeyValues* GetProfileKeyValues( LPCSTR section );
 
