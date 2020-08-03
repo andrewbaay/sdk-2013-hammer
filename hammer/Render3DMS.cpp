@@ -815,6 +815,7 @@ void CRender3D::RenderSkybox()
 			for ( int j = 0; j < 4; ++j )
 			{
 				meshBuilder.Position3fv( positionArray[j].Base() );
+				meshBuilder.Normal3fv( vec3_origin.Base() );
 				meshBuilder.TexCoord2fv( 0, texCoordArray[j].Base() );
 				meshBuilder.AdvanceVertex();
 			}
