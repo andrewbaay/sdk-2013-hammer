@@ -16,7 +16,6 @@
 #include <mmsystem.h>
 #include "Camera.h"
 #include "GlobalFunctions.h"
-#include "Gizmo.h"
 #include "History.h"
 #include "Keyboard.h"
 #include "MainFrm.h"

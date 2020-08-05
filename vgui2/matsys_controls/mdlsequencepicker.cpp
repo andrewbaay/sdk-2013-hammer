@@ -202,7 +202,7 @@ void CMDLSequencePicker::RefreshActivitiesAndSequencesList()
 
 	for (int j = 0; j < hdr->GetNumSeq(); j++)
 	{
-		if ( /*g_viewerSettings.showHidden ||*/ !(hdr->pSeqdesc(j).flags & STUDIO_HIDDEN))
+		if (!(hdr->pSeqdesc(j).flags & STUDIO_HIDDEN))
 		{
 			const char *pActivityName = hdr->pSeqdesc(j).pszActivityName();
 			if ( pActivityName && pActivityName[0] )

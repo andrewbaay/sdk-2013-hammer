@@ -27,7 +27,6 @@ class CMapGroup;
 class CMapView;
 class CMapView3D;
 class CMapView2D;
-class IBSPLighting;
 class CRender;
 class CManifest;
 
@@ -225,7 +224,6 @@ class CMapDoc : public CDocument
 
 		virtual bool IsManifest( void ) { return false; }
 
-		IBSPLighting	*GetBSPLighting()	{ return m_pBSPLighting; }
 		CToolManager	*GetTools()			{ return m_pToolManager; } // return tools working on this document
 		CSelection		*GetSelection()		{ return m_pSelection;	} // return current selection
 
@@ -348,8 +346,6 @@ class CMapDoc : public CDocument
 
 		void DeleteObject(CMapClass *pObject);
 		void DeleteObjectList(CMapObjectList &List);
-
-		void InternalEnableLightPreview( bool bCustomFilename );
 
 		//
 		// Object selection:
@@ -719,8 +715,6 @@ class CMapDoc : public CDocument
 		float m_flAnimationTime;		// Current time in the animation
 		bool m_bIsAnimating;
 
-		IBSPLighting		*m_pBSPLighting;
-
 		//
 		// Visgroups.
 		//
@@ -757,12 +751,6 @@ class CMapDoc : public CDocument
 		afx_msg void OnEditApplytexture();
 		afx_msg void OnToolsSubtractselection();
 		afx_msg void OnToolsCenterOrigins();
-		afx_msg void OnEnableLightPreview();
-		afx_msg void OnEnableLightPreviewCustomFilename();
-		afx_msg void OnDisableLightPreview();
-		afx_msg void OnToggleLightPreview();
-		afx_msg void OnUpdateLightPreview();
-		afx_msg void OnAbortLightCalculation();
 		afx_msg void OnEditCopy();
 		afx_msg void OnEditPaste();
 		afx_msg void OnUpdateEditSelection(CCmdUI *pCmdUI);

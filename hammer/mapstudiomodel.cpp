@@ -12,7 +12,6 @@
 #include "MapStudioModel.h"
 #include "Render2D.h"
 #include "Render3D.h"
-#include "ViewerSettings.h"
 #include "hammer.h"
 #include "materialsystem/IMesh.h"
 #include "TextureSystem.h"
@@ -107,7 +106,6 @@ CMapStudioModel *CMapStudioModel::CreateMapStudioModel(const char *pszModelPath,
 CMapStudioModel::CMapStudioModel(void)
 {
 	Initialize();
-	InitViewerSettings();
 }
 
 

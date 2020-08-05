@@ -72,13 +72,7 @@ IDR_MAINFRAME           ICON                    "res\\Forge.ico"
 
 IDR_FORGEMAPTYPE        ICON                    "res\\ForgeDoc.ico"
 
-IDR_FORGEPAKTYPE        ICON                    "res\\icon1.ico"
-
 IDI_TEXTUREWINDOW       ICON                    "res\\texturew.ico"
-
-IDI_BRUSHEDITOR         ICON                    "res\\ico00001.ico"
-
-BMI_SETTINGS            ICON                    "res\\ico00002.ico"
 
 AFX_IDI_STD_FRAME       ICON                    "res\\afx_idi_.ico"
 
@@ -120,17 +114,7 @@ IDI_OUTPUT_EXTERNAL     ICON                    "res\\output_external.ico"
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
 
-IDB_PAKENTRYTYPES       BITMAP                  "res\\paktypes.bmp"
-
 IDR_SELECTIONTOOLS      BITMAP                  "res\\seltools.bmp"
-
-BMB_SETTINGS            BITMAP                  "res\\set_u.bmp"
-
-IDB_PREFABS             BITMAP                  "res\\bitmap1.bmp"
-
-IDB_CUBE                BITMAP                  "res\\cube.bmp"
-
-IDB_CUBECHECK           BITMAP                  "res\\cubechec.bmp"
 
 IDB_TREELISTCHECKS      BITMAP                  "res\\treelistchecks.bmp"
 
@@ -155,8 +139,6 @@ IDB_GIZMO_SCALE_HANDLE  BITMAP                  "res\\gizmoscale.bmp"
 IDB_GIZMO_ROTATE_HANDLE BITMAP                  "res\\gizmorotate.bmp"
 
 IDR_DISPEDIT_TOOLBAR    BITMAP                  "res\\dispedit.bmp"
-
-IDB_BITMAP1             BITMAP                  "res\\bmp00001.bmp"
 
 IDR_UNDOREDO            BITMAP                  "res\\undoredo.bmp"
 
@@ -3190,7 +3172,6 @@ STRINGTABLE
 BEGIN
     IDR_MAINFRAME           "Hammer"
     IDR_FORGEMAPTYPE        "\nvmf\nValve Map Files\nValve Map Files (*.vmf)\n.vmf"
-    IDR_FORGEPAKTYPE        "\npak\nQuake PAK archive\nQuake PAK archive (*.pak)\n.pak\nWorldcraft.Pak\nQuake PAK archive"
     IDS_NONE                "(none)"
     IDR_MANIFESTDOC         "\nvmm\nValve Manifest Map Files\nValve Manifest Map Files (*.manifest_vmf)\n.vmm"
 END

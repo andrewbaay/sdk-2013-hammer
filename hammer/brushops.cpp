@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -14,7 +14,6 @@
 #include "MapFace.h"
 #include "hammer_mathlib.h"
 #include "history.h"
-#include "Error3d.h"
 #include "BrushOps.h"
 #include "GlobalFunctions.h"
 
@@ -119,7 +118,7 @@ void RemoveDuplicateWindingPoints(winding_t *pWinding, float fMinDist)
 
 				pWinding->numpoints--;
 			}
-		}		
+		}
 	}
 }
 
@@ -260,7 +259,7 @@ winding_t *CreateWindingFromPlane(PLANE *pPlane)
 	float	max, v;
 	Vector	org, vright, vup;
 	winding_t	*w;
-	
+
 	// find the major axis
 	max = -BOGUS_RANGE;
 	x = -1;
@@ -317,37 +316,3 @@ winding_t *CreateWindingFromPlane(PLANE *pPlane)
 
 	return w;
 }
-
-
-static CArray<error3d, error3d&> Errors;
-static int nErrors;
-
-void Add3dError(DWORD dwObjectID, LPCTSTR pszReason, PVOID pInfo)
-{
-	error3d err;
-	err.dwObjectID = dwObjectID;
-	err.pszReason = pszReason;
-	err.pInfo = pInfo;
-	Errors.Add(err);
-	++nErrors;
-}
-
-int Get3dErrorCount()
-{
-	return nErrors;
-}
-
-error3d * Enum3dErrors(BOOL bStart)
-{
-	static int iCurrent = 0;
-
-	if(bStart)
-		iCurrent = 0;
-
-	if(iCurrent == nErrors)
-		return NULL;
-
-	return & Errors.GetData()[iCurrent++];
-}
-
-

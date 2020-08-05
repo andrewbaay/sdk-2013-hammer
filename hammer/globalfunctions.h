@@ -60,14 +60,6 @@ extern CMessageWnd *g_pwndMessage;
 
 void Msg(int type, PRINTF_FORMAT_STRING const char *fmt, ...);
 
-
-//
-// timing functions
-//
-double I_FloatTime( void );
-void I_BeginTime( void );
-double I_EndTime( void );
-
 // noise function
 float PerlinNoise2D( float x, float y, float rockiness );
 float PerlinNoise2DScaled( float x, float y, float rockiness );

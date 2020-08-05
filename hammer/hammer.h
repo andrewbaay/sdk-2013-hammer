@@ -190,11 +190,6 @@ protected:
 
 	static bool	m_bIsNewDocumentVisible;
 
-	// Check for 16-bit color or higher.
-	bool Check16BitColor();
-
-	void UpdateLighting(CMapDoc *pDoc);
-
 	bool m_bClosing;					// The user has initiated app shutdown.
 	bool m_bActiveApp;
 	bool m_SuppressVideoAllocation;

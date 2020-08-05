@@ -15,7 +15,6 @@
 #include "Render2D.h"
 #include "Render3D.h"
 #include "StudioModel.h"
-#include "ViewerSettings.h"
 #include "materialsystem/IMesh.h"
 #include "TextureSystem.h"
 #include "bone_setup.h"

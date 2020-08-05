@@ -20,9 +20,6 @@
 #include "Manifest.h"
 #include "MapView3D.h"
 #include "MapView2D.h"
-#include "PakDoc.h"
-#include "PakViewDirec.h"
-#include "PakFrame.h"
 #include "Prefabs.h"
 #include "GlobalFunctions.h"
 #include "Shell.h"
@@ -32,7 +29,6 @@
 #include "ToolManager.h"
 #include "Hammer.h"
 #include "StudioModel.h"
-#include "ibsplighting.h"
 #include "statusbarids.h"
 #include "tier0/icommandline.h"
 #include "soundsystem.h"
@@ -982,28 +978,6 @@ bool CHammer::InitSessionGameConfig(const char *szGame)
 
 
 //-----------------------------------------------------------------------------
-// Check for 16-bit color or higher.
-//-----------------------------------------------------------------------------
-bool CHammer::Check16BitColor()
-{
-	// Check for 15-bit color or higher.
-	HDC hDC = ::CreateCompatibleDC(NULL);
-	if (hDC)
-	{
-		int bpp = GetDeviceCaps(hDC, BITSPIXEL);
-		if (bpp < 15)
-		{
-			AfxMessageBox("Your screen must be in 16-bit color or higher to run Hammer.");
-			return false;
-		}
-		::DeleteDC(hDC);
-	}
-
-	return true;
-}
-
-
-//-----------------------------------------------------------------------------
 // Purpose: Returns true if Hammer is in the process of shutting down.
 //-----------------------------------------------------------------------------
 InitReturnVal_t CHammer::Init()
@@ -1027,9 +1001,6 @@ InitReturnVal_t CHammer::HammerInternalInit()
 	InitReturnVal_t nRetVal = BaseClass::Init();
 	if ( nRetVal != INIT_OK )
 		return nRetVal;
-
-	if ( !Check16BitColor() )
-		return INIT_FAILED;
 
 	//
 	// Create a custom window class for this application so that engine's
@@ -1910,57 +1881,6 @@ bool CHammer::GetForceRenderNextFrame()
 	return m_bForceRenderNextFrame;
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  : *pDoc -
-//-----------------------------------------------------------------------------
-void CHammer::UpdateLighting(CMapDoc *pDoc)
-{
-	static int lastPercent = -20000;
-	int curPercent = -10000;
-
-	IBSPLighting *pLighting = pDoc->GetBSPLighting();
-	if ( pLighting )
-	{
-		// Update 5x / second.
-		static DWORD lastTime = 0;
-
-		DWORD curTime = GetTickCount();
-		if ( curTime - lastTime < 200 )
-		{
-			curPercent = lastPercent; // no change
-		}
-		else
-		{
-			curPercent = (int)( pLighting->GetPercentComplete() * 10000.0f );
-			lastTime = curTime;
-		}
-
-		// Redraw the views when new lightmaps are ready.
-		if ( pLighting->CheckForNewLightmaps() )
-		{
-			SetForceRenderNextFrame();
-			pDoc->UpdateAllViews( MAPVIEW_UPDATE_ONLY_3D );
-		}
-	}
-
-	// Update the status text.
-	if ( curPercent == -10000 )
-	{
-		SetStatusText( SBI_LIGHTPROGRESS, "<->" );
-	}
-	else if( curPercent != lastPercent )
-	{
-		char str[256];
-		sprintf( str, "%.2f%%", curPercent / 100.0f );
-		SetStatusText( SBI_LIGHTPROGRESS, str );
-	}
-
-	lastPercent = curPercent;
-}
-
-
 //-----------------------------------------------------------------------------
 // Purpose: Performs idle processing. Runs the frame and does MFC idle processing.
 // Input  : lCount - The number of times OnIdle has been called in succession,
@@ -1971,12 +1891,6 @@ void CHammer::UpdateLighting(CMapDoc *pDoc)
 BOOL CHammer::OnIdle(LONG lCount)
 {
 	UpdatePrefabs();
-
-	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
-	if (pDoc)
-	{
-		UpdateLighting(pDoc);
-	}
 
 	g_Textures.UpdateFileChangeWatchers();
 	UpdateStudioFileChangeWatcher();

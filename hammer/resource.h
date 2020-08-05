@@ -30,7 +30,6 @@
 #define IDR_FORGEMAPTYPE                129
 #define IDR_MAPDOC                      129
 #define IDR_MAPDOC_VALVE                129
-#define IDR_FORGEPAKTYPE                130
 #define IDR_QUAKEMAPTYPE                131
 #define IDS_NONE                        131
 #define IDR_FORGEMAPTYPE2               132

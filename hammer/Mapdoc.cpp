@@ -59,7 +59,6 @@
 #include "TransformDlg.h"
 #include "VisGroup.h"
 #include "hammer.h"
-#include "ibsplighting.h"
 #include "camera.h"
 #include "MapDiffDlg.h"
 #include "StockSolids.h"
@@ -114,12 +113,6 @@ BEGIN_MESSAGE_MAP(CMapDoc, CDocument)
 	ON_COMMAND(ID_EDIT_APPLYTEXTURE, OnEditApplytexture)
 	ON_COMMAND(ID_TOOLS_SUBTRACTSELECTION, OnToolsSubtractselection)
 	ON_UPDATE_COMMAND_UI(ID_TOOLS_SUBTRACTSELECTION, OnUpdateEditSelection)
-	ON_COMMAND(ID_MAP_ENABLELIGHTPREVIEW, OnEnableLightPreview)
-	ON_COMMAND(ID_ENABLE_LIGHT_PREVIEW_CUSTOM_FILENAME, OnEnableLightPreviewCustomFilename)
-	ON_COMMAND(ID_MAP_DISABLELIGHTPREVIEW, OnDisableLightPreview)
-	ON_COMMAND(ID_MAP_UPDATELIGHTPREVIEW, OnUpdateLightPreview)
-	ON_COMMAND(ID_MAP_TOGGLELIGHTPREVIEW, OnToggleLightPreview)
-	ON_COMMAND(ID_MAP_ABORTLIGHTCALCULATION, OnAbortLightCalculation)
 	ON_COMMAND(ID_EDIT_COPYWC, OnEditCopy)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPYWC, OnUpdateEditSelection)
 	ON_COMMAND(ID_EDIT_PASTEWC, OnEditPaste)
@@ -469,7 +462,6 @@ CMapDoc::CMapDoc(void)
 
 	s_ActiveDocs.AddToTail(this);
 
-	m_pBSPLighting = 0;
 	m_pPortalFile = NULL;
 
 	m_SmoothingGroupVisual = 0;
@@ -535,8 +527,6 @@ CMapDoc::~CMapDoc(void)
 		delete m_pSelection;
 		m_pSelection = NULL;
 	}
-
-	OnDisableLightPreview();
 }
 
 
@@ -3284,9 +3274,6 @@ void CMapDoc::OnCloseDocument(void)
 //-----------------------------------------------------------------------------
 BOOL CMapDoc::OnSaveDocument(LPCTSTR lpszPathName)
 {
-	if( m_pBSPLighting )
-		m_pBSPLighting->Serialize();
-
 	//
 	// If a file with the same name exists, back it up before saving the new one.
 	//
@@ -11218,243 +11205,6 @@ ChunkFileResult_t CMapDoc::SaveViewSettingsVMF(CChunkFile *pFile, CSaveInfo *pSa
 		return eResult;
 
 	return(pFile->EndChunk());
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Turns on lighting preview mode by loading the BSP file with the
-//			same named as the VMF being edited.
-//-----------------------------------------------------------------------------
-void CMapDoc::InternalEnableLightPreview( bool bCustomFilename )
-{
-#if 0
-	OnDisableLightPreview();
-
-	m_pBSPLighting = CreateBSPLighting();
-
-	// Either use the VMF filename or the last-exported VMF name.
-	CString strFile;
-	if( m_strLastExportFileName.GetLength() == 0 )
-		strFile = GetPathName();
-	else
-		strFile = m_strLastExportFileName;
-
-	// Convert the extension to .bsp
-	char *p = strFile.GetBuffer(MAX_PATH);
-	char *ext = strrchr(p, '.');
-	if( ext )
-	{
-		strcpy( ext, ".bsp" );
-	}
-
-
-	// Strip out the directory.
-	char *cur = p;
-	while ((cur = strstr(cur, "/")) != NULL)
-	{
-		*cur = '\\';
-	}
-
-	char fileName[MAX_PATH];
-
-	char *pLastSlash = p;
-	char *pTest;
-	while ((pTest = strstr(pLastSlash, "\\")) != NULL)
-	{
-		pLastSlash = pTest + 1;
-	}
-
-	if( pLastSlash )
-		strcpy( fileName, pLastSlash );
-	else
-		strcpy( fileName, p );
-
-	strFile.ReleaseBuffer();
-
-
-	// Use <mod directory> + "/maps/" + <filename>
-	char fullPath[MAX_PATH*2];
-	sprintf( fullPath, "%s\\maps\\%s", g_pGameConfig->m_szModDir, fileName );
-
-
-	// Only do the dialog if they said to or if the default BSP file doesn't exist.
-	if( !bCustomFilename )
-	{
-		FILE *fp = fopen( fullPath, "rb" );
-		if( fp )
-			fclose( fp );
-		else
-			bCustomFilename = true;
-	}
-
-
-	CString finalPath;
-	if( bCustomFilename )
-	{
-		CFileDialog dlg(
-			TRUE,		// bOpenFile
-			"bsp",		// default extension
-			fullPath,	// default filename,
-			OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,	// flags
-			"BSP Files (*.bsp)|*.bsp|All Files (*.*)|*.*||",
-			NULL 		// filter
-			);
-
-		if( dlg.DoModal() != IDOK )
-			return;
-
-		finalPath = dlg.GetPathName();
-	}
-	else
-	{
-		finalPath = fullPath;
-	}
-
-	if( !m_pBSPLighting->Load( finalPath ) )
-	{
-		char str[256];
-		Q_snprintf( str, sizeof(str), "Can't load lighting from '%s'.", (LPCSTR)finalPath );
-		AfxMessageBox( str );
-	}
-
-
-	// Switch the first mapview we find into 3D lighting preview.
-	POSITION viewPos = GetFirstViewPosition();
-	while( viewPos )
-	{
-		CView *pView = GetNextView( viewPos );
-		if (pView->IsKindOf(RUNTIME_CLASS(CMapView3D)))
-		{
-			CMapView3D *pView3D = (CMapView3D *)pView;
-			pView3D->SetDrawType( VIEW3D_LIGHTING_PREVIEW2 );
-			break;
-		}
-	}
-#endif
-}
-
-
-void CMapDoc::OnEnableLightPreview()
-{
-	InternalEnableLightPreview( false );
-}
-
-
-void CMapDoc::OnEnableLightPreviewCustomFilename()
-{
-	InternalEnableLightPreview( true );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Turns off lighting preview mode.
-//-----------------------------------------------------------------------------
-void CMapDoc::OnDisableLightPreview()
-{
-#if 0
-	// Change any light preview views back to regular 3D.
-	POSITION p = GetFirstViewPosition();
-	while (p)
-	{
-		CView *pView = GetNextView(p);
-		if (pView->IsKindOf(RUNTIME_CLASS(CMapView3D)))
-		{
-			CMapView3D *pView3D = (CMapView3D *)pView;
-
-			if( pView3D->GetDrawType() == VIEW3D_LIGHTING_PREVIEW2 )
-				pView3D->SetDrawType( VIEW3D_TEXTURED );
-		}
-	}
-
-	if( m_pBSPLighting )
-	{
-		m_pBSPLighting->Release();
-		m_pBSPLighting = 0;
-	}
-#endif
-}
-
-
-void CMapDoc::OnUpdateLightPreview()
-{
-	if( !m_pBSPLighting )
-		return;
-
-	// Save out a file with just the ents.
-	char szFile[MAX_PATH];
-	V_strcpy_safe( szFile, GetPathName() );
-	szFile[strlen(szFile) - 1] = 'e';
-
-	if( !SaveVMF( szFile, SAVEFLAGS_LIGHTSONLY ) )
-	{
-		CString str;
-		str.FormatMessage( IDS_CANT_SAVE_ENTS_FILE, szFile );
-		return;
-	}
-
-	// Get it in memory.
-	CUtlVector<char> fileData;
-	FILE *fp = fopen( szFile, "rb" );
-	if( !fp )
-	{
-		CString str;
-		str.FormatMessage( IDS_CANT_OPEN_ENTS_FILE, szFile );
-		AfxMessageBox( str, MB_OK );
-		return;
-	}
-
-	fseek( fp, 0, SEEK_END );
-	fileData.SetSize( ftell( fp ) + 1 );
-	fseek( fp, 0, SEEK_SET );
-	fread( fileData.Base(), 1, fileData.Count(), fp );
-	fclose( fp );
-
-	// Null-terminate it.
-	fileData[ fileData.Count() - 1 ] = 0;
-
-	// Tell the incremental lighting manager to relight.
-	m_pBSPLighting->StartLighting( fileData.Base() );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CMapDoc::OnToggleLightPreview()
-{
-#if 0
-	if( m_pBSPLighting )
-	{
-		POSITION p = GetFirstViewPosition();
-		while (p)
-		{
-			CView *pView = GetNextView(p);
-			if (pView->IsKindOf(RUNTIME_CLASS(CMapView3D)))
-			{
-				CMapView3D *pView3D = (CMapView3D *)pView;
-
-				if( pView3D->GetDrawType() == VIEW3D_LIGHTING_PREVIEW2 )
-					pView3D->SetDrawType( VIEW3D_TEXTURED );
-				else if( pView3D->GetDrawType() == VIEW3D_TEXTURED )
-					pView3D->SetDrawType( VIEW3D_LIGHTING_PREVIEW2 );
-			}
-		}
-	}
-	else
-	{
-		// If no lighting is loaded, then load it.
-		OnEnableLightPreview();
-	}
-#endif
-}
-
-
-void CMapDoc::OnAbortLightCalculation()
-{
-	if( !m_pBSPLighting )
-		return;
-
-	m_pBSPLighting->Interrupt();
 }
 
 

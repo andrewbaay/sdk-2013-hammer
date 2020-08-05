@@ -22,7 +22,6 @@
 #include "TextureSystem.h"
 #include "ToolInterface.h"
 #include "StudioModel.h"
-#include "ibsplighting.h"
 #include "ToolManager.h"
 #include "mapview.h"
 #include "hammer.h"
@@ -1872,16 +1871,6 @@ void CRender3D::Render(void)
 	}
 
 	m_TranslucentSortRendering = true;
-
- 	if (IsInLightingPreview())
- 	{
- 		// Lighting preview?
- 		IBSPLighting *pBSPLighting = pDoc->GetBSPLighting();
- 		if (pBSPLighting)
- 		{
- 			pBSPLighting->Draw();
- 		}
- 	}
 
 	//
 	// Render the world using octree culling.
