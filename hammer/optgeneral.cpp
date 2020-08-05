@@ -205,6 +205,17 @@ BOOL COPTGeneral::OnApply(void)
 	CString str;
 	m_cAutosaveDir.GetWindowText(str);
 
+	if ( !V_IsAbsolutePath( str ) || str.GetAt( 0 ) == '\\' )
+	{
+		char progDir[MAX_PATH];
+		APP()->GetDirectory( DIR_PROGRAM, progDir );
+		V_strcat_safe( progDir, "hammer\\" );
+		if ( str.GetAt( 0 ) == '\\' )
+			str = progDir + str.Mid( 1 );
+		else
+			str = progDir + str;
+	}
+
 	if ( strcmp( Options.general.szAutosaveDir, str ) )
 	{
 		strcpy( Options.general.szAutosaveDir, str );

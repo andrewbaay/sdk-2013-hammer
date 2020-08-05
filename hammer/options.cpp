@@ -536,7 +536,7 @@ bool COptions::Read(void)
 
 	char szDefaultAutosavePath[MAX_PATH];
 	V_strcpy_safe( szDefaultAutosavePath, APP()->GetProfileString( pszGeneral, "Directory", "C:" ) );
-	V_strcpy_safe( szDefaultAutosavePath, "\\HammerAutosave\\" );
+	V_strcpy_safe( szDefaultAutosavePath, "\\autosave\\" );
 	strcpy( general.szAutosaveDir, APP()->GetProfileString("General", "Autosave Dir", szDefaultAutosavePath));
 	if ( Q_strlen( general.szAutosaveDir ) == 0 )
 	{
