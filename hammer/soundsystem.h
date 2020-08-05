@@ -40,6 +40,7 @@ public:
 	~CSoundSystem(void);
 
 	bool Initialize( );
+	bool InitializeEngine();
 	void ShutDown(void);
 
 	// Build the list of sounds
@@ -65,6 +66,8 @@ public:
 	void OpenSource( SoundType_t type, int nIndex );
 
 	void SetVolume( float value );
+
+	void PlaySoundFromMemory( const byte* mem, size_t memSize );
 
 private:
 	struct SoundInfo_t

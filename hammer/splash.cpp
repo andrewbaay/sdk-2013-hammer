@@ -8,7 +8,7 @@
 #include "resource.h"
 #include "Splash.h"
 #include "tier0/icommandline.h"
-
+#include "soundsystem.h"
 
 #define SPLASH_MIN_SHOW_TIME_MS	500
 
@@ -19,12 +19,9 @@
 // Sorry Tom...   :(
 #define HAMMER_TIME 1
 #ifdef HAMMER_TIME
-#include <io.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 #include "StatusBarIDs.h"
 
-unsigned char g_CantTouchThis[] =
+static constexpr const unsigned char g_CantTouchThis[] =
 {
 	0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x01, 0x00, 0x0B, 0x00, 0xF0, 0x4D, 0x54,
 	0x72, 0x6B, 0x00, 0x00, 0x00, 0x13, 0x00, 0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08, 0x00, 0xFF,
@@ -71,73 +68,15 @@ unsigned char g_CantTouchThis[] =
 
 /////////////////////////////////////////////////////////////////////////////
 
-#include <mmsystem.h>
-
-int m_uiMIDIPlayerID = 0;
-
-void CloseMIDIPlayer()
-{
-	// Close the MIDI player, if possible
-	if (m_uiMIDIPlayerID != 0)
-	{
-	  mciSendCommand(m_uiMIDIPlayerID, MCI_CLOSE, 0, NULL);
-	  m_uiMIDIPlayerID = 0;
-	}
-}
-void PlayMIDISong(LPTSTR szMIDIFileName, BOOL bRestart)
-{
-	// See if the MIDI player needs to be opened
-	if (m_uiMIDIPlayerID == 0)
-	{
-	  // Open the MIDI player by specifying the device and filename
-	  MCI_OPEN_PARMS mciOpenParms;
-	  mciOpenParms.lpstrDeviceType = "sequencer";
-	  mciOpenParms.lpstrElementName = szMIDIFileName;
-	  if (mciSendCommand(NULL, MCI_OPEN, MCI_OPEN_TYPE | MCI_OPEN_ELEMENT,
-		(DWORD)&mciOpenParms) == 0)
-		// Get the ID for the MIDI player
-		m_uiMIDIPlayerID = mciOpenParms.wDeviceID;
-	  else
-		// There was a problem, so just return
-		return;
-	}
-
-	// Restart the MIDI song, if necessary
-	if (bRestart)
-	{
-	  MCI_SEEK_PARMS mciSeekParms;
-	  if (mciSendCommand(m_uiMIDIPlayerID, MCI_SEEK, MCI_SEEK_TO_START,
-		(DWORD)&mciSeekParms) != 0)
-		// There was a problem, so close the MIDI player
-		CloseMIDIPlayer();
-	}
-
-	// Play the MIDI song
-	MCI_PLAY_PARMS mciPlayParms;
-	if (mciSendCommand(m_uiMIDIPlayerID, MCI_PLAY, MCI_WAIT,
-	  (DWORD)&mciPlayParms) != 0)
-	  // There was a problem, so close the MIDI player
-	  CloseMIDIPlayer();
-}
-
 void CantTouchThisThread( void * )
 {
-	int file = _open( "hamrtime.mid", _O_BINARY| _O_CREAT | _O_RDWR, _S_IREAD | _S_IWRITE );
-	if ( file != -1 )
-	{
-		AfxGetApp()->GetMainWnd()->SetWindowText( "Hammer time!" );
-		SetStatusText(SBI_PROMPT, "Stop, Hammer time!");
-		bool fPlay = ( _write( file, g_CantTouchThis, sizeof( g_CantTouchThis ) ) == sizeof( g_CantTouchThis ) );
-		NOTE_UNUSED( fPlay );
-		_close( file );
-		PlayMIDISong("hamrtime.mid", false );
-		CloseMIDIPlayer();
-		_unlink( "hamrtime.mid" );
-		SetStatusText(SBI_PROMPT, "You can't touch this");
-		AfxGetApp()->GetMainWnd()->SetWindowText( "Hammer" );
-		Sleep(1500);
-		SetStatusText(SBI_PROMPT, "For Help, press F1");
-	}
+	AfxGetApp()->GetMainWnd()->SetWindowText( "Hammer time!" );
+	SetStatusText(SBI_PROMPT, "Stop, Hammer time!");
+	g_Sounds.PlaySoundFromMemory( g_CantTouchThis, sizeof( g_CantTouchThis ) );
+	SetStatusText(SBI_PROMPT, "You can't touch this");
+	Sleep(1500);
+	AfxGetApp()->GetMainWnd()->SetWindowText( "Hammer" );
+	SetStatusText(SBI_PROMPT, "For Help, press F1");
 }
 
 void CantTouchThis()
@@ -208,8 +147,8 @@ void CSplashWnd::ShowSplashScreen(CWnd* pParentWnd /*= NULL*/)
 	if (s_pSplashWnd->Create(pParentWnd))
 	{
 		s_pSplashWnd->UpdateWindow();
-        if (CommandLine()->FindParm("-hammertime"))
-		    CantTouchThis();
+		if (CommandLine()->FindParm("-hammertime"))
+			CantTouchThis();
 	}
 	else
 	{

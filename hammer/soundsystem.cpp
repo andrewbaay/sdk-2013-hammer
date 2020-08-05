@@ -7,7 +7,6 @@
 
 #include "stdafx.h"
 #include "soundsystem.h"
-#include "mmsystem.h"
 #include "filesystem.h"
 #include "KeyValues.h"
 #include "hammer.h"
@@ -97,17 +96,22 @@ CSoundSystem::~CSoundSystem()
 //-----------------------------------------------------------------------------
 // Initialization, shutdown
 //-----------------------------------------------------------------------------
-bool CSoundSystem::Initialize( )
+bool CSoundSystem::Initialize()
 {
 	for ( int i = 0; i < SOUND_TYPE_COUNT; ++i )
 	{
 		m_SoundList[i].m_Sounds.EnsureCapacity( 1024 );
 		m_SoundList[i].m_pStrings = NULL;
 
-		if (!BuildSoundList( (SoundType_t)i ) )
+		if ( !BuildSoundList( (SoundType_t)i ) )
 			return false;
 	}
 
+	return true;
+}
+
+bool CSoundSystem::InitializeEngine()
+{
 	if ( FMOD::Memory_Initialize( nullptr, 0, FmodAlloc, FmodRealloc, FmodFree ) != FMOD_OK )
 		return false;
 
@@ -574,6 +578,15 @@ bool CSoundSystem::Play( SoundType_t type, int nIndex )
 	return true;
 }
 
+void CSoundSystem::PlaySoundFromMemory( const byte* mem, size_t size )
+{
+	FMOD_CREATESOUNDEXINFO info;
+	V_memset( &info, 0, sizeof( FMOD_CREATESOUNDEXINFO ) );
+	info.cbsize = sizeof( FMOD_CREATESOUNDEXINFO );
+	info.length = size;
+	m_pSystem->createStream( reinterpret_cast<const char*>( mem ), FMOD_LOOP_OFF | FMOD_2D | FMOD_IGNORETAGS | FMOD_VIRTUAL_PLAYFROMSTART | FMOD_OPENMEMORY, &info, &m_pLastSound );
+	m_pSystem->playSound( m_pLastSound, nullptr, false, &m_pLastChannel );
+}
 
 //-----------------------------------------------------------------------------
 // Stops any playing sound.

@@ -1118,6 +1118,9 @@ InitReturnVal_t CHammer::HammerInternalInit()
 		initInfo.m_pDirectoryName = pTempBuf;
 	}
 
+	// Initialize the sound system engine
+	g_Sounds.InitializeEngine();
+
 	CSplashWnd::ShowSplashScreen(pMainFrame);
 
 	if ( FileSystem_LoadSearchPaths( initInfo ) != FS_OK )
