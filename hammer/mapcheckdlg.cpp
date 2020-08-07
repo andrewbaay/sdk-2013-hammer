@@ -246,12 +246,15 @@ void CMapCheckDlg::GotoSelectedErrors()
 		if (m_Errors.GetSel(i) > 0)
 		{
 			MapError *pError = (MapError *)m_Errors.GetItemDataPtr(i);
-			if (pError)
+			if (pError && pError->pObjects[0])
 			{
 				Objects.AddToTail(pError->pObjects[0]);
 			}
 		}
 	}
+
+	if ( Objects.IsEmpty() )
+		return;
 
 	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
 
@@ -715,7 +718,7 @@ static BOOL FindPlayer(CMapEntity *pObject, DWORD*)
 	if ( !IsCheckVisible( pObject ) )
 		return TRUE;
 
-	if (pObject->IsPlaceholder() && pObject->IsClass("info_player_start"))
+	if ( pObject->IsPlaceholder() && V_strnicmp( pObject->GetClassName(), "info_player_", 12 ) == 0 )
 	{
 		return(FALSE);
 	}
