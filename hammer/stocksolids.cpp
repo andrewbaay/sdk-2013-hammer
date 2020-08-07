@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -79,7 +79,7 @@ int StockSolid::GetFieldData(int iIndex, int *piData) const
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void StockSolid::SetOrigin(const Vector &o)
 {
@@ -88,7 +88,7 @@ void StockSolid::SetOrigin(const Vector &o)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void StockSolid::SetCenterOffset(const Vector &ofs)
 {
@@ -99,7 +99,7 @@ void StockSolid::SetCenterOffset(const Vector &ofs)
 void StockSolid::AddDataField(STSDF_TYPE type, const char *pszName, int iRangeLower, int iRangeUpper)
 {
 	Assert(nFields < iMaxFields);
-	
+
 	STSDATAFIELD& field = pFields[nFields++];
 
 	field.type = type;
@@ -173,7 +173,7 @@ void StockBlock::CreateMapSolid(CMapSolid *pSolid, TextureAlignment_t eAlignment
 	Points[2][0] = bmaxs[0];
 	Points[2][1] = bmins[1];
 	Points[2][2] = bmaxs[2];
-	
+
 	Points[3][0] = bmins[0];
 	Points[3][1] = bmins[1];
 	Points[3][2] = bmaxs[2];
@@ -325,7 +325,7 @@ void StockWedge::CreateMapSolid(CMapSolid *pSolid, TextureAlignment_t eTextureAl
 	Points[2][0] = origin[0] - fWidth;
 	Points[2][1] = origin[1] - fDepth;
 	Points[2][2] = origin[2] + fHeight;
-	
+
 	Points[3][0] = origin[0] - fWidth;
 	Points[3][1] = origin[1] - fDepth;
 	Points[3][2] = origin[2] - fHeight;
@@ -345,7 +345,7 @@ void StockWedge::CreateMapSolid(CMapSolid *pSolid, TextureAlignment_t eTextureAl
 	Points[2][0] = origin[0] - fWidth;
 	Points[2][1] = origin[1] - fDepth;
 	Points[2][2] = origin[2] - fHeight;
-	
+
 	Points[3][0] = origin[0] - fWidth;
 	Points[3][1] = origin[1] - fDepth;
 	Points[3][2] = origin[2] + fHeight;
@@ -365,7 +365,7 @@ void StockWedge::CreateMapSolid(CMapSolid *pSolid, TextureAlignment_t eTextureAl
 	Points[2][0] = origin[0] + fWidth;
 	Points[2][1] = origin[1] - fDepth;
 	Points[2][2] = origin[2] - fHeight;
-	
+
 	Points[3][0] = origin[0] + fWidth;
 	Points[3][1] = origin[1] - fDepth;
 	Points[3][2] = origin[2] + fHeight;
@@ -511,7 +511,7 @@ void StockSpike::CreateMapSolid(CMapSolid *pSolid, TextureAlignment_t eTextureAl
 	for(int i = 0; i < nSides+1; i++)
 	{
 		// YWB rounding???
-		pmPoints[i][2] = rint(origin[2] - fHeight);
+		pmPoints[i][2] = /*rint*/(origin[2] - fHeight);
 	}
 
 	NewFace.CreateFace(pmPoints, -nSides);
@@ -588,17 +588,17 @@ void StockSphere::CreateMapSolid(CMapSolid *pSolid, TextureAlignment_t eTextureA
 
 	//
 	// Build the sphere by building slices at constant angular intervals.
-	// 
+	//
 	// Each slice is a ring of four-sided faces, except for the top and bottom slices,
 	// which are flattened cones.
 	//
 	// Unrolled, a sphere made with 5 'sides' has 25 faces and looks like this:
-	//				
+	//
 	//			/\  /\  /\  /\  /\
 	//		   / 0\/ 1\/ 2\/ 3\/ 4\
-	//		  |  5|  6|  7|  8|  9| 	
-	//		  | 10| 11| 12| 13| 14| 	
-	//		  | 15| 16| 17| 18| 19| 	
+	//		  |  5|  6|  7|  8|  9|
+	//		  | 10| 11| 12| 13| 14|
+	//		  | 15| 16| 17| 18| 19|
 	//		   \20/\21/\22/\23/\24/
 	//			\/  \/  \/  \/  \/
 	//
@@ -637,7 +637,7 @@ void StockSphere::CreateMapSolid(CMapSolid *pSolid, TextureAlignment_t eTextureA
 				Points[0][1] = TopPoints[i + 1][1];
 				Points[0][2] = fUpperHeight;
 			}
-			
+
 			Points[1][0] = TopPoints[i][0];
 			Points[1][1] = TopPoints[i][1];
 			Points[1][2] = fUpperHeight;
@@ -672,7 +672,7 @@ void StockSphere::CreateMapSolid(CMapSolid *pSolid, TextureAlignment_t eTextureA
 			Face.texture.smooth = 1.f;
 			pSolid->AddFace(&Face);
 		}
-	
+
 		fAngle += fAngleStep;
 	}
 
