@@ -29,15 +29,6 @@ struct ExportDXFInfo_s;
 #define MAPSOLID_MAX_FACES				512         // Maximum number of faces a solid can have.
 
 
-enum HL1_SolidType_t
-{
-	btSolid,
-	btWater,
-	btSlime,
-	btLava
-};
-
-
 typedef BlockArray <CMapFace, 6, (MAPSOLID_MAX_FACES / 6) + 1> CSolidFaces;
 
 
@@ -102,13 +93,6 @@ public:
 	LPCTSTR GetTexture( int iFace = -1 );
 	bool HasDisp( void );
 	virtual bool IsSolid( ) { return true; }
-
-	//
-	// Half-Life 1 solid types.
-	//
-	inline HL1_SolidType_t GetHL1SolidType(void) { return(m_eSolidType); }
-	inline void SetHL1SolidType(HL1_SolidType_t eSolidType) { m_eSolidType = eSolidType; }
-	HL1_SolidType_t HL1SolidTypeFromTextureName(const char *pszTexture);
 
 	virtual bool IsScaleable(void) const { return(true); }
 	virtual bool IsVisualElement(void) { return(true); }
@@ -177,8 +161,6 @@ protected:
 
 	bool m_bValid : 1;						// Is it a proper convex solid?
 	bool m_bIsCordonBrush : 1;				// Whether this brush was added by the cordon tool.
-
-	HL1_SolidType_t m_eSolidType;		// Used for HalfLife 1 maps only - solid, water, slime, lava.
 };
 
 

@@ -43,7 +43,6 @@ CMapSolid::CMapSolid(CMapClass *Parent0)
 	: m_bValid(FALSE), m_bFacesHavePoints(false)	// well, no faces
 {
 	m_pParent = Parent0;
-	m_eSolidType = btSolid;
 	m_bIsCordonBrush = false;
 
 	PickRandomColor();
@@ -560,7 +559,6 @@ CMapClass *CMapSolid::CopyFrom(CMapClass *pobj, bool bUpdateDependencies)
 	CMapSolid *pFrom = (CMapSolid *)pobj;
 
 	CMapClass::CopyFrom(pobj, bUpdateDependencies);
-	m_eSolidType = pFrom->GetHL1SolidType();
 
 	m_bIsCordonBrush = pFrom->m_bIsCordonBrush;
 
@@ -1118,11 +1116,6 @@ ChunkFileResult_t CMapSolid::LoadVMF(CChunkFile *pFile, bool &bValid)
 			CalcBounds();
 
 			//
-			// Set solid type based on texture name.
-			//
-			m_eSolidType = HL1SolidTypeFromTextureName(Faces[0].texture.texture);
-
-			//
 			// create all of the displacement surfaces for faces with the displacement property
 			//
 			int faceCount = GetFaceCount();
@@ -1517,38 +1510,6 @@ bool CMapSolid::HasDisp( void )
 	}
 
 	return false;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Returns a solid type for the given texture name.
-// Input  : pszTexture -
-//-----------------------------------------------------------------------------
-HL1_SolidType_t CMapSolid::HL1SolidTypeFromTextureName(const char *pszTexture)
-{
-	HL1_SolidType_t eSolidType;
-
-	if (pszTexture[0] == '*')
-	{
-		if (!strncmp(pszTexture + 1, "slime", 5))
-		{
-			eSolidType = btSlime;
-		}
-		else if (!strncmp(pszTexture + 1, "lava", 4))
-		{
-			eSolidType = btLava;
-		}
-		else
-		{
-			eSolidType = btWater;
-		}
-	}
-	else
-	{
-		eSolidType = btSolid;
-	}
-
-	return(eSolidType);
 }
 
 
