@@ -39,6 +39,7 @@ struct COptionsGeneral
 	BOOL bEnableAutosave;
 	BOOL bShowHiddenTargetsAsBroken;
 	BOOL bRadiusCulling;
+	BOOL bMaterialProxies;
 };
 
 

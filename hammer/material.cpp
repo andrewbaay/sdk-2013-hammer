@@ -27,6 +27,7 @@
 #include "tier0/dbg.h"
 #include "TextureSystem.h"
 #include "materialproxyfactory_wc.h"
+#include "options.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -1446,7 +1447,8 @@ bool CMaterial::Initialize( HWND hwnd )
 	g_materialSystemConfig.SetFlag(	MATSYS_VIDCFG_FLAGS_STENCIL, true );
 	g_materialSystemConfig.SetFlag(	MATSYS_VIDCFG_FLAGS_USING_MULTIPLE_WINDOWS, true );
 
-	//materials->SetMaterialProxyFactory( GetHammerMaterialProxyFactory() );
+	if ( Options.general.bMaterialProxies )
+		materials->SetMaterialProxyFactory( GetHammerMaterialProxyFactory() );
 
 	bool res = materials->SetMode( hwnd, g_materialSystemConfig );
 

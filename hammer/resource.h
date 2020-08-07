@@ -924,6 +924,7 @@
 #define IDC_SCULPT_PUSH                 1648
 #define IDC_INVERT_DISPLACEMENT_ALPHA   1648
 #define IDC_COLOR_ENABLE                1648
+#define IDC_MATSYS_PROXY                1648
 #define IDC_SIMILARCHECK                1649
 #define IDC_AUTOSAVEDIR                 1649
 #define IDC_SCULPT_CARVE                1649

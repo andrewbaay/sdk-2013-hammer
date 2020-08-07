@@ -117,6 +117,7 @@ void COPTGeneral::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_GROUPWHILEIGNOREGROUPS, Options.general.bGroupWhileIgnore);
 	DDX_Check(pDX, IDC_INDEPENDENTWINDOWS, Options.general.bIndependentwin);
 	DDX_Check(pDX, IDC_LOADWINPOSITIONS, Options.general.bLoadwinpos);
+	DDX_Check(pDX, IDC_MATSYS_PROXY, Options.general.bMaterialProxies);
 	DDV_UndoLevels( pDX, m_iUndoLevels );
 	DDV_MaxCameras( pDX, m_nMaxCameras );
 	DDX_Control(pDX, IDC_ENABLEAUTOSAVE, m_cEnableAutosave);

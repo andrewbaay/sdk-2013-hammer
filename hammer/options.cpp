@@ -533,6 +533,7 @@ bool COptions::Read(void)
 	general.bClosedCorrectly = APP()->GetProfileInt(pszGeneral, "Closed Correctly", TRUE);
 	general.bShowHiddenTargetsAsBroken = APP()->GetProfileInt(pszGeneral, "Show Hidden Targets As Broken", TRUE);
 	general.bRadiusCulling = APP()->GetProfileInt(pszGeneral, "Use Radius Culling", FALSE);
+	general.bMaterialProxies = APP()->GetProfileInt(pszGeneral, "Enable Proxies", TRUE);
 
 	char szDefaultAutosavePath[MAX_PATH];
 	V_strcpy_safe( szDefaultAutosavePath, APP()->GetProfileString( pszGeneral, "Directory", "C:" ) );
@@ -751,6 +752,7 @@ void COptions::Write( BOOL fOverwrite, BOOL fSaveConfigs )
 	APP()->SetDirectory( DIR_AUTOSAVE, general.szAutosaveDir );
 	APP()->WriteProfileInt(pszGeneral, "Show Hidden Targets As Broken", general.bShowHiddenTargetsAsBroken);
 	APP()->WriteProfileInt(pszGeneral, "Use Radius Culling", general.bRadiusCulling);
+	APP()->WriteProfileInt(pszGeneral, "Enable Proxies", general.bMaterialProxies);
 
 
 
@@ -869,6 +871,7 @@ void COptions::SetDefaults(void)
 	general.bShowCollisionModels = FALSE;
 	general.bShowDetailObjects = TRUE;
 	general.bShowNoDrawBrushes = TRUE;
+	general.bMaterialProxies = TRUE;
 
 	// view2d
 	view2d.bScrollbars = TRUE;
