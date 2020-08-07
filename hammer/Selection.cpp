@@ -90,7 +90,7 @@ void CSelection::GetBoundsForTranslation( Vector &vecMins, Vector &vecMaxs )
 	vecMins.Init( COORD_NOTINIT, COORD_NOTINIT, 0 );
 	vecMaxs.Init( -COORD_NOTINIT, -COORD_NOTINIT, 0 );
 
-	// If there are any solids, then only use the bounds for those. Otherwise, 
+	// If there are any solids, then only use the bounds for those. Otherwise,
 	// an entity that is off the grid can pull all the solids off the grid and you never want that.
 	int nSolids = 0;
 	for (int i = 0; i < m_SelectionList.Count(); i++)
@@ -615,6 +615,8 @@ void CSelection::SelectObjectList( const CMapObjectList *pList, int cmd )
 		for (int pos=0;pos<pList->Count();pos++)
 		{
 			CMapClass *pObject = pList->Element(pos);
+			if ( !pObject )
+				continue;
 			CMapClass *pSelObject = pObject->PrepareSelection( m_eSelectMode );
 			if (pSelObject)
 			{
