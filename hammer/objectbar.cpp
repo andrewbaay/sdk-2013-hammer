@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -29,6 +29,10 @@
 
 #pragma warning( disable : 4355 )
 
+extern int ScriptableSolid_Count();
+extern int ScriptableSolid_Find( const char* text );
+extern void ScriptableSolid_GetNames( CUtlVector<CString>& names );
+
 
 CMapClass *CreateArch(BoundBox *pBox, float fStartAngle, int iSides, float fArc,
 					   int iWallWidth, int iAddHeight, BOOL bPreview);
@@ -43,7 +47,7 @@ static char _szNewObjName[128];
 struct SolidTypeInfo_t
 {
 	LPCTSTR pszName;
-	UINT nFaces;	
+	UINT nFaces;
 	UINT nFacesMin;
 	UINT nFacesMax;
 	bool bEnableFaceControl;
@@ -108,7 +112,7 @@ static int FindGameDataClass( const char *pName )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CObjectBar::CObjectBar()
 	: CHammerBar(), m_CreateList( this )
@@ -129,8 +133,8 @@ bool CObjectBar::UseRandomYawOnEntityPlacement()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pDX - 
+// Purpose:
+// Input  : pDX -
 //-----------------------------------------------------------------------------
 void CObjectBar::DoDataExchange(CDataExchange *pDX)
 {
@@ -143,7 +147,7 @@ void CObjectBar::DoDataExchange(CDataExchange *pDX)
 
 //-----------------------------------------------------------------------------
 // Purpose: Returns the bounds of the current 3D prefab object.
-// Input  : *pBox - 
+// Input  : *pBox -
 // Output : Returns TRUE on success, FALSE on failure.
 //-----------------------------------------------------------------------------
 BOOL CObjectBar::GetPrefabBounds(BoundBox *pBox)
@@ -208,10 +212,10 @@ CPrefab* CObjectBar::FindPrefabByName( const char *pName )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pBox - 
-//			pAxes - 
-// Output : 
+// Purpose:
+// Input  : pBox -
+//			pAxes -
+// Output :
 //-----------------------------------------------------------------------------
 CMapClass *CObjectBar::CreateInBox(BoundBox *pBox, CMapView *pView)
 {
@@ -240,19 +244,22 @@ CMapClass *CObjectBar::CreateInBox(BoundBox *pBox, CMapView *pView)
 		//
 		int nSolidIndex = _iNewObjIndex;
 
-		int nFacesMin = SolidTypes[nSolidIndex].nFacesMin;
-		int nFacesMax = SolidTypes[nSolidIndex].nFacesMax;
-
-		//
-		// Insure that the face count is within legal range (if applicable).
-		//
-		if ((SolidTypes[nSolidIndex].bEnableFaceControl) && (nFaces < nFacesMin || nFaces > nFacesMax))
+		if ( (unsigned)nSolidIndex < ARRAYSIZE( SolidTypes ) )
 		{
-			CString str;
-			str.Format("The face count for a %s must be in the range of %d to %d.",
-				SolidTypes[nSolidIndex].pszName, nFacesMin, nFacesMax);
-			AfxMessageBox(str);
-			return NULL;
+			int nFacesMin = SolidTypes[nSolidIndex].nFacesMin;
+			int nFacesMax = SolidTypes[nSolidIndex].nFacesMax;
+
+			//
+			// Insure that the face count is within legal range (if applicable).
+			//
+			if ( ( SolidTypes[nSolidIndex].bEnableFaceControl ) && ( nFaces < nFacesMin || nFaces > nFacesMax ) )
+			{
+				CString str;
+				str.Format( "The face count for a %s must be in the range of %d to %d.",
+							SolidTypes[nSolidIndex].pszName, nFacesMin, nFacesMax );
+				AfxMessageBox( str );
+				return NULL;
+			}
 		}
 
 		if(nSolidIndex < 5)
@@ -305,21 +312,21 @@ CMapClass *CObjectBar::CreateInBox(BoundBox *pBox, CMapView *pView)
 			// save values for next use of arch
 			dlg.SaveValues();
 
-			CMapClass *pArch = CreateArch(pBox, dlg.m_fAngle, 
-				dlg.m_iSides, dlg.m_fArc, dlg.m_iWallWidth, 
+			CMapClass *pArch = CreateArch(pBox, dlg.m_fAngle,
+				dlg.m_iSides, dlg.m_fArc, dlg.m_iWallWidth,
 				dlg.m_iAddHeight, FALSE);
 
 			const CMapObjectList &SolidList = *pArch->GetChildren();
 			FOR_EACH_OBJ( SolidList, nSolid )
-			{	
+			{
 				CMapSolid	*pSolid = dynamic_cast<CMapSolid *>(SolidList[nSolid]);
 				if ( pSolid )
 					pSolid->SetTexture(GetDefaultTextureName());
-			}	
+			}
 
 			return pArch;
 		}
-		else
+		else if (nSolidIndex == 6)
 		{
 			// Torus
 			CTorusDlg dlg( pBox->bmins, pBox->bmaxs );
@@ -338,14 +345,19 @@ CMapClass *CObjectBar::CreateInBox(BoundBox *pBox, CMapView *pView)
 
 			const CMapObjectList &SolidList = *pTorus->GetChildren();
 			FOR_EACH_OBJ( SolidList, nSolid )
-			{	
+			{
 				CMapSolid	*pSolid = dynamic_cast<CMapSolid *>(SolidList[nSolid]);
 				if ( pSolid )
 					pSolid->SetTexture(GetDefaultTextureName());
-			}	
+			}
 
 			return pTorus;
 		}
+	}
+	else if (ListType == listScriptable)
+	{
+		extern CMapClass* ScriptableSolid_Create( int index, const BoundBox* box );
+		return ScriptableSolid_Create( _iNewObjIndex, pBox );
 	}
 	else
 	{
@@ -370,7 +382,7 @@ LPCTSTR CObjectBar::GetDefaultEntityClass(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CMapClass *CObjectBar::BuildPrefabObjectAtPoint( Vector const &HitPos )
 {
@@ -389,7 +401,7 @@ CMapClass *CObjectBar::BuildPrefabObjectAtPoint( Vector const &HitPos )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 bool CObjectBar::IsEntityToolCreatingPrefab( void )
 {
@@ -401,7 +413,7 @@ bool CObjectBar::IsEntityToolCreatingPrefab( void )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 bool CObjectBar::IsEntityToolCreatingEntity( void )
 {
@@ -413,12 +425,13 @@ bool CObjectBar::IsEntityToolCreatingEntity( void )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CObjectBar::OnChangeCategory()
 {
 	switch (ListType)
 	{
+		case listScriptable:
 		case listPrimitives:
 		{
 			iBlockSel = -1;
@@ -459,8 +472,8 @@ void CObjectBar::OnChangeCategory()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pParentWnd - 
+// Purpose:
+// Input  : pParentWnd -
 // Output : Returns TRUE on success, FALSE on failure.
 //-----------------------------------------------------------------------------
 BOOL CObjectBar::Create(CWnd *pParentWnd)
@@ -506,6 +519,9 @@ void CObjectBar::LoadBlockCategories( void )
 	m_CategoryList.ResetContent();
 	m_CategoryList.AddString("Primitives");
 
+	if ( ScriptableSolid_Count() > 0 )
+		m_CategoryList.AddString( "Scriptable" );
+
 	// the next items are the prefab categories (libraries)
 	LoadPrefabCategories();
 
@@ -519,7 +535,7 @@ void CObjectBar::LoadBlockCategories( void )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CObjectBar::LoadEntityCategories( void )
 {
@@ -542,7 +558,7 @@ void CObjectBar::LoadEntityCategories( void )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CObjectBar::LoadPrefabCategories( void )
 {
@@ -569,7 +585,7 @@ void CObjectBar::LoadPrefabCategories( void )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CObjectBar::LoadBlockItems( void )
 {
@@ -596,6 +612,15 @@ void CObjectBar::LoadBlockItems( void )
 
 		m_CreateList.SetSuggestions( suggestions );
 	}
+	else if ( ScriptableSolid_Count() > 0 && m_CategoryList.GetCurSel() == 1 )
+	{
+		ListType = listScriptable;
+
+		CUtlVector<CString> suggestions;
+		ScriptableSolid_GetNames( suggestions );
+
+		m_CreateList.SetSuggestions( suggestions );
+	}
 	else
 	{
 		LoadPrefabItems();
@@ -604,7 +629,7 @@ void CObjectBar::LoadBlockItems( void )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CObjectBar::LoadEntityItems( void )
 {
@@ -638,7 +663,7 @@ void CObjectBar::LoadEntityItems( void )
 				}
 			}
 		}
-		
+
 		m_CreateList.SetSuggestions( suggestions );
 	}
 	else
@@ -649,7 +674,7 @@ void CObjectBar::LoadEntityItems( void )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CObjectBar::LoadPrefabItems( void )
 {
@@ -657,10 +682,10 @@ void CObjectBar::LoadPrefabItems( void )
 	ListType = listPrefabs;
 
 	CUtlVector<CString> suggestions;
-	
+
 	// get the active library and add the prefabs from it
 	CPrefabLibrary *pLibrary = CPrefabLibrary::FindID( m_CategoryList.GetItemData(m_CategoryList.GetCurSel() ) );
-	
+
 	POSITION p = ENUM_START;
 	CPrefab *pPrefab = pLibrary->EnumPrefabs( p );
 	while( pPrefab )
@@ -674,7 +699,7 @@ void CObjectBar::LoadPrefabItems( void )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CObjectBar::DoHideControls()
 {
@@ -693,14 +718,14 @@ void CObjectBar::DoHideControls()
 		GetDlgItem(IDC_FACESPROMPT)->ShowWindow(SW_HIDE);
 		GetDlgItem(ID_INSERTPREFAB_ORIGINAL)->ShowWindow(SW_SHOW);
 	}
-	else if(ListType == listEntities)
+	else if(ListType == listEntities || ListType == listScriptable)
 	{
 		m_Faces.ShowWindow(SW_HIDE);
 		m_FacesSpin.ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_FACESPROMPT)->ShowWindow(SW_HIDE);
 		GetDlgItem(ID_INSERTPREFAB_ORIGINAL)->ShowWindow(SW_HIDE);
 	}
-	
+
 	// Show the "random yaw" button?
 	bool bShow = (ListType == listEntities);
 	GetDlgItem( IDC_RANDOMYAW )->ShowWindow( bShow ? SW_SHOW : SW_HIDE );
@@ -708,13 +733,13 @@ void CObjectBar::DoHideControls()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pCmdUI - 
+// Purpose:
+// Input  : *pCmdUI -
 //-----------------------------------------------------------------------------
 void CObjectBar::UpdateControl(CCmdUI *pCmdUI)
 {
 	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
-	
+
 	switch (pCmdUI->m_nID)
 	{
 		case ID_INSERTPREFAB_ORIGINAL:
@@ -728,7 +753,7 @@ void CObjectBar::UpdateControl(CCmdUI *pCmdUI)
 		{
 			BOOL bEnable = FALSE;
 			if (pDoc)
-			{ 			
+			{
 				int nTool = pDoc->GetTools()->GetActiveToolID();
 				if ((nTool == TOOL_ENTITY) || (nTool == TOOL_BLOCK))
 				{
@@ -749,9 +774,9 @@ void CObjectBar::UpdateControl(CCmdUI *pCmdUI)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pWnd - 
-//			bModifyWnd - 
+// Purpose:
+// Input  : *pWnd -
+//			bModifyWnd -
 // Output : Returns TRUE on success, FALSE on failure.
 //-----------------------------------------------------------------------------
 BOOL CObjectBar::EnableFaceControl(CWnd *pWnd, BOOL bModifyWnd)
@@ -784,8 +809,8 @@ BOOL CObjectBar::EnableFaceControl(CWnd *pWnd, BOOL bModifyWnd)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pCmdUI - 
+// Purpose:
+// Input  : *pCmdUI -
 //-----------------------------------------------------------------------------
 void CObjectBar::UpdateFaceControl(CCmdUI *pCmdUI)
 {
@@ -840,6 +865,13 @@ void CObjectBar::OnTextChanged( const char *pSelection )
 			break;
 		}
 
+		case listScriptable:
+		{
+			_iNewObjIndex = ScriptableSolid_Find( pSelection );
+			iBlockSel = _iNewObjIndex;
+			break;
+		}
+
 		case listEntities:
 		{
 			_iNewObjIndex = FindGameDataClass( pSelection );
@@ -847,7 +879,7 @@ void CObjectBar::OnTextChanged( const char *pSelection )
 			if ( _iNewObjIndex != -1 )
 			{
 				Q_strncpy( _szNewObjName, pSelection, sizeof( _szNewObjName ) );
-			}				
+			}
 			break;
 		}
 	}
@@ -862,17 +894,17 @@ void CObjectBar::OnTextChanged( const char *pSelection )
 
 	m_FacesSpin.SetRange(SolidTypes[nSolidIndex].nFacesMin, SolidTypes[nSolidIndex].nFacesMax);
 	m_FacesSpin.SetPos(SolidTypes[nSolidIndex].nFaces);
-	
+
 	itoa(SolidTypes[nSolidIndex].nFaces, szBuf, 10);
 	m_Faces.SetWindowText(szBuf);
 }
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : dwGameID - 
-//			piNewIndex - 
-// Output : 
+// Purpose:
+// Input  : dwGameID -
+//			piNewIndex -
+// Output :
 //-----------------------------------------------------------------------------
 int CObjectBar::GetPrevSelIndex(DWORD dwGameID, int *piNewIndex)
 {
@@ -890,14 +922,14 @@ int CObjectBar::GetPrevSelIndex(DWORD dwGameID, int *piNewIndex)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pMsg - 
+// Purpose:
+// Input  : pMsg -
 // Output : Returns TRUE on success, FALSE on failure.
 //-----------------------------------------------------------------------------
-BOOL CObjectBar::PreTranslateMessage(MSG* pMsg) 
+BOOL CObjectBar::PreTranslateMessage(MSG* pMsg)
 {
 	//
-	// See if the message is a keydown and the current focus window is the 
+	// See if the message is a keydown and the current focus window is the
 	//  ComboBox in the ObjectBar!
 	//
 	/*static BOOL bRecurse = FALSE;
@@ -919,8 +951,8 @@ BOOL CObjectBar::PreTranslateMessage(MSG* pMsg)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : iTool - 
+// Purpose:
+// Input  : iTool -
 //-----------------------------------------------------------------------------
 void CObjectBar::UpdateListForTool( int iTool )
 {
@@ -943,7 +975,7 @@ void CObjectBar::UpdateListForTool( int iTool )
 		m_PrevSel[iPrevSel].entity.strCategory = "Entities";
 		m_PrevSel[iPrevSel].entity.strItem = g_pGameConfig->szDefaultPoint;
 	}
-	
+
 	// get game id previously selected data index
 	iPrevSel = GetPrevSelIndex( m_dwPrevGameID );
 	if (iPrevSel == -1)
@@ -982,7 +1014,7 @@ void CObjectBar::UpdateListForTool( int iTool )
 	}
 
 	// save tool for next pass
-	m_iLastTool = iTool;					 
+	m_iLastTool = iTool;
 
 	//
 	// update new for new tool
@@ -994,13 +1026,17 @@ void CObjectBar::UpdateListForTool( int iTool )
 		//
 		LoadBlockCategories();
 		m_CategoryList.SelectString( -1, m_PrevSel[iPrevSel].block.strCategory );
-		LoadBlockItems();		
+		LoadBlockItems();
 
 		m_CreateList.SelectItem( m_PrevSel[iPrevSel].block.strItem );
 		OnTextChanged( m_PrevSel[iPrevSel].block.strItem );
-		iBlockSel = FindSolidType( m_PrevSel[iPrevSel].block.strItem );
+
+		if ( ScriptableSolid_Count() > 0 && m_CategoryList.GetCurSel() == 1 )
+			iBlockSel = ScriptableSolid_Find( m_PrevSel[iPrevSel].block.strItem );
+		else
+			iBlockSel = FindSolidType( m_PrevSel[iPrevSel].block.strItem );
 		Assert( iBlockSel >= 0 );
-		
+
 		// hide/show appropriate controls
 		DoHideControls();
 
@@ -1018,7 +1054,7 @@ void CObjectBar::UpdateListForTool( int iTool )
 		LoadEntityCategories();
 		m_CategoryList.SelectString( -1, m_PrevSel[iPrevSel].entity.strCategory );
 		LoadEntityItems();
-		
+
 		m_CreateList.SelectItem( m_PrevSel[iPrevSel].entity.strItem );
 		OnTextChanged( m_PrevSel[iPrevSel].entity.strItem );
 		iEntitySel = FindGameDataClass( m_PrevSel[iPrevSel].entity.strItem );

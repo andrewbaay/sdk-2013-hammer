@@ -1184,6 +1184,9 @@ InitReturnVal_t CHammer::HammerInternalInit()
 	// Initialize the sound system
 	g_Sounds.Initialize();
 
+	extern void ScriptInit();
+	ScriptInit();
+
 	UpdatePrefabs_Init();
 
 	// Indicate that we are ready to use.
@@ -1376,6 +1379,9 @@ void CHammer::Shutdown()
 #endif
 
 	// PrintBudgetGroupTimes_Recursive( g_VProfCurrentProfile.GetRoot() );
+
+	extern void ScriptShutdown();
+	ScriptShutdown();
 
 	HammerVGui()->Shutdown();
 

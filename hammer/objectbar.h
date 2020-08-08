@@ -63,6 +63,7 @@ private:
 	{
 		listPrimitives,
 		listPrefabs,
+		listScriptable,
 		listEntities
 	} ListType;
 

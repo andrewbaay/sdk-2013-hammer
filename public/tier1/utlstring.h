@@ -59,36 +59,35 @@ public:
 	CUtlString( const char *pString, int length );
 	CUtlString( const CUtlString& string );
 
-#ifdef MOVE_CONSTRUCTOR_SUPPORT
 	// Support moving of CUtlString objects. Long live C++11
 	// This move constructor will get called when appropriate, such as when
 	// returning objects from functions, or otherwise copying from temporaries
 	// which are about to be destroyed. It can also be explicitly invoked with
 	// std::move().
 	// Move constructor:
-	CUtlString( CUtlString&& rhs )
+	CUtlString( CUtlString&& rhs ) noexcept
 	{
 		// Move the string pointer from the source to this -- be sure to
 		// zero out the source to avoid double frees.
 		m_pString = rhs.m_pString;
-		rhs.m_pString = 0;
+		rhs.m_pString = nullptr;
 	}
 	// Move assignment operator:
-	CUtlString& operator=( CUtlString&& rhs )
+	CUtlString& operator=( CUtlString&& rhs ) noexcept
 	{
 		// Move the string pointer from the source to this -- be sure to
 		// zero out the source to avoid double frees.
 		m_pString = rhs.m_pString;
-		rhs.m_pString = 0;
+		rhs.m_pString = nullptr;
 		return *this;
 	}
-#endif
 
 	~CUtlString();
 
 	const char	*Get( ) const;
 	void		Set( const char *pValue );
 	operator const char*() const;
+	explicit operator bool() const { return m_pString != nullptr; }
 
 	// Set directly and don't look for a null terminator in pValue.
 	// nChars does not include the nul and this will only copy
@@ -149,7 +148,14 @@ public:
 
 	CUtlString operator+( const char *pOther ) const;
 	CUtlString operator+( const CUtlString &other ) const;
+	CUtlString operator+( char rhs ) const;
 	CUtlString operator+( int rhs ) const;
+	friend CUtlString operator+( const char* lhs, const CUtlString& rhs )
+	{
+		CUtlString s = lhs;
+		s += rhs;
+		return s;
+	}
 
 	bool MatchesPattern( const CUtlString &Pattern, int nFlags = 0 ) const;		// case SENSITIVE, use * for wildcard in pattern string
 

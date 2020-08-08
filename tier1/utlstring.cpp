@@ -136,8 +136,9 @@ void CUtlString::Clear()
 
 void CUtlString::Purge()
 {
-    free( m_pString );
-    m_pString = NULL;
+	if ( m_pString )
+		free( m_pString );
+	m_pString = nullptr;
 }
 
 bool CUtlString::IsEqual_CaseSensitive( const char *src ) const
@@ -195,12 +196,7 @@ bool CUtlString::operator==( const CUtlString &src ) const
 {
 	if ( IsEmpty() )
 	{
-		if ( src.IsEmpty() )
-		{
-			return true;
-		}
-
-		return false;
+		return src.IsEmpty();
 	}
 	else
 	{
@@ -726,6 +722,13 @@ CUtlString CUtlString::operator+( const CUtlString &other ) const
 	CUtlString s = *this;
 	s += other;
 	return s;
+}
+
+CUtlString CUtlString::operator+( char rhs ) const
+{
+	CUtlString ret = *this;
+	ret += rhs;
+	return ret;
 }
 
 CUtlString CUtlString::operator+( int rhs ) const

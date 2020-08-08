@@ -484,6 +484,11 @@ int V_atoi( const char *str )
 
 float V_atof (const char *str)
 {
+	return (float)V_atod( str );
+}
+
+double V_atod(const char *str)
+{
 	AssertValidStringPtr( str );
 	double			val;
 	int             sign;

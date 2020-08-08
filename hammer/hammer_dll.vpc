@@ -337,6 +337,30 @@ $Project "hammer_dll"
 		$File	"vmfmeshdatasupport.h"
 		$File	"wndTex.h"
 
+		$Folder "Scripting"
+		{
+			$File	"scripting\docgen.cpp" \
+					"scripting\scriptarray.cpp" \
+					"scripting\scriptbuilder.cpp" \
+					"scripting\scriptdictionary.cpp" \
+					"scripting\scriptgrid.cpp" \
+					"scripting\scripthelper.cpp" \
+					"scripting\scripting.cpp" \
+					"scripting\scriptmath.cpp" \
+					"scripting\scriptstring.cpp"
+			{
+				$Configuration
+				{
+					$Compiler
+					{
+						$AdditionalIncludeDirectories	"$BASE;.\"
+						$Create/UsePrecompiledHeader	"Not Using Precompiled Headers"
+					}
+				}
+			}
+			$FilePattern "scripting\*.h"
+		}
+
 		$Folder	"Map classes"
 		{
 			$File	"MapAlignedBox.cpp"
