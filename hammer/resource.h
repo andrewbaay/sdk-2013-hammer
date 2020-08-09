@@ -190,6 +190,7 @@
 #define IDD_OPTIONS_COLOR               356
 #define IDD_ENTITY_SPRINKLE             357
 #define IDD_DIALOG_SYNC_FILE            358
+#define IDD_SCRIPT_GUI                  358
 #define IDD_KEYBIND_EDITOR              360
 #define IDC_BRDLG_FLIPHORIZ             1000
 #define IDC_BRDLG_FLIPVERT              1001
@@ -1381,7 +1382,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        358
+#define _APS_NEXT_RESOURCE_VALUE        360
 #define _APS_NEXT_COMMAND_VALUE         33290
 #define _APS_NEXT_CONTROL_VALUE         1700
 #define _APS_NEXT_SYMED_VALUE           116

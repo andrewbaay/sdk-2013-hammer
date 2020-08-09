@@ -5,10 +5,20 @@
 #include "mapsolid.h"
 #include "mapgroup.h"
 #include "globalfunctions.h"
+#include "mainfrm.h"
 #include "options.h"
 #include "tier0/icommandline.h"
 #include "tier1/fmtstr.h"
+#include "tier1/utlhashdict.h"
 #include "filesystem.h"
+
+#include "vgui_controls/EditablePanel.h"
+#include "vgui_controls/Button.h"
+#include "vgui_controls/Label.h"
+#include "vgui_controls/TextEntry.h"
+#include "HammerVGui.h"
+#include "VGuiWnd.h"
+#include "resource.h"
 
 #include "scriptarray.h"
 #include "scriptbuilder.h"
@@ -18,7 +28,6 @@
 #include "scriptmath.h"
 #include "scriptstring.h"
 #include "asbind.h"
-#include "as_jit.h"
 #ifdef DEBUG
 #include "docgen.h"
 #endif
@@ -27,6 +36,8 @@
 
 #pragma comment( lib, "angelscript.lib" )
 
+ASBIND_TYPE( CScriptDictionary, dictionary );
+ASBIND_TYPE( ScriptString, string );
 ASBIND_TYPE( Vector, Vector );
 ASBIND_TYPE( QAngle, QAngle );
 ASBIND_TYPE( Vector2D, Vector2D );
@@ -40,7 +51,6 @@ ASBIND_TYPE( TextureAlignment_t, TextureAlignment_t );
 ASBIND_ARRAY_TYPE( CScriptArrayT<Vector>, Vector );
 
 static asIScriptEngine* engine = nullptr;
-static asCJITCompiler* compiler = nullptr;
 static CUtlVector<asIScriptModule*> modules;
 
 static void msgCallback( const asSMessageInfo* msg, void* )
@@ -61,6 +71,11 @@ static void msgCallback( const asSMessageInfo* msg, void* )
 	}
 
 	ConColorMsg( clr, "%s(%d:%d): %s\n", msg->section, msg->row, msg->col, msg->message );
+}
+
+static void Print( const ScriptString& str )
+{
+	Msg( "%s", str.Get() );
 }
 
 static void WrapCreateFace( CMapFace* pThis, CScriptArrayT<Vector>* points, int nPoints )
@@ -105,17 +120,21 @@ public:
 	{
 		m_pEngineCtx = instance->GetEngine()->RequestContext();
 		asITypeInfo* type = instance->GetObjectType();
-		m_setData = type->GetMethodByName( "SetData" );
+		m_getGuiData = type->GetMethodByName( "GetGuiData" );
+		m_guiClosed = type->GetMethodByName( "GuiClosed" );
 		m_createMapSolid = type->GetMethodByName( "CreateMapSolid" );
-		Assert( m_setData.isValid() && m_createMapSolid.isValid() );
+		Assert( m_getGuiData.isValid() && m_guiClosed.isValid() && m_createMapSolid.isValid() );
 
-		m_setData.setContext( m_pEngineCtx );
+		m_getGuiData.setContext( m_pEngineCtx );
+		m_guiClosed.setContext( m_pEngineCtx );
 		m_createMapSolid.setContext( m_pEngineCtx );
 
-		m_setData.setObject( instance );
+		m_getGuiData.setObject( instance );
+		m_guiClosed.setObject( instance );
 		m_createMapSolid.setObject( instance );
 
-		m_setData.addref();
+		m_getGuiData.addref();
+		m_guiClosed.addref();
 		m_createMapSolid.addref();
 	}
 
@@ -123,7 +142,8 @@ public:
 	{
 		m_pEngineCtx->Unprepare();
 
-		m_setData.release();
+		m_getGuiData.release();
+		m_guiClosed.release();
 		m_createMapSolid.release();
 
 		if ( auto eng = m_pScriptInstance->GetEngine() )
@@ -131,8 +151,32 @@ public:
 		m_pScriptInstance->Release();
 	}
 
-	void SetData( const BoundBox* box ) { m_setData( box ); }
-	CMapClass* CreateMapSolid( TextureAlignment_t align ) { return m_createMapSolid( align ); }
+	enum GuiElement_t : uint32 // needs to be 32-bit for AS
+	{
+		Label,
+		TextBox,
+		Divider
+	};
+
+	struct GUIData
+	{
+		GuiElement_t element;
+		ScriptString text;
+		int default;
+
+		GUIData( GuiElement_t el, const ScriptString& text, int def )
+			: element( el ), text( text ), default( def ) {}
+
+		GUIData( GuiElement_t el, const ScriptString& text )
+			: element( el ), text( text ) {}
+
+		GUIData( GuiElement_t el )
+			: element( el ) { Assert( el == Divider ); }
+	};
+
+	bool ShowGui();
+
+	CMapClass* CreateMapSolid( const BoundBox* box, TextureAlignment_t align ) { return m_createMapSolid( box, align ); }
 
 	const ScriptString& Name() const { return m_name; }
 
@@ -141,9 +185,264 @@ private:
 	asIScriptContext*	m_pEngineCtx;
 	asIScriptObject*	m_pScriptInstance;
 
-	ASBind::FunctionPtr<void( const BoundBox* )> m_setData;
-	ASBind::FunctionPtr<CMapClass*( TextureAlignment_t )> m_createMapSolid;
+	ASBind::FunctionPtr<CScriptArrayT<ScriptSolid::GUIData>*()> m_getGuiData;
+	ASBind::FunctionPtr<bool( const CScriptDictionary* )> m_guiClosed;
+	ASBind::FunctionPtr<CMapClass*( const BoundBox*, TextureAlignment_t )> m_createMapSolid;
 };
+
+class ScriptSolidGui : public vgui::EditablePanel
+{
+	DECLARE_CLASS_SIMPLE( ScriptSolidGui, vgui::EditablePanel );
+
+public:
+	ScriptSolidGui( CScriptArrayT<ScriptSolid::GUIData>* pData ) : vgui::EditablePanel( nullptr, "ScriptGui" )
+	{
+		auto sizer = new vgui::CBoxSizer( vgui::ESLD_VERTICAL );
+		for ( size_t i = 0; i < pData->GetSize(); i++ )
+		{
+			auto& data = *pData->At( i );
+
+			switch ( data.element )
+			{
+			case ScriptSolid::Label:
+				{
+					auto label = new vgui::Label( this, "", data.text );
+					label->SetContentAlignment( vgui::Label::a_center );
+					sizer->AddPanel( label, vgui::SizerAddArgs_t() );
+					break;
+				}
+			case ScriptSolid::TextBox:
+				{
+					auto row = new vgui::CBoxSizer( vgui::ESLD_HORIZONTAL );
+
+					auto label = new vgui::Label( this, "", data.text );
+					row->AddPanel( label, vgui::SizerAddArgs_t().Expand( 0.0f ).Padding( 0 ) );
+
+					row->AddSpacer( vgui::SizerAddArgs_t().Expand( 1.0f ).Padding( 0 ) );
+
+					auto entry = new vgui::TextEntry( this, "" );
+					entry->SetAllowNumericInputOnly( true );
+					if ( data.default )
+						entry->SetText( CNumStr( data.default ) );
+
+					row->AddPanel( entry, vgui::SizerAddArgs_t().Expand( 0.0f ).Padding( 0 ).MinX( 48 ) );
+
+					m_entries.Insert( data.text, entry );
+
+					sizer->AddSizer( row, vgui::SizerAddArgs_t().Expand( 0.0f ).Padding( 3 ) );
+				}
+				break;
+			case ScriptSolid::Divider:
+				sizer->AddSpacer( vgui::SizerAddArgs_t().Padding( 5 ) );
+				break;
+			default:
+				Assert( 0 );
+				break;
+			};
+		}
+
+		auto row = new vgui::CBoxSizer( vgui::ESLD_HORIZONTAL );
+
+		row->AddSpacer( vgui::SizerAddArgs_t().Expand( 0.5f ).Padding( 4 ) );
+		row->AddPanel( new vgui::Button( this, "cancel", "Cancel", this, "Cancel" ), vgui::SizerAddArgs_t().Expand( 0.0f ).Padding( 0 ) );
+		row->AddSpacer( vgui::SizerAddArgs_t().Expand( 0.0f ).Padding( 4 ) );
+		row->AddPanel( new vgui::Button( this, "ok", "Create", this, "OK" ), vgui::SizerAddArgs_t().Expand( 0.0f ).Padding( 0 ) );
+
+		sizer->AddSpacer( vgui::SizerAddArgs_t().Expand( 1.0f ) );
+
+		sizer->AddSizer( row, vgui::SizerAddArgs_t().Expand( 0.0f ).Padding( 5 ) );
+
+		sizer->AddSpacer( vgui::SizerAddArgs_t().Padding( 3 ) );
+
+		SetSizer( sizer );
+		InvalidateLayout( true );
+	}
+
+	~ScriptSolidGui() = default;
+
+	const CUtlHashDict<vgui::TextEntry*>& Entries() const { return m_entries; }
+
+	void OnCommand( const char* cmd ) override
+	{
+		GetParent()->OnCommand( cmd );
+	}
+
+private:
+	CUtlHashDict<vgui::TextEntry*> m_entries;
+};
+
+class CScriptDialog : public CVguiDialog
+{
+	DECLARE_DYNAMIC( CScriptDialog )
+
+private:
+	class CScriptDialogPanel : public vgui::EditablePanel
+	{
+		DECLARE_CLASS_SIMPLE( CScriptDialogPanel, vgui::EditablePanel );
+	public:
+		CScriptDialogPanel( CScriptDialog* pBrowser, const char* panelName, vgui::HScheme hScheme ) :
+			vgui::EditablePanel( NULL, panelName, hScheme )
+		{
+			m_pBrowser = pBrowser;
+		}
+
+		void OnSizeChanged( int newWide, int newTall ) override
+		{
+			// call Panel and not EditablePanel OnSizeChanged.
+			Panel::OnSizeChanged( newWide, newTall );
+		}
+
+		void OnCommand( const char* pCommand ) override
+		{
+			if ( Q_stricmp( pCommand, "OK" ) == 0 )
+			{
+				m_pBrowser->EndDialog( IDOK );
+			}
+			else if ( Q_stricmp( pCommand, "Cancel" ) == 0 || Q_stricmp( pCommand, "Close" ) == 0 )
+			{
+				m_pBrowser->EndDialog( IDCANCEL );
+			}
+		}
+
+		void OnKeyCodeTyped( vgui::KeyCode code ) override
+		{
+			BaseClass::OnKeyCodeTyped( code );
+
+			if ( code == KEY_ESCAPE )
+				m_pBrowser->EndDialog( IDCANCEL );
+		}
+
+	private:
+		CScriptDialog* m_pBrowser;
+	};
+
+public:
+	CScriptDialog( CWnd* pParent, CScriptArrayT<ScriptSolid::GUIData>* pData ) : CVguiDialog( CScriptDialog::IDD, pParent )
+	{
+		m_pDialog = new ScriptSolidGui( pData );
+	}
+	~CScriptDialog() override
+	{
+		// CDialog isn't going to clean up its vgui children
+		delete m_pDialog;
+	}
+
+	// Dialog Data
+	enum { IDD = IDD_SCRIPT_GUI };
+
+protected:
+	virtual void DoDataExchange( CDataExchange* pDX )
+	{
+		CDialog::DoDataExchange( pDX );
+	}
+	virtual BOOL PreTranslateMessage( MSG* pMsg )
+	{
+		// don't filter dialog message
+		return CWnd::PreTranslateMessage( pMsg );
+	}
+
+	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnSize( UINT nType, int cx, int cy )
+	{
+		if ( nType == SIZE_MINIMIZED || !IsWindow( m_VGuiWindow.m_hWnd ) )
+			return CDialog::OnSize( nType, cx, cy );
+
+		Resize();
+
+		CDialog::OnSize(nType, cx, cy);
+	}
+
+	afx_msg BOOL OnEraseBkgnd( CDC* pDC )
+	{
+		return TRUE;
+	}
+
+	virtual BOOL OnInitDialog()
+	{
+		CDialog::OnInitDialog();
+
+		m_VGuiWindow.Create( NULL, _T("ScriptGui"), WS_VISIBLE|WS_CHILD, CRect(0,0,100,100), this, IDD_SCRIPT_GUI );
+
+		vgui::EditablePanel* pMainPanel = new CScriptDialogPanel( this, "ScriptGui", HammerVGui()->GetHammerScheme() );
+
+		m_VGuiWindow.SetParentWindow( &m_VGuiWindow );
+		m_VGuiWindow.SetMainPanel( pMainPanel );
+		pMainPanel->MakePopup( false, false );
+		m_VGuiWindow.SetRepaintInterval( 30 );
+
+		m_pDialog->SetParent( pMainPanel );
+		m_pDialog->AddActionSignalTarget( pMainPanel );
+		pMainPanel->InvalidateLayout( true );
+
+		Resize();
+
+		return TRUE;
+	}
+
+	void Resize()
+	{
+		// reposition controls
+		CRect rect;
+		GetClientRect( &rect );
+
+		m_VGuiWindow.MoveWindow( rect );
+
+		m_pDialog->SetBounds( 0, 0, rect.Width(), rect.Height() );
+	}
+
+	CVGuiPanelWnd	m_VGuiWindow;
+
+	ScriptSolidGui*	m_pDialog;
+
+	void Show()
+	{
+		if ( m_pDialog )
+			m_pDialog->SetVisible( true );
+	}
+	void Hide()
+	{
+		if ( m_pDialog )
+			m_pDialog->SetVisible( false );
+	}
+};
+IMPLEMENT_DYNAMIC( CScriptDialog, CVguiDialog )
+
+BEGIN_MESSAGE_MAP(CScriptDialog, CDialog)
+	ON_WM_SIZE()
+	ON_WM_DESTROY()
+	ON_WM_ERASEBKGND()
+END_MESSAGE_MAP()
+
+bool ScriptSolid::ShowGui()
+{
+	auto data = m_getGuiData();
+	if ( data->IsEmpty() )
+		return true;
+
+	CScriptDialog dialog( GetMainWnd(), data );
+	dialog.Show();
+	if ( dialog.DoModal() != IDOK )
+		return false;
+
+	auto& entries = dialog.m_pDialog->Entries();
+
+	auto dict = CScriptDictionary::Create( m_pEngineCtx->GetEngine() );
+
+	for ( auto i = entries.First(); entries.IsValidIndex( i ); i = entries.Next( i ) )
+	{
+		char _value[64];
+		entries.Element( i )->GetText( _value, 64 );
+
+		dict->Set( entries.GetElementName( i ), V_atoi64( _value ) );
+	}
+
+	return m_guiClosed( dict );
+}
+
+ASBIND_TYPE( ScriptSolid::GuiElement_t, GuiElement_t );
+ASBIND_TYPE( ScriptSolid::GUIData, GUIData );
+ASBIND_ARRAY_TYPE( CScriptArrayT<ScriptSolid::GUIData>, GUIData );
 
 static CUtlVector<ScriptSolid*> scriptSolids;
 static void RegisterScriptSolid( const ScriptString& name, asIScriptObject* solidClass )
@@ -156,12 +455,9 @@ void ScriptInit()
 	asPrepareMultithread();
 	engine = asCreateScriptEngine();
 	engine->SetMessageCallback( asFUNCTION( msgCallback ), nullptr, asCALL_CDECL );
-	compiler = new asCJITCompiler();
 	engine->SetEngineProperty( asEP_ALWAYS_IMPL_DEFAULT_CONSTRUCT, 1 );
 	engine->SetEngineProperty( asEP_BUILD_WITHOUT_LINE_CUES, 1 );
 	engine->SetEngineProperty( asEP_COMPILER_WARNINGS, 1 );
-	engine->SetEngineProperty( asEP_INCLUDE_JIT_INSTRUCTIONS, 1 );
-	engine->SetJITCompiler( compiler );
 	engine->SetDefaultAccessMask( 0xFFFFFFFF );
 
 	RegisterScriptMath( engine );
@@ -384,9 +680,18 @@ void ScriptInit()
 		.refcast( &WrapCastMapClass<CMapSolid>, true )
 		;
 
+	ASBind::Enum{ engine, "GuiElement_t" }.all<ScriptSolid::GuiElement_t>();
+
+	ASBind::Class<ScriptSolid::GUIData, ASBind::class_pod>{ engine }
+		.constructor<void( ScriptSolid::GuiElement_t, const ScriptString&, int )>()
+		.constructor<void( ScriptSolid::GuiElement_t, const ScriptString& )>()
+		.constructor<void( ScriptSolid::GuiElement_t )>()
+		;
+
 	ASBind::Interface{ engine, "ScriptSolid" }
-		.method<void( const BoundBox* )>( "SetData" )
-		.method<CMapClass*( TextureAlignment_t )>( "CreateMapSolid" )
+		.constmethod<CScriptArrayT<ScriptSolid::GUIData>*()>( "GetGuiData" )
+		.method<bool( const CScriptDictionary* )>( "GuiClosed" )
+		.method<CMapClass*( const BoundBox*, TextureAlignment_t )>( "CreateMapSolid" )
 		;
 
 	ASBind::Global{ engine }
@@ -394,6 +699,7 @@ void ScriptInit()
 		.constvar( vec3_invalid, "vec3_invalid" )
 		.constvar( vec3_angle, "vec3_angle" )
 		.constvar( vec4_origin, "vec4_origin" )
+		.function( &Print, "print" )
 		.function( &WrapCreateMapClass<CMapGroup>, "CreateMapGroup" )
 		.function( &WrapCreateMapClass<CMapSolid>, "CreateSolid" )
 		.function2( &RegisterScriptSolid, "void RegisterScriptSolid( const string &in name, ScriptSolid@ instance )" )
@@ -454,7 +760,6 @@ void ScriptShutdown()
 	modules.Purge();
 
 	engine->ShutDownAndRelease();
-	delete compiler;
 	asUnprepareMultithread();
 }
 
@@ -476,8 +781,9 @@ CMapClass* ScriptableSolid_Create( int index, const BoundBox* box )
 	if ( !scriptSolids.IsValidIndex( index ) )
 		return nullptr;
 	auto solid = scriptSolids[index];
-	solid->SetData( box );
-	CMapClass* ret = solid->CreateMapSolid( Options.GetTextureAlignment() );
+	if ( !solid->ShowGui() )
+		return nullptr;
+	CMapClass* ret = solid->CreateMapSolid( box, Options.GetTextureAlignment() );
 	if ( ret )
 		SetDefTexture( ret );
 

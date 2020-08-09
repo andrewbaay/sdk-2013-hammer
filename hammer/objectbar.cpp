@@ -244,22 +244,19 @@ CMapClass *CObjectBar::CreateInBox(BoundBox *pBox, CMapView *pView)
 		//
 		int nSolidIndex = _iNewObjIndex;
 
-		if ( (unsigned)nSolidIndex < ARRAYSIZE( SolidTypes ) )
-		{
-			int nFacesMin = SolidTypes[nSolidIndex].nFacesMin;
-			int nFacesMax = SolidTypes[nSolidIndex].nFacesMax;
+		int nFacesMin = SolidTypes[nSolidIndex].nFacesMin;
+		int nFacesMax = SolidTypes[nSolidIndex].nFacesMax;
 
-			//
-			// Insure that the face count is within legal range (if applicable).
-			//
-			if ( ( SolidTypes[nSolidIndex].bEnableFaceControl ) && ( nFaces < nFacesMin || nFaces > nFacesMax ) )
-			{
-				CString str;
-				str.Format( "The face count for a %s must be in the range of %d to %d.",
-							SolidTypes[nSolidIndex].pszName, nFacesMin, nFacesMax );
-				AfxMessageBox( str );
-				return NULL;
-			}
+		//
+		// Insure that the face count is within legal range (if applicable).
+		//
+		if ( ( SolidTypes[nSolidIndex].bEnableFaceControl ) && ( nFaces < nFacesMin || nFaces > nFacesMax ) )
+		{
+			CString str;
+			str.Format( "The face count for a %s must be in the range of %d to %d.",
+						SolidTypes[nSolidIndex].pszName, nFacesMin, nFacesMax );
+			AfxMessageBox( str );
+			return NULL;
 		}
 
 		if(nSolidIndex < 5)
@@ -326,7 +323,7 @@ CMapClass *CObjectBar::CreateInBox(BoundBox *pBox, CMapView *pView)
 
 			return pArch;
 		}
-		else if (nSolidIndex == 6)
+		else
 		{
 			// Torus
 			CTorusDlg dlg( pBox->bmins, pBox->bmaxs );

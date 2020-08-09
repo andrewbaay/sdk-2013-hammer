@@ -116,6 +116,7 @@ void RegisterScriptMath( asIScriptEngine* engine )
 	r = engine->RegisterGlobalFunction( "float abs(float)", asFUNCTIONPR( fabsf, ( float ), float ), asCALL_CDECL ); Assert( r >= 0 );
 	r = engine->RegisterGlobalFunction( "float floor(float)", asFUNCTIONPR( floorf, ( float ), float ), asCALL_CDECL ); Assert( r >= 0 );
 	r = engine->RegisterGlobalFunction( "float fraction(float)", asFUNCTIONPR( fractionf, ( float ), float ), asCALL_CDECL ); Assert( r >= 0 );
+	r = engine->RegisterGlobalFunction( "float rint(float)", asFUNCTIONPR( rint, ( float ), float ), asCALL_CDECL ); Assert( r >= 0 );
 
 	// Don't register modf because AngelScript already supports the % operator
 }

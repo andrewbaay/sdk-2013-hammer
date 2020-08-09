@@ -1137,7 +1137,7 @@ class Class
 		switch ( class_type )
 		{
 			case class_pod:
-				flags = asOBJ_APP_CLASS | asOBJ_VALUE | asOBJ_POD;
+				flags = asOBJ_APP_CLASS | asOBJ_VALUE | asOBJ_POD | asGetTypeTraits<T>();
 				size = sizeof( T );
 				break;
 			case class_class:
