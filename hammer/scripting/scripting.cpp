@@ -162,16 +162,16 @@ public:
 	{
 		GuiElement_t element;
 		ScriptString text;
-		int default;
+		int defaultVal;
 
 		GUIData( GuiElement_t el, const ScriptString& text, int def )
-			: element( el ), text( text ), default( def ) {}
+			: element( el ), text( text ), defaultVal( def ) { Assert( el == TextBox ); }
 
 		GUIData( GuiElement_t el, const ScriptString& text )
-			: element( el ), text( text ) {}
+			: element( el ), text( text ), defaultVal( 0 ) { Assert( el == Label ); }
 
 		GUIData( GuiElement_t el )
-			: element( el ) { Assert( el == Divider ); }
+			: element( el ), defaultVal( 0 ) { Assert( el == Divider ); }
 	};
 
 	bool ShowGui();
@@ -208,6 +208,7 @@ public:
 				{
 					auto label = new vgui::Label( this, "", data.text );
 					label->SetContentAlignment( vgui::Label::a_center );
+					label->SetCenterWrap( true );
 					sizer->AddPanel( label, vgui::SizerAddArgs_t() );
 					break;
 				}
@@ -216,20 +217,20 @@ public:
 					auto row = new vgui::CBoxSizer( vgui::ESLD_HORIZONTAL );
 
 					auto label = new vgui::Label( this, "", data.text );
-					row->AddPanel( label, vgui::SizerAddArgs_t().Expand( 0.0f ).Padding( 0 ) );
+					row->AddPanel( label, vgui::SizerAddArgs_t().Padding( 0 ) );
 
 					row->AddSpacer( vgui::SizerAddArgs_t().Expand( 1.0f ).Padding( 0 ) );
 
 					auto entry = new vgui::TextEntry( this, "" );
 					entry->SetAllowNumericInputOnly( true );
-					if ( data.default )
-						entry->SetText( CNumStr( data.default ) );
+					if ( data.defaultVal )
+						entry->SetText( CNumStr( data.defaultVal ) );
 
-					row->AddPanel( entry, vgui::SizerAddArgs_t().Expand( 0.0f ).Padding( 0 ).MinX( 48 ) );
+					row->AddPanel( entry, vgui::SizerAddArgs_t().Padding( 0 ).MinX( 48 ) );
 
 					m_entries.Insert( data.text, entry );
 
-					sizer->AddSizer( row, vgui::SizerAddArgs_t().Expand( 0.0f ).Padding( 3 ) );
+					sizer->AddSizer( row, vgui::SizerAddArgs_t().Padding( 3 ) );
 				}
 				break;
 			case ScriptSolid::Divider:
@@ -244,14 +245,12 @@ public:
 		auto row = new vgui::CBoxSizer( vgui::ESLD_HORIZONTAL );
 
 		row->AddSpacer( vgui::SizerAddArgs_t().Expand( 0.5f ).Padding( 4 ) );
-		row->AddPanel( new vgui::Button( this, "cancel", "Cancel", this, "Cancel" ), vgui::SizerAddArgs_t().Expand( 0.0f ).Padding( 0 ) );
-		row->AddSpacer( vgui::SizerAddArgs_t().Expand( 0.0f ).Padding( 4 ) );
-		row->AddPanel( new vgui::Button( this, "ok", "Create", this, "OK" ), vgui::SizerAddArgs_t().Expand( 0.0f ).Padding( 0 ) );
+		row->AddPanel( new vgui::Button( this, "cancel", "Cancel", this, "Cancel" ), vgui::SizerAddArgs_t().Padding( 0 ) );
+		row->AddSpacer( vgui::SizerAddArgs_t().Padding( 4 ) );
+		row->AddPanel( new vgui::Button( this, "ok", "Create", this, "OK" ), vgui::SizerAddArgs_t().Padding( 0 ) );
 
 		sizer->AddSpacer( vgui::SizerAddArgs_t().Expand( 1.0f ) );
-
-		sizer->AddSizer( row, vgui::SizerAddArgs_t().Expand( 0.0f ).Padding( 5 ) );
-
+		sizer->AddSizer( row, vgui::SizerAddArgs_t().Padding( 5 ) );
 		sizer->AddSpacer( vgui::SizerAddArgs_t().Padding( 3 ) );
 
 		SetSizer( sizer );
@@ -331,11 +330,11 @@ public:
 	enum { IDD = IDD_SCRIPT_GUI };
 
 protected:
-	virtual void DoDataExchange( CDataExchange* pDX )
+	void DoDataExchange( CDataExchange* pDX ) override
 	{
 		CDialog::DoDataExchange( pDX );
 	}
-	virtual BOOL PreTranslateMessage( MSG* pMsg )
+	BOOL PreTranslateMessage( MSG* pMsg ) override
 	{
 		// don't filter dialog message
 		return CWnd::PreTranslateMessage( pMsg );
@@ -353,12 +352,12 @@ public:
 		CDialog::OnSize(nType, cx, cy);
 	}
 
-	afx_msg BOOL OnEraseBkgnd( CDC* pDC )
+	afx_msg BOOL OnEraseBkgnd( CDC* )
 	{
 		return TRUE;
 	}
 
-	virtual BOOL OnInitDialog()
+	BOOL OnInitDialog() override
 	{
 		CDialog::OnInitDialog();
 
@@ -400,11 +399,6 @@ public:
 		if ( m_pDialog )
 			m_pDialog->SetVisible( true );
 	}
-	void Hide()
-	{
-		if ( m_pDialog )
-			m_pDialog->SetVisible( false );
-	}
 };
 IMPLEMENT_DYNAMIC( CScriptDialog, CVguiDialog )
 
@@ -417,7 +411,7 @@ END_MESSAGE_MAP()
 bool ScriptSolid::ShowGui()
 {
 	auto data = m_getGuiData();
-	if ( data->IsEmpty() )
+	if ( !data || data->IsEmpty() )
 		return true;
 
 	CScriptDialog dialog( GetMainWnd(), data );
@@ -714,7 +708,6 @@ void ScriptInit()
 	{
 		const CFmtStr fullScript( "scripts/%s", find );
 
-		CScriptBuilder builder;
 		if ( !ctx )
 			ctx = engine->RequestContext();
 		builder.StartNewModule( engine, find );
@@ -739,6 +732,9 @@ void ScriptInit()
 	}
 
 	g_pFullFileSystem->FindClose( h );
+
+	if ( ctx )
+		engine->ReturnContext( ctx );
 
 #ifdef DEBUG
 	if ( CommandLine_Tier0()->FindParm( "-doc" ) )

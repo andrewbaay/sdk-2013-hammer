@@ -962,10 +962,11 @@ protected:
 		int r = ctx->Execute();
 		if ( r != asEXECUTION_FINISHED && r != asEXECUTION_SUSPENDED )
 		{
-			Warning( "ASBind::FunctionPtrBase: Execute failed %d (name %s)\n", r, fptr->GetName() );
+			const Color c{ 32, 32, 255, 0 };
+			ConColorMsg( c, "ASBind::FunctionPtrBase: Execute failed %d (name %s)\n", r, fptr->GetName() );
 			if ( r == asEXECUTION_EXCEPTION )
 			{
-				Warning( "%s\n", GetExceptionInfo( ctx, true ).Get() );
+				ConColorMsg( c, "%s\n", GetExceptionInfo( ctx, true ).Get() );
 			}
 			bfailed = true;
 		}
