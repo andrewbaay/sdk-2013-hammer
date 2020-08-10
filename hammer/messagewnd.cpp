@@ -109,31 +109,58 @@ void CMessageWnd::AddMsg( const Color& color, const TCHAR* msg )
 		}
 	}
 
-	int iAddAt = iNumMsgs;
-
-	// Don't allow growth after MAX_MESSAGE_WND_LINES
-	if ( iNumMsgs == MAX_MESSAGE_WND_LINES )
+	const auto& addMsg = [&]( int length, const char* message )
 	{
-		MWMSGSTRUCT* p = MsgArray.GetData();
-		memcpy( p, p + 1, sizeof( *p ) * ( MAX_MESSAGE_WND_LINES - 1 ) );
-		iAddAt = MAX_MESSAGE_WND_LINES - 1;
+		if ( length == 0 )
+			return;
+		int iAddAt = iNumMsgs;
+
+		// Don't allow growth after MAX_MESSAGE_WND_LINES
+		if ( iNumMsgs == MAX_MESSAGE_WND_LINES )
+		{
+			MWMSGSTRUCT* p = MsgArray.GetData();
+			memmove( p, p + 1, sizeof( *p ) * ( MAX_MESSAGE_WND_LINES - 1 ) );
+			iAddAt = MAX_MESSAGE_WND_LINES - 1;
+		}
+		else
+		{
+			++iNumMsgs;
+		}
+
+		// format message
+		MWMSGSTRUCT mws;
+		mws.MsgLen = length;
+		mws.color  = color;
+		Assert( mws.MsgLen <= ( sizeof( mws.szMsg ) / sizeof( TCHAR ) ) );
+		mws.MsgLen = Min<int>( mws.MsgLen, sizeof( mws.szMsg ) );
+		mws.repeatCount = 0U;
+		_tcsncpy( mws.szMsg, message, mws.MsgLen );
+
+		// Add the message, growing the array as necessary
+		MsgArray.SetAtGrow( iAddAt, mws );
+	};
+
+	const auto& atEnd = [&msg, len]
+	{
+		auto endL = strchr( msg, '\n' );
+		return endL == nullptr || endL == &msg[len - 1] ? nullptr : endL;
+	};
+
+	const char* end;
+	bool split = false;
+	while ( ( end = atEnd() ) != nullptr )
+	{
+		*const_cast<char*>( end ) = 0;
+		int newLen = strlen( msg );
+		addMsg( newLen, msg );
+		msg += newLen + 1;
+		split = true;
 	}
+
+	if ( split )
+		addMsg( strlen( msg ), msg );
 	else
-	{
-		++iNumMsgs;
-	}
-
-	// format message
-	MWMSGSTRUCT mws;
-	mws.MsgLen = len;
-	mws.color  = color;
-	Assert( mws.MsgLen <= ( sizeof( mws.szMsg ) / sizeof( TCHAR ) ) );
-	mws.MsgLen = Min<int>( mws.MsgLen, sizeof( mws.szMsg ) );
-	mws.repeatCount = 0U;
-	_tcsncpy( mws.szMsg, msg, mws.MsgLen );
-
-	// Add the message, growing the array as necessary
-	MsgArray.SetAtGrow( iAddAt, mws );
+		addMsg( len, msg );
 
 	// Don't do stuff that requires the window to exist.
 	if ( m_hWnd == NULL )
@@ -174,7 +201,7 @@ void CMessageWnd::Activate()
 		return;
 
 	ShowWindow( SW_SHOW );
-	SetWindowPos( &( CWnd::wndTopMost ), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW );
+	SetWindowPos( &CWnd::wndTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW );
 	BringWindowToTop();
 	SetFocus();
 }
