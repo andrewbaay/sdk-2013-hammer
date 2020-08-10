@@ -125,6 +125,10 @@ public:
 		m_createMapSolid = type->GetMethodByName( "CreateMapSolid" );
 		Assert( m_getGuiData.isValid() && m_guiClosed.isValid() && m_createMapSolid.isValid() );
 
+		static const bool debug = CommandLine_Tier0()->FindParm( "-script_debug" ) != 0;
+		if ( debug )
+			m_pEngineCtx->SetExceptionCallback( asMETHOD( ScriptSolid, ExceptionCallback ), this, asCALL_THISCALL );
+
 		m_getGuiData.setContext( m_pEngineCtx );
 		m_guiClosed.setContext( m_pEngineCtx );
 		m_createMapSolid.setContext( m_pEngineCtx );
@@ -176,7 +180,12 @@ public:
 
 	bool ShowGui();
 
-	CMapClass* CreateMapSolid( const BoundBox* box, TextureAlignment_t align ) { return m_createMapSolid( box, align ); }
+	CMapClass* CreateMapSolid( const BoundBox* box, TextureAlignment_t align )
+	{
+		if ( auto solid = m_createMapSolid( box, align ); !m_createMapSolid.failed() )
+			return solid;
+		return nullptr;
+	}
 
 	const ScriptString& Name() const { return m_name; }
 
@@ -184,6 +193,124 @@ private:
 	ScriptString		m_name;
 	asIScriptContext*	m_pEngineCtx;
 	asIScriptObject*	m_pScriptInstance;
+
+	void ExceptionCallback( asIScriptContext* ctx )
+	{
+		const Color c{ 32, 32, 255, 0 };
+		ConColorMsg( c, "%s", GetExceptionInfo( ctx, true ).Get() );
+
+		auto eng = ctx->GetEngine();
+
+		const auto& printType = [c, eng, strType = eng->GetTypeIdByDecl( "string" ),
+									vecType  = eng->GetTypeIdByDecl( "Vector" ),
+									vec2Type = eng->GetTypeIdByDecl( "Vector2D" ),
+									vec4Type = eng->GetTypeIdByDecl( "Vector4D" ),
+									angType = eng->GetTypeIdByDecl( "QAngle" )]( const char* decl, void* addr, int id, const auto& printT ) -> void
+		{
+			switch ( id )
+			{
+			case asTYPEID_BOOL:
+				ConColorMsg( c, "%s = %d\n", decl, *static_cast<bool*>( addr ) );
+				break;
+			case asTYPEID_INT8:
+				ConColorMsg( c, "%s = %d\n", decl, *static_cast<int8*>( addr ) );
+				break;
+			case asTYPEID_INT16:
+				ConColorMsg( c, "%s = %d\n", decl, *static_cast<int16*>( addr ) );
+				break;
+			case asTYPEID_INT32:
+				ConColorMsg( c, "%s = %d\n", decl, *static_cast<int32*>( addr ) );
+				break;
+			case asTYPEID_INT64:
+				ConColorMsg( c, "%s = %lld\n", decl, *static_cast<int64*>( addr ) );
+				break;
+			case asTYPEID_UINT8:
+				ConColorMsg( c, "%s = %u\n", decl, *static_cast<uint8*>( addr ) );
+				break;
+			case asTYPEID_UINT16:
+				ConColorMsg( c, "%s = %u\n", decl, *static_cast<uint16*>( addr ) );
+				break;
+			case asTYPEID_UINT32:
+				ConColorMsg( c, "%s = %u\n", decl, *static_cast<uint32*>( addr ) );
+				break;
+			case asTYPEID_UINT64:
+				ConColorMsg( c, "%s = %llu\n", decl, *static_cast<uint64*>( addr ) );
+				break;
+			case asTYPEID_FLOAT:
+				ConColorMsg( c, "%s = %g\n", decl, *static_cast<float*>( addr ) );
+				break;
+			case asTYPEID_DOUBLE:
+				ConColorMsg( c, "%s = %g\n", decl, *static_cast<double*>( addr ) );
+				break;
+			default:
+				if ( id == strType )
+					ConColorMsg( c, "%s = %s\n", decl, static_cast<ScriptString*>( addr )->Get() );
+				else if ( id == vecType || id == angType )
+					ConColorMsg( c, "%s = [%g %g %g]\n", decl, XYZ( *static_cast<Vector*>( addr ) ) );
+				else if ( id == vec4Type )
+					ConColorMsg( c, "%s = [%g %g %g %g]\n", decl, XYZ( *static_cast<Vector4D*>( addr ) ), static_cast<Vector4D*>( addr )->w );
+				else if ( id == vec2Type )
+					ConColorMsg( c, "%s = [%g %g]\n", decl, static_cast<Vector2D*>( addr )->x, static_cast<Vector2D*>( addr )->y );
+				else
+				{
+					auto type = eng->GetTypeInfoById( id );
+
+					ConColorMsg( c, "%s = 0x%x\n", decl, addr );
+					if ( addr == nullptr )
+						break;
+					if ( V_stristr( type->GetName(), "array" ) == type->GetName() )
+					{
+						auto arrDecl = decl + V_strlen( decl );
+						while ( *( --arrDecl - 1 ) != ' ' );
+						auto arr = strchr( decl, '@' ) + 2 == arrDecl ? *static_cast<CScriptArray**>( addr ) : static_cast<CScriptArray*>( addr );
+						auto elId = arr->GetElementTypeId();
+						for ( size_t i = 0; i < arr->GetSize(); i++ )
+							printT( CFmtStr( "%s[%u]", arrDecl, i ), arr->At( i ), elId, printT );
+					}
+					else if ( !V_stricmp( type->GetName(), "dictionary" ) )
+					{
+						auto dictDecl = decl + V_strlen( decl );
+						while ( *( --dictDecl - 1 ) != ' ' );
+						auto type = eng->GetTypeInfoById( id );
+						auto dict = strchr( decl, '@' ) + 2 == dictDecl ? *static_cast<CScriptDictionary**>( addr ) : static_cast<CScriptDictionary*>( addr );
+
+						for ( const CScriptDictionary::CIterator& iter : *dict )
+							printT( CFmtStr( "%s[\"%s\"]", dictDecl, iter.GetKey().Get() ), const_cast<void*>( iter.GetAddressOfValue() ), iter.GetTypeId(), printT );
+					}
+				}
+				break;
+			}
+		};
+
+		if ( auto thisId = ctx->GetThisTypeId(); thisId > 0 )
+		{
+			auto _this = ctx->GetThisPointer();
+			auto thisType = eng->GetTypeInfoById( thisId );
+
+			ConColorMsg( c, "\n-- this --\n" );
+			for ( size_t i = 0; i < thisType->GetPropertyCount(); i++ )
+			{
+				auto decl = thisType->GetPropertyDeclaration( i );
+				int  id, offset;
+				thisType->GetProperty( i, nullptr, &id, nullptr, nullptr, &offset );
+
+				printType( decl, static_cast<byte*>( _this ) + offset, id, printType );
+			}
+		}
+
+		ConColorMsg( c, "-- locals --\n" );
+		for ( int i = 0; i < ctx->GetVarCount(); i++ )
+		{
+			auto decl = ctx->GetVarDeclaration( i );
+			auto addr = ctx->GetAddressOfVar( i );
+			auto id = ctx->GetVarTypeId( i );
+
+			if ( !ctx->IsVarInScope( i ) )
+				continue;
+
+			printType( decl, addr, id, printType );
+		}
+	}
 
 	ASBind::FunctionPtr<CScriptArrayT<ScriptSolid::GUIData>*()> m_getGuiData;
 	ASBind::FunctionPtr<bool( const CScriptDictionary* )> m_guiClosed;
@@ -411,6 +538,8 @@ END_MESSAGE_MAP()
 bool ScriptSolid::ShowGui()
 {
 	auto data = m_getGuiData();
+	if ( m_getGuiData.failed() )
+		return false;
 	if ( !data || data->IsEmpty() )
 		return true;
 
@@ -431,7 +560,7 @@ bool ScriptSolid::ShowGui()
 		dict->Set( entries.GetElementName( i ), V_atoi64( _value ) );
 	}
 
-	return m_guiClosed( dict );
+	return m_guiClosed( dict ) && !m_guiClosed.failed();
 }
 
 ASBIND_TYPE( ScriptSolid::GuiElement_t, GuiElement_t );

@@ -218,16 +218,16 @@ CUtlString GetExceptionInfo( asIScriptContext* ctx, bool showStack )
 	CUtlBuffer text( 0, 0, CUtlBuffer::TEXT_BUFFER );
 
 	const asIScriptFunction* function = ctx->GetExceptionFunction();
-	text << "function:    " << function->GetDeclaration() << "\n";
-	text << "module:      " << ( function->GetModuleName() ? function->GetModuleName() : "" ) << "\n";
-	text << "section:     " << ( function->GetScriptSectionName() ? function->GetScriptSectionName() : "" ) << "\n";
-	text << "line:        " << ctx->GetExceptionLineNumber() << "\n";
-	text << "description: " << ctx->GetExceptionString() << "\n";
+	text << "function:  " << function->GetDeclaration() << "\n";
+	text << "module:    " << ( function->GetModuleName() ? function->GetModuleName() : "" ) << "\n";
+	text << "section:   " << ( function->GetScriptSectionName() ? function->GetScriptSectionName() : "" ) << "\n";
+	text << "line:      " << ctx->GetExceptionLineNumber() << "\n";
+	text << "exception: " << ctx->GetExceptionString() << "\n";
 
 	if ( showStack && ctx->GetCallstackSize() > 1 )
 	{
 		text << "--- call stack ---\n";
-		for ( asUINT n = 1; n < ctx->GetCallstackSize(); n++ )
+		for ( asUINT n = 0; n < ctx->GetCallstackSize(); n++ )
 		{
 			function = ctx->GetFunction( n );
 			if ( function )

@@ -962,11 +962,14 @@ protected:
 		int r = ctx->Execute();
 		if ( r != asEXECUTION_FINISHED && r != asEXECUTION_SUSPENDED )
 		{
-			const Color c{ 32, 32, 255, 0 };
-			ConColorMsg( c, "ASBind::FunctionPtrBase: Execute failed %d (name %s)\n", r, fptr->GetName() );
-			if ( r == asEXECUTION_EXCEPTION )
+			static const bool debug = CommandLine_Tier0()->FindParm( "-script_debug" ) != 0;
+			if ( !debug )
 			{
-				ConColorMsg( c, "%s\n", GetExceptionInfo( ctx, true ).Get() );
+				const Color c{ 32, 32, 255, 0 };
+				if ( r == asEXECUTION_EXCEPTION )
+					ConColorMsg( c, "%s", GetExceptionInfo( ctx, true ).Get() );
+				else
+					ConColorMsg( c, "ASBind::FunctionPtrBase: Execute failed %d (name %s)\n", r, fptr->GetName() );
 			}
 			bfailed = true;
 		}

@@ -478,8 +478,8 @@
 <div name="cmapsolid"><a name="cmapsolid"></a><div class="block" name="cmapsolid">
 <div class="api"><span class="AS-keyword">class</span> <span class="AS-classtype">CMapSolid</span>
 {
-	<span class="AS-keyword">void</span> AddFace(<span class="AS-keyword">const</span> <span class="AS-valuetype">CMapFace</span>&amp;<span class="AS-keyword">in</span>);
-	<span class="AS-keyword">void</span> InitializeTextureAxes(<span class="AS-enumtype">TextureAlignment_t</span>, <span class="AS-keyword">uint</span>);
+	<span class="AS-keyword">void</span> AddFace(<span class="AS-keyword">const</span> <span class="AS-valuetype">CMapFace</span>&amp;<span class="AS-keyword">in</span> face);
+	<span class="AS-keyword">void</span> InitializeTextureAxes(<span class="AS-enumtype">TextureAlignment_t</span> align, <span class="AS-keyword">uint</span> initTexFlags);
 	<span class="AS-keyword">void</span> CalcBounds(<span class="AS-keyword">bool</span> full);
 	<span class="AS-keyword">void</span> GetBoundsSize(<span class="AS-valuetype">Vector</span>&amp;<span class="AS-keyword">out</span> size);
 	<span class="AS-keyword">void</span> TransMove(<span class="AS-keyword">const</span> <span class="AS-valuetype">Vector</span>&amp;<span class="AS-keyword">in</span> delta);
