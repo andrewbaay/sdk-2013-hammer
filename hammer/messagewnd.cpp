@@ -140,18 +140,17 @@ void CMessageWnd::AddMsg( const Color& color, const TCHAR* msg )
 		MsgArray.SetAtGrow( iAddAt, mws );
 	};
 
-	const auto& atEnd = [&msg, len]
+	const auto& atEnd = [last = &msg[len - 1], &msg, len]
 	{
 		auto endL = strchr( msg, '\n' );
-		return endL == nullptr || endL == &msg[len - 1] ? nullptr : endL;
+		return endL == nullptr || endL == last ? nullptr : endL;
 	};
 
 	const char* end;
 	bool split = false;
 	while ( ( end = atEnd() ) != nullptr )
 	{
-		*const_cast<char*>( end ) = 0;
-		int newLen = strlen( msg );
+		int newLen = end - msg;
 		addMsg( newLen, msg );
 		msg += newLen + 1;
 		split = true;
