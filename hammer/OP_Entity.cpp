@@ -4661,6 +4661,13 @@ HBRUSH CMyEdit::CtlColor( CDC* pDC, UINT nCtlColor )
 			b = (int)( fb * 255.0f );
 		}
 
+		if ( r == -1 || g == -1 || b == -1 )
+		{
+			r = 255;
+			g = 255;
+			b = 255;
+		}
+
 		auto col = RGB( r, g, b );
 
 		if ( col != m_lastColor )
@@ -4963,6 +4970,13 @@ bool COP_Entity::CustomDrawItemValue( const LPDRAWITEMSTRUCT p, const RECT *pRec
 				r = (int)(fr * 255.0);
 				g = (int)(fg * 255.0);
 				b = (int)(fb * 255.0);
+			}
+
+			if ( r == -1 || g == -1 || b == -1 )
+			{
+				r = 255;
+				g = 255;
+				b = 255;
 			}
 
 			CDC* pDC = CDC::FromHandle( p->hDC );
