@@ -311,7 +311,7 @@ CSysModule *Sys_LoadModule( const char *pModuleName, Sys_Flags flags /* = SYS_NO
 		// full path failed, let LoadLibrary() try to search the PATH now
 		hDLL = Sys_LoadLibrary( pModuleName, flags );
 #if defined( _DEBUG )
-		if ( !hDLL )
+		if ( !hDLL && ( flags & SYS_NOLOAD ) == 0 )
 		{
 // So you can see what the error is in the debugger...
 #if defined( _WIN32 ) && !defined( _X360 )
