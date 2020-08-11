@@ -511,6 +511,7 @@ void CMapStudioModel::Render2D(CRender2D *pRender)
 		m_pStudioModel->SetOrigin(m_Origin);
 		m_pStudioModel->SetSkin(m_Skin);
 		m_pStudioModel->SetBodygroups( m_BodyGroup );
+		m_pStudioModel->SetScale(m_flModelScale);
 
 		if ( GetSelectionState()==SELECT_NORMAL || pRender->IsInLocalTransformMode() )
 		{
