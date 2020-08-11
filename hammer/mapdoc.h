@@ -647,6 +647,7 @@ class CMapDoc : public CDocument
 		static ChunkFileResult_t LoadWorldCallback(CChunkFile *pFile, CMapDoc *pDoc);
 		static ChunkFileResult_t LoadViewSettingsCallback(CChunkFile *pFile, CMapDoc *pDoc);
 		static ChunkFileResult_t LoadViewSettingsKeyCallback(const char *szKey, const char *szValue, CMapDoc *pDoc);
+		static ChunkFileResult_t LoadViewDataKeyCallback(CChunkFile *pFile, CMapDoc *pDoc, const char *chunkName);
 
 		//
 		// Search functions.

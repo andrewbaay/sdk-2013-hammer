@@ -106,7 +106,7 @@ CMapView3D::CMapView3D(void)
 {
 	m_eDrawType = VIEW3D_WIREFRAME;
 	m_pRender = NULL;
-	m_pCamera = NULL;
+	m_pCamera = new CCamera();
 
 	m_dwTimeLastInputSample = 0;
 
@@ -891,7 +891,6 @@ void CMapView3D::OnInitialUpdate(void)
 	//
 	// Create and initialize the camera.
 	//
-	m_pCamera = new CCamera();
 	Assert(m_pCamera != NULL);
 	if (m_pCamera == NULL)
 	{
@@ -956,16 +955,6 @@ void CMapView3D::OnInitialUpdate(void)
 	// Enable or disable texture filtering.
 	//
 	m_pRender->RenderEnable(RENDER_FILTER_TEXTURES, (Options.view3d.bFilterTextures == TRUE));
-
-	// Get the initial viewpoint and view direction from the default camera in the document.
-
-	Camera3D *pCamTool = dynamic_cast<Camera3D*>(m_pToolManager->GetToolForID( TOOL_CAMERA ));
-	if ( pCamTool )
-	{
-		Vector vecPos,vecLookAt;
-		pCamTool->GetCameraPos( vecPos,vecLookAt );
-		SetCamera(vecPos, vecLookAt);
-	}
 
 	CView::OnInitialUpdate();
 }

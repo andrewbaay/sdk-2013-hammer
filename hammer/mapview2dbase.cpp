@@ -198,7 +198,6 @@ void CMapView2DBase::OnInitialUpdate(void)
 	CMapDoc *pDoc = GetMapDoc();
 	m_pToolManager = pDoc->GetTools();
 
-	CenterView();
 	SetColorMode(Options.view2d.bWhiteOnBlack);
 
 	ShowScrollBar(SB_HORZ, Options.view2d.bScrollbars);

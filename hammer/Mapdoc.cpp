@@ -64,9 +64,9 @@
 #include "StockSolids.h"
 #include "ToolMorph.h"
 #include "ToolBlock.h"
-#include "p4lib/ip4.h"
 #include "mapdoc.h"
 #include "matsys_controls/assetpickerdefs.h"
+#include "tier1/fmtstr.h"
 
 #include "utlbuffer.h"
 
@@ -1916,13 +1916,106 @@ ChunkFileResult_t CMapDoc::LoadViewSettingsKeyCallback(const char *szKey, const 
 	return(ChunkFile_Ok);
 }
 
+ChunkFileResult_t CMapDoc::LoadViewDataKeyCallback( CChunkFile* pFile, CMapDoc* pDoc, const char* chunkName )
+{
+	if ( chunkName[0] != 'v' || !V_isdigit( chunkName[1] ) )
+		return ChunkFile_NotHandled;
+
+	struct Data
+	{
+		CMapDoc* doc;
+
+		ThreeState_t bIs3d;
+		Vector pos;
+		Vector ang;
+		float zoom;
+	};
+
+	const auto& func = []( const char* szKey, const char* szValue, Data* pData ) -> ChunkFileResult_t
+	{
+		if ( !V_stricmp( szKey, "3d" ) )
+			pData->bIs3d = V_atoi( szValue ) ? TRS_TRUE : TRS_FALSE;
+		else if ( !V_stricmp( szKey, "position" ) )
+			CChunkFile::ReadKeyValuePoint( szValue, pData->pos );
+		else if ( !V_stricmp( szKey, "angle" ) )
+			CChunkFile::ReadKeyValueVector3( szValue, pData->ang );
+		else if ( !V_stricmp( szKey, "zoom" ) )
+			CChunkFile::ReadKeyValueFloat( szValue, pData->zoom );
+		return ChunkFile_Ok;
+	};
+
+	bool b3d = false;
+	CMapView* view = nullptr;
+	int i = V_atoi( chunkName + 1 );
+	POSITION pos = pDoc->GetFirstViewPosition();
+	while ( pos )
+	{
+		CView* pView = pDoc->GetNextView( pos );
+		if ( i-- == 0 )
+		{
+			b3d = pView->IsKindOf( RUNTIME_CLASS( CMapView3D ) );
+			view = b3d ? static_cast<CMapView3D*>( pView ) : static_cast<CMapView*>( static_cast<CMapView2DBase*>( pView ) );
+			break;
+		}
+	}
+
+	if ( !view )
+		return ChunkFile_Ok; // could not get n-th view
+
+	Data data{ pDoc, TRS_NONE, vec3_origin, vec3_origin, 1.0f };
+
+	auto res = pFile->ReadChunk( (ChunkFileResult_t( * )( const char*, const char*, Data* ))func, &data );
+
+	if ( res != ChunkFile_Ok || data.bIs3d == TRS_NONE || static_cast<bool>( data.bIs3d ) != b3d )
+		return res;
+
+	auto cam = view->GetCamera();
+	cam->SetViewPoint( data.pos );
+	if ( b3d )
+	{
+		cam->SetPitch( data.ang.x );
+		cam->SetYaw( data.ang.y );
+		cam->SetRoll( data.ang.z );
+	}
+	else
+		cam->SetZoom( data.zoom );
+
+	return res;
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Loads the view settings chunk, where per-map view settings are kept.
 //-----------------------------------------------------------------------------
 ChunkFileResult_t CMapDoc::LoadViewSettingsCallback(CChunkFile *pFile, CMapDoc *pDoc)
 {
+	CChunkHandlerMap Handlers;
+
+	const auto& viewsHandler = []( CChunkFile* file, CMapDoc* doc ) -> ChunkFileResult_t
+	{
+		ChunkFileResult_t eResult;
+		char szName[MAX_KEYVALUE_LEN];
+		char szValue[MAX_KEYVALUE_LEN];
+		ChunkType_t eChunkType;
+
+		do
+		{
+			eResult = file->ReadNext( szName, szValue, sizeof( szValue ), eChunkType );
+			if ( eResult != ChunkFile_Ok )
+				break;
+			if ( eChunkType != ChunkType_Chunk )
+				continue;
+
+			LoadViewDataKeyCallback( file, doc, szName );
+		} while ( eResult == ChunkFile_Ok );
+
+		return eResult == ChunkFile_EndOfChunk ? ChunkFile_Ok : eResult;
+	};
+
+	Handlers.AddHandler( "views", (ChunkFileResult_t( * )( CChunkFile*, CMapDoc* ))viewsHandler, pDoc );
+	pFile->PushHandlers( &Handlers );
 	ChunkFileResult_t eResult = pFile->ReadChunk(LoadViewSettingsKeyCallback, pDoc);
+	pFile->PopHandlers();
 	if (eResult == ChunkFile_Ok)
 	{
 		pDoc->UpdateStatusBarSnap();
@@ -11213,7 +11306,58 @@ ChunkFileResult_t CMapDoc::SaveViewSettingsVMF(CChunkFile *pFile, CSaveInfo *pSa
 	if (eResult != ChunkFile_Ok)
 		return eResult;
 
-	return(pFile->EndChunk());
+	eResult = pFile->BeginChunk( "views" );
+	if (eResult != ChunkFile_Ok)
+		return eResult;
+
+	int i = 0;
+	POSITION pos = GetFirstViewPosition();
+	while ( pos )
+	{
+		CView* pView = GetNextView( pos );
+
+		eResult = pFile->BeginChunk( CFmtStr( "v%d", i++ ) );
+		if ( eResult != ChunkFile_Ok )
+			return eResult;
+
+		const bool b3d = pView->IsKindOf( RUNTIME_CLASS( CMapView3D ) );
+		auto view = b3d ? static_cast<CMapView3D*>( pView ) : static_cast<CMapView*>( static_cast<CMapView2DBase*>( pView ) );
+
+		eResult = pFile->WriteKeyValueBool( "3d", b3d );
+		if ( eResult != ChunkFile_Ok )
+			return eResult;
+
+		auto cam = view->GetCamera();
+		Vector pos;
+		cam->GetViewPoint( pos );
+		eResult = pFile->WriteKeyValuePoint( "position", pos );
+		if ( eResult != ChunkFile_Ok )
+			return eResult;
+
+		if ( b3d )
+		{
+			const auto angles = cam->GetAngles();
+			eResult = pFile->WriteKeyValueVector3( "angle", Vector( cam->GetPitch(), cam->GetYaw(), cam->GetRoll() ) );
+			if ( eResult != ChunkFile_Ok )
+				return eResult;
+		}
+		else
+		{
+			eResult = pFile->WriteKeyValueFloat( "zoom", cam->GetZoom() );
+			if ( eResult != ChunkFile_Ok )
+				return eResult;
+		}
+
+		eResult = pFile->EndChunk();
+		if ( eResult != ChunkFile_Ok )
+			return eResult;
+	}
+
+	eResult = pFile->EndChunk();
+	if (eResult != ChunkFile_Ok)
+		return eResult;
+
+	return pFile->EndChunk();
 }
 
 
