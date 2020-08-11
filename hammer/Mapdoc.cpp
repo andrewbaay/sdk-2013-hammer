@@ -1502,7 +1502,8 @@ ChunkFileResult_t CMapDoc::LoadHiddenCallback(CChunkFile *pFile, CMapDoc *pDoc)
 	ChunkFileResult_t eResult = pFile->ReadChunk();
 	pFile->PopHandlers();
 
-	pDoc->m_QuickHideGroup.AddToTail( pDoc->GetMapWorld()->GetChildren()->Tail() );
+	if (eResult == ChunkFile_Ok)
+		pDoc->m_QuickHideGroup.AddToTail( pDoc->GetMapWorld()->GetChildren()->Tail() );
 
 	return(eResult);
 }
