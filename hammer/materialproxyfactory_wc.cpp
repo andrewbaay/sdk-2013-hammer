@@ -57,7 +57,7 @@ IMaterialProxy* CMaterialProxyFactory::CreateProxy( const char* proxyName )
 	const int find = m_proxies.Find( proxyName );
 	if ( m_proxies.IsValidIndex( find ) )
 		return m_proxies[find]();
-	return nullptr;
+	return CreateProxy( "Empty" ); // silence proxy warnings
 }
 
 void CMaterialProxyFactory::DeleteProxy( IMaterialProxy* pProxy )
