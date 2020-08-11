@@ -5,17 +5,26 @@
 //=============================================================================//
 
 #include "stdafx.h"
+
+#include "camera.h"
+#include "mapclass.h"
+#include "mapview.h"
+#include "mapworld.h"
+
 #include "tier1/strtools.h"
 #include "materialsystem/imaterialproxy.h"
 #include "materialsystem/imaterialproxyfactory.h"
 #include "materialsystem/imaterialvar.h"
 #include "materialsystem/imaterial.h"
-#include "KeyValues.h"
-#include "utldict.h"
+#include "materialsystem/itexture.h"
+#include "tier1/KeyValues.h"
+#include "tier1/utldict.h"
+#include "tier1/utlstring.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+extern float frameTime;
 
 // ------------------------------------------------------------------------------------- //
 // The material proxy factory for WC.
@@ -39,8 +48,8 @@ private:
 static CMaterialProxyFactory g_MaterialProxyFactory;
 
 #define REGISTER_PROXY( className, proxyName ) \
-	static IMaterialProxy* __Create##className##_proxy() { return new className; } \
-	static CMaterialProxyFactory::CMaterialProxyFactoryRegister __##className##_proxy_register( proxyName, __Create##className##_proxy )
+	static IMaterialProxy* __Create##proxyName##_proxy() { return new className; } \
+	static CMaterialProxyFactory::CMaterialProxyFactoryRegister __##proxyName##_proxy_register( V_STRINGIFY( proxyName ), __Create##proxyName##_proxy )
 
 
 IMaterialProxy* CMaterialProxyFactory::CreateProxy( const char* proxyName )
@@ -316,7 +325,7 @@ private:
 	IMaterialVar* m_pMinsVar;
 	IMaterialVar* m_pMaxsVar;
 };
-REGISTER_PROXY( CWorldDimsProxy, "WorldDims" );
+REGISTER_PROXY( CWorldDimsProxy, WorldDims );
 
 
 class CAddProxy : public CFunctionProxy
@@ -360,7 +369,7 @@ public:
 		}
 	}
 };
-REGISTER_PROXY( CAddProxy, "Add" );
+REGISTER_PROXY( CAddProxy, Add );
 
 class CSubtractProxy : public CFunctionProxy
 {
@@ -403,7 +412,7 @@ public:
 		}
 	}
 };
-REGISTER_PROXY( CSubtractProxy, "Subtract" );
+REGISTER_PROXY( CSubtractProxy, Subtract );
 
 class CMultiplyProxy : public CFunctionProxy
 {
@@ -446,7 +455,7 @@ public:
 		}
 	}
 };
-REGISTER_PROXY( CMultiplyProxy, "Multiply" );
+REGISTER_PROXY( CMultiplyProxy, Multiply );
 
 class CDivideProxy : public CFunctionProxy
 {
@@ -495,7 +504,7 @@ public:
 		}
 	}
 };
-REGISTER_PROXY( CDivideProxy, "Divide" );
+REGISTER_PROXY( CDivideProxy, Divide );
 
 class CClampProxy : public CFunctionProxy
 {
@@ -575,7 +584,7 @@ private:
 	CFloatInput m_Min;
 	CFloatInput m_Max;
 };
-REGISTER_PROXY( CClampProxy, "Clamp" );
+REGISTER_PROXY( CClampProxy, Clamp );
 
 class CSineProxy : public CResultProxy
 {
@@ -618,7 +627,7 @@ private:
 	CFloatInput m_SineMin;
 	CFloatInput m_SineTimeOffset;
 };
-REGISTER_PROXY( CSineProxy, "Sine" );
+REGISTER_PROXY( CSineProxy, Sine );
 
 class CEqualsProxy : public CFunctionProxy
 {
@@ -653,7 +662,7 @@ public:
 		}
 	}
 };
-REGISTER_PROXY( CEqualsProxy, "Equals" );
+REGISTER_PROXY( CEqualsProxy, Equals );
 
 class CFracProxy : public CFunctionProxy
 {
@@ -697,7 +706,7 @@ public:
 		}
 	}
 };
-REGISTER_PROXY( CFracProxy, "Frac" );
+REGISTER_PROXY( CFracProxy, Frac );
 
 class CIntProxy : public CFunctionProxy
 {
@@ -741,7 +750,7 @@ public:
 		}
 	}
 };
-REGISTER_PROXY( CIntProxy, "Int" );
+REGISTER_PROXY( CIntProxy, Int );
 
 class CLinearRampProxy : public CResultProxy
 {
@@ -773,7 +782,7 @@ private:
 	CFloatInput m_Rate;
 	CFloatInput m_InitialValue;
 };
-REGISTER_PROXY( CLinearRampProxy, "LinearRamp" );
+REGISTER_PROXY( CLinearRampProxy, LinearRamp );
 
 static CUniformRandomStream random;
 class CUniformNoiseProxy : public CResultProxy
@@ -809,7 +818,7 @@ private:
 	CFloatInput	m_flMinVal;
 	CFloatInput	m_flMaxVal;
 };
-REGISTER_PROXY( CUniformNoiseProxy, "UniformNoise" );
+REGISTER_PROXY( CUniformNoiseProxy, UniformNoise );
 
 static CGaussianRandomStream randomgaussian;
 static CUniformRandomStream randomgaussianbase;
@@ -867,7 +876,7 @@ private:
 	CFloatInput	m_flMinVal;
 	CFloatInput	m_flMaxVal;
 };
-REGISTER_PROXY( CGaussianNoiseProxy, "GaussianNoise" );
+REGISTER_PROXY( CGaussianNoiseProxy, GaussianNoise );
 
 class CExponentialProxy : public CFunctionProxy
 {
@@ -916,7 +925,7 @@ private:
 	CFloatInput	m_flMinVal;
 	CFloatInput	m_flMaxVal;
 };
-REGISTER_PROXY( CExponentialProxy, "Exponential" );
+REGISTER_PROXY( CExponentialProxy, Exponential );
 
 class CAbsProxy : public CFunctionProxy
 {
@@ -926,7 +935,7 @@ public:
 		SetFloatResult( fabs( m_pSrc1->GetFloatValue() ) );
 	}
 };
-REGISTER_PROXY( CAbsProxy, "Abs" );
+REGISTER_PROXY( CAbsProxy, Abs );
 
 class CEmptyProxy : public IMaterialProxy
 {
@@ -938,7 +947,8 @@ public:
 	void Release() override { delete this; }
 	IMaterial* GetMaterial() { return nullptr; }
 };
-REGISTER_PROXY( CEmptyProxy, "Empty" );
+REGISTER_PROXY( CEmptyProxy, Empty );
+REGISTER_PROXY( CEmptyProxy, Dummy );
 
 class CLessOrEqualProxy : public CFunctionProxy
 {
@@ -1017,7 +1027,7 @@ private:
 	IMaterialVar *m_pLessVar;
 	IMaterialVar *m_pGreaterVar;
 };
-REGISTER_PROXY( CLessOrEqualProxy, "LessOrEqual" );
+REGISTER_PROXY( CLessOrEqualProxy, LessOrEqual );
 
 class CWrapMinMaxProxy : public CFunctionProxy
 {
@@ -1062,7 +1072,7 @@ private:
 	CFloatInput	m_flMinVal;
 	CFloatInput	m_flMaxVal;
 };
-REGISTER_PROXY( CWrapMinMaxProxy, "WrapMinMax" );
+REGISTER_PROXY( CWrapMinMaxProxy, WrapMinMax );
 
 class CSelectFirstIfNonZeroProxy : public CFunctionProxy
 {
@@ -1113,7 +1123,7 @@ public:
 		}
 	}
 };
-REGISTER_PROXY( CSelectFirstIfNonZeroProxy, "SelectFirstIfNonZero" );
+REGISTER_PROXY( CSelectFirstIfNonZeroProxy, SelectFirstIfNonZero );
 
 class CTextureTransformProxy : public CResultProxy
 {
@@ -1192,7 +1202,7 @@ private:
 	IMaterialVar* m_pRotateVar = nullptr;
 	IMaterialVar* m_pTranslateVar = nullptr;
 };
-REGISTER_PROXY( CTextureTransformProxy, "TextureTransform" );
+REGISTER_PROXY( CTextureTransformProxy, TextureTransform );
 
 class CMatrixRotateProxy : public CResultProxy
 {
@@ -1234,7 +1244,7 @@ private:
 	CFloatInput	m_Angle;
 	IMaterialVar* m_pAxisVar = nullptr;
 };
-REGISTER_PROXY( CMatrixRotateProxy, "MatrixRotate" );
+REGISTER_PROXY( CMatrixRotateProxy, MatrixRotate );
 
 class CTimeMaterialProxy : public CResultProxy
 {
@@ -1244,7 +1254,7 @@ public:
 		SetFloatResult( Plat_FloatTime() );
 	}
 };
-REGISTER_PROXY( CTimeMaterialProxy, "CurrentTime" );
+REGISTER_PROXY( CTimeMaterialProxy, CurrentTime );
 
 class CTextureScrollMaterialProxy : public IMaterialProxy
 {
@@ -1321,7 +1331,7 @@ private:
 	CFloatInput m_TextureScrollAngle;
 	CFloatInput m_TextureScale;
 };
-REGISTER_PROXY( CTextureScrollMaterialProxy, "TextureScroll" );
+REGISTER_PROXY( CTextureScrollMaterialProxy, TextureScroll );
 
 class CShieldProxy : public IMaterialProxy
 {
@@ -1394,4 +1404,347 @@ private:
 	float m_ScrollRate;
 	float m_ScrollAngle;
 };
-REGISTER_PROXY( CShieldProxy, "Shield" );
+REGISTER_PROXY( CShieldProxy, Shield );
+
+class CBaseAnimatedTextureProxy : public IMaterialProxy
+{
+public:
+	CBaseAnimatedTextureProxy()
+	{
+		Cleanup();
+	}
+
+	~CBaseAnimatedTextureProxy() override
+	{
+		Cleanup();
+	}
+
+	bool Init( IMaterial* pMaterial, KeyValues* pKeyValues ) override
+	{
+		if ( char const* pAnimatedTextureVarName = pKeyValues->GetString( "animatedTextureVar" ) )
+		{
+			bool foundVar;
+			m_AnimatedTextureVar = pMaterial->FindVar( pAnimatedTextureVarName, &foundVar, false );
+			if ( foundVar )
+			{
+				if ( char const* pAnimatedTextureFrameNumVarName = pKeyValues->GetString( "animatedTextureFrameNumVar" ) )
+				{
+					m_AnimatedTextureFrameNumVar = pMaterial->FindVar( pAnimatedTextureFrameNumVarName, &foundVar, false );
+					if ( foundVar )
+					{
+						m_FrameRate = pKeyValues->GetFloat( "animatedTextureFrameRate", 15 );
+						m_WrapAnimation = pKeyValues->GetBool( "animationNoWrap" );
+						return true;
+					}
+				}
+			}
+		}
+
+		// Error - null out pointers.
+		Cleanup();
+		return false;
+	}
+
+	void OnBind( void* pEntity ) override
+	{
+		Assert ( m_AnimatedTextureVar );
+
+		if( m_AnimatedTextureVar->GetType() != MATERIAL_VAR_TYPE_TEXTURE )
+		{
+			return;
+		}
+		ITexture *pTexture;
+		pTexture = m_AnimatedTextureVar->GetTextureValue();
+		int numFrames = pTexture->GetNumAnimationFrames();
+
+		if ( numFrames <= 0 )
+		{
+			Assert( !"0 frames in material calling animated texture proxy" );
+			return;
+		}
+
+		// NOTE: Must not use relative time based methods here
+		// because the bind proxy can be called many times per frame.
+		// Prevent multiple Wrap callbacks to be sent for no wrap mode
+		float startTime = GetAnimationStartTime( pEntity );
+		float deltaTime = Plat_FloatTime() - startTime;
+		float prevTime = deltaTime - frameTime;
+
+		// Clamp..
+		if ( deltaTime < 0.0f )
+			deltaTime = 0.0f;
+		if ( prevTime < 0.0f )
+			prevTime = 0.0f;
+
+		float frame = m_FrameRate * deltaTime;
+		float prevFrame = m_FrameRate * prevTime;
+
+		int intFrame = ( (int)frame ) % numFrames;
+		int intPrevFrame = ( (int)prevFrame ) % numFrames;
+
+		// Report wrap situation...
+		if ( intPrevFrame > intFrame )
+		{
+			if ( m_WrapAnimation )
+				AnimationWrapped( pEntity );
+			else
+			{
+				// Only sent the wrapped message once.
+				// when we're in non-wrapping mode
+				if ( prevFrame < numFrames )
+					AnimationWrapped( pEntity );
+				intFrame = numFrames - 1;
+			}
+		}
+
+		m_AnimatedTextureFrameNumVar->SetIntValue( intFrame );
+	}
+
+	void Release() override
+	{
+		delete this;
+	}
+
+	IMaterial* GetMaterial() override
+	{
+		return m_AnimatedTextureVar->GetOwningMaterial();
+	}
+
+protected:
+	// derived classes must implement this; it returns the time
+	// that the animation began
+	virtual float  GetAnimationStartTime( void* pBaseEntity ) = 0;
+
+	// Derived classes may implement this if they choose;
+	// this method is called whenever the animation wraps...
+	virtual void   AnimationWrapped( void* pBaseEntity ) {}
+
+protected:
+	void Cleanup()
+	{
+		m_AnimatedTextureVar = NULL;
+		m_AnimatedTextureFrameNumVar = NULL;
+	}
+
+	IMaterialVar *m_AnimatedTextureVar;
+	IMaterialVar *m_AnimatedTextureFrameNumVar;
+	float m_FrameRate;
+	bool m_WrapAnimation;
+};
+
+class CAnimatedTextureProxy : public CBaseAnimatedTextureProxy
+{
+public:
+	CAnimatedTextureProxy() {}
+	~CAnimatedTextureProxy() override = default;
+	float GetAnimationStartTime( void* pBaseEntity ) override { return 0.f; }
+};
+REGISTER_PROXY( CAnimatedTextureProxy, AnimatedTexture );
+REGISTER_PROXY( CAnimatedTextureProxy, AnimatedOffsetTexture );
+
+class CAnimateSpecificTexture : public CBaseAnimatedTextureProxy
+{
+private:
+	CUtlString m_OnlyAnimateOnTexture;
+public:
+	float GetAnimationStartTime( void* pBaseEntity ) override { return 0; }
+	bool Init( IMaterial* pMaterial, KeyValues* pKeyValues ) override
+	{
+		char const* pszAnimateOnTexture = pKeyValues->GetString( "onlyAnimateOnTexture" );
+		if( !pszAnimateOnTexture )
+			return false;
+
+		m_OnlyAnimateOnTexture.Set( pszAnimateOnTexture );
+
+		return CBaseAnimatedTextureProxy::Init( pMaterial, pKeyValues );
+	}
+
+	void OnBind( void* pEntity ) override
+	{
+		if ( m_OnlyAnimateOnTexture.IsEqual_CaseInsensitive( m_AnimatedTextureVar->GetTextureValue()->GetName() ) )
+			CBaseAnimatedTextureProxy::OnBind( pEntity );
+	}
+
+	void Release() override
+	{
+		delete this;
+	}
+};
+REGISTER_PROXY( CAnimateSpecificTexture, AnimateSpecificTexture );
+
+abstract_class CEntityMaterialProxy : public IMaterialProxy
+{
+public:
+	void Release() override
+	{
+		delete this;
+	}
+
+	void OnBind( void* pEntity ) override
+	{
+		if( !pEntity )
+			return;
+
+		OnBind( static_cast<CRender::ProxyData*>( pEntity ) );
+	}
+
+protected:
+	// base classes should implement these
+	virtual void OnBind( CRender::ProxyData* pEntity ) = 0;
+};
+
+class CEntityOriginMaterialProxy : public CEntityMaterialProxy
+{
+public:
+	CEntityOriginMaterialProxy()
+	{
+		m_pMaterial = NULL;
+		m_pOriginVar = NULL;
+	}
+	~CEntityOriginMaterialProxy() override = default;
+
+	bool Init( IMaterial* pMaterial, KeyValues* pKeyValues ) override
+	{
+		m_pMaterial = pMaterial;
+		bool found;
+		m_pOriginVar = m_pMaterial->FindVar( "$entityorigin", &found );
+		if ( !found )
+		{
+			m_pOriginVar = NULL;
+			return false;
+		}
+		return true;
+	}
+
+	void OnBind( CRender::ProxyData* pEntity ) override
+	{
+		if ( !pEntity->pClass )
+			return;
+		Vector origin;
+		pEntity->pClass->GetOrigin( origin );
+		m_pOriginVar->SetVecValue( origin.x, origin.y, origin.z );
+	}
+
+	IMaterial *GetMaterial() override
+	{
+		return m_pMaterial;
+	}
+
+protected:
+	IMaterial *m_pMaterial;
+	IMaterialVar *m_pOriginVar;
+};
+REGISTER_PROXY( CEntityOriginMaterialProxy, EntityOrigin );
+
+class CPlayerProximityProxy : public CResultProxy
+{
+public:
+	bool Init( IMaterial* pMaterial, KeyValues* pKeyValues ) override
+	{
+		if ( !CResultProxy::Init( pMaterial, pKeyValues ) )
+			return false;
+
+		m_Factor = pKeyValues->GetFloat( "scale", 0.002f );
+		return true;
+	}
+
+	void OnBind( void* pEntity ) override
+	{
+		if ( !pEntity )
+			return;
+
+		// Find the distance between the player and this entity....
+		auto entity = static_cast<CRender::ProxyData*>( pEntity );
+		if ( !entity->pClass )
+			return;
+		Vector camOrigin, entOrigin;
+		entity->pClass->GetOrigin( entOrigin );
+		entity->pRender->GetCamera()->GetViewPoint( camOrigin );
+
+		Vector delta;
+		VectorSubtract( entOrigin, camOrigin, delta );
+
+		Assert( m_pResult );
+		SetFloatResult( delta.Length() * m_Factor );
+	}
+
+private:
+	float	m_Factor;
+};
+REGISTER_PROXY( CPlayerProximityProxy, PlayerProximity );
+
+class CPlayerViewProxy : public CResultProxy
+{
+public:
+	bool Init( IMaterial* pMaterial, KeyValues* pKeyValues ) override
+	{
+		if ( !CResultProxy::Init( pMaterial, pKeyValues ) )
+			return false;
+
+		m_Factor = pKeyValues->GetFloat( "scale", 2.0f );
+		return true;
+	}
+
+	void OnBind( void* pEntity ) override
+	{
+		if ( !pEntity )
+			return;
+
+	// Find the view angle between the player and this entity....
+		auto entity = static_cast<CRender::ProxyData*>( pEntity );
+		if ( !entity->pClass )
+			return;
+		Vector camOrigin, entOrigin, forward;
+		entity->pClass->GetOrigin( entOrigin );
+		auto cam = entity->pRender->GetCamera();
+		cam->GetViewPoint( camOrigin );
+		cam->GetViewForward( forward );
+
+		Vector delta;
+		VectorSubtract( entOrigin, camOrigin, delta );
+		VectorNormalize( delta );
+
+		Assert( m_pResult );
+		SetFloatResult( DotProduct( forward, delta ) * m_Factor );
+	}
+
+private:
+	float	m_Factor;
+};
+REGISTER_PROXY( CPlayerViewProxy, PlayerView );
+
+class CPlayerPositionProxy : public CResultProxy
+{
+public:
+	bool Init( IMaterial* pMaterial, KeyValues* pKeyValues ) override
+	{
+		if ( !CResultProxy::Init( pMaterial, pKeyValues ) )
+			return false;
+
+		m_Factor = pKeyValues->GetFloat( "scale", 0.005f );
+		return true;
+	}
+
+	void OnBind( void* pEntity ) override
+	{
+		if ( !pEntity )
+			return;
+
+		// Find the view pos....
+		auto entity = static_cast<CRender::ProxyData*>( pEntity );
+		if ( !entity->pClass )
+			return;
+		Vector camOrigin;
+		auto cam = entity->pRender->GetCamera();
+		cam->GetViewPoint( camOrigin );
+
+		Assert( m_pResult );
+		Vector res;
+		VectorMultiply( camOrigin, m_Factor, res );
+		m_pResult->SetVecValue( res.Base(), 3 );
+	}
+
+private:
+	float	m_Factor;
+};
+REGISTER_PROXY( CPlayerPositionProxy, PlayerPosition );

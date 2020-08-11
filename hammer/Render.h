@@ -177,8 +177,8 @@ public:
 	void SetHandleStyle( int size, HandleStyle_t type );
 
 	void SetDefaultRenderMode(EditorRenderMode_t eRenderMode);
-	void BindTexture(IEditorTexture *pTexture);
-	void BindMaterial( IMaterial *pMaterial );
+	void BindTexture(IEditorTexture *pTexture, CMapClass* proxyData = nullptr);
+	void BindMaterial( IMaterial *pMaterial, CMapClass* proxyData = nullptr );
 
 	virtual void SetRenderMode( EditorRenderMode_t eRenderMode, bool force = false);
 	inline	EditorRenderMode_t GetCurrentRenderMode() { return m_eCurrentRenderMode; }
@@ -237,6 +237,12 @@ public:
 			void			TransformInstanceVector( Vector &In, Vector &Out ) { m_CurrentInstanceState.m_InstanceMatrix.V3Mul( In, Out ); }
 			void			RotateInstanceVector( Vector &In, Vector &Out ) { VectorRotate( In, m_CurrentInstanceState.m_InstanceMatrix.As3x4(), Out ); }
 			void			TransformInstanceAABB( Vector &InMins, Vector &InMaxs, Vector &OutMins, Vector &OutMaxs ) { TransformAABB( m_CurrentInstanceState.m_InstanceMatrix.As3x4(), InMins, InMaxs, OutMins, OutMaxs );  }
+
+	struct ProxyData
+	{
+		CRender* pRender;
+		CMapClass* pClass;
+	};
 
 protected:
 
@@ -307,7 +313,7 @@ protected:
 #endif // STENCIL_AS_CALLS
 	int										m_nNumInstancesRendered;	// number of instances rendered that impacted the stencil buffer
 	CUtlVector<InstanceRenderingState_t>	m_InstanceRenderingState;	// the instance rendering state stack
-
+	ProxyData                               m_proxyData;
 };
 
 #endif // RENDER_H

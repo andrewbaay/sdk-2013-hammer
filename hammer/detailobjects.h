@@ -159,6 +159,7 @@ protected:
 
 	CUtlVector<CSpriteModel *>	m_DetailSprites;
 	CUtlVector<StudioModel *>	m_DetailModels;
+	CMapClass*                  m_pParentsParent;
 };
 
 #endif // DETAILOBJECTS_H

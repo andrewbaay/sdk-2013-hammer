@@ -59,6 +59,9 @@ static bool g_bShowStatistics = false;
 static bool g_bUseCullTree = true;
 static bool g_bRenderCullBoxes = false;
 
+float frameTime = 0.f;
+static float lastRenderTime = 0.f;
+
 int g_nBitmapGenerationCounter = 1;
 
 //-----------------------------------------------------------------------------
@@ -958,6 +961,8 @@ void CRender3D::StartRenderFrame(void)
 	pRenderContext->CullMode( MATERIAL_CULLMODE_CCW );
 
 	Assert( m_TranslucentRenderObjects.Count() == 0 );
+
+	lastRenderTime = Plat_FloatTime();
 }
 
 class CLightPreview_Light
@@ -1684,6 +1689,8 @@ void CRender3D::EndRenderFrame(void)
 			TextOut(m_WinData.hDC, 2, 18, szText, nLen);
 		}
 	}
+
+	frameTime = Plat_FloatTime() - lastRenderTime;
 }
 
 

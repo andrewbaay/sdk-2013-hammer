@@ -2046,7 +2046,7 @@ void CMapFace::RenderFaces( CRender3D* pRender, int nCount, MapFaceRender_t **pp
 
 	if ( RenderingModeIsTextured(ppFaces[0]->m_RenderMode))
 	{
-		pRender->BindTexture( ppFaces[0]->m_pTexture );
+		pRender->BindTexture( ppFaces[0]->m_pTexture, dynamic_cast<CMapClass*>( ppFaces[0]->m_pMapFace->GetParent() ) );
 	}
 
 	pRender->PushRenderMode( ppFaces[0]->m_RenderMode );
@@ -2278,7 +2278,7 @@ void CMapFace::RenderOpaqueFaces( CRender3D* pRender )
 		{
 			if ( RenderingModeIsTextured( mapFace.m_RenderMode ))
 			{
-				pRender->BindTexture( mapFace.m_pTexture );
+				pRender->BindTexture( mapFace.m_pTexture, dynamic_cast<CMapClass*>( mapFace.m_pMapFace->GetParent() ) );
 			}
 
 			mapFace.m_pMapFace->RenderFace3D( pRender, mapFace.m_RenderMode, mapFace.m_RenderSelected, mapFace.m_FaceSelectionState );
@@ -2418,7 +2418,7 @@ void CMapFace::Render3D(CRender3D *pRender)
 	else
 	{
 		// Set up the texture to use
-		pRender->BindTexture( m_pTexture );
+		pRender->BindTexture( m_pTexture, dynamic_cast<CMapClass*>( GetParent() ) );
 
 		RenderFace3D( pRender, eCurrentRenderMode, renderSelected, eFaceSelectionState );
 		if (renderSelected && pRender->NeedsOverlay())

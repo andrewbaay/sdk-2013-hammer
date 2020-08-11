@@ -515,12 +515,12 @@ void CMapStudioModel::Render2D(CRender2D *pRender)
 		if ( GetSelectionState()==SELECT_NORMAL || pRender->IsInLocalTransformMode() )
 		{
  			// draw textured model half translucent
-			m_pStudioModel->DrawModel2D(pRender, 0.6 , false );
+			m_pStudioModel->DrawModel2D(pRender, 0.6f, false, GetParent() );
 		}
 		else
 		{
 			// just draw the wireframe
-			m_pStudioModel->DrawModel2D(pRender, 1.0 , true );
+			m_pStudioModel->DrawModel2D(pRender, 1.0f, true, GetParent() );
 		}
 	}
 
@@ -776,7 +776,7 @@ void CMapStudioModel::Render3D(CRender3D *pRender)
 				bWireframe = true;
 
 			pRender->BeginRenderHitTarget(this);
-			m_pStudioModel->DrawModel3D(pRender, m_ModelRenderColor, flAlpha, bWireframe );
+			m_pStudioModel->DrawModel3D(pRender, m_ModelRenderColor, flAlpha, bWireframe, GetParent() );
 			pRender->EndRenderHitTarget();
 
 			if (IsSelected())

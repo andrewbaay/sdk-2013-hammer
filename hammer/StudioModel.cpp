@@ -584,7 +584,7 @@ void StudioModel::SetupModel ( int bodypart )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void StudioModel::DrawModel3D( CRender3D *pRender, const Color &color, float flAlpha, bool bWireframe )
+void StudioModel::DrawModel3D( CRender3D *pRender, const Color &color, float flAlpha, bool bWireframe, CMapClass* pParent )
 {
 	studiohdr_t *pStudioHdr = GetStudioRenderHdr();
 	if (!pStudioHdr)
@@ -603,7 +603,9 @@ void StudioModel::DrawModel3D( CRender3D *pRender, const Color &color, float flA
 	info.m_Body = m_bodynum;
 	info.m_HitboxSet = 0;
 
-	info.m_pClientEntity = NULL;
+	CRender::ProxyData proxyData{ pRender, pParent };
+
+	info.m_pClientEntity = &proxyData;
 	info.m_Lod = -1;
 	info.m_pColorMeshes = NULL;
 
@@ -646,7 +648,7 @@ void StudioModel::DrawModel3D( CRender3D *pRender, const Color &color, float flA
 	}
 }
 
-void StudioModel::DrawModel2D( CRender2D *pRender, float flAlpha, bool bWireFrame  )
+void StudioModel::DrawModel2D( CRender2D *pRender, float flAlpha, bool bWireFrame, CMapClass* pParent )
 {
 	studiohdr_t *pStudioHdr = GetStudioRenderHdr();
 	if (!pStudioHdr)
@@ -666,7 +668,9 @@ void StudioModel::DrawModel2D( CRender2D *pRender, float flAlpha, bool bWireFram
 	info.m_Body = m_bodynum;
 	info.m_HitboxSet = 0;
 
-	info.m_pClientEntity = NULL;
+	CRender::ProxyData proxyData{ pRender, pParent };
+
+	info.m_pClientEntity = &proxyData;
 	info.m_Lod = -1;
 	info.m_pColorMeshes = NULL;
 

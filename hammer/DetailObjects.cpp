@@ -707,6 +707,7 @@ void	DetailObjects::BuildAnyDetailObjects(CMapFace *pMapFace)
 	else
 	{
 		pMapFace->m_pDetailObjects = pDetails = new DetailObjects;
+		pDetails->m_pParentsParent = dynamic_cast<CMapClass*>( pMapFace->GetParent() );
 	}
 
 	if ( pDetails )
@@ -785,7 +786,7 @@ void DetailObjects::Render3D(CRender3D *pRender)
 				Maxs[j] += fDetailDistance;
 			}
 			if ( IsPointInBox( viewPoint, Mins, Maxs ) )
-				pModel->DrawModel3D( pRender, Color(255, 255, 255, 255), 1, false  );
+				pModel->DrawModel3D( pRender, Color(255, 255, 255, 255), 1, false, m_pParentsParent );
 		}
 		pRender->PopRenderMode();
 

@@ -70,6 +70,8 @@ CRender::CRender(void)
 
 	m_pModelWireframe = NULL;
 	m_pCurrentMaterial = NULL;
+	m_proxyData.pRender = this;
+	m_proxyData.pClass = NULL;
 	m_pBoundMaterial = NULL;
 
 	m_nDecalMode = 0;
@@ -1391,10 +1393,10 @@ void CRender::DrawPoint( const Vector &vPoint )
 //			to this rendering context, it is uploaded to the driver.
 // Input  : pTexture - Pointer to the texture object being bound.
 //-----------------------------------------------------------------------------
-void CRender::BindTexture(IEditorTexture *pTexture)
+void CRender::BindTexture(IEditorTexture *pTexture, CMapClass* proxyData)
 {
 	// These textures must be CMaterials....
-	BindMaterial( pTexture->GetMaterial() );
+	BindMaterial( pTexture->GetMaterial(), proxyData );
 }
 
 
@@ -1403,11 +1405,12 @@ void CRender::BindTexture(IEditorTexture *pTexture)
 //			to this rendering context, it is uploaded to the driver.
 // Input  : pMaterial - Pointer to the material object being bound.
 //-----------------------------------------------------------------------------
-void CRender::BindMaterial( IMaterial *pMaterial )
+void CRender::BindMaterial( IMaterial *pMaterial, CMapClass* proxyData )
 {
-	if ( m_pBoundMaterial != pMaterial )
+	if ( m_pBoundMaterial != pMaterial || m_proxyData.pClass != proxyData )
 	{
 		m_pBoundMaterial = pMaterial;
+		m_proxyData.pClass = proxyData;
 		SetRenderMode( RENDER_MODE_CURRENT, true );
 	}
 }
@@ -1522,7 +1525,7 @@ void CRender::SetRenderMode(EditorRenderMode_t eRenderMode, bool bForce)
 
 	Assert( m_pCurrentMaterial != NULL );
 
-	pRenderContext->Bind( m_pCurrentMaterial );
+	pRenderContext->Bind( m_pCurrentMaterial, &m_proxyData );
 
 	pRenderContext->SetIntRenderingParameter(INT_RENDERPARM_ENABLE_FIXED_LIGHTING,0);
 	if (eRenderMode==RENDER_MODE_TEXTURED_SHADED)
