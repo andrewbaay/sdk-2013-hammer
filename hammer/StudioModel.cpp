@@ -463,7 +463,7 @@ StudioModel::~StudioModel(void)
 // Purpose: Sets the Euler angles for the model.
 // Input  : fAngles - A pointer to engine PITCH, YAW, and ROLL angles.
 //-----------------------------------------------------------------------------
-void StudioModel::SetAngles(QAngle& pfAngles)
+void StudioModel::SetAngles(const QAngle& pfAngles)
 {
 	m_angles[PITCH] = pfAngles[PITCH];
 	m_angles[YAW] = pfAngles[YAW];
@@ -537,6 +537,10 @@ void StudioModel::SetUpBones( bool bUpdatePose, matrix3x4_t *pBoneToWorld )
 		if (pbones[i].parent == -1)
 		{
 			ConcatTransforms( cameraTransform, bonematrix, pBoneToWorld[ i ] );
+
+			VectorScale( pBoneToWorld[i][0], m_flScale, pBoneToWorld[i][0] );
+			VectorScale( pBoneToWorld[i][1], m_flScale, pBoneToWorld[i][1] );
+			VectorScale( pBoneToWorld[i][2], m_flScale, pBoneToWorld[i][2] );
 		}
 		else
 		{
@@ -619,7 +623,6 @@ void StudioModel::DrawModel3D( CRender3D *pRender, const Color &color, float flA
 		AngleMatrix(m_angles, fCurrentMatrix);
 		ConcatTransforms(matrix.As3x4(), fCurrentMatrix, fMatrixNew);
 
-		QAngle newAngles;
 		MatrixAngles(fMatrixNew, m_angles);
 
 		matrix3x4_t boneToWorld[MAXSTUDIOBONES];
@@ -655,7 +658,6 @@ void StudioModel::DrawModel2D( CRender2D *pRender, float flAlpha, bool bWireFram
 	Vector orgOrigin = m_origin;
 	QAngle orgAngles = m_angles;
 
-
 	DrawModelInfo_t info;
 	info.m_pStudioHdr = pStudioHdr;
 	info.m_pHardwareData = GetHardwareData();
@@ -682,7 +684,6 @@ void StudioModel::DrawModel2D( CRender2D *pRender, float flAlpha, bool bWireFram
 		AngleMatrix(m_angles, fCurrentMatrix);
 		ConcatTransforms(matrix.As3x4(), fCurrentMatrix, fMatrixNew);
 
-		QAngle newAngles;
 		MatrixAngles(fMatrixNew, m_angles);
 	}
 
@@ -698,13 +699,12 @@ void StudioModel::DrawModel2D( CRender2D *pRender, float flAlpha, bool bWireFram
 		pRender->DrawModel( &info, boneToWorld, m_origin, flAlpha, bWireFrame );
 	}
 
-
 	if ( bTransform )
 	{
 		// restore original position and angles
 		m_origin = orgOrigin;
 		m_angles = orgAngles;
-    }
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1087,6 +1087,11 @@ int StudioModel::SetSkin( int iValue )
 	m_skinnum = iValue;
 
 	return iValue;
+}
+
+void StudioModel::SetScale(float flScale )
+{
+	m_flScale = flScale;
 }
 
 const char *StudioModel::GetModelName( void )

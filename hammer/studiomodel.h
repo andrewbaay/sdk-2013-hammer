@@ -102,11 +102,12 @@ public:
 	int						SetBodygroup( int iGroup, int iValue );
 	int						SetBodygroups( int iValue );
 	int						SetSkin( int iValue );
+	void					SetScale( float flScale );
 	void					SetOrigin( float x, float y, float z );
 	void					GetOrigin( float &x, float &y, float &z );
 	void					SetOrigin( const Vector &v );
 	void					GetOrigin( Vector &v );
-	void					SetAngles( QAngle& pfAngles );
+	void					SetAngles( const QAngle& pfAngles );
 	bool					IsTranslucent();
 
 	CStudioHdr				*GetStudioHdr() const;
@@ -126,6 +127,7 @@ private:
 	float					m_poseParameter[MAXSTUDIOPOSEPARAM];		// animation blending
 	byte					m_mouth;			// mouth position
 	char*					m_pModelName;		// model file name
+	float					m_flScale;
 
 	Vector					*m_pPosePos;
 	Quaternion				*m_pPoseAng;

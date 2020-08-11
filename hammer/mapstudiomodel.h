@@ -122,6 +122,8 @@ class CMapStudioModel : public CMapHelper
 		Color m_ModelRenderColor;
 		int m_iSolid;						// The collision setting of this model: 0 = not solid, 2 = bounding box, 6 = vphysics
 
+		float m_flModelScale;
+
 		bool m_bExtraRotation;
 
 		//

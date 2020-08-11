@@ -174,8 +174,14 @@ void CMapStudioModel::CalcBounds(BOOL bFullUpdate)
 			m_pStudioModel->ExtractMovementBbox(Mins, Maxs);
 		}
 
+		Mins *= m_flModelScale;
+		Maxs *= m_flModelScale;
+
 		Mins += m_Origin;
 		Maxs += m_Origin;
+
+		m_CullBox.bmins *= m_flModelScale;
+		m_CullBox.bmaxs *= m_flModelScale;
 
 		m_CullBox.bmins += m_Origin;
 		m_CullBox.bmaxs += m_Origin;
@@ -240,6 +246,7 @@ CMapClass *CMapStudioModel::CopyFrom(CMapClass *pObject, bool bUpdateDependencie
 	m_flFadeMaxDist = pFrom->m_flFadeMaxDist;
 	m_ModelRenderColor = pFrom->m_ModelRenderColor;
 	m_iSolid = pFrom->m_iSolid;
+	m_flModelScale = pFrom->m_flModelScale;
 
 	return(this);
 }
@@ -301,6 +308,7 @@ void CMapStudioModel::Initialize(void)
 	m_flFadeMinDist = 0.0f;
 	m_flFadeMaxDist = 0.0f;
 	m_iSolid = -1;
+	m_flModelScale = 1.0f;
 }
 
 
@@ -361,7 +369,12 @@ void CMapStudioModel::OnParentKeyChanged(const char* szKey, const char* szValue)
 	}
 	else if ( !stricmp( szKey, "solid") )
 	{
-		m_iSolid = atof( szValue );
+		m_iSolid = atoi( szValue );
+	}
+	else if ( !stricmp( szKey, "modelscale") )
+	{
+		m_flModelScale = atof( szValue );
+		GetParent()->CalcBounds(TRUE);
 	}
 }
 
@@ -495,7 +508,7 @@ void CMapStudioModel::Render2D(CRender2D *pRender)
 		//
 
 		m_pStudioModel->SetAngles(vecAngles);
-		m_pStudioModel->SetOrigin(m_Origin[0], m_Origin[1], m_Origin[2]);
+		m_pStudioModel->SetOrigin(m_Origin);
 		m_pStudioModel->SetSkin(m_Skin);
 		m_pStudioModel->SetBodygroups( m_BodyGroup );
 
@@ -749,6 +762,7 @@ void CMapStudioModel::Render3D(CRender3D *pRender)
 			m_pStudioModel->SetOrigin(m_Origin[0], m_Origin[1], m_Origin[2]);
 			m_pStudioModel->SetSkin(m_Skin);
 			m_pStudioModel->SetBodygroups( m_BodyGroup );
+			m_pStudioModel->SetScale( m_flModelScale );
 
 			float flAlpha = 1.0;
 			if ( Options.view3d.bPreviewModelFade )
