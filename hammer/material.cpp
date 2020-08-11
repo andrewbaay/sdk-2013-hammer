@@ -28,6 +28,7 @@
 #include "TextureSystem.h"
 #include "materialproxyfactory_wc.h"
 #include "options.h"
+#include "pixelwriter.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -789,13 +790,18 @@ void CMaterial::DrawBrowserIcons( CDC *pDC, RECT& dstRect, bool detectErrors )
 	static CMaterial* pBaseAlphaEnvMapMaskIcon = 0;
 	static CMaterial* pErrorIcon = 0;
 
-	if (!pTranslucentIcon)
+	if ( !pTranslucentIcon )
 	{
-		pTranslucentIcon			= CreateMaterial("editor/translucenticon", true);
-		pOpaqueIcon					= CreateMaterial("editor/opaqueicon", true);
-		pSelfIllumIcon				= CreateMaterial("editor/selfillumicon", true);
-		pBaseAlphaEnvMapMaskIcon	= CreateMaterial("editor/basealphaenvmapmaskicon", true);
-		pErrorIcon					= CreateMaterial("editor/erroricon", true);
+		if ( ( pTranslucentIcon = CreateMaterial( "editor/translucenticon", true ) ) != nullptr )
+			pTranslucentIcon->m_TranslucentBaseTexture = false;
+		if ( ( pOpaqueIcon = CreateMaterial( "editor/opaqueicon", true ) ) != nullptr )
+			pOpaqueIcon->m_TranslucentBaseTexture = false;
+		if ( ( pSelfIllumIcon = CreateMaterial( "editor/selfillumicon", true ) ) != nullptr )
+			pSelfIllumIcon->m_TranslucentBaseTexture = false;
+		if ( ( pBaseAlphaEnvMapMaskIcon = CreateMaterial( "editor/basealphaenvmapmaskicon", true ) ) != nullptr )
+			pBaseAlphaEnvMapMaskIcon->m_TranslucentBaseTexture = false;
+		if ( ( pErrorIcon = CreateMaterial( "editor/erroricon", true ) ) != nullptr )
+			pErrorIcon->m_TranslucentBaseTexture = false;
 
 		Assert( pTranslucentIcon && pOpaqueIcon && pSelfIllumIcon && pBaseAlphaEnvMapMaskIcon && pErrorIcon );
 	}
@@ -864,9 +870,10 @@ void CMaterial::DrawBitmap( CDC *pDC, RECT& srcRect, RECT& dstRect )
 	bmih.biWidth = srcWidth;
 	bmih.biHeight = -srcHeight;
 	bmih.biCompression = BI_RGB;
-
-	bmih.biBitCount = 24;
 	bmih.biPlanes = 1;
+
+	bmih.biBitCount = m_TranslucentBaseTexture ? 32 : 24;
+    bmih.biSizeImage = m_nWidth * m_nHeight * ( m_TranslucentBaseTexture ? 4 : 3 );
 
 	static BOOL bInit = false;
 	if (!bInit)
@@ -881,8 +888,49 @@ void CMaterial::DrawBitmap( CDC *pDC, RECT& srcRect, RECT& dstRect )
 	int dest_width = dstRect.right - dstRect.left;
 	int dest_height = dstRect.bottom - dstRect.top;
 
+	if ( m_TranslucentBaseTexture )
+	{
+		void* data;
+		auto hdc = CreateCompatibleDC( pDC->m_hDC );
+		auto bitmap = CreateDIBSection( hdc, (BITMAPINFO*)&bmi, DIB_RGB_COLORS, &data, NULL, 0x0 );
+		CPixelWriter writer;
+		writer.SetPixelMemory( IMAGE_FORMAT_BGRA8888, data, m_nWidth * 4 );
+
+		constexpr int boxSize = 8;
+		for ( int y = 0; y < m_nHeight; ++y )
+		{
+			writer.Seek( 0, y );
+			for ( int x = 0; x < m_nWidth; ++x )
+			{
+				if ( ( x & boxSize ) ^ ( y & boxSize ) )
+					writer.WritePixel( 102, 102, 102, 255 );
+				else
+					writer.WritePixel( 153, 153, 153, 255 );
+			}
+		}
+
+		SelectObject( hdc, bitmap );
+		BitBlt( pDC->m_hDC, dstRect.left, dstRect.top, dest_width, dest_height, hdc, srcRect.left, -srcRect.top, SRCCOPY );
+		DeleteObject( bitmap );
+
+		bitmap = CreateBitmap( srcWidth, srcHeight, 1, 32, m_pData );
+		SelectObject( hdc, bitmap );
+
+		BLENDFUNCTION bf{ AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
+
+		if ( !AlphaBlend( pDC->m_hDC, dstRect.left, dstRect.top, dest_width, dest_height, hdc, srcRect.left, -srcRect.top, srcWidth, srcHeight, bf ))
+		{
+			Msg(mwError, "CMaterial::Draw(): AlphaBlend failed.");
+		}
+
+		DeleteObject( bitmap );
+		DeleteDC( hdc );
+		return;
+	}
+
 	// ** bits **
 	SetStretchBltMode(pDC->m_hDC, COLORONCOLOR);
+
 	if (StretchDIBits(pDC->m_hDC, dstRect.left, dstRect.top, dest_width, dest_height,
 		srcRect.left, -srcRect.top, srcWidth, srcHeight, m_pData, (BITMAPINFO*)&bmi, DIB_RGB_COLORS, SRCCOPY) == GDI_ERROR)
 	{
@@ -1058,7 +1106,6 @@ int CMaterial::GetShortName(char *pszName) const
 //-----------------------------------------------------------------------------
 bool CMaterial::LoadMaterialHeader( IMaterial *pMat )
 {
-
 	PreviewImageRetVal_t retVal;
 	bool translucentBaseTexture;
 	ImageFormat eImageFormat;
@@ -1085,7 +1132,7 @@ bool CMaterial::LoadMaterialHeader( IMaterial *pMat )
 		g_Textures.RegisterTextureKeywords( this );
 	}
 
-	return(true);
+	return true;
 }
 
 
@@ -1111,84 +1158,6 @@ bool CMaterial::IsWater( void ) const
 	}
 
 	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: If the buffer pointer passed in is not NULL, copies the image data
-//			in RGB format to the buffer
-// Input  : pImageRGB - Pointer to buffer that receives the image data. If the
-//				pointer is NULL, no data is copied, only the data size is returned.
-// Output : Returns a the size of the RGB image in bytes.
-//-----------------------------------------------------------------------------
-int CMaterial::GetImageDataRGB( void *pImageRGB )
-{
-	Assert( m_nWidth > 0 );
-
-	if ( pImageRGB != NULL )
-	{
-		Load();
-
-		g_pMaterialImageCache->EnCache( this );
-		if (!this->HasData())
-		{
-			return(NULL);
-		}
-
-		unsigned char *src, *dst;
-		src = ( unsigned char * )m_pData;
-		dst = (unsigned char *)pImageRGB;
-		for( ; src < ( unsigned char * )m_pData + m_nWidth * m_nHeight * 3; src += 3, dst += 3 )
-		{
-			dst[0] = src[2];
-			dst[1] = src[1];
-			dst[2] = src[0];
-		}
-
-		return(	m_nWidth * m_nHeight * 3 );
-	}
-
-	return(	m_nWidth * m_nHeight * 3 );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: If the buffer pointer passed in is not NULL, copies the image data
-//			in RGBA format to the buffer
-// Input  : pImageRGBA - Pointer to buffer that receives the image data. If the
-//				pointer is NULL, no data is copied, only the data size is returned.
-// Output : Returns a the size of the RGBA image in bytes.
-//-----------------------------------------------------------------------------
-int CMaterial::GetImageDataRGBA(void *pImageRGBA)
-{
-	Assert( m_nWidth > 0 );
-
-	if (pImageRGBA != NULL)
-	{
-		Load();
-
-		g_pMaterialImageCache->EnCache(this);
-		if (!this->HasData())
-		{
-			return(NULL);
-		}
-
-		unsigned char *src, *dst;
-		src = (unsigned char *)m_pData;
-		dst = (unsigned char *)pImageRGBA;
-
-		while (src < (unsigned char *)m_pData + m_nWidth * m_nHeight * 4);
-		{
-			dst[0] = src[2];
-			dst[1] = src[1];
-			dst[2] = src[0];
-			dst[3] = 0;
-
-			src += 4;
-			dst += 4;
-		}
-	}
-
-	return(m_nWidth * m_nHeight * 4);
 }
 
 
@@ -1270,26 +1239,28 @@ bool CMaterial::LoadMaterialImage( void )
 {
 	Load();
 
-	if ((!m_nWidth) || (!m_nHeight))
-		return(false);
+	if ( !m_nWidth || !m_nHeight )
+		return false;
 
-	m_pData = malloc(m_nWidth * m_nHeight * 3);
-	Assert(m_pData);
+	m_pData = malloc( m_nWidth * m_nHeight * ( m_TranslucentBaseTexture ? 4 : 3 ) );
+	Assert( m_pData );
 
-	ImageFormat imageFormat;
+	ImageFormat imageFormat = m_TranslucentBaseTexture ? IMAGE_FORMAT_BGRA8888 : IMAGE_FORMAT_BGR888;
 
-//	if( _strnicmp( m_pMaterial->GetName(), "decals", 6 ) == 0 )
-//	{
-//		imageFormat = IMAGE_FORMAT_BGR888_BLUESCREEN;
-//	}
-//	else
+	PreviewImageRetVal_t retVal = m_pMaterial->GetPreviewImage( (unsigned char*)m_pData, m_nWidth, m_nHeight, imageFormat );
+	if ( retVal == MATERIAL_PREVIEW_IMAGE_OK && m_TranslucentBaseTexture )
 	{
-		imageFormat = IMAGE_FORMAT_BGR888;
+		auto data = (unsigned char*)m_pData;
+		auto size = m_nWidth * size_t( m_nHeight );
+		for ( size_t i = 0; i < size; i += 4 )
+		{
+			auto a = data[i + 3];
+			data[i + 0] = ( data[i + 0] * a ) / 255;
+			data[i + 1] = ( data[i + 1] * a ) / 255;
+			data[i + 2] = ( data[i + 2] * a ) / 255;
+		}
 	}
-
-	PreviewImageRetVal_t retVal;
-	retVal = m_pMaterial->GetPreviewImage( (unsigned char *)m_pData, m_nWidth, m_nHeight, imageFormat );
-	return (retVal != MATERIAL_PREVIEW_IMAGE_BAD);
+	return retVal != MATERIAL_PREVIEW_IMAGE_BAD;
 }
 
 

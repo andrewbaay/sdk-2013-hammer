@@ -41,17 +41,14 @@ class CDummyTexture : public IEditorTexture
 			return(true);
 		}
 
-		int GetImageDataRGB( void *pImageRGB );
-		int GetImageDataRGBA( void *pImageRGBA );
-
 		inline int GetImageWidth() const
 		{
-			return(0);
+			return 256;
 		}
 
 		inline int GetImageHeight() const
 		{
-			return(0);
+			return 256;
 		}
 
 		inline float GetDecalScale() const
@@ -66,12 +63,12 @@ class CDummyTexture : public IEditorTexture
 
 		inline int GetWidth() const
 		{
-			return(0);
+			return 256;
 		}
 
 		inline int GetHeight() const
 		{
-			return(0);
+			return 256;
 		}
 
 		inline int GetTextureID() const
@@ -126,10 +123,16 @@ class CDummyTexture : public IEditorTexture
 			return false;
 		}
 
+		IMaterial* GetMaterial( bool bForceLoad=true )
+		{
+			return errorMaterial;
+		}
+
 	protected:
 
 		char m_szName[MAX_PATH];
-		char m_szFileName[MAX_PATH];
+
+		static IMaterial* errorMaterial;
 };
 
 

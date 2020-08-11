@@ -82,20 +82,6 @@ class IEditorTexture
 		virtual bool IsWater( void ) const = 0;
 
 		//-----------------------------------------------------------------------------
-		// Purpose: 
-		// Input  : pData - 
-		// Output : 
-		//-----------------------------------------------------------------------------
-		virtual int GetImageDataRGB( void *pData = NULL ) = 0;
-
-		//-----------------------------------------------------------------------------
-		// Purpose: 
-		// Input  : pData - 
-		// Output : 
-		//-----------------------------------------------------------------------------
-		virtual int GetImageDataRGBA( void *pData = NULL ) = 0;
-
-		//-----------------------------------------------------------------------------
 		// Purpose: Returns true if this texture has an alpha component, false if not.
 		//-----------------------------------------------------------------------------
 		virtual bool HasAlpha( void ) const = 0;
