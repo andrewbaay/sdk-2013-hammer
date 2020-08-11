@@ -10179,10 +10179,13 @@ bool CMapDoc::SaveVMF(const char *pszFileName, int saveFlags )
 	CChunkFile File;
 
 	ChunkFileResult_t eResult = File.Open(pszFileName, ChunkFile_Write);
-	BeginWaitCursor();
 
 	// Change the main title bar.
-	GetMainWnd()->SetWindowText( "Saving..." );
+	if ( ( saveFlags & SAVEFLAGS_NO_UI_UPDATE ) == 0 )
+	{
+		BeginWaitCursor();
+		GetMainWnd()->SetWindowText( "Saving..." );
+	}
 	// We can optionally use these calls if we want the document name to go away so the title bar only says "Saving...".
 	//GetMainWnd()->ModifyStyle( FWS_ADDTOTITLE, 0 );  //GetMainWnd()->ModifyStyle( 0, FWS_ADDTOTITLE );
 
@@ -10293,19 +10296,20 @@ bool CMapDoc::SaveVMF(const char *pszFileName, int saveFlags )
 	}
 
 	// Restore the main window's title.
-	GetMainWnd()->OnUpdateFrameTitle( true );
-
-	if (eResult != ChunkFile_Ok)
+	if ( ( saveFlags & SAVEFLAGS_NO_UI_UPDATE ) == 0 )
 	{
-		GetMainWnd()->MessageBox(File.GetErrorText(eResult), "Error Saving File", MB_OK);
+		GetMainWnd()->OnUpdateFrameTitle( true );
+		if ( eResult != ChunkFile_Ok )
+		{
+			GetMainWnd()->MessageBox( File.GetErrorText( eResult ), "Error Saving File", MB_OK );
+		}
+		else
+		{
+			//save filename into registry for last known good file for crash recovery purposes.
+			AfxGetApp()->WriteProfileString( "General", "Last Good Save", pszFileName );
+		}
+		EndWaitCursor();
 	}
-	else
-	{
-		//save filename into registry for last known good file for crash recovery purposes.
-		AfxGetApp()->WriteProfileString("General", "Last Good Save", pszFileName);
-	}
-
-	EndWaitCursor();
 	return( eResult == ChunkFile_Ok );
 }
 

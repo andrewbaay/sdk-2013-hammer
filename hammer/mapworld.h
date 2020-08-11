@@ -19,6 +19,7 @@
 // Flags for SaveVMF.
 #define SAVEFLAGS_LIGHTSONLY	(1<<0)
 #define SAVEFLAGS_AUTOSAVE		(1<<1)
+#define SAVEFLAGS_NO_UI_UPDATE	(1<<2)
 
 
 #define MAX_VISIBLE_OBJECTS		10000

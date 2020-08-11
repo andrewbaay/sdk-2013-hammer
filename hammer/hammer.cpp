@@ -44,7 +44,6 @@
 #include "HammerVGui.h"
 #include "vgui_controls/Controls.h"
 #include "lpreview_thread.h"
-#include "steam/steam_api.h"
 #include "inputsystem/iinputsystem.h"
 #include "datacache/idatacache.h"
 #include "datamodel/dmelementfactoryhelper.h"
@@ -53,6 +52,8 @@
 #include "KeyValues.h"
 #include "particles/particles.h"
 #include "afxvisualmanagerwindows.h"
+#include "tier0/minidump.h"
+#include "tier0/threadtools.h"
 // #include "vgui/ILocalize.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -119,27 +120,24 @@ CreateInterfaceFn g_Factory;
 
 bool g_bHDR = true;
 
-int WrapFunctionWithMinidumpHandler( int (*pfn)(void *pParam), void *pParam, int errorRetVal )
+struct MinidumpWrapperHelper_t
 {
-	int nRetVal;
+	int ( *m_pfn )( void* pParam );
+	void* m_pParam;
+	int m_iRetVal;
+};
 
-	if ( !Plat_IsInDebugSession() && !CommandLine()->FindParm( "-nominidumps") )
-	{
-		try  // this try block allows the SE translator to work
-		{
-			nRetVal = pfn( pParam );
-		}
-		catch( ... )
-		{
-			return errorRetVal;
-		}
-	}
-	else
-	{
-		nRetVal = pfn( pParam );
-	}
+static void MinidumpWrapperHelper( void* arg )
+{
+	MinidumpWrapperHelper_t* info = (MinidumpWrapperHelper_t*)arg;
+	info->m_iRetVal = info->m_pfn( info->m_pParam );
+}
 
-	return nRetVal;
+int WrapFunctionWithMinidumpHandler( int ( *pfn )( void* pParam ), void* pParam, int errorRetVal )
+{
+	MinidumpWrapperHelper_t info{ pfn, pParam, errorRetVal };
+	CatchAndWriteMiniDumpForVoidPtrFn( MinidumpWrapperHelper, &info, true );
+	return info.m_iRetVal;
 }
 
 
@@ -451,6 +449,7 @@ CHammer::~CHammer(void)
 //-----------------------------------------------------------------------------
 bool CHammer::Connect( CreateInterfaceFn factory )
 {
+	EnableCrashingOnCrashes();
 	if ( !BaseClass::Connect( factory ) )
 		return false;
 
@@ -493,7 +492,7 @@ bool CHammer::Connect( CreateInterfaceFn factory )
 	{
 		// Default location for GameConfig.txt is in ./hammer/cfg/ but this may be overridden on the command line
 		char szGameConfigDir[MAX_PATH];
-		APP()->GetDirectory( DIR_PROGRAM, szGameConfigDir );
+		GetDirectory( DIR_PROGRAM, szGameConfigDir );
 		CFmtStrN<MAX_PATH> dir("%s/hammer/cfg", szGameConfigDir);
 		g_pFullFileSystem->AddSearchPath(dir.Get(), "hammer_cfg", PATH_ADD_TO_HEAD);
 		V_FixupPathName( szGameConfigDir, MAX_PATH, dir.Get() );
@@ -624,7 +623,7 @@ void CHammer::EndImportSettings(void)
 // Input  : dir - Enumerated directory to retrieve.
 //			p - Pointer to buffer that receives the full path to the directory.
 //-----------------------------------------------------------------------------
-void CHammer::GetDirectory(DirIndex_t dir, char *p)
+void CHammer::GetDirectory(DirIndex_t dir, char *p) const
 {
 	switch (dir)
 	{
@@ -982,7 +981,7 @@ bool CHammer::InitSessionGameConfig(const char *szGame)
 //-----------------------------------------------------------------------------
 InitReturnVal_t CHammer::Init()
 {
-	return (InitReturnVal_t)WrapFunctionWithMinidumpHandler( &CHammer::StaticHammerInternalInit, this, INIT_FAILED );
+	return (InitReturnVal_t)WrapFunctionWithMinidumpHandler( StaticHammerInternalInit, this, INIT_FAILED );
 }
 
 
@@ -1113,7 +1112,7 @@ InitReturnVal_t CHammer::HammerInternalInit()
 	if ( !initInfo.m_pDirectoryName[0] )
 	{
 		static char pTempBuf[MAX_PATH];
-		APP()->GetDirectory(DIR_PROGRAM, pTempBuf);
+		GetDirectory(DIR_PROGRAM, pTempBuf);
 		strcat( pTempBuf, "..\\hl2" );
 		initInfo.m_pDirectoryName = pTempBuf;
 	}
@@ -1178,7 +1177,7 @@ InitReturnVal_t CHammer::HammerInternalInit()
 
 	// Load detail object descriptions.
 	char	szGameDir[_MAX_PATH];
-	APP()->GetDirectory(DIR_MOD, szGameDir);
+	GetDirectory(DIR_MOD, szGameDir);
 	DetailObjects::LoadEmitDetailObjectDictionary( szGameDir );
 
 	// Initialize the sound system
@@ -1205,7 +1204,7 @@ InitReturnVal_t CHammer::HammerInternalInit()
 
 	if ( Options.general.bClosedCorrectly == FALSE )
 	{
-		CString strLastGoodSave = APP()->GetProfileString("General", "Last Good Save", "");
+		CString strLastGoodSave = GetProfileString("General", "Last Good Save", "");
 
 		if ( strLastGoodSave.GetLength() != 0 )
 		{
@@ -1278,8 +1277,67 @@ void CHammer::EditKeyBindings()
 	}
 }
 
+static unsigned WriteCrashSave( void* )
+{
+	CHammerDocTemplate* templates[] = { APP()->pMapDocTemplate, APP()->pManifestDocTemplate };
+
+	char szRootDir[MAX_PATH];
+	APP()->GetDirectory( DIR_AUTOSAVE, szRootDir );
+	CString strAutosaveDirectory( szRootDir );
+	EditorUtil_ConvertPath( strAutosaveDirectory, true );
+
+	for ( CHammerDocTemplate* pTemplate : templates )
+	{
+		for ( POSITION pos = pTemplate->GetFirstDocPosition(); pos != NULL; )
+		{
+			CDocument* pDoc = pTemplate->GetNextDoc( pos );
+			ASSERT_VALID( pDoc );
+			CMapDoc* pMapDoc = dynamic_cast<CMapDoc*>( pDoc );
+
+			CString strExtension  = ".vmf_autosave";
+			//this will hold the name of the map w/o leading directory info or file extension
+			CString strMapTitle;
+			//full path of map file
+			CString strMapFilename = pDoc->GetPathName();
+
+			DWORD dwTotalAutosaveDirectorySize = 0;
+			int nCurrentAutosaveNumber = 0;
+
+			// the map hasn't been saved before and doesn't have a filename; using default: 'autosave'
+			if ( strMapFilename.IsEmpty() )
+			{
+				strMapTitle = "autosave";
+			}
+			// the map already has a filename
+			else
+			{
+				int nFilenameBeginOffset = strMapFilename.ReverseFind( '\\' ) + 1;
+				int nFilenameEndOffset = strMapFilename.Find( '.' );
+				//get the filename of the map, between the leading '\' and the '.'
+				strMapTitle = strMapFilename.Mid( nFilenameBeginOffset, nFilenameEndOffset - nFilenameBeginOffset );
+			}
+
+			CString strSaveName = strAutosaveDirectory + strMapTitle + "_crash" + strExtension;
+
+			pMapDoc->SaveVMF( strSaveName, SAVEFLAGS_AUTOSAVE | SAVEFLAGS_NO_UI_UPDATE );
+		}
+	}
+	return 0;
+}
+
+static LONG WINAPI WrapperException( _EXCEPTION_POINTERS* pExceptionInfo )
+{
+	auto thread = CreateSimpleThread( WriteCrashSave, nullptr ); // new thread with free stack space
+	ThreadJoin( thread );
+	ReleaseThreadHandle( thread );
+
+	return EXCEPTION_CONTINUE_SEARCH;
+}
+
 int CHammer::MainLoop()
 {
+	SetUnhandledExceptionFilter( WrapperException );
+	AddVectoredExceptionHandler( 1, WrapperException );
 	return WrapFunctionWithMinidumpHandler( StaticInternalMainLoop, this, -1 );
 }
 
@@ -2045,7 +2103,7 @@ int CHammer::GetNextAutosaveNumber( CUtlMap<FILETIME, WIN32_FIND_DATA, int> *pFi
 	oldestAutosaveTime.dwLowDateTime = 0;
 
 	char szRootDir[MAX_PATH];
-	APP()->GetDirectory(DIR_AUTOSAVE, szRootDir);
+	GetDirectory(DIR_AUTOSAVE, szRootDir);
 	CString strAutosaveDirectory( szRootDir );
 
 	int nNumberActualAutosaves = 0;
@@ -2170,7 +2228,7 @@ void CHammer::Autosave( void )
 	if ( pDoc && pDoc->NeedsAutosave() )
 	{
 		char szRootDir[MAX_PATH];
-		APP()->GetDirectory(DIR_AUTOSAVE, szRootDir);
+		GetDirectory(DIR_AUTOSAVE, szRootDir);
 		CString strAutosaveDirectory( szRootDir );
 
 		//expand the path if $SteamUserDir etc are used for SDK users
@@ -2211,7 +2269,7 @@ void CHammer::Autosave( void )
 
 		CString strSaveName = strAutosaveDirectory + strMapTitle + strAutosaveNumber + strExtension + "_autosave";
 
-		pDoc->SaveVMF( (char *)strSaveName.GetBuffer(), SAVEFLAGS_AUTOSAVE );
+		pDoc->SaveVMF( strSaveName, SAVEFLAGS_AUTOSAVE );
 		//don't autosave again unless they make changes
 		pDoc->SetAutosaveFlag( FALSE );
 
@@ -2261,7 +2319,7 @@ bool CHammer::VerifyAutosaveDirectory( char *szAutosaveDirectory ) const
 	}
 	else
 	{
-		APP()->GetDirectory(DIR_AUTOSAVE, szRootDir);
+		GetDirectory(DIR_AUTOSAVE, szRootDir);
 	}
 
 	if ( szRootDir[0] == 0 )
@@ -2340,14 +2398,14 @@ bool CHammer::VerifyAutosaveDirectory( char *szAutosaveDirectory ) const
 //-----------------------------------------------------------------------------
 void CHammer::LoadLastGoodSave( void )
 {
-	CString strLastGoodSave = APP()->GetProfileString("General", "Last Good Save", "");
+	CString strLastGoodSave = GetProfileString("General", "Last Good Save", "");
 	char szMapDir[MAX_PATH];
 	strcpy(szMapDir, g_pGameConfig->szMapDir);
 	CDocument *pCurrentDoc;
 
 	if ( !strLastGoodSave.IsEmpty() )
 	{
-		pCurrentDoc = APP()->OpenDocumentFile( strLastGoodSave );
+		pCurrentDoc = OpenDocumentFile( strLastGoodSave );
 
 		if ( !pCurrentDoc )
 		{
@@ -2356,7 +2414,7 @@ void CHammer::LoadLastGoodSave( void )
 		}
 
 		char szAutoSaveDir[MAX_PATH];
-		APP()->GetDirectory(DIR_AUTOSAVE, szAutoSaveDir);
+		GetDirectory(DIR_AUTOSAVE, szAutoSaveDir);
 
 		if ( !((CMapDoc *)pCurrentDoc)->IsAutosave() && Q_stristr( pCurrentDoc->GetPathName(), szAutoSaveDir ) )
 		{

@@ -116,7 +116,7 @@ public:
 	virtual int Run(void);
 	//}}AFX_VIRTUAL
 
-	void GetDirectory(DirIndex_t dir, char *p);
+	void GetDirectory(DirIndex_t dir, char *p) const;
 	void SetDirectory(DirIndex_t dir, const char *p);
 
 	UINT GetProfileIntA(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault) override;
