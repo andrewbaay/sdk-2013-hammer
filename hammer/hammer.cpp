@@ -1300,9 +1300,6 @@ static unsigned WriteCrashSave( void* )
 			//full path of map file
 			CString strMapFilename = pDoc->GetPathName();
 
-			DWORD dwTotalAutosaveDirectorySize = 0;
-			int nCurrentAutosaveNumber = 0;
-
 			// the map hasn't been saved before and doesn't have a filename; using default: 'autosave'
 			if ( strMapFilename.IsEmpty() )
 			{

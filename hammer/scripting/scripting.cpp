@@ -271,7 +271,6 @@ private:
 					{
 						auto dictDecl = decl + V_strlen( decl );
 						while ( *( --dictDecl - 1 ) != ' ' );
-						auto type = eng->GetTypeInfoById( id );
 						auto dict = strchr( decl, '@' ) + 2 == dictDecl ? *static_cast<CScriptDictionary**>( addr ) : static_cast<CScriptDictionary*>( addr );
 
 						for ( const CScriptDictionary::CIterator& iter : *dict )
