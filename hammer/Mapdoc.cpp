@@ -483,6 +483,8 @@ CMapDoc::CMapDoc(void)
 
 	m_bReadOnly = true;
 	m_bDeferredSave = false;
+
+	m_bSaveVisiblesOnly = false;
 }
 
 
