@@ -923,6 +923,9 @@ void CBaseAssetPicker::CreateStandardControls( vgui::Panel *pParent, bool bAllow
 	m_pAssetSplitter = new vgui::Splitter( pParent, "AssetSplitter", SPLITTER_MODE_HORIZONTAL, 1 );
 	m_pAssetSplitter->SetAutoResize( PIN_TOPLEFT, AUTORESIZE_DOWNANDRIGHT, 0, 0, 0, 0 );
 
+	float flFractions[] = { 0.4f, 0.6f };
+	m_pAssetSplitter->RespaceSplitters( flFractions );
+
 	vgui::Panel *pSplitterTopSide = m_pAssetSplitter->GetChild( 0 );
 	vgui::Panel *pSplitterBottomSide = m_pAssetSplitter->GetChild( 1 );
 
@@ -954,7 +957,7 @@ void CBaseAssetPicker::CreateStandardControls( vgui::Panel *pParent, bool bAllow
     m_pAssetBrowser->SetSelectIndividualCells( false );
     m_pAssetBrowser->SetMultiselectEnabled( bAllowMultiselect );
 	m_pAssetBrowser->SetEmptyListText( pTemp );
- 	m_pAssetBrowser->SetDragEnabled( true );
+ 	m_pAssetBrowser->SetDragEnabled( false );
 	m_pAssetBrowser->AddActionSignalTarget( this );
 	m_pAssetBrowser->SetSortFunc( 0, AssetBrowserModSortFunc );
 	m_pAssetBrowser->SetSortFunc( 1, AssetBrowserSortFunc );
@@ -991,7 +994,7 @@ void CBaseAssetPicker::AutoLayoutStandardControls(  )
 		CBoxSizer* pRow = new CBoxSizer(ESLD_HORIZONTAL);
 		pRow->AddPanel( new Label(pSplitterTopLeftSide,"ModFilterLabel","Mod Filter"), SizerAddArgs_t() );
 		pRow->AddPanel( m_pModSelector, SizerAddArgs_t().Expand( 1.0f ) );
-		pRow->AddPanel( m_pRescanButton, SizerAddArgs_t() );
+		pRow->AddPanel( m_pRescanButton, SizerAddArgs_t().MinX( 68 ) );
 		pTopLeftSplitterLayout->AddSizer( pRow, SizerAddArgs_t() );
 	}
 	m_pSubDirCheck->SetEnabled( true );
@@ -1007,7 +1010,7 @@ void CBaseAssetPicker::AutoLayoutStandardControls(  )
 		CBoxSizer* pRow = new CBoxSizer(ESLD_HORIZONTAL);
 		pRow->AddPanel( new Label(pSplitterBottomLeftSide,"FullPathLabel","Full Path"), SizerAddArgs_t() );
 		pRow->AddPanel( m_pFullPath, SizerAddArgs_t().Expand( 1.0f ) );
-		pRow->AddPanel( m_pFindAssetButton, SizerAddArgs_t().Expand( 1.0f ) );
+		pRow->AddPanel( m_pFindAssetButton, SizerAddArgs_t().MinX( 68 ) );
 		pBottomLeftSplitterLayout->AddSizer( pRow, SizerAddArgs_t() );
 	}
 	{
@@ -1019,7 +1022,6 @@ void CBaseAssetPicker::AutoLayoutStandardControls(  )
 	{
 		CBoxSizer* pRow = new CBoxSizer( ESLD_HORIZONTAL );
 		pRow->AddPanel( m_pOnlyUsedCheck, SizerAddArgs_t().Expand( 1.0f ) );
-		pRow->AddPanel( new Label( pSplitterBottomLeftSide, "OnlyUsedLabel", "Show used assets only" ), SizerAddArgs_t() );
 		pBottomLeftSplitterLayout->AddSizer( pRow, SizerAddArgs_t() );
 	}
 	pSplitterBottomLeftSide->SetSizer(pBottomLeftSplitterLayout);
@@ -1180,7 +1182,7 @@ void CBaseAssetPicker::OnKeyCodeTyped( KeyCode code )
 {
 	if (( code == KEY_UP ) || ( code == KEY_DOWN ) || ( code == KEY_PAGEUP ) || ( code == KEY_PAGEDOWN ))
 	{
-		KeyValues *pMsg = new KeyValues("KeyCodeTyped", "code", code);
+		KeyValues *pMsg = new KeyValues("KeyCodePressed", "code", code);
 		vgui::ipanel()->SendMessage( m_pAssetBrowser->GetVPanel(), pMsg, GetVPanel());
 		pMsg->deleteThis();
 	}

@@ -75,8 +75,8 @@ CMDLPicker::CMDLPicker( vgui::Panel *pParent, int nFlags ) :
 	vgui::Panel *pSplitterRightSide = m_pFileBrowserSplitter->GetChild( 1 );
 
 	// Standard browser controls
-	pSplitterLeftSide->RequestFocus();
 	CreateStandardControls( pSplitterLeftSide, false );
+	AutoLayoutStandardControls();
 
 	// property sheet - revisions, changes, etc.
 	m_pPreviewSplitter = new Splitter( pSplitterRightSide, "PreviewSplitter", SPLITTER_MODE_HORIZONTAL, 1 );
