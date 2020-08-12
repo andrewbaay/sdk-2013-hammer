@@ -80,7 +80,7 @@ public:
 		*width = entry.m_Width;
 		*height = entry.m_Height;
 		*imageFormat = entry.m_ImageFormat;
-		*isTranslucent = entry.m_bIsTranslucent;
+		*isTranslucent = entry.m_bIsTranslucent && pMaterial->GetMaterialVarFlag( MATERIAL_VAR_TRANSLUCENT );
 
 		return entry.m_RetVal;
 	}
