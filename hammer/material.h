@@ -73,11 +73,6 @@ public:
 
 	const char *GetFileName(void) const;
 
-	inline CPalette *GetPalette(void) const
-	{
-		return(NULL);
-	}
-
 	inline int GetSurfaceAttributes(void) const
 	{
 		return(0);
@@ -106,11 +101,6 @@ public:
 	inline bool HasData(void) const
 	{
 		return((m_nWidth != 0) && (m_nHeight != 0));
-	}
-
-	inline bool HasPalette(void) const
-	{
-		return(false);
 	}
 
 	inline bool IsDummy(void) const

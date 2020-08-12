@@ -94,7 +94,7 @@ private:
 private:
 	CFileChangeWatcher m_Watcher;
 	CTextureSystem *m_pTextureSystem;
-	int m_Context;	
+	int m_Context;
 };
 
 
@@ -102,7 +102,7 @@ class CTextureSystem : public IMaterialEnumerator
 {
 public:
 	friend class CMaterialFileChangeWatcher;
-	
+
 	CTextureSystem(void);
 	virtual ~CTextureSystem(void);
 
@@ -149,7 +149,6 @@ public:
 	// Load graphics files from options list.
 	//
 	void LoadAllGraphicsFiles(void);
-	void InformPaletteChanged(void);
 
 	// IMaterialEnumerator interface, Used to add all the world materials into the material list.
 	bool EnumMaterial( const char *pMaterialName, int nContext );
@@ -171,7 +170,7 @@ public:
 
 	// bind local cubemap again
 	void RebindDefaultCubeMap();
-	
+
 	void UpdateFileChangeWatchers();
 
 	// Gets tools/toolsnodraw
@@ -190,9 +189,9 @@ protected:
 	void ReloadMaterialsUsingTexture( ITexture *pTestTexture );
 
 	static bool GetFileTypeFromFilename( const char *pFilename, CTextureSystem::EFileType *pFileType );
-	
+
 	CUtlVector<CMaterialFileChangeWatcher*> m_ChangeWatchers;
-			
+
 // Internal stuff.
 
 	void FreeAllTextures();
@@ -260,7 +259,7 @@ IEditorTexture *CTextureSystem::GetActiveTexture(int nIndex) const
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 int CTextureSystem::GroupsGetCount() const
 {
@@ -272,7 +271,7 @@ int CTextureSystem::GroupsGetCount() const
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CTextureGroup *CTextureSystem::GroupsGet(int nIndex) const
 {

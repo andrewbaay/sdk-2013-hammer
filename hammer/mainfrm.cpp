@@ -1027,11 +1027,6 @@ void CMainFrame::SetBrightness(float fBrightness)
 	// update options
 	Options.textures.fBrightness = fBrightness;
 
-	// update display
-	for(int i = 0; i < Options.configs.nConfigs; i++)
-		Options.configs.Configs[i]->Palette.SetBrightness(fBrightness);
-	g_Textures.InformPaletteChanged();
-
 	//
 	// if current tool isn't the material tool, then redraw the texture bar
 	//

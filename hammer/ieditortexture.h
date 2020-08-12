@@ -15,7 +15,6 @@
 
 
 class CDC;
-class CPalette;
 class IMaterial;
 
 
@@ -71,9 +70,7 @@ class IEditorTexture
 		virtual int GetSurfaceAttributes( void ) const = 0;
 		virtual int GetSurfaceContents(void ) const = 0;
 		virtual int GetSurfaceValue( void ) const = 0;
-		virtual CPalette *GetPalette( void ) const = 0;
 		virtual bool HasData( void ) const = 0;
-		virtual bool HasPalette( void ) const = 0;
 		virtual bool Load( void ) = 0; // ensure that texture is loaded. could this be done internally?
 		virtual void Reload( bool bFullReload ) = 0; // The texture changed. If bFullReload is true, then the material system reloads it too.
 		virtual bool IsLoaded( void ) const = 0;

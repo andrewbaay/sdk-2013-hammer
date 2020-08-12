@@ -84,15 +84,6 @@ void CTextureBox::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	{
 		IEditorTexture *pTex = (IEditorTexture *)GetItemDataPtr(lpDrawItemStruct->itemID);
 		dc.SetROP2(R2_COPYPEN);
-		CPalette *pOldPalette = NULL;
-
-		if (pTex != NULL)
-		{
-			pTex->Load();
-
-			pOldPalette = dc.SelectPalette(pTex->HasPalette() ? pTex->GetPalette() : g_pGameConfig->Palette, FALSE);
-			dc.RealizePalette();
-		}
 
 		COLORREF dwBackColor = RGB(255,255,255);
 		COLORREF dwForeColor = RGB(0,0,0);
@@ -152,11 +143,6 @@ void CTextureBox::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 				dc.SetBkMode(TRANSPARENT);
 				dc.TextOut(r.left + 4, r.top + 2, szName, iLen);
 			}
-		}
-
-		if (pOldPalette)
-		{
-			dc.SelectPalette(pOldPalette, FALSE);
 		}
 	}
 	else if (lpDrawItemStruct->itemState & ODS_FOCUS)

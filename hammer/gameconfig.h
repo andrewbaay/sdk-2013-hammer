@@ -11,7 +11,6 @@
 #endif
 
 #include "fgdlib/GameData.h"
-#include "GamePalette.h"
 
 class MDkeyvalue;
 class KeyValues;
@@ -67,7 +66,6 @@ public:
 
 	CStringArray GDFiles;
 	GameData GD;	// gamedata files loaded
-    CGamePalette Palette;
 
 	bool Load(KeyValues *pkv);
 	bool Save(KeyValues *pkv);

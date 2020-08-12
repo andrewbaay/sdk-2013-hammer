@@ -404,22 +404,6 @@ void CTextureSystem::AddMRU(IEditorTexture *pTex)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Change palette on all textures.
-// Input  :
-// dvs: need to handle a palette change for Quake support
-//-----------------------------------------------------------------------------
-void CTextureSystem::InformPaletteChanged()
-{
-//	int nGraphics = GetCount();
-//
-//	for (int i = 0; i < nGraphics; i++)
-//	{
-//		IEditorTexture *pTex = &GetAt(i);
-//	}
-}
-
-
-//-----------------------------------------------------------------------------
 // Purpose: Returns the texture context that corresponds to the given game config.
 //-----------------------------------------------------------------------------
 TextureContext_t *CTextureSystem::FindTextureContextForConfig(CGameConfig *pConfig)

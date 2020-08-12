@@ -56,11 +56,6 @@ class CDummyTexture : public IEditorTexture
 			return(1.0f);
 		}
 
-		CPalette *GetPalette() const
-		{
-			return(NULL);
-		}
-
 		inline int GetWidth() const
 		{
 			return 256;
@@ -99,11 +94,6 @@ class CDummyTexture : public IEditorTexture
 		inline bool HasData() const
 		{
 			return(true);
-		}
-
-		inline bool HasPalette() const
-		{
-			return(false);
 		}
 
 		bool Load( void );
