@@ -701,22 +701,13 @@ static bool LoadSky( const char *skyname, IMaterial* skyboxMaterials[6] )
 {
 	char name[256];
 	IMaterial* skies[6];
-	bool success = true;
 	constexpr const char* skyboxsuffix[6] = { "rt", "bk", "lf", "ft", "up", "dn" };
 
 	for ( int i = 0; i < 6; i++ )
 	{
 		V_sprintf_safe( name, "skybox/%s%s", skyname, skyboxsuffix[i] );
 		skies[i] = materials->FindMaterial( name, TEXTURE_GROUP_SKYBOX );
-		if( !IsErrorMaterial( skies[i] ) )
-			continue;
-
-		success = false;
-		break;
 	}
-
-	if ( !success )
-		return false;
 
 	// Increment references
 	for ( int i = 0; i < 6; i++ )
