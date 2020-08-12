@@ -96,7 +96,6 @@ void CMapViewLogical::OnInitialUpdate(void)
 {
 	CreateTitleWindow();
 	GetTitleWnd()->SetTitle("Logical");
-	SetZoom(0);  // Zoom out as far as possible.
 	UpdateClientView();
 	CMapView2DBase::OnInitialUpdate();
 	// FIXME: Hardcoded light gray background - should be from a new "Logical View" options settings dialog
