@@ -193,7 +193,7 @@ BOOL CTextureWindow::EnumTexturePositions(TWENUMPOS *pTE, BOOL bStart)
 
 	do
 	{
-		pTE->pTex = g_Textures.EnumActiveTextures(&pTE->iTexIndex);
+		pTE->pTex = g_Textures.EnumActiveTextures(pTE->iTexIndex);
 
 		if (pTE->pTex == NULL)
 			continue;

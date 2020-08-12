@@ -335,7 +335,7 @@ void CTextureBox::LoadGraphicList(void)
 	// Add the rest of the textures to the list.
 	//
 	int nIndex = 0;
-	IEditorTexture *pTex = g_Textures.EnumActiveTextures(&nIndex);
+	IEditorTexture *pTex = g_Textures.EnumActiveTextures(nIndex);
 	while (pTex != NULL)
 	{
 		char szStr[MAX_PATH];
@@ -345,7 +345,7 @@ void CTextureBox::LoadGraphicList(void)
 		SetItemDataPtr(nStrCount, (void *)pTex);
 		nStrCount++;
 
-		pTex = g_Textures.EnumActiveTextures(&nIndex);
+		pTex = g_Textures.EnumActiveTextures(nIndex);
 	}
 
 	//

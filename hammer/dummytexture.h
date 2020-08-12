@@ -15,114 +15,44 @@
 
 #include "IEditorTexture.h"
 
-class CDummyTexture : public IEditorTexture
+class CDummyTexture final : public IEditorTexture
 {
-	public:
+public:
+	CDummyTexture( const char* pszName );
+	~CDummyTexture() override = default;
 
-		CDummyTexture(const char *pszName);
-		virtual ~CDummyTexture();
+	static void DestroyDummyMaterial();
 
-		inline const char *GetName() const
-		{
-			return(m_szName);
-		}
-		int GetShortName(char *pszName) const;
+	const char* GetName() const override { return m_szName; }
+	const char* GetFileName() const override { return m_szName; }
+	int GetShortName( char* pszName ) const override;
+	int GetKeywords( char* pszKeywords ) const override;
 
-		int GetKeywords(char *pszKeywords) const;
+	void Draw( CDC* pDC, const RECT& rect, int iFontHeight, int iIconHeight, const DrawTexData_t& DrawTexData ) override;
 
-		void Draw(CDC *pDC, RECT &rect, int iFontHeight, int iIconHeight, DrawTexData_t &DrawTexData);
+	bool IsDummy() const override { return true; }
 
-		const char *GetFileName(void) const;
+	int GetImageWidth() const override { return 256; }
+	int GetImageHeight() const override { return 256; }
+	int GetWidth() const override { return 256; }
+	int GetHeight() const override { return 256; }
+	float GetDecalScale() const override { return 1.0f; }
 
-		void GetSize(SIZE &size) const;
+	bool HasData() const override { return true; }
 
-		inline bool IsDummy() const
-		{
-			return(true);
-		}
+	bool Load() override { return true; }
+	void Reload( bool bFullReload ) override {}
+	bool IsLoaded() const override { return true; }
 
-		inline int GetImageWidth() const
-		{
-			return 256;
-		}
+	bool IsWater() const override { return false; }
 
-		inline int GetImageHeight() const
-		{
-			return 256;
-		}
+	IMaterial* GetMaterial( bool bForceLoad = true ) override { return errorMaterial; }
 
-		inline float GetDecalScale() const
-		{
-			return(1.0f);
-		}
+protected:
 
-		inline int GetWidth() const
-		{
-			return 256;
-		}
+	char m_szName[MAX_PATH];
 
-		inline int GetHeight() const
-		{
-			return 256;
-		}
-
-		inline int GetTextureID() const
-		{
-			return(0);
-		}
-
-		inline int GetSurfaceAttributes() const
-		{
-			return(0);
-		}
-
-		inline int GetSurfaceContents() const
-		{
-			return(0);
-		}
-
-		inline int GetSurfaceValue() const
-		{
-			return(0);
-		}
-
-		inline bool HasAlpha() const
-		{
-			return(false);
-		}
-
-		inline bool HasData() const
-		{
-			return(true);
-		}
-
-		bool Load( void );
-		void Reload( bool bFullReload ) {}
-
-		inline bool IsLoaded() const
-		{
-			return true;
-		}
-
-		inline void SetTextureID( int nTextureID )
-		{
-		}
-
-		bool IsWater( void ) const
-		{
-			return false;
-		}
-
-		IMaterial* GetMaterial( bool bForceLoad=true )
-		{
-			return errorMaterial;
-		}
-
-	protected:
-
-		char m_szName[MAX_PATH];
-
-		static IMaterial* errorMaterial;
+	static IMaterial* errorMaterial;
 };
 
 

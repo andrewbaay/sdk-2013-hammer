@@ -21,16 +21,12 @@ IMaterial* CDummyTexture::errorMaterial = nullptr;
 //-----------------------------------------------------------------------------
 // Purpose: Constructor.
 //-----------------------------------------------------------------------------
-CDummyTexture::CDummyTexture(const char *pszName)
+CDummyTexture::CDummyTexture( const char* pszName )
 {
-	if (pszName != NULL)
-	{
-		strcpy(m_szName, pszName);
-	}
+	if ( pszName != NULL )
+		strcpy( m_szName, pszName );
 	else
-	{
-		strcpy(m_szName, "Missing texture");
-	}
+		strcpy( m_szName, "Missing texture" );
 
 	if ( !errorMaterial )
 	{
@@ -39,24 +35,15 @@ CDummyTexture::CDummyTexture(const char *pszName)
 	}
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Destructor.
-//-----------------------------------------------------------------------------
-CDummyTexture::~CDummyTexture()
+void CDummyTexture::DestroyDummyMaterial()
 {
+	if ( errorMaterial )
+	{
+		errorMaterial->DecrementReferenceCount();
+		errorMaterial->DeleteIfUnreferenced();
+		errorMaterial = nullptr;
+	}
 }
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Returns an empty string, since we have no source file.
-//-----------------------------------------------------------------------------
-const char *CDummyTexture::GetFileName() const
-{
-	static char *pszEmpty = "";
-	return(pszEmpty);
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Returns a string of comma delimited keywords associated with this
@@ -64,14 +51,12 @@ const char *CDummyTexture::GetFileName() const
 // Input  : pszKeywords - Buffer to receive keywords, NULL to query string length.
 // Output : Returns the number of characters in the keyword string.
 //-----------------------------------------------------------------------------
-int CDummyTexture::GetKeywords(char *pszKeywords) const
+int CDummyTexture::GetKeywords( char* pszKeywords ) const
 {
-	if (pszKeywords != NULL)
-	{
+	if ( pszKeywords != NULL )
 		*pszKeywords = '\0';
-	}
 
-	return(0);
+	return 0;
 }
 
 
@@ -80,30 +65,13 @@ int CDummyTexture::GetKeywords(char *pszKeywords) const
 // Input  : *pszName -
 // Output :
 //-----------------------------------------------------------------------------
-// dvs: move into a common place for CWADTexture & CDummyTexture
-int CDummyTexture::GetShortName(char *pszName) const
+int CDummyTexture::GetShortName( char* pszName ) const
 {
-	char szBuf[MAX_PATH];
+	if ( pszName == NULL )
+		return V_strlen( m_szName );
 
-	if (pszName == NULL)
-	{
-		pszName = szBuf;
-	}
-
-	strcpy(pszName, m_szName);
-
-	return(strlen(pszName));
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  : size -
-//-----------------------------------------------------------------------------
-void CDummyTexture::GetSize( SIZE &size ) const
-{
-	size.cx = 0;
-	size.cy = 0;
+	V_strcpy( pszName, m_szName );
+	return V_strlen( pszName );
 }
 
 
@@ -115,19 +83,19 @@ void CDummyTexture::GetSize( SIZE &size ) const
 //			iFontHeight -
 //			dwFlags -
 //-----------------------------------------------------------------------------
-void CDummyTexture::Draw(CDC *pDC, RECT &rect, int iFontHeight, int iIconHeight, DrawTexData_t &DrawTexData)
+void CDummyTexture::Draw( CDC* pDC, const RECT& rect, int iFontHeight, int iIconHeight, const DrawTexData_t& DrawTexData )
 {
-	CFont *pOldFont = (CFont *)pDC->SelectStockObject(ANSI_VAR_FONT);
-	COLORREF crText = pDC->SetTextColor(RGB(0xff, 0xff, 0xff));
-	COLORREF crBack = pDC->SetBkColor(RGB(0, 0, 0));
+	CFont* pOldFont = (CFont*)pDC->SelectStockObject( ANSI_VAR_FONT );
+	COLORREF crText = pDC->SetTextColor( RGB( 0xff, 0xff, 0xff ) );
+	COLORREF crBack = pDC->SetBkColor( RGB( 0, 0, 0 ) );
 
 	auto width = rect.right - rect.left;
 	auto height = rect.bottom - rect.top;
 
 	BITMAPINFO bmi;
-	BITMAPINFOHEADER &bmih = bmi.bmiHeader;
-	memset( &bmih, 0, sizeof( bmih ) );
-	bmih.biSize = sizeof(bmih);
+	memset( &bmi, 0, sizeof( bmi ) );
+	BITMAPINFOHEADER& bmih = bmi.bmiHeader;
+	bmih.biSize = sizeof( BITMAPINFOHEADER );
 	bmih.biWidth = width;
 	bmih.biHeight = height;
 	bmih.biCompression = BI_RGB;
@@ -137,7 +105,9 @@ void CDummyTexture::Draw(CDC *pDC, RECT &rect, int iFontHeight, int iIconHeight,
     bmih.biSizeImage = width * height * 4;
 
 	void* data;
-	auto hdc = CreateCompatibleDC( pDC->m_hDC );
+	CDC hdc;
+	hdc.CreateCompatibleDC( pDC );
+
 	auto bitmap = CreateDIBSection( hdc, &bmi, DIB_RGB_COLORS, &data, NULL, 0x0 );
 	CPixelWriter writer;
 	writer.SetPixelMemory( IMAGE_FORMAT_RGBA8888, data, width * 4 );
@@ -155,24 +125,13 @@ void CDummyTexture::Draw(CDC *pDC, RECT &rect, int iFontHeight, int iIconHeight,
 		}
 	}
 
-	SelectObject( hdc, bitmap );
-	BitBlt( pDC->m_hDC, rect.left, rect.top, width, height, hdc, 0, 0, SRCCOPY );
+	hdc.SelectObject( bitmap );
+	pDC->BitBlt( rect.left, rect.top, width, height, &hdc, 0, 0, SRCCOPY );
 	DeleteObject( bitmap );
-	DeleteDC( hdc );
 
-	pDC->TextOut(rect.left + 2, rect.top + 2, "No Image", 8);
+	pDC->TextOut( rect.left + 2, rect.top + 2, "No Image", 8 );
 
-	pDC->SelectObject(pOldFont);
-	pDC->SetTextColor(crText);
-	pDC->SetBkColor(crBack);
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Loads this texture from disk if it is not already loaded.
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CDummyTexture::Load( void )
-{
-	return(true);
+	pDC->SelectObject( pOldFont );
+	pDC->SetTextColor( crText );
+	pDC->SetBkColor( crBack );
 }

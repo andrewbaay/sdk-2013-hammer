@@ -20,7 +20,6 @@
 #include "materialsystem/IMaterial.h"
 #include "materialsystem/imaterialvar.h"
 #include "materialsystem/ishaderapi.h"
-#include "bitmap/imageformat.h" // hack : don't want to include this just for ImageFormat
 #include "FileSystem.h"
 #include "tier1/strtools.h"
 #include "tier1/fmtstr.h"
@@ -36,21 +35,7 @@
 
 #pragma warning(disable:4244)
 
-#define _GraphicCacheAllocate(n)	malloc(n)
-
-
 MaterialSystem_Config_t g_materialSystemConfig;
-static MaterialHandle_t g_CurrMaterial;
-
-extern void ScaleBitmap(CSize sizeSrc, CSize sizeDest, char *src, char *dest);
-
-
-struct MaterialCacheEntry_t
-{
-	char szName[MAX_PATH];		//
-	CMaterial *pMaterial;		//
-	int nRefCount;				//
-};
 
 
 //-----------------------------------------------------------------------------
@@ -76,13 +61,20 @@ public:
 			i = s_PreviewImagePropertiesCache.Insert( pMaterial, entry );
 		}
 
-		CPreviewImagePropertiesCache::CEntry &entry = s_PreviewImagePropertiesCache[i];
+		const CPreviewImagePropertiesCache::CEntry& entry = s_PreviewImagePropertiesCache[i];
 		*width = entry.m_Width;
 		*height = entry.m_Height;
 		*imageFormat = entry.m_ImageFormat;
 		*isTranslucent = entry.m_bIsTranslucent && pMaterial->GetMaterialVarFlag( MATERIAL_VAR_TRANSLUCENT );
 
 		return entry.m_RetVal;
+	}
+
+	static void InvalidateMaterial( IMaterial* pMaterial )
+	{
+		int i = s_PreviewImagePropertiesCache.Find( pMaterial );
+		if ( i != s_PreviewImagePropertiesCache.InvalidIndex() )
+			s_PreviewImagePropertiesCache.RemoveAt( i );
 	}
 
 private:
@@ -97,7 +89,7 @@ private:
 		PreviewImageRetVal_t m_RetVal;
 	};
 
-	static bool PreviewImageLessFunc( IMaterial* const &a, IMaterial* const &b )
+	static bool PreviewImageLessFunc( IMaterial* const& a, IMaterial* const& b )
 	{
 		return a < b;
 	}
@@ -113,14 +105,13 @@ CUtlMap<IMaterial*, CPreviewImagePropertiesCache::CEntry> CPreviewImagePropertie
 class CMaterialImageCache
 {
 public:
-
-	CMaterialImageCache(int maxNumGraphicsLoaded);
-	~CMaterialImageCache(void);
-	void EnCache( CMaterial *pMaterial );
+	CMaterialImageCache( int maxNumGraphicsLoaded );
+	~CMaterialImageCache();
+	void EnCache( CMaterial* pMaterial );
 
 protected:
 
-	CMaterial **pool;
+	CMaterial** pool;
 	int cacheSize;
 	int currentID;  // next one to get killed.
 };
@@ -130,14 +121,11 @@ protected:
 // Purpose: Constructor. Allocates a pool of material pointers.
 // Input  : maxNumGraphicsLoaded -
 //-----------------------------------------------------------------------------
-CMaterialImageCache::CMaterialImageCache(int maxNumGraphicsLoaded)
+CMaterialImageCache::CMaterialImageCache( int maxNumGraphicsLoaded )
 {
 	cacheSize = maxNumGraphicsLoaded;
 	pool = new CMaterialPtr[cacheSize];
-	if (pool != NULL)
-	{
-		memset(pool, 0, sizeof(CMaterialPtr) * cacheSize);
-	}
+	memset( pool, 0, sizeof( CMaterialPtr ) * cacheSize );
 	currentID = 0;
 }
 
@@ -145,12 +133,9 @@ CMaterialImageCache::CMaterialImageCache(int maxNumGraphicsLoaded)
 //-----------------------------------------------------------------------------
 // Purpose: Destructor. Frees the pool memory.
 //-----------------------------------------------------------------------------
-CMaterialImageCache::~CMaterialImageCache(void)
+CMaterialImageCache::~CMaterialImageCache()
 {
-	if (pool != NULL)
-	{
-		delete [] pool;
-	}
+	delete[] pool;
 }
 
 
@@ -158,19 +143,15 @@ CMaterialImageCache::~CMaterialImageCache(void)
 // Purpose:
 // Input  : *pMaterial -
 //-----------------------------------------------------------------------------
-void CMaterialImageCache::EnCache( CMaterial *pMaterial )
+void CMaterialImageCache::EnCache( CMaterial* pMaterial )
 {
-	if (pMaterial->m_pData != NULL)
-	{
+	if ( pMaterial->m_pData != NULL )
 		// Already cached.
 		return;
-	}
 
 	// kill currentID
-	if ((pool[currentID]) && (pool[currentID]->HasData()))
-	{
+	if ( pool[currentID] && pool[currentID]->HasData() )
 		pool[currentID]->FreeData();
-	}
 
 	pool[currentID] = pMaterial;
 	pMaterial->LoadMaterialImage();
@@ -184,231 +165,39 @@ void CMaterialImageCache::EnCache( CMaterial *pMaterial )
 }
 
 
-static CMaterialImageCache *g_pMaterialImageCache = NULL;
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-CMaterialCache::CMaterialCache(void)
-{
-	m_pCache = NULL;
-	m_nMaxEntries = 0;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-CMaterialCache::~CMaterialCache(void)
-{
-	if (m_pCache != NULL)
-	{
-		delete m_pCache;
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Allocates cache memory for a given number of materials.
-// Input  : nMaxEntries - Maximum number of materials in the cache.
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CMaterialCache::Create(int nMaxEntries)
-{
-	Assert((m_pCache == NULL) && (m_nMaxEntries == 0));
-
-	if (m_pCache != NULL)
-	{
-		delete m_pCache;
-		m_pCache = NULL;
-		m_nMaxEntries = 0;
-	}
-
-	if (nMaxEntries <= 0)
-	{
-		nMaxEntries = 500;
-	}
-
-	m_pCache = new MaterialCacheEntry_t[nMaxEntries];
-
-	if (m_pCache != NULL)
-	{
-		memset(m_pCache, 0, sizeof(m_pCache[0]) * nMaxEntries);
-		m_nMaxEntries = nMaxEntries;
-	}
-
-	return(m_pCache != NULL);
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Factory. Creates a material by name, first looking in the cache.
-// Input  : pszMaterialName - Name of material, ie "brick/brickfloor01".
-// Output : Returns a pointer to the new material object, NULL if the given
-//			material did not exist.
-//-----------------------------------------------------------------------------
-CMaterial *CMaterialCache::CreateMaterial(const char *pszMaterialName)
-{
-	CMaterial *pMaterial = NULL;
-
-	if (pszMaterialName != NULL)
-	{
-		//
-		// Find this material in the cache. If it is here, return it.
-		//
-		pMaterial = FindMaterial(pszMaterialName);
-		if (pMaterial == NULL)
-		{
-			//
-			// Not found in the cache, try to create it.
-			//
-			pMaterial = CMaterial::CreateMaterial(pszMaterialName, true);
-			if (pMaterial != NULL)
-			{
-				//
-				// Success. Add the newly created material to the cache.
-				//
-				AddMaterial(pMaterial);
-				return(pMaterial);
-			}
-		}
-		else
-		{
-			//
-			// Found in the cache, bump the reference count.
-			//
-			AddRef(pMaterial);
-		}
-	}
-
-	return(pMaterial);
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Finds a material in the cache.
-// Input  : char *pszMaterialName -
-// Output : CMaterial
-//-----------------------------------------------------------------------------
-void CMaterialCache::AddMaterial(CMaterial *pMaterial)
-{
-	if (pMaterial != NULL)
-	{
-		Assert(m_nEntries < m_nMaxEntries);
-
-		if (m_nEntries < m_nMaxEntries)
-		{
-			m_pCache[m_nEntries].pMaterial = pMaterial;
-			m_pCache[m_nEntries].nRefCount = 1;
-			m_nEntries++;
-		}
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Increments the reference count on a material in the cache. Called by
-//			client code when a pointer to the model is copied, making that
-//			reference independent.
-// Input  : pModel - Model for which to increment the reference count.
-//-----------------------------------------------------------------------------
-void CMaterialCache::AddRef(CMaterial *pMaterial)
-{
-	for (int i = 0; i < m_nEntries; i++)
-	{
-		if (m_pCache[i].pMaterial == pMaterial)
-		{
-			m_pCache[i].nRefCount++;
-			return;
-		}
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Finds a material in the cache by name.
-// Input  : char *pszMaterialName -
-// Output : CMaterial
-//-----------------------------------------------------------------------------
-CMaterial *CMaterialCache::FindMaterial(const char *pszMaterialName)
-{
-	if (pszMaterialName != NULL)
-	{
-		for (int i = 0; i < m_nEntries; i++)
-		{
-			if (!stricmp(m_pCache[i].pMaterial->GetName(), pszMaterialName))
-			{
-				return(m_pCache[i].pMaterial);
-			}
-		}
-	}
-
-	return(NULL);
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Decrements the reference count of a material, deleting it and
-//			removing it from the cache if its reference count becomes zero.
-// Input  : pMaterial - Material to release.
-//-----------------------------------------------------------------------------
-void CMaterialCache::Release(CMaterial *pMaterial)
-{
-	if (pMaterial != NULL)
-	{
-		for (int i = 0; i < m_nEntries; i++)
-		{
-			if (m_pCache[i].pMaterial == pMaterial)
-			{
-				m_pCache[i].nRefCount--;
-				if (m_pCache[i].nRefCount == 0)
-				{
-					delete m_pCache[i].pMaterial;
-
-					m_nEntries--;
-					m_pCache[i] = m_pCache[m_nEntries];
-
-					memset(&m_pCache[m_nEntries], 0, sizeof(m_pCache[0]));
-				}
-
-				break;
-			}
-		}
-	}
-}
+static CMaterialImageCache* g_pMaterialImageCache = NULL;
 
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor. Initializes data members.
 //-----------------------------------------------------------------------------
-CMaterial::CMaterial(void)
+CMaterial::CMaterial()
 {
-	memset(m_szName, 0, sizeof(m_szName));
-	memset(m_szFileName, 0, sizeof(m_szFileName));
-	memset(m_szKeywords, 0, sizeof(m_szKeywords));
+	memset( m_szName, 0, sizeof( m_szName ) );
+	memset( m_szFileName, 0, sizeof( m_szFileName ) );
+	memset( m_szKeywords, 0, sizeof( m_szKeywords ) );
 
 	m_nWidth = 0;
 	m_nHeight = 0;
-    m_nTextureID = 0;
 	m_pData = NULL;
 	m_bLoaded = false;
 	m_pMaterial = NULL;
 	m_TranslucentBaseTexture = false;
+	m_bIsWater = TRS_NONE;
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose: Destructor. Frees texture image data and palette.
 //-----------------------------------------------------------------------------
-CMaterial::~CMaterial(void)
+CMaterial::~CMaterial()
 {
 	//
 	// Free image data.
 	//
 	if (m_pData != NULL)
 	{
-		free(m_pData);
+		free( m_pData );
 		m_pData = NULL;
 	}
 
@@ -426,48 +215,34 @@ CMaterial::~CMaterial(void)
 //-----------------------------------------------------------------------------
 // Finds all .VMT files in a particular directory
 //-----------------------------------------------------------------------------
-bool CMaterial::LoadMaterialsInDirectory( char const* pDirectoryName, int nDirectoryNameLen,
-						IMaterialEnumerator *pEnum, int nContext, int nFlags )
+bool CMaterial::LoadMaterialsInDirectory( char const* pDirectoryName, IMaterialEnumerator* pEnum, int nContext, int nFlags )
 {
-	//Assert( Q_strnicmp( pDirectoryName, "materials", 9 ) == 0 );
-
-	char *pWildCard;
-	pWildCard = ( char * )stackalloc( nDirectoryNameLen + 7 );
-	Q_snprintf( pWildCard, nDirectoryNameLen + 7, "%s/*.vmt", pDirectoryName );
-
-	if ( !g_pFileSystem )
-	{
+	CFmtStrN<MAX_PATH> pWildCard( "%s/*.vmt", pDirectoryName );
+	if ( !g_pFullFileSystem )
 		return false;
-	}
 
 	FileFindHandle_t findHandle;
-	const char *pFileName = g_pFullFileSystem->FindFirstEx( pWildCard, "GAME", &findHandle );
-	while( pFileName )
+	const char* pFileName = g_pFullFileSystem->FindFirstEx( pWildCard, "GAME", &findHandle );
+	while ( pFileName )
 	{
-		if (IsIgnoredMaterial(pFileName))
+		if ( IsIgnoredMaterial( pFileName ) )
 		{
 			pFileName = g_pFullFileSystem->FindNext( findHandle );
 			continue;
 		}
 
-		if( !g_pFullFileSystem->FindIsDirectory( findHandle ) )
+		if ( !g_pFullFileSystem->FindIsDirectory( findHandle ) )
 		{
 			// Strip off the 'materials/' part of the material name.
-			char *pFileNameWithPath;
-			int nAllocSize = nDirectoryNameLen + Q_strlen(pFileName) + 2;
-			pFileNameWithPath = (char *)stackalloc( nAllocSize );
-			Q_snprintf(	pFileNameWithPath, nAllocSize, "%s/%s", &pDirectoryName[MATERIAL_PREFIX_LEN], pFileName );
-			Q_strnlwr( pFileNameWithPath, nAllocSize );
+			CFmtStrN<MAX_PATH> pFileNameWithPath( "%s/%s", &pDirectoryName[MATERIAL_PREFIX_LEN], pFileName );
+			V_strnlwr( pFileNameWithPath.Access(), pFileNameWithPath.Length() );
 
 			// Strip off the extension...
-			char *pExt = Q_strrchr( pFileNameWithPath, '.');
-			if (pExt)
+			if ( char* pExt = V_strrchr( pFileNameWithPath.Access(), '.' ) )
 				*pExt = 0;
 
-			if (!pEnum->EnumMaterial( pFileNameWithPath, nContext ))
-			{
+			if ( !pEnum->EnumMaterial( pFileNameWithPath, nContext ) )
 				return false;
-			}
 		}
 		pFileName = g_pFullFileSystem->FindNext( findHandle );
 	}
@@ -481,45 +256,36 @@ bool CMaterial::LoadMaterialsInDirectory( char const* pDirectoryName, int nDirec
 // It only finds their names so we can generate shell materials for them
 // that we can load up at a later time
 //-----------------------------------------------------------------------------
-bool CMaterial::InitDirectoryRecursive( char const* pDirectoryName,
-						IMaterialEnumerator *pEnum, int nContext, int nFlags )
+bool CMaterial::InitDirectoryRecursive( char const* pDirectoryName, IMaterialEnumerator* pEnum, int nContext, int nFlags )
 {
 	// Make sure this is an ok directory, otherwise don't bother
-	if (ShouldSkipMaterial( pDirectoryName + MATERIAL_PREFIX_LEN, nFlags ))
+	if ( ShouldSkipMaterial( pDirectoryName + MATERIAL_PREFIX_LEN, nFlags ) )
 		return true;
 
-	// Compute directory name length
-	int nDirectoryNameLen = Q_strlen( pDirectoryName );
-
-	if (!LoadMaterialsInDirectory( pDirectoryName, nDirectoryNameLen, pEnum, nContext, nFlags ))
+	if ( !LoadMaterialsInDirectory( pDirectoryName, pEnum, nContext, nFlags ) )
 		return false;
 
-	char *pWildCard = ( char * )stackalloc( nDirectoryNameLen + 5 );
-	strcpy(pWildCard, pDirectoryName);
-	strcat(pWildCard, "/*.*");
-	int nPathStrLen = nDirectoryNameLen + 1;
-
 	FileFindHandle_t findHandle;
-	const char *pFileName = g_pFullFileSystem->FindFirstEx( pWildCard, "GAME", &findHandle );
-	while( pFileName )
+	CFmtStrN<MAX_PATH> pWildCard( "%s/*.*", pDirectoryName );
+	const char* pFileName = g_pFullFileSystem->FindFirstEx( pWildCard, "GAME", &findHandle );
+	while ( pFileName )
 	{
-		if (!IsIgnoredMaterial(pFileName))
+		if ( IsIgnoredMaterial( pFileName ) )
 		{
-			if ((pFileName[0] != '.') || (pFileName[1] != '.' && pFileName[1] != 0))
-			{
-				if( g_pFullFileSystem->FindIsDirectory( findHandle ) )
-				{
-					int fileNameStrLen = Q_strlen( pFileName );
-					char *pFileNameWithPath = ( char * )stackalloc( nPathStrLen + fileNameStrLen + 1 );
-					memcpy( pFileNameWithPath, pWildCard, nPathStrLen );
-					pFileNameWithPath[nPathStrLen] = '\0';
-					Q_strncat( pFileNameWithPath, pFileName, nPathStrLen + fileNameStrLen + 1 );
+			pFileName = g_pFullFileSystem->FindNext( findHandle );
+			continue;
+		}
 
-					if (!InitDirectoryRecursive( pFileNameWithPath, pEnum, nContext, nFlags ))
-						return false;
-				}
+		if ( pFileName[0] != '.' || ( pFileName[1] != '.' && pFileName[1] != 0 ) )
+		{
+			if ( g_pFullFileSystem->FindIsDirectory( findHandle ) )
+			{
+				CFmtStrN<MAX_PATH> pFileNameWithPath( "%s/%s", pDirectoryName, pFileName );
+				if ( !InitDirectoryRecursive( pFileNameWithPath, pEnum, nContext, nFlags ) )
+					return false;
 			}
 		}
+
 		pFileName = g_pFullFileSystem->FindNext( findHandle );
 	}
 
@@ -532,7 +298,7 @@ bool CMaterial::InitDirectoryRecursive( char const* pDirectoryName,
 // It only finds their names so we can generate shell materials for them
 // that we can load up at a later time
 //-----------------------------------------------------------------------------
-void CMaterial::EnumerateMaterials( IMaterialEnumerator *pEnum, const char *szRoot, int nContext, int nFlags )
+void CMaterial::EnumerateMaterials( IMaterialEnumerator* pEnum, const char* szRoot, int nContext, int nFlags )
 {
 	InitDirectoryRecursive( szRoot, pEnum, nContext, nFlags );
 }
@@ -547,55 +313,26 @@ void CMaterial::EnumerateMaterials( IMaterialEnumerator *pEnum, const char *szRo
 //				INCLUDE_MODEL_MATERIALS
 // Output : Returns true to skip, false to not skip this material.
 //-----------------------------------------------------------------------------
-bool CMaterial::ShouldSkipMaterial(const char *pszName, int nFlags)
+bool CMaterial::ShouldSkipMaterial( const char* pszName, int nFlags )
 {
 	//static char szStrippedName[MAX_PATH];
 
 	// if NULL skip it
-	if( !pszName )
+	if ( !pszName )
 		return true;
 
 	//
 	// check against the list of exclusion directories
 	//
-	for( int i = 0; i < g_pGameConfig->m_MaterialExclusions.Count(); i++ )
+	for ( int i = 0; i < g_pGameConfig->m_MaterialExclusions.Count(); i++ )
 	{
 		// This will guarantee the match is at the start of the string
-		const char *pMatchFound = V_stristr( pszName, g_pGameConfig->m_MaterialExclusions[i].szDirectory );
-		if( pMatchFound == pszName )
+		const char* pMatchFound = V_stristr( pszName, g_pGameConfig->m_MaterialExclusions[i].szDirectory );
+		if ( pMatchFound == pszName )
 			return true;
 	}
 
 	return false;
-
-#if 0
-	bool bSkip = false;
-
-	if (pszName != NULL)
-	{
-		if (!(nFlags & INCLUDE_MODEL_MATERIALS))
-		{
-			if (_strnicmp(pszName, "models/", 7) == 0)
-			{
-				bSkip = true;
-			}
-		}
-
-		if (!(nFlags & INCLUDE_WORLD_MATERIALS))
-		{
-			if (_strnicmp(pszName, "models/", 7) != 0)
-			{
-				bSkip = true;
-			}
-		}
-	}
-	else
-	{
-		bSkip = true;
-	}
-
-	return(bSkip);
-#endif
 }
 
 
@@ -605,38 +342,34 @@ bool CMaterial::ShouldSkipMaterial(const char *pszName, int nFlags)
 // Output : Returns a pointer to the new material object, NULL if the given
 //			material did not exist.
 //-----------------------------------------------------------------------------
-CMaterial *CMaterial::CreateMaterial(const char *pszMaterialName, bool bLoadImmediately, bool* pFound)
+CMaterial* CMaterial::CreateMaterial( const char* pszMaterialName, bool bLoadImmediately, bool* pFound )
 {
-	Assert (pszMaterialName);
-
- 	CMaterial *pMaterial = new CMaterial;
-	Assert( pMaterial );
+	Assert( pszMaterialName );
+	CMaterial* pMaterial = new CMaterial;
 
 	// Store off the material name so we can load it later if we need to
-	Q_snprintf( pMaterial->m_szFileName, MAX_PATH, pszMaterialName );
-	Q_snprintf( pMaterial->m_szName, MAX_PATH, pszMaterialName );
+	V_sprintf_safe( pMaterial->m_szFileName, pszMaterialName );
+	V_sprintf_safe( pMaterial->m_szName, pszMaterialName );
 
 	//
 	// Find the material by name and load it.
 	//
-	if (bLoadImmediately)
+	if ( bLoadImmediately )
 	{
-		bool bFound = pMaterial->LoadMaterial();
-
 		// Returns if the material was found or not
-		if (pFound)
+		if ( bool bFound = pMaterial->LoadMaterial(); pFound )
 			*pFound = bFound;
 	}
 
 	return pMaterial;
 }
 
-bool CMaterial::IsIgnoredMaterial( const char *pName )
+bool CMaterial::IsIgnoredMaterial( const char* pName )
 {
-	//TODO: make this a customizable user option?
-	if ( !Q_strnicmp(pName, "debug", 5) ||
-		!Q_strnicmp(pName, ".svn", 4) || strstr (pName, ".svn") ||
-		!Q_strnicmp(pName, "models", 6) || strstr (pName, "models") )
+	// TODO: make this a customizable user option?
+	if ( !V_strnicmp( pName, "debug", 5 ) ||
+		!V_strnicmp( pName, ".svn", 4 ) || V_strstr( pName, ".svn" ) ||
+		!V_strnicmp( pName, "models", 6 ) || V_strstr( pName, "models" ) )
 		return true;
 
 	return false;
@@ -648,38 +381,27 @@ bool CMaterial::IsIgnoredMaterial( const char *pName )
 bool CMaterial::LoadMaterial()
 {
 	bool bFound = true;
-	if (!m_bLoaded)
+	if ( !m_bLoaded )
 	{
-		if (IsIgnoredMaterial(m_szFileName))
-		{
+		if ( IsIgnoredMaterial( m_szFileName ) )
 			return false;
-		}
 
 		m_bLoaded = true;
 
-		IMaterial *pMat = materials->FindMaterial(m_szFileName, TEXTURE_GROUP_OTHER);
+		IMaterial* pMat = materials->FindMaterial( m_szFileName, TEXTURE_GROUP_OTHER );
 		if ( IsErrorMaterial( pMat ) )
 			bFound = false;
 
 		Assert( pMat );
 
-		if (!pMat)
-		{
+		if ( !pMat )
 			return false;
-		}
 
-		if (!LoadMaterialHeader(pMat))
+		if ( !LoadMaterialHeader( pMat ) )
 		{
-			// dvs: yeaaaaaaaaah, we're gonna disable this until the spew can be reduced
-			//Msg( mwError,"Load material header failed: %s", m_szFileName );
-
 			bFound = false;
-			pMat = materials->FindMaterial("debug/debugempty", TEXTURE_GROUP_OTHER);
-
-			if (pMat)
-			{
-				LoadMaterialHeader(pMat);
-			}
+			if ( ( pMat = materials->FindMaterial( "debug/debugempty", TEXTURE_GROUP_OTHER ) ) != nullptr )
+				LoadMaterialHeader( pMat );
 		}
 	}
 
@@ -693,37 +415,39 @@ bool CMaterial::LoadMaterial()
 void CMaterial::Reload( bool bFullReload )
 {
 	// Don't bother if we're not loaded yet
-	if (!m_bLoaded)
+	if ( !m_bLoaded )
 		return;
 
 	FreeData();
 
 	if ( m_pMaterial )
 	{
+		CPreviewImagePropertiesCache::InvalidateMaterial( m_pMaterial );
 		m_pMaterial->DecrementReferenceCount();
 	}
-	m_pMaterial = materials->FindMaterial(m_szFileName, TEXTURE_GROUP_OTHER);
+	m_pMaterial = materials->FindMaterial( m_szFileName, TEXTURE_GROUP_OTHER );
 	Assert( m_pMaterial );
 
 	if ( bFullReload )
 		m_pMaterial->Refresh();
 
-	PreviewImageRetVal_t retVal;
 	bool translucentBaseTexture;
 	ImageFormat eImageFormat;
 	int width, height;
-	retVal = m_pMaterial->GetPreviewImageProperties(&width, &height, &eImageFormat, &translucentBaseTexture);
-	if (retVal == MATERIAL_PREVIEW_IMAGE_BAD)
-		return;
+	PreviewImageRetVal_t retVal = CPreviewImagePropertiesCache::GetPreviewImageProperties( m_pMaterial, &width, &height, &eImageFormat, &translucentBaseTexture );
+	if ( retVal == MATERIAL_PREVIEW_IMAGE_OK )
+	{
+		m_nWidth = width;
+		m_nHeight = height;
+		m_TranslucentBaseTexture = translucentBaseTexture;
+	}
 
-	m_nWidth = width;
-	m_nHeight = height;
-	m_TranslucentBaseTexture = translucentBaseTexture;
+	m_bIsWater = TRS_NONE;
 
 	// Find the keywords for this material from the vmt file.
 	bool bFound;
-	IMaterialVar *pVar = m_pMaterial->FindVar("%keywords", &bFound, false);
-	if (bFound)
+	IMaterialVar* pVar = m_pMaterial->FindVar( "%keywords", &bFound, false );
+	if ( bFound )
 	{
 		V_strcpy_safe( m_szKeywords, pVar->GetStringValue() );
 
@@ -732,10 +456,8 @@ void CMaterial::Reload( bool bFullReload )
 	}
 
 	// Make sure to bump the refcount again. Not sure why this wasn't always done (check for leaks).
-	if (m_pMaterial)
-	{
+	if ( m_pMaterial )
 		m_pMaterial->IncrementReferenceCount();
-	}
 }
 
 
@@ -754,12 +476,12 @@ IMaterial* CMaterial::GetMaterial( bool bForceLoad )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CMaterial::DrawIcon( CDC *pDC, CMaterial* pIcon, RECT& dstRect )
+void CMaterial::DrawIcon( CDC* pDC, CMaterial* pIcon, RECT& dstRect )
 {
-	if (!pIcon)
+	if ( !pIcon )
 		return;
 
-	g_pMaterialImageCache->EnCache(pIcon);
+	g_pMaterialImageCache->EnCache( pIcon );
 
 	RECT rect, dst;
 	rect.left = 0; rect.right = pIcon->GetWidth();
@@ -783,13 +505,13 @@ void CMaterial::DrawIcon( CDC *pDC, CMaterial* pIcon, RECT& dstRect )
 //			dstRect -
 //			detectErrors -
 //-----------------------------------------------------------------------------
-void CMaterial::DrawBrowserIcons( CDC *pDC, RECT& dstRect, bool detectErrors )
+void CMaterial::DrawBrowserIcons( CDC* pDC, RECT& dstRect, bool detectErrors )
 {
-	static CMaterial* pTranslucentIcon = 0;
-	static CMaterial* pOpaqueIcon = 0;
-	static CMaterial* pSelfIllumIcon = 0;
-	static CMaterial* pBaseAlphaEnvMapMaskIcon = 0;
-	static CMaterial* pErrorIcon = 0;
+	static CMaterial* pTranslucentIcon = nullptr;
+	static CMaterial* pOpaqueIcon = nullptr;
+	static CMaterial* pSelfIllumIcon = nullptr;
+	static CMaterial* pBaseAlphaEnvMapMaskIcon = nullptr;
+	static CMaterial* pErrorIcon = nullptr;
 
 	if ( !pTranslucentIcon )
 	{
@@ -808,43 +530,32 @@ void CMaterial::DrawBrowserIcons( CDC *pDC, RECT& dstRect, bool detectErrors )
 	}
 
 	bool error = false;
-
 	IMaterial* pMaterial = GetMaterial();
 	if ( pMaterial->GetMaterialVarFlag( MATERIAL_VAR_TRANSLUCENT ) )
 	{
 		DrawIcon( pDC, pTranslucentIcon, dstRect );
-		if (detectErrors)
-		{
+		if ( detectErrors )
 			error = error || !m_TranslucentBaseTexture;
-		}
 	}
 	else
-	{
 		DrawIcon( pDC, pOpaqueIcon, dstRect );
-	}
 
 	if ( pMaterial->GetMaterialVarFlag( MATERIAL_VAR_SELFILLUM ))
 	{
 		DrawIcon( pDC, pSelfIllumIcon, dstRect );
-		if (detectErrors)
-		{
+		if ( detectErrors )
 			error = error || !m_TranslucentBaseTexture;
-		}
 	}
 
-	if ( pMaterial->GetMaterialVarFlag( MATERIAL_VAR_BASEALPHAENVMAPMASK ))
+	if ( pMaterial->GetMaterialVarFlag( MATERIAL_VAR_BASEALPHAENVMAPMASK ) )
 	{
 		DrawIcon( pDC, pBaseAlphaEnvMapMaskIcon, dstRect );
-		if (detectErrors)
-		{
+		if ( detectErrors )
 			error = error || !m_TranslucentBaseTexture;
-		}
 	}
 
-	if (error)
-	{
+	if ( error )
 		DrawIcon( pDC, pErrorIcon, dstRect );
-	}
 }
 
 
@@ -854,20 +565,15 @@ void CMaterial::DrawBrowserIcons( CDC *pDC, RECT& dstRect, bool detectErrors )
 //			srcRect -
 //			dstRect -
 //-----------------------------------------------------------------------------
-void CMaterial::DrawBitmap( CDC *pDC, RECT& srcRect, RECT& dstRect )
+void CMaterial::DrawBitmap( CDC* pDC, const RECT& srcRect, const RECT& dstRect )
 {
-	static struct
-	{
-		BITMAPINFOHEADER bmih;
-		unsigned short colorindex[256];
-	} bmi;
-
 	int srcWidth = srcRect.right - srcRect.left;
 	int srcHeight = srcRect.bottom - srcRect.top;
 
-	BITMAPINFOHEADER &bmih = bmi.bmih;
-	memset(&bmih, 0, sizeof(bmih));
-	bmih.biSize = sizeof(bmih);
+	BITMAPINFO bmi;
+	memset( &bmi, 0, sizeof( bmi ) );
+	BITMAPINFOHEADER& bmih = bmi.bmiHeader;
+	bmih.biSize = sizeof( BITMAPINFOHEADER );
 	bmih.biWidth = srcWidth;
 	bmih.biHeight = -srcHeight;
 	bmih.biCompression = BI_RGB;
@@ -876,24 +582,16 @@ void CMaterial::DrawBitmap( CDC *pDC, RECT& srcRect, RECT& dstRect )
 	bmih.biBitCount = m_TranslucentBaseTexture ? 32 : 24;
     bmih.biSizeImage = m_nWidth * m_nHeight * ( m_TranslucentBaseTexture ? 4 : 3 );
 
-	static BOOL bInit = false;
-	if (!bInit)
-	{
-		bInit = true;
-		for (int i = 0; i < 256; i++)
-		{
-			bmi.colorindex[i] = i;
-		}
-	}
-
 	int dest_width = dstRect.right - dstRect.left;
 	int dest_height = dstRect.bottom - dstRect.top;
 
 	if ( m_TranslucentBaseTexture )
 	{
 		void* data;
-		auto hdc = CreateCompatibleDC( pDC->m_hDC );
-		auto bitmap = CreateDIBSection( hdc, (BITMAPINFO*)&bmi, DIB_RGB_COLORS, &data, NULL, 0x0 );
+		CDC hdc;
+		hdc.CreateCompatibleDC( pDC );
+
+		auto bitmap = CreateDIBSection( hdc, &bmi, DIB_RGB_COLORS, &data, NULL, 0x0 );
 		CPixelWriter writer;
 		writer.SetPixelMemory( IMAGE_FORMAT_BGRA8888, data, m_nWidth * 4 );
 
@@ -910,33 +608,26 @@ void CMaterial::DrawBitmap( CDC *pDC, RECT& srcRect, RECT& dstRect )
 			}
 		}
 
-		SelectObject( hdc, bitmap );
-		BitBlt( pDC->m_hDC, dstRect.left, dstRect.top, dest_width, dest_height, hdc, srcRect.left, -srcRect.top, SRCCOPY );
+		hdc.SelectObject( bitmap );
+		pDC->BitBlt( dstRect.left, dstRect.top, dest_width, dest_height, &hdc, srcRect.left, -srcRect.top, SRCCOPY );
 		DeleteObject( bitmap );
 
 		bitmap = CreateBitmap( srcWidth, srcHeight, 1, 32, m_pData );
-		SelectObject( hdc, bitmap );
+		hdc.SelectObject( bitmap );
 
-		BLENDFUNCTION bf{ AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
-
-		if ( !AlphaBlend( pDC->m_hDC, dstRect.left, dstRect.top, dest_width, dest_height, hdc, srcRect.left, -srcRect.top, srcWidth, srcHeight, bf ))
-		{
-			Msg(mwError, "CMaterial::Draw(): AlphaBlend failed.");
-		}
+		constexpr BLENDFUNCTION bf{ AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
+		if ( !pDC->AlphaBlend( dstRect.left, dstRect.top, dest_width, dest_height, &hdc, srcRect.left, -srcRect.top, srcWidth, srcHeight, bf ) )
+			Msg( mwError, "CMaterial::Draw(): AlphaBlend failed." );
 
 		DeleteObject( bitmap );
-		DeleteDC( hdc );
 		return;
 	}
 
 	// ** bits **
-	SetStretchBltMode(pDC->m_hDC, COLORONCOLOR);
-
-	if (StretchDIBits(pDC->m_hDC, dstRect.left, dstRect.top, dest_width, dest_height,
-		srcRect.left, -srcRect.top, srcWidth, srcHeight, m_pData, (BITMAPINFO*)&bmi, DIB_RGB_COLORS, SRCCOPY) == GDI_ERROR)
-	{
-		Msg(mwError, "CMaterial::Draw(): StretchDIBits failed.");
-	}
+	pDC->SetStretchBltMode( COLORONCOLOR );
+	if ( StretchDIBits( pDC->m_hDC, dstRect.left, dstRect.top, dest_width, dest_height,
+						srcRect.left, -srcRect.top, srcWidth, srcHeight, m_pData, &bmi, DIB_RGB_COLORS, SRCCOPY ) == GDI_ERROR )
+		Msg( mwError, "CMaterial::Draw(): StretchDIBits failed." );
 }
 
 
@@ -947,42 +638,33 @@ void CMaterial::DrawBitmap( CDC *pDC, RECT& srcRect, RECT& dstRect )
 //			iFontHeight -
 //			dwFlags -
 //-----------------------------------------------------------------------------
-void CMaterial::Draw(CDC *pDC, RECT& rect, int iFontHeight, int iIconHeight, DrawTexData_t &DrawTexData)//, BrowserData_t *pBrowserData)
+void CMaterial::Draw( CDC* pDC, const RECT& rect, int iFontHeight, int iIconHeight, const DrawTexData_t& DrawTexData )
 {
-	g_pMaterialImageCache->EnCache(this);
-	if (!this->HasData())
-	{
-		return;
-	}
-
-	if (m_nWidth <= 0)
+	g_pMaterialImageCache->EnCache( this );
+	if ( !HasData() )
 	{
 NoData:
 		// draw "no data"
-		CFont *pOldFont = (CFont*) pDC->SelectStockObject(ANSI_VAR_FONT);
-		COLORREF cr = pDC->SetTextColor(RGB(0xff, 0xff, 0xff));
-		COLORREF cr2 = pDC->SetBkColor(RGB(0, 0, 0));
+		CFont* pOldFont = (CFont*)pDC->SelectStockObject( ANSI_VAR_FONT );
+		COLORREF cr = pDC->SetTextColor( RGB( 0xff, 0xff, 0xff ) );
+		COLORREF cr2 = pDC->SetBkColor( RGB( 0, 0, 0 ) );
 
 		// draw black rect first
-		pDC->FillRect(&rect, CBrush::FromHandle(HBRUSH(GetStockObject(BLACK_BRUSH))));
+		pDC->FillRect( &rect, CBrush::FromHandle( HBRUSH( GetStockObject( BLACK_BRUSH ) ) ) );
 
 		// then text
-		pDC->TextOut(rect.left+2, rect.top+2, "No Image", 8);
-		pDC->SelectObject(pOldFont);
-		pDC->SetTextColor(cr);
-		pDC->SetBkColor(cr2);
+		pDC->TextOut( rect.left + 2, rect.top + 2, "No Image", 8 );
+		pDC->SelectObject( pOldFont );
+		pDC->SetTextColor( cr );
+		pDC->SetBkColor( cr2 );
 		return;
 	}
 
 	// no data -
-	if (!m_pData)
+	if ( !m_pData && !Load() )
 	{
-		// try to load -
-		if (!Load())
-		{
-			// can't load -
-			goto NoData;
-		}
+		// can't load -
+		goto NoData;
 	}
 
 	// Draw the material image
@@ -993,63 +675,53 @@ NoData:
 	srcRect.bottom = m_nHeight;
 	dstRect = rect;
 
-	if (DrawTexData.nFlags & drawCaption)
-	{
-		dstRect.bottom -= iFontHeight +  4;
-	}
-	if (DrawTexData.nFlags & drawIcons)
-	{
+	if ( DrawTexData.nFlags & drawCaption )
+		dstRect.bottom -= iFontHeight + 4;
+	if ( DrawTexData.nFlags & drawIcons )
 		dstRect.bottom -= iIconHeight;
-	}
 
-	if (!(DrawTexData.nFlags & drawResizeAlways))
+	if ( !( DrawTexData.nFlags & drawResizeAlways ) )
 	{
-		if (m_nWidth < dstRect.right - dstRect.left )
-		{
+		if ( m_nWidth < dstRect.right - dstRect.left )
 			dstRect.right = dstRect.left + m_nWidth;
-		}
 
-		if (m_nHeight < dstRect.bottom - dstRect.top )
-		{
+		if ( m_nHeight < dstRect.bottom - dstRect.top )
 			dstRect.bottom = dstRect.top + m_nHeight;
-		}
 	}
 	DrawBitmap( pDC, srcRect, dstRect );
 
 	// Draw the icons
-	if (DrawTexData.nFlags & drawIcons)
+	if ( DrawTexData.nFlags & drawIcons )
 	{
 		dstRect = rect;
-		if (DrawTexData.nFlags & drawCaption)
-		{
+		if ( DrawTexData.nFlags & drawCaption )
 			dstRect.bottom -= iFontHeight + 5;
-		}
 		dstRect.top = dstRect.bottom - iIconHeight;
-		DrawBrowserIcons(pDC, dstRect, (DrawTexData.nFlags & drawErrors) != 0 );
+		DrawBrowserIcons( pDC, dstRect, ( DrawTexData.nFlags & drawErrors ) != 0 );
 	}
 
 	// ** caption **
-	if (DrawTexData.nFlags & drawCaption)
+	if ( DrawTexData.nFlags & drawCaption )
 	{
 		// draw background for name
-		CBrush brCaption(RGB(0, 0, 255));
-		CRect rcCaption(rect);
+		CBrush brCaption( RGB( 0, 0, 255 ) );
+		CRect  rcCaption( rect );
 
-		rcCaption.top = rcCaption.bottom - (iFontHeight + 5);
-		pDC->FillRect(rcCaption, &brCaption);
+		rcCaption.top = rcCaption.bottom - ( iFontHeight + 5 );
+		pDC->FillRect( rcCaption, &brCaption );
 
 		// draw name
 		char szShortName[MAX_PATH];
-		int iLen = GetShortName(szShortName);
-		pDC->TextOut(rect.left, rect.bottom - (iFontHeight + 4), szShortName, iLen);
+		int iLen = GetShortName( szShortName );
+		pDC->TextOut( rect.left, rect.bottom - ( iFontHeight + 4 ), szShortName, iLen );
 
 		// draw usage count
-		if (DrawTexData.nFlags & drawUsageCount)
+		if ( DrawTexData.nFlags & drawUsageCount )
 		{
 			CString str;
-			str.Format("%d", DrawTexData.nUsageCount);
-			CSize size = pDC->GetTextExtent(str);
-			pDC->TextOut(rect.right - size.cx, rect.bottom - (iFontHeight + 4), str);
+			str.Format( "%d", DrawTexData.nUsageCount );
+			CSize size = pDC->GetTextExtent( str );
+			pDC->TextOut( rect.right - size.cx, rect.bottom - ( iFontHeight + 4 ), str );
 		}
 	}
 }
@@ -1058,7 +730,7 @@ NoData:
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CMaterial::FreeData( void )
+void CMaterial::FreeData()
 {
 	free( m_pData );
 	m_pData = NULL;
@@ -1071,16 +743,15 @@ void CMaterial::FreeData( void )
 // Input  : pszKeywords - Buffer to receive keywords, NULL to query string length.
 // Output : Returns the number of characters in the keyword string.
 //-----------------------------------------------------------------------------
-int CMaterial::GetKeywords(char *pszKeywords) const
+int CMaterial::GetKeywords( char* pszKeywords ) const
 {
 	// To access keywords, we have to have the header loaded
-	const_cast<CMaterial*>(this)->Load();
-	if (pszKeywords != NULL)
-	{
-		strcpy(pszKeywords, m_szKeywords);
-	}
+	const_cast<CMaterial*>( this )->Load();
+	if ( pszKeywords == NULL )
+		return V_strlen( m_szKeywords );
 
-	return(strlen(m_szKeywords));
+	V_strcpy( pszKeywords, m_szKeywords );
+	return V_strlen( m_szKeywords );
 }
 
 
@@ -1089,14 +760,13 @@ int CMaterial::GetKeywords(char *pszKeywords) const
 // Input  : *pszName -
 // Output : int
 //-----------------------------------------------------------------------------
-int CMaterial::GetShortName(char *pszName) const
+int CMaterial::GetShortName( char* pszName ) const
 {
-	if (pszName != NULL)
-	{
-		strcpy(pszName, m_szName);
-	}
+	if ( pszName == NULL )
+		return V_strlen(m_szName);
 
-	return(strlen(m_szName));
+	V_strcpy( pszName, m_szName );
+	return V_strlen( m_szName );
 }
 
 
@@ -1105,14 +775,14 @@ int CMaterial::GetShortName(char *pszName) const
 // Input  : material -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool CMaterial::LoadMaterialHeader( IMaterial *pMat )
+bool CMaterial::LoadMaterialHeader( IMaterial* pMat )
 {
 	PreviewImageRetVal_t retVal;
 	bool translucentBaseTexture;
 	ImageFormat eImageFormat;
 	int width, height;
 	retVal = CPreviewImagePropertiesCache::GetPreviewImageProperties( pMat, &width, &height, &eImageFormat, &translucentBaseTexture);
-	if (retVal == MATERIAL_PREVIEW_IMAGE_BAD)
+	if ( retVal == MATERIAL_PREVIEW_IMAGE_BAD )
 		return false;
 
 	m_pMaterial = pMat;
@@ -1124,8 +794,8 @@ bool CMaterial::LoadMaterialHeader( IMaterial *pMat )
 
 	// Find the keywords for this material from the vmt file.
 	bool bFound;
-	IMaterialVar *pVar = pMat->FindVar("%keywords", &bFound, false);
-	if (bFound)
+	IMaterialVar* pVar = pMat->FindVar( "%keywords", &bFound, false );
+	if ( bFound )
 	{
 		V_strcpy_safe( m_szKeywords, pVar->GetStringValue() );
 
@@ -1140,39 +810,31 @@ bool CMaterial::LoadMaterialHeader( IMaterial *pMat )
 //-----------------------------------------------------------------------------
 // Purpose: Returns the full path of the file from which this material was loaded.
 //-----------------------------------------------------------------------------
-const char *CMaterial::GetFileName( void ) const
+const char* CMaterial::GetFileName() const
 {
-	return(m_szFileName);
+	return m_szFileName;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-bool CMaterial::IsWater( void ) const
+bool CMaterial::IsWater() const
 {
+	if ( m_bIsWater != TRS_NONE )
+		return static_cast<bool>( m_bIsWater );
 	bool bFound;
-	IMaterialVar *pVar = m_pMaterial->FindVar( "$surfaceprop", &bFound, false );
+	IMaterialVar* pVar = m_pMaterial->FindVar( "$surfaceprop", &bFound, false );
 	if ( bFound )
 	{
-		if ( !strcmp( "water", pVar->GetStringValue() ) )
+		if ( !V_stricmp( "water", pVar->GetStringValue() ) )
+		{
+			const_cast<CMaterial*>( this )->m_bIsWater = TRS_TRUE;
 			return true;
+		}
 	}
 
+	const_cast<CMaterial*>( this )->m_bIsWater = TRS_FALSE;
 	return false;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  : size -
-//-----------------------------------------------------------------------------
-void CMaterial::GetSize(SIZE &size) const
-{
-	const_cast<CMaterial*>(this)->Load();
-	Assert( m_nWidth >= 0 );
-
-	size.cx = m_nWidth;
-	size.cy = m_nHeight;
 }
 
 
@@ -1180,7 +842,7 @@ void CMaterial::GetSize(SIZE &size) const
 // Purpose: Loads this material's image from disk if it is not already loaded.
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool CMaterial::Load( void )
+bool CMaterial::Load()
 {
 	LoadMaterial();
 	return true;
@@ -1190,53 +852,44 @@ bool CMaterial::Load( void )
 //-----------------------------------------------------------------------------
 // cache in the image size only when we need to
 //-----------------------------------------------------------------------------
-int CMaterial::GetImageWidth(void) const
+int CMaterial::GetImageWidth() const
 {
-	const_cast<CMaterial*>(this)->Load();
-	return(m_nWidth);
+	const_cast<CMaterial*>( this )->Load();
+	return m_nWidth;
 }
 
-int CMaterial::GetImageHeight(void) const
+int CMaterial::GetImageHeight() const
 {
-	const_cast<CMaterial*>(this)->Load();
-	return(m_nHeight);
+	const_cast<CMaterial*>( this )->Load();
+	return m_nHeight;
 }
 
-int CMaterial::GetWidth(void) const
+int CMaterial::GetWidth() const
 {
-	const_cast<CMaterial*>(this)->Load();
-	return(m_nWidth);
+	const_cast<CMaterial*>( this )->Load();
+	return m_nWidth;
 }
 
-int CMaterial::GetHeight(void) const
+int CMaterial::GetHeight() const
 {
-	const_cast<CMaterial*>(this)->Load();
-	return(m_nHeight);
+	const_cast<CMaterial*>( this )->Load();
+	return m_nHeight;
 }
 
-float CMaterial::GetDecalScale(void) const
+float CMaterial::GetDecalScale() const
 {
-	const_cast<CMaterial*>(this)->Load();
+	const_cast<CMaterial*>( this )->Load();
 
-	IMaterialVar *decalScaleVar;
 	bool found;
-
-	decalScaleVar = m_pMaterial->FindVar( "$decalScale", &found, false );
-	if( !found )
-	{
-		return 1.0f;
-	}
-	else
-	{
-		return decalScaleVar->GetFloatValue();
-	}
+	IMaterialVar* decalScaleVar = m_pMaterial->FindVar( "$decalScale", &found, false );
+	return !found ? 1.0f : decalScaleVar->GetFloatValue();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool CMaterial::LoadMaterialImage( void )
+bool CMaterial::LoadMaterialImage()
 {
 	Load();
 
@@ -1265,7 +918,7 @@ bool CMaterial::LoadMaterialImage( void )
 }
 
 
-static void InitMaterialSystemConfig(MaterialSystem_Config_t& pConfig)
+static void InitMaterialSystemConfig( MaterialSystem_Config_t& pConfig )
 {
 	pConfig.bEditMode = true;
 	pConfig.m_nAASamples = 0;
@@ -1275,11 +928,11 @@ static void InitMaterialSystemConfig(MaterialSystem_Config_t& pConfig)
 }
 
 
-static char const* s_rt_names[] = { "_rt_albedo","_rt_normal","_rt_position", "_rt_accbuf" };
-ImageFormat s_rt_formats[]={ IMAGE_FORMAT_RGBA32323232F, IMAGE_FORMAT_RGBA32323232F,
-							 IMAGE_FORMAT_RGBA32323232F, IMAGE_FORMAT_RGBA16161616F };
+static constexpr const char* const s_rt_names[] = { "_rt_albedo", "_rt_normal", "_rt_position", "_rt_accbuf" };
+constexpr const ImageFormat s_rt_formats[]={ IMAGE_FORMAT_RGBA32323232F, IMAGE_FORMAT_RGBA32323232F,
+											 IMAGE_FORMAT_RGBA32323232F, IMAGE_FORMAT_RGBA16161616F };
 
-static CTextureReference sg_ExtraFP16Targets[NELEMS(s_rt_names)];
+static CTextureReference sg_ExtraFP16Targets[NELEMS( s_rt_names )];
 
 void AllocateLightingPreviewtextures()
 {
@@ -1289,7 +942,7 @@ void AllocateLightingPreviewtextures()
 	{
 		bHaveAllocated = true;
 		MaterialSystemInterface()->BeginRenderTargetAllocation();
-		for ( int idx = 0; idx < NELEMS( sg_ExtraFP16Targets ); idx++ )
+		for ( uint idx = 0; idx < NELEMS( sg_ExtraFP16Targets ); idx++ )
 			sg_ExtraFP16Targets[idx].Init(
 				materials->CreateNamedRenderTargetTextureEx2(
 					s_rt_names[idx],
@@ -1434,20 +1087,14 @@ bool CMaterial::Initialize( HWND hwnd )
 //-----------------------------------------------------------------------------
 // Purpose: Restores the material system to an uninitialized state.
 //-----------------------------------------------------------------------------
-void CMaterial::ShutDown(void)
+void CMaterial::ShutDown()
 {
-	for ( int i = 0; i < NELEMS(sg_ExtraFP16Targets); ++i )
-	{
+	for ( int i = 0; i < NELEMS( sg_ExtraFP16Targets ); ++i )
 		sg_ExtraFP16Targets[i].Shutdown();
-	}
 
-	if (materials != NULL)
-	{
+	if ( materials != NULL )
 		materials->UncacheAllMaterials();
-	}
 
 	delete g_pMaterialImageCache;
 	g_pMaterialImageCache = NULL;
 }
-
-

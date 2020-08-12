@@ -32,7 +32,6 @@
 #pragma warning(disable:4244)
 
 
-#define _GraphicCacheAllocate(n)	malloc(n)
 #define IsSortChr(ch) ((ch == '-') || (ch == '+'))
 
 
@@ -47,7 +46,7 @@ CTextureSystem g_Textures;
 //-----------------------------------------------------------------------------
 // CMaterialFileChangeWatcher implementation.
 //-----------------------------------------------------------------------------
-void CMaterialFileChangeWatcher::Init( CTextureSystem *pSystem, int context )
+void CMaterialFileChangeWatcher::Init( CTextureSystem* pSystem, int context )
 {
 	m_pTextureSystem = pSystem;
 	m_Context = context;
@@ -55,30 +54,30 @@ void CMaterialFileChangeWatcher::Init( CTextureSystem *pSystem, int context )
 	m_Watcher.Init( this );
 
 	char searchPaths[1024 * 16];
-	if ( g_pFullFileSystem->GetSearchPath( "GAME", false, searchPaths, sizeof( searchPaths ) ) > 0 )
+	if ( g_pFullFileSystem->GetSearchPath_safe( "GAME", false, searchPaths ) > 0 )
 	{
 		CUtlVector<char*> searchPathList;
 		V_SplitString( searchPaths, ";", searchPathList );
 
-		for ( int i=0; i < searchPathList.Count(); i++ )
+		for ( int i = 0; i < searchPathList.Count(); i++ )
 		{
+			if ( V_stristr( searchPathList[i], ".vpk" ) )
+				continue; // no vpks
 			m_Watcher.AddDirectory( searchPathList[i], "materials", true );
 		}
 
 		searchPathList.PurgeAndDeleteElements();
 	}
 	else
-	{
 		Warning( "Error in GetSearchPath. Dynamic material list updating will not be available." );
-	}
 }
 
-void CMaterialFileChangeWatcher::OnFileChange( const char *pRelativeFilename, const char *pFullFilename )
+void CMaterialFileChangeWatcher::OnFileChange( const char* pRelativeFilename, const char* pFullFilename )
 {
 	//Msg( "OnNewFile: %s\n", pRelativeFilename );
 
 	CTextureSystem::EFileType eFileType;
-	if ( CTextureSystem::GetFileTypeFromFilename( pRelativeFilename, &eFileType ) )
+	if ( CTextureSystem::GetFileTypeFromFilename( pRelativeFilename, eFileType ) )
 		m_pTextureSystem->OnFileChange( pRelativeFilename, m_Context, eFileType );
 }
 
@@ -91,22 +90,14 @@ void CMaterialFileChangeWatcher::Update()
 //-----------------------------------------------------------------------------
 // Purpose: Constructor. Creates the "All" group and sets it as the active group.
 //-----------------------------------------------------------------------------
-CTextureSystem::CTextureSystem(void)
+CTextureSystem::CTextureSystem()
 {
-	m_pLastTex = NULL;
+	m_pLastTex = nullptr;
 	m_nLastIndex = 0;
-	m_pActiveContext = NULL;
-	m_pActiveGroup = NULL;
-	m_pCubemapTexture = NULL;
-	m_pNoDrawTexture = NULL;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Destructor. Frees the list of groups and dummy textures.
-//-----------------------------------------------------------------------------
-CTextureSystem::~CTextureSystem(void)
-{
+	m_pActiveContext = nullptr;
+	m_pActiveGroup = nullptr;
+	m_pCubemapTexture = nullptr;
+	m_pNoDrawTexture = nullptr;
 }
 
 
@@ -118,47 +109,34 @@ void CTextureSystem::FreeAllTextures()
 	if ( m_pCubemapTexture )
 	{
 	 	m_pCubemapTexture->DecrementReferenceCount();
-		m_pCubemapTexture = NULL;
+		m_pCubemapTexture = nullptr;
 	}
 
 	int nContextCount = m_TextureContexts.Count();
-	for (int nContext = 0; nContext < nContextCount; nContext++)
+	for ( int nContext = 0; nContext < nContextCount; nContext++ )
 	{
-		TextureContext_t *pContext = &m_TextureContexts.Element(nContext);
+		TextureContext_t& context = m_TextureContexts.Element( nContext );
 
 		//
 		// Delete all the texture groups for this context.
 		//
-		int nGroupCount = pContext->Groups.Count();
-		for (int nGroup = 0; nGroup < nGroupCount; nGroup++)
-		{
-			delete pContext->Groups.Element(nGroup);
-		}
+		context.Groups.PurgeAndDeleteElements();
 
 		//
 		// Delete dummy textures.
 		//
-		int nDummyCount = pContext->Dummies.Count();
-		for (int nDummy = 0; nDummy < nDummyCount; nDummy++)
-		{
-			IEditorTexture *pTex = pContext->Dummies.Element(nDummy);
-			delete pTex;
-		}
+		context.Dummies.PurgeAndDeleteElements();
 	}
 
 	//
 	// Delete all the textures from the master list.
 	//
-	for (int i = 0; i < m_Textures.Count(); i++)
-	{
-		IEditorTexture *pTex = m_Textures[i];
-		delete pTex;
-	}
-	m_Textures.RemoveAll();
+	m_Textures.PurgeAndDeleteElements();
 
-	m_pLastTex = NULL;
+	m_pLastTex = nullptr;
 	m_nLastIndex = -1;
 
+	CDummyTexture::DestroyDummyMaterial();
 
 	// Delete the keywords.
 	m_Keywords.PurgeAndDeleteElements();
@@ -171,27 +149,27 @@ void CTextureSystem::FreeAllTextures()
 // Input  : pTexture - Pointer to texture to add.
 // Output : Returns the index of the texture in the master texture list.
 //-----------------------------------------------------------------------------
-int CTextureSystem::AddTexture(IEditorTexture *pTexture)
+int CTextureSystem::AddTexture( IEditorTexture* pTexture )
 {
-	return m_Textures.AddToTail(pTexture);
+	return m_Textures.AddToTail( pTexture );
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose: Begins iterating the list of texture/material keywords.
 //-----------------------------------------------------------------------------
-int CTextureSystem::GetNumKeywords(void)
+int CTextureSystem::GetNumKeywords() const
 {
-	return(m_Keywords.Count());
+	return m_Keywords.Count();
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose: Continues iterating the list of texture/material keywords.
 //-----------------------------------------------------------------------------
-const char *CTextureSystem::GetKeyword(int pos)
+const char* CTextureSystem::GetKeyword( int pos ) const
 {
-	return(m_Keywords.Element(pos));
+	return m_Keywords.Element( pos );
 }
 
 
@@ -201,30 +179,23 @@ const char *CTextureSystem::GetKeyword(int pos)
 //			bUseMRU -
 // Output :
 //-----------------------------------------------------------------------------
-IEditorTexture *CTextureSystem::EnumActiveTextures(int *piIndex) const
+IEditorTexture* CTextureSystem::EnumActiveTextures( int& piIndex ) const
 {
-	Assert(piIndex != NULL);
-
-	if (piIndex != NULL)
+	if ( m_pActiveGroup != nullptr )
 	{
-		if (m_pActiveGroup != NULL)
+		IEditorTexture* pTex = nullptr;
+		do
 		{
-			IEditorTexture *pTex = NULL;
-
-			do
+			pTex = m_pActiveGroup->GetTexture( piIndex );
+			if ( pTex != nullptr )
 			{
-				pTex = m_pActiveGroup->GetTexture(*piIndex);
-				if (pTex != NULL)
-				{
-					(*piIndex)++;
-
-					return(pTex);
-				}
-			} while (pTex != NULL);
-		}
+				++piIndex;
+				return pTex;
+			}
+		} while ( pTex != nullptr );
 	}
 
-	return(NULL);
+	return nullptr;
 }
 
 
@@ -232,16 +203,16 @@ IEditorTexture *CTextureSystem::EnumActiveTextures(int *piIndex) const
 // Purpose: Initializes the texture system.
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool CTextureSystem::Initialize(HWND hwnd)
+bool CTextureSystem::Initialize( HWND hwnd )
 {
-	return CMaterial::Initialize(hwnd);
+	return CMaterial::Initialize( hwnd );
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose: Shuts down the texture system.
 //-----------------------------------------------------------------------------
-void CTextureSystem::ShutDown(void)
+void CTextureSystem::ShutDown()
 {
 	if ( m_pActiveContext )
 	{
@@ -264,24 +235,22 @@ void CTextureSystem::ShutDown(void)
 //			bDummy -
 // Output :
 //-----------------------------------------------------------------------------
-IEditorTexture *CTextureSystem::FindActiveTexture(LPCSTR pszInputName, int *piIndex, BOOL bDummy)
+IEditorTexture *CTextureSystem::FindActiveTexture( LPCSTR pszInputName, int* piIndex, BOOL bDummy )
 {
 
 	// The .vmf file format gets confused if there are backslashes in material names,
 	// so make sure they're all using forward slashes here.
 	char szName[MAX_PATH];
-	Q_StrSubst( pszInputName, "\\", "/", szName, sizeof( szName ) );
+	V_StrSubst( pszInputName, "\\", "/", szName, sizeof( szName ) );
 	const char *pszName = szName;
-	IEditorTexture *pTex = NULL;
+	IEditorTexture *pTex = nullptr;
 	//
 	// Check the cache first.
 	//
-	if (m_pLastTex && !stricmp(pszName, m_pLastTex->GetName()))
+	if ( m_pLastTex && !V_stricmp( pszName, m_pLastTex->GetName() ) )
 	{
-		if (piIndex)
-		{
+		if ( piIndex )
 			*piIndex = m_nLastIndex;
-		}
 
 		return m_pLastTex;
 	}
@@ -305,78 +274,43 @@ IEditorTexture *CTextureSystem::FindActiveTexture(LPCSTR pszInputName, int *piIn
 	}
 
 	//
-	// Let's try again, this time with \textures\ decoration
-	// TODO: remove this?
-	//
-	{
-		iIndex = 0;
-		char szBuf[512];
-
-		sprintf(szBuf, "textures\\%s", pszName);
-
-		for (int i = strlen(szBuf) -1; i >= 0; i--)
-		{
-			if (szBuf[i] == '/')
-				szBuf[i] = '\\';
-		}
-
-		strlwr(szBuf);
-
-		if ( m_pActiveGroup )
-		{
-			pTex = m_pActiveGroup->FindTextureByName( szBuf, &iIndex);
-			if ( pTex )
-			{
-				if ( piIndex )
-					*piIndex = iIndex;
-
-				m_pLastTex = pTex;
-				m_nLastIndex = iIndex;
-
-				return pTex;
-			}
-		}
-	}
-	//
 	// Caller doesn't want dummies.
 	//
-	if (!bDummy)
-	{
-		return(NULL);
-	}
+	if ( !bDummy )
+		return nullptr;
 
-	Assert(!piIndex);
+	Assert( !piIndex );
 
 	//
 	// Check the list of dummies for a texture with the same name and texture format.
 	//
-	if (m_pActiveContext)
+	if ( m_pActiveContext )
 	{
 		int nDummyCount = m_pActiveContext->Dummies.Count();
-		for (int nDummy = 0; nDummy < nDummyCount; nDummy++)
+		for ( int nDummy = 0; nDummy < nDummyCount; nDummy++ )
 		{
-			IEditorTexture *pTex = m_pActiveContext->Dummies.Element(nDummy);
-			if (!strcmpi(pszName, pTex->GetName()))
+			IEditorTexture* pTex = m_pActiveContext->Dummies.Element( nDummy );
+			if ( !V_stricmp( pszName, pTex->GetName() ) )
 			{
 				m_pLastTex = pTex;
 				m_nLastIndex = -1;
-				return(pTex);
+				return pTex;
 			}
 		}
 
 		//
 		// Not found; add a dummy as a placeholder for the missing texture.
 		//
-		pTex = AddDummy(pszName);
+		pTex = AddDummy( pszName );
 	}
 
-	if (pTex != NULL)
+	if ( pTex != nullptr )
 	{
 		m_pLastTex = pTex;
 		m_nLastIndex = -1;
 	}
 
-	return(pTex);
+	return pTex;
 }
 
 
@@ -384,49 +318,42 @@ IEditorTexture *CTextureSystem::FindActiveTexture(LPCSTR pszInputName, int *piIn
 // Purpose:
 // Input  : *pTex -
 //-----------------------------------------------------------------------------
-void CTextureSystem::AddMRU(IEditorTexture *pTex)
+void CTextureSystem::AddMRU( IEditorTexture* pTex )
 {
-	if (!m_pActiveContext)
+	if ( !m_pActiveContext )
 		return;
 
-	int nIndex = m_pActiveContext->MRU.Find(pTex);
-	if (nIndex != -1)
-	{
-		m_pActiveContext->MRU.Remove(nIndex);
-	}
-	else if (m_pActiveContext->MRU.Count() == 8)
-	{
-		m_pActiveContext->MRU.Remove(7);
-	}
+	int nIndex = m_pActiveContext->MRU.Find( pTex );
+	if ( nIndex != -1 )
+		m_pActiveContext->MRU.Remove( nIndex );
+	else if ( m_pActiveContext->MRU.Count() == 8 )
+		m_pActiveContext->MRU.Remove( 7 );
 
-	m_pActiveContext->MRU.AddToHead(pTex);
+	m_pActiveContext->MRU.AddToHead( pTex );
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose: Returns the texture context that corresponds to the given game config.
 //-----------------------------------------------------------------------------
-TextureContext_t *CTextureSystem::FindTextureContextForConfig(CGameConfig *pConfig)
+TextureContext_t* CTextureSystem::FindTextureContextForConfig( CGameConfig* pConfig )
 {
-	for (int i = 0; i < m_TextureContexts.Count(); i++)
+	for ( int i = 0; i < m_TextureContexts.Count(); i++ )
 	{
-		if (m_TextureContexts.Element(i).pConfig == pConfig)
-		{
-			return &m_TextureContexts.Element(i);
-		}
+		if ( m_TextureContexts.Element( i ).pConfig == pConfig )
+			return &m_TextureContexts.Element( i );
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CTextureSystem::SetActiveConfig(CGameConfig *pConfig)
+void CTextureSystem::SetActiveConfig( CGameConfig* pConfig )
 {
-	TextureContext_t *pContext = FindTextureContextForConfig(pConfig);
-	if (pContext)
+	if ( TextureContext_t* pContext = FindTextureContextForConfig( pConfig ) )
 	{
 		m_pActiveContext = pContext;
 		m_pActiveGroup = m_pActiveContext->pAllGroup;
@@ -441,9 +368,7 @@ void CTextureSystem::SetActiveConfig(CGameConfig *pConfig)
 		}
 	}
 	else
-	{
-		m_pActiveContext = NULL;
-	}
+		m_pActiveContext = nullptr;
 }
 
 
@@ -451,25 +376,25 @@ void CTextureSystem::SetActiveConfig(CGameConfig *pConfig)
 // Purpose:
 // Input  : char *pcszName -
 //-----------------------------------------------------------------------------
-void CTextureSystem::SetActiveGroup(const char *pcszName)
+void CTextureSystem::SetActiveGroup( const char* pcszName )
 {
-	if (!m_pActiveContext)
+	if ( !m_pActiveContext )
 		return;
 
 	char szBuf[MAX_PATH];
-	sprintf(szBuf, "textures\\%s", pcszName);
+	V_sprintf_safe( szBuf, "textures\\%s", pcszName );
 
 	int iCount = m_pActiveContext->Groups.Count();
-	for (int i = 0; i < iCount; i++)
+	for ( int i = 0; i < iCount; i++ )
 	{
 		CTextureGroup *pGroup = m_pActiveContext->Groups.Element(i);
-		if (!strcmpi(pGroup->GetName(), pcszName))
+		if ( !V_stricmp( pGroup->GetName(), pcszName ) )
 		{
 			m_pActiveGroup = pGroup;
 			return;
 		}
 
-		if (strstr(pGroup->GetName(), pcszName))
+		if ( V_strstr( pGroup->GetName(), pcszName ) )
 		{
 			m_pActiveGroup = pGroup;
 			return;
@@ -481,18 +406,18 @@ void CTextureSystem::SetActiveGroup(const char *pcszName)
 }
 
 
-void HammerFileSystem_ReportSearchPath( const char *szPathID )
+void HammerFileSystem_ReportSearchPath( const char* szPathID )
 {
 	char szSearchPath[ 4096 ];
 	g_pFullFileSystem->GetSearchPath( szPathID, true, szSearchPath, sizeof( szSearchPath ) );
 
 	Msg( mwStatus, "------------------------------------------------------------------" );
 
-	char *pszOnePath = strtok( szSearchPath, ";" );
+	char* pszOnePath = strtok( szSearchPath, ";" );
 	while ( pszOnePath )
 	{
 		Msg( mwStatus, "Search Path (%s): %s", szPathID, pszOnePath );
-		pszOnePath = strtok( NULL, ";" );
+		pszOnePath = strtok( nullptr, ";" );
 	}
 }
 
@@ -501,7 +426,7 @@ void HammerFileSystem_ReportSearchPath( const char *szPathID )
 // FIXME: Make this work correctly, using the version in filesystem_tools.cpp
 // (it doesn't work currently owing to filesystem setup issues)
 //-----------------------------------------------------------------------------
-void HammerFileSystem_SetGame( const char *pExeDir, const char *pModDir )
+void HammerFileSystem_SetGame( const char* pExeDir, const char* pModDir )
 {
 	static bool s_bOnce = false;
 	Assert( !s_bOnce );
@@ -509,13 +434,12 @@ void HammerFileSystem_SetGame( const char *pExeDir, const char *pModDir )
 
 	char buf[MAX_PATH];
 
-	Q_snprintf( buf, MAX_PATH, "%s\\hl2", pExeDir );
-	g_pFullFileSystem->AddSearchPath( buf, "GAME", PATH_ADD_TO_HEAD );
+	V_sprintf_safe( buf, "%s\\hl2", pExeDir );
+	if ( g_pFullFileSystem->FileExists( buf ) )
+		g_pFullFileSystem->AddSearchPath( buf, "GAME", PATH_ADD_TO_HEAD );
 
 	if ( pModDir && *pModDir != '\0' )
-	{
 		g_pFullFileSystem->AddSearchPath( pModDir, "GAME", PATH_ADD_TO_HEAD );
-	}
 
 	HammerFileSystem_ReportSearchPath( "GAME" );
 }
@@ -524,7 +448,7 @@ void HammerFileSystem_SetGame( const char *pExeDir, const char *pModDir )
 //-----------------------------------------------------------------------------
 // Purpose: Loads textures from all texture files.
 //-----------------------------------------------------------------------------
-void CTextureSystem::LoadAllGraphicsFiles(void)
+void CTextureSystem::LoadAllGraphicsFiles()
 {
 	FreeAllTextures();
 
@@ -533,26 +457,26 @@ void CTextureSystem::LoadAllGraphicsFiles(void)
 	//for (int nConfig = 0; nConfig < Options.configs.GetGameConfigCount(); nConfig++)
 	{
 		//CGameConfig *pConfig = Options.configs.GetGameConfig(nConfig);
-		CGameConfig *pConfig = g_pGameConfig;
+		CGameConfig* pConfig = g_pGameConfig;
 
 		// Create a new texture context with the materials for that config.
-		TextureContext_t *pContext = AddTextureContext();
+		TextureContext_t* pContext = AddTextureContext();
 
 		// Bind it to this config.
 		pContext->pConfig = pConfig;
 
 		// Create a group to hold all the textures for this context.
-		pContext->pAllGroup = new CTextureGroup("All Textures");
-		pContext->Groups.AddToTail(pContext->pAllGroup);
+		pContext->pAllGroup = new CTextureGroup( "All Textures" );
+		pContext->Groups.AddToTail( pContext->pAllGroup );
 
-		HammerFileSystem_SetGame(pConfig->m_szGameExeDir, pConfig->m_szModDir);
+		HammerFileSystem_SetGame( pConfig->m_szGameExeDir, pConfig->m_szModDir );
 
 		// Set the new context as the active context.
 		m_pActiveContext = pContext;
 
 		// Load the materials for this config.
 		// Do this unconditionally so that we get necessary editor materials.
-		LoadMaterials(pConfig);
+		LoadMaterials( pConfig );
 
 		m_pActiveContext->pAllGroup->Sort();
 	}
@@ -562,22 +486,22 @@ void CTextureSystem::LoadAllGraphicsFiles(void)
 //-----------------------------------------------------------------------------
 // Purpose: Loads all the materials for the given game config.
 //-----------------------------------------------------------------------------
-void CTextureSystem::LoadMaterials(CGameConfig *pConfig)
+void CTextureSystem::LoadMaterials( CGameConfig* pConfig )
 {
-	CTextureGroup *pGroup = new CTextureGroup("Materials");
-	m_pActiveContext->Groups.AddToTail(pGroup);
+	CTextureGroup* pGroup = new CTextureGroup( "Materials" );
+	m_pActiveContext->Groups.AddToTail( pGroup );
 
 	// Add all the materials to the group.
 	CMaterial::EnumerateMaterials( this, "materials", (int)pGroup, INCLUDE_WORLD_MATERIALS );
 
 	// Watch the materials directory recursively...
-	CMaterialFileChangeWatcher *pWatcher = new CMaterialFileChangeWatcher;
+	CMaterialFileChangeWatcher* pWatcher = new CMaterialFileChangeWatcher;
 	pWatcher->Init( this, (int)pGroup );
 	m_ChangeWatchers.AddToTail( pWatcher );
 
-	Assert( m_pCubemapTexture == NULL );
+	Assert( m_pCubemapTexture == nullptr );
 
-	m_pCubemapTexture = MaterialSystemInterface()->FindTexture( "editor/cubemap", NULL, true );
+	m_pCubemapTexture = MaterialSystemInterface()->FindTexture( "editor/cubemap", nullptr, true );
 
 	if ( m_pCubemapTexture )
 	{
@@ -587,8 +511,8 @@ void CTextureSystem::LoadMaterials(CGameConfig *pConfig)
 	}
 
 	// Get the nodraw texture.
-	m_pNoDrawTexture = NULL;
-	for ( int i=0; i < m_Textures.Count(); i++ )
+	m_pNoDrawTexture = nullptr;
+	for ( int i = 0; i < m_Textures.Count(); i++ )
 	{
 		if ( V_stricmp( m_Textures[i]->GetName(), "tools/toolsnodraw" ) == 0 )
 		{
@@ -603,7 +527,6 @@ void CTextureSystem::LoadMaterials(CGameConfig *pConfig)
 void CTextureSystem::RebindDefaultCubeMap()
 {
 	// rebind with the default cubemap
-
 	if (  m_pCubemapTexture )
 	{
 		CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
@@ -614,7 +537,7 @@ void CTextureSystem::RebindDefaultCubeMap()
 
 void CTextureSystem::UpdateFileChangeWatchers()
 {
-	for ( int i=0; i < m_ChangeWatchers.Count(); i++ )
+	for ( int i = 0; i < m_ChangeWatchers.Count(); i++ )
 		m_ChangeWatchers[i]->Update();
 }
 
@@ -631,21 +554,19 @@ void CTextureSystem::OnFileChange( const char *pFilename, int context, CTextureS
 		Assert( false );
 		return;
 	}
-	fixedSlashes[ V_strlen( fixedSlashes ) - 4 ] = 0;
+	fixedSlashes[V_strlen( fixedSlashes ) - 4] = 0;
 
 
 	// Handle it based on what type of file we've got.
 	if ( eFileType == k_eFileTypeVMT )
 	{
-		IEditorTexture *pTex = FindActiveTexture( fixedSlashes, NULL, FALSE );
+		IEditorTexture* pTex = FindActiveTexture( fixedSlashes, nullptr, FALSE );
 		if ( pTex )
-		{
 			pTex->Reload( true );
-		}
 		else
 		{
 			EnumMaterial( fixedSlashes, context );
-			IEditorTexture *pTex = FindActiveTexture( fixedSlashes, NULL, FALSE );
+			IEditorTexture* pTex = FindActiveTexture( fixedSlashes, nullptr, FALSE );
 			if ( pTex )
 			{
 				GetMainWnd()->m_TextureBar.NotifyNewMaterial( pTex );
@@ -656,10 +577,10 @@ void CTextureSystem::OnFileChange( const char *pFilename, int context, CTextureS
 	else if ( eFileType == k_eFileTypeVTF )
 	{
 		// Whether a VTF was added, removed, or modified, we do the same thing.. refresh it and any materials that reference it.
-		ITexture *pTexture = materials->FindTexture( fixedSlashes, TEXTURE_GROUP_UNACCOUNTED, false );
+		ITexture* pTexture = materials->FindTexture( fixedSlashes, TEXTURE_GROUP_UNACCOUNTED, false );
 		if ( pTexture )
 		{
-			pTexture->Download( NULL );
+			pTexture->Download( nullptr );
 			ReloadMaterialsUsingTexture( pTexture );
 		}
 	}
@@ -670,30 +591,28 @@ void CTextureSystem::OnFileChange( const char *pFilename, int context, CTextureS
 // Purpose: Load any materials that reference this texture. Used so we can refresh a
 // material's preview image if a relevant .vtf changes.
 //-----------------------------------------------------------------------------
-void CTextureSystem::ReloadMaterialsUsingTexture( ITexture *pTestTexture )
+void CTextureSystem::ReloadMaterialsUsingTexture( ITexture* pTestTexture )
 {
-	for ( int i=0; i < m_Textures.Count(); i++ )
+	for ( int i = 0; i < m_Textures.Count(); i++ )
 	{
-		IEditorTexture *pEditorTex = m_Textures[i];
-		IMaterial *pMat = pEditorTex->GetMaterial( false );
+		IEditorTexture* pEditorTex = m_Textures[i];
+		IMaterial* pMat = pEditorTex->GetMaterial( false );
 		if ( !pMat )
 			continue;
 
-		IMaterialVar **pParams = pMat->GetShaderParams();
+		IMaterialVar** pParams = pMat->GetShaderParams();
 		int nParams = pMat->ShaderParamCount();
 		for ( int iParam=0; iParam < nParams; iParam++ )
 		{
 			if ( pParams[iParam]->GetType() != MATERIAL_VAR_TYPE_TEXTURE )
 				continue;
 
-			ITexture *pTex = pParams[iParam]->GetTextureValue();
+			ITexture* pTex = pParams[iParam]->GetTextureValue();
 			if ( !pTex )
 				continue;
 
 			if ( pTex == pTestTexture )
-			{
 				pEditorTex->Reload( true );
-			}
 		}
 	}
 }
@@ -702,18 +621,18 @@ void CTextureSystem::ReloadMaterialsUsingTexture( ITexture *pTestTexture )
 //-----------------------------------------------------------------------------
 // Purpose: Figure out the file type from its extension. Returns false if we don't have an enum for that extension.
 //-----------------------------------------------------------------------------
-bool CTextureSystem::GetFileTypeFromFilename( const char *pFilename, CTextureSystem::EFileType *pFileType )
+bool CTextureSystem::GetFileTypeFromFilename( const char* pFilename, CTextureSystem::EFileType& pFileType )
 {
 	char strRight[16];
 	V_StrRight( pFilename, 4, strRight, sizeof( strRight ) );
 	if ( V_stricmp( strRight, ".vmt" ) == 0 )
 	{
-		*pFileType = CTextureSystem::k_eFileTypeVMT;
+		pFileType = CTextureSystem::k_eFileTypeVMT;
 		return true;
 	}
 	else if ( V_stricmp( strRight, ".vtf" ) == 0 )
 	{
-		*pFileType = CTextureSystem::k_eFileTypeVTF;
+		pFileType = CTextureSystem::k_eFileTypeVTF;
 		return true;
 	}
 	return false;
@@ -723,13 +642,13 @@ bool CTextureSystem::GetFileTypeFromFilename( const char *pFilename, CTextureSys
 //-----------------------------------------------------------------------------
 // Purpose: Loads textures from all texture files.
 //-----------------------------------------------------------------------------
-void CTextureSystem::ReloadTextures( const char *pFilterName )
+void CTextureSystem::ReloadTextures( const char* pFilterName )
 {
 	MaterialSystemInterface()->ReloadMaterials( pFilterName );
 
 	for ( int i = 0; i < m_Textures.Count(); i++ )
 	{
-		if ( !Q_stristr( pFilterName, m_Textures[i]->GetName() ) )
+		if ( !V_stristr( pFilterName, m_Textures[i]->GetName() ) )
 			continue;
 
 		m_Textures[i]->Reload( false );
@@ -743,15 +662,15 @@ void CTextureSystem::ReloadTextures( const char *pFilterName )
 // Input  : pszName - Name of missing texture.
 // Output : Returns a pointer to the new dummy texture.
 //-----------------------------------------------------------------------------
-IEditorTexture *CTextureSystem::AddDummy(LPCTSTR pszName)
+IEditorTexture* CTextureSystem::AddDummy( LPCTSTR pszName )
 {
-	if (!m_pActiveContext)
-		return NULL;
+	if ( !m_pActiveContext )
+		return nullptr;
 
-	IEditorTexture *pTex = new CDummyTexture(pszName);
-	m_pActiveContext->Dummies.AddToTail(pTex);
+	IEditorTexture* pTex = new CDummyTexture( pszName );
+	m_pActiveContext->Dummies.AddToTail( pTex );
 
-	return(pTex);
+	return pTex;
 }
 
 
@@ -761,112 +680,52 @@ IEditorTexture *CTextureSystem::AddDummy(LPCTSTR pszName)
 //			elem2 -
 // Output : static int __cdecl
 //-----------------------------------------------------------------------------
-static int __cdecl SortTexturesProc(IEditorTexture * const *elem1, IEditorTexture * const *elem2)
+static int __cdecl SortTexturesProc( IEditorTexture* const* elem1, IEditorTexture* const* elem2 )
 {
-	IEditorTexture *pElem1 = *((IEditorTexture **)elem1);
-	IEditorTexture *pElem2 = *((IEditorTexture **)elem2);
+	auto pElem1 = *elem1;
+	auto pElem2 = *elem2;
 
-	Assert((pElem1 != NULL) && (pElem2 != NULL));
-	if ((pElem1 == NULL) || (pElem2 == NULL))
-	{
-		return(0);
-	}
+	Assert( pElem1 != nullptr && pElem2 != nullptr );
+	if ( pElem1 == nullptr || pElem2 == nullptr )
+		return 0;
 
-	const char *pszName1 = pElem1->GetName();
-	const char *pszName2 = pElem2->GetName();
+	const char* pszName1 = pElem1->GetName();
+	const char* pszName2 = pElem2->GetName();
 
 	char ch1 = pszName1[0];
 	char ch2 = pszName2[0];
 
-	if (IsSortChr(ch1) && !IsSortChr(ch2))
+	if ( IsSortChr( ch1 ) && !IsSortChr( ch2 ) )
 	{
-		int iFamilyLen = strlen(pszName1+2);
-		int iFamily = strnicmp(pszName1+2, pszName2, iFamilyLen);
-		if (!iFamily)
-		{
-			return(-1);	// same family - put elem1 before elem2
-		}
-		return(iFamily);	// sort normally
+		int iFamilyLen = V_strlen( pszName1 + 2 );
+		int iFamily = V_strnicmp( pszName1 + 2, pszName2, iFamilyLen );
+		if ( !iFamily )
+			return -1; // same family - put elem1 before elem2
+		return iFamily; // sort normally
 	}
-	else if (!IsSortChr(ch1) && IsSortChr(ch2))
+	else if ( !IsSortChr( ch1 ) && IsSortChr( ch2 ) )
 	{
-		int iFamilyLen = strlen(pszName2+2);
-		int iFamily = strnicmp(pszName1, pszName2+2, iFamilyLen);
-		if (!iFamily)
-		{
-			return(1);	// same family - put elem2 before elem1
-		}
-		return(iFamily);	// sort normally
+		int iFamilyLen = V_strlen( pszName2 + 2 );
+		int iFamily = V_strnicmp( pszName1, pszName2 + 2, iFamilyLen );
+		if ( !iFamily )
+			return 1; // same family - put elem2 before elem1
+		return iFamily; // sort normally
 	}
-	else if (IsSortChr(ch1) && IsSortChr(ch2))
+	else if ( IsSortChr( ch1 ) && IsSortChr( ch2 ) )
 	{
 		// do family name sorting
-		int iFamily = strcmpi(pszName1+2, pszName2+2);
-
-		if (!iFamily)
+		int iFamily = V_stricmp( pszName1 + 2, pszName2 + 2 );
+		if ( !iFamily )
 		{
 			// same family - sort by number
 			return pszName1[1] - pszName2[1];
 		}
 
 		// different family
-		return(iFamily);
+		return iFamily;
 	}
 
-	return(strcmpi(pszName1, pszName2));
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  : sizeSrc -
-//			sizeDest -
-//			*src -
-//			*dest -
-//-----------------------------------------------------------------------------
-void ScaleBitmap(CSize sizeSrc, CSize sizeDest, char *src, char *dest)
-{
-    int i;
-    int e_y = (sizeSrc.cy << 1) - sizeDest.cy;
-    int sizeDest2_y = (sizeDest.cy << 1);
-	int sizeSrc2_y = sizeSrc.cy << 1;
-	int srcline = 0, destline = 0;
-	char *srclinep, *destlinep;
-	int e_x = (sizeSrc.cx << 1) - sizeDest.cx;
-	int sizeDest2_x = (sizeDest.cx << 1);
-	int sizeSrc2_x = sizeSrc.cx << 1;
-
-    for( i = 0; i < sizeDest.cy; i++ )
-    {
-		// scale by X
-		{
-			srclinep = src + (srcline * sizeSrc.cx);
-			destlinep = dest + (destline * sizeDest.cx);
-
-			for( int j = 0; j < sizeDest.cx; j++ )
-			{
-				*destlinep = *srclinep;
-
-				while( e_x >= 0 )
-				{
-					++srclinep;
-					e_x -= sizeDest2_x;
-				}
-
-				++destlinep;
-				e_x += sizeSrc2_x;
-			}
-		}
-
-        while( e_y >= 0 )
-        {
-            ++srcline;
-            e_y -= sizeDest2_y;
-        }
-
-        ++destline;
-        e_y += sizeSrc2_y;
-    }
+	return V_stricmp( pszName1, pszName2 );
 }
 
 
@@ -876,13 +735,13 @@ void ScaleBitmap(CSize sizeSrc, CSize sizeDest, char *src, char *dest)
 // Input  : format - Texture format to look for.
 // Output : Returns TRUE if textures of a given format are available, FALSE if not.
 //-----------------------------------------------------------------------------
-bool CTextureSystem::HasTexturesForConfig(CGameConfig *pConfig)
+bool CTextureSystem::HasTexturesForConfig( CGameConfig* pConfig )
 {
-	if (!pConfig)
+	if ( !pConfig )
 		return false;
 
-	TextureContext_t *pContext = FindTextureContextForConfig(pConfig);
-	if (!pContext)
+	TextureContext_t* pContext = FindTextureContextForConfig( pConfig );
+	if ( !pContext )
 		return false;
 
 	return !pContext->Groups.IsEmpty();
@@ -892,21 +751,19 @@ bool CTextureSystem::HasTexturesForConfig(CGameConfig *pConfig)
 //-----------------------------------------------------------------------------
 // Used to add all the world materials into the material list
 //-----------------------------------------------------------------------------
-bool CTextureSystem::EnumMaterial( const char *pMaterialName, int nContext )
+bool CTextureSystem::EnumMaterial( const char* pMaterialName, int nContext )
 {
-	CTextureGroup *pGroup = (CTextureGroup *)nContext;
-	CMaterial *pMaterial = CMaterial::CreateMaterial(pMaterialName, false);
-	if (pMaterial != NULL)
+	CTextureGroup* pGroup = (CTextureGroup*)nContext;
+	CMaterial* pMaterial = CMaterial::CreateMaterial( pMaterialName, false );
+	if ( pMaterial )
 	{
 		// Add it to the master list of textures.
-		AddTexture(pMaterial);
+		AddTexture( pMaterial );
 
 		// Add the texture's index to the given group and to the "All" group.
-		pGroup->AddTexture(pMaterial);
-		if (pGroup != m_pActiveContext->pAllGroup)
-		{
-			m_pActiveContext->pAllGroup->AddTexture(pMaterial);
-		}
+		pGroup->AddTexture( pMaterial );
+		if ( pGroup != m_pActiveContext->pAllGroup )
+			m_pActiveContext->pAllGroup->AddTexture( pMaterial );
 	}
 	return true;
 }
@@ -915,39 +772,34 @@ bool CTextureSystem::EnumMaterial( const char *pMaterialName, int nContext )
 //-----------------------------------------------------------------------------
 // Registers the keywords as existing in a particular material
 //-----------------------------------------------------------------------------
-void CTextureSystem::RegisterTextureKeywords( IEditorTexture *pTexture )
+void CTextureSystem::RegisterTextureKeywords( IEditorTexture* pTexture )
 {
 	//
 	// Add any new keywords from this material to the list of keywords.
 	//
 	char szKeywords[MAX_PATH];
-	pTexture->GetKeywords(szKeywords);
-	if (szKeywords[0] != '\0')
+	pTexture->GetKeywords( szKeywords );
+	if ( szKeywords[0] != '\0' )
 	{
-		char *pch = strtok(szKeywords, " ,;");
-		while (pch != NULL)
+		char* pch = strtok( szKeywords, " ,;" );
+		while ( pch )
 		{
 			// dvs: hide in a Find function
 			bool bFound = false;
-
-			for( int pos=0; pos < m_Keywords.Count(); pos++ )
+			for ( int pos = 0; pos < m_Keywords.Count(); pos++ )
 			{
-				const char *pszTest = m_Keywords.Element(pos);
-				if (!stricmp(pszTest, pch))
+				const char* pszTest = m_Keywords.Element( pos );
+				if ( !V_stricmp( pszTest, pch ) )
 				{
 					bFound = true;
 					break;
 				}
 			}
 
-			if (!bFound)
-			{
-				char *pszKeyword = new char[strlen(pch) + 1];
-				strcpy(pszKeyword, pch);
-				m_Keywords.AddToTail(pszKeyword);
-			}
+			if ( !bFound )
+				m_Keywords.AddToTail( V_strdup( pch ) );
 
-			pch = strtok(NULL, " ,;");
+			pch = strtok( nullptr, " ,;" );
 		}
 	}
 }
@@ -959,9 +811,7 @@ void CTextureSystem::RegisterTextureKeywords( IEditorTexture *pTexture )
 void CTextureSystem::LazyLoadTextures()
 {
 	if ( m_pActiveContext && m_pActiveContext->pAllGroup )
-	{
 		m_pActiveContext->pAllGroup->LazyLoadTextures();
-	}
 }
 
 
@@ -969,53 +819,50 @@ void CTextureSystem::LazyLoadTextures()
 // Purpose:
 // Output : TextureContext_t
 //-----------------------------------------------------------------------------
-TextureContext_t *CTextureSystem::AddTextureContext()
+TextureContext_t* CTextureSystem::AddTextureContext()
 {
 	// Allocate a new texture context.
 	int nIndex = m_TextureContexts.AddToTail();
 
 	// Add the group to this config's list of texture groups.
-	TextureContext_t *pContext = &m_TextureContexts.Element(nIndex);
-	return pContext;
+	return &m_TextureContexts.Element( nIndex );
 }
 
 
 //-----------------------------------------------------------------------------
 // Opens the source file associated with a material
 //-----------------------------------------------------------------------------
-void CTextureSystem::OpenSource( const char *pMaterialName )
+void CTextureSystem::OpenSource( const char* pMaterialName )
 {
 	if ( !pMaterialName )
 		return;
 
 	char pRelativePath[MAX_PATH];
-	Q_snprintf( pRelativePath, MAX_PATH, "materials/%s.vmt", pMaterialName );
+	V_sprintf_safe( pRelativePath, "materials/%s.vmt", pMaterialName );
 
 	char pFullPath[MAX_PATH];
-	if ( g_pFullFileSystem->GetLocalPath( pRelativePath, pFullPath, MAX_PATH ) )
-	{
-		ShellExecute( NULL, "open", pFullPath, NULL, NULL, SW_SHOWNORMAL );
-	}
+	if ( g_pFullFileSystem->GetLocalPath_safe( pRelativePath, pFullPath ) )
+		ShellExecute( nullptr, "open", pFullPath, nullptr, nullptr, SW_SHOWNORMAL );
 }
 
 //-----------------------------------------------------------------------------
 // Opens explorer dialog and selects the source file
 //-----------------------------------------------------------------------------
-void CTextureSystem::ExploreToSource( const char *pMaterialName )
+void CTextureSystem::ExploreToSource( const char* pMaterialName )
 {
 	if ( !pMaterialName )
 		return;
 
 	char pRelativePath[MAX_PATH];
-	Q_snprintf( pRelativePath, MAX_PATH, "materials/%s.vmt", pMaterialName );
+	V_sprintf_safe( pRelativePath, "materials/%s.vmt", pMaterialName );
 
 	char pFullPath[MAX_PATH];
-	if ( g_pFullFileSystem->GetLocalPath( pRelativePath, pFullPath, MAX_PATH ) )
+	if ( g_pFullFileSystem->GetLocalPath_safe( pRelativePath, pFullPath ) )
 	{
 		CString strSel = "/select, ";
 		strSel += pFullPath;
 
-		ShellExecute(NULL, "open", "explorer", strSel, NULL, SW_SHOWNORMAL );
+		ShellExecute( nullptr, "open", "explorer", strSel, nullptr, SW_SHOWNORMAL );
 	}
 }
 
@@ -1024,9 +871,9 @@ void CTextureSystem::ExploreToSource( const char *pMaterialName )
 // Purpose: Constructor.
 // Input  : pszName - Name of group, ie "Materials" or "u:\hl\tfc\tfc.wad".
 //-----------------------------------------------------------------------------
-CTextureGroup::CTextureGroup(const char *pszName)
+CTextureGroup::CTextureGroup( const char* pszName )
 {
-	strcpy(m_szName, pszName);
+	V_strcpy_safe( m_szName, pszName );
 	m_nTextureToLoad = 0;
 }
 
@@ -1035,9 +882,9 @@ CTextureGroup::CTextureGroup(const char *pszName)
 // Purpose: Adds a texture to this group.
 // Input  : pTexture - Texture to add.
 //-----------------------------------------------------------------------------
-void CTextureGroup::AddTexture(IEditorTexture *pTexture)
+void CTextureGroup::AddTexture( IEditorTexture* pTexture )
 {
-	int index = m_Textures.AddToTail(pTexture);
+	int index = m_Textures.AddToTail( pTexture );
 	m_TextureNameMap.Insert( pTexture->GetName(), index );
 }
 
@@ -1045,15 +892,15 @@ void CTextureGroup::AddTexture(IEditorTexture *pTexture)
 //-----------------------------------------------------------------------------
 // Purpose: Sorts the group.
 //-----------------------------------------------------------------------------
-void CTextureGroup::Sort(void)
+void CTextureGroup::Sort()
 {
-	m_Textures.Sort(SortTexturesProc);
+	m_Textures.Sort( SortTexturesProc );
 
 	// Redo the name map.
 	m_TextureNameMap.RemoveAll();
-	for ( int i=0; i < m_Textures.Count(); i++ )
+	for ( int i = 0; i < m_Textures.Count(); i++ )
 	{
-		IEditorTexture *pTex = m_Textures[i];
+		IEditorTexture* pTex = m_Textures[i];
 		m_TextureNameMap.Insert( pTex->GetName(), i );
 	}
 
@@ -1066,44 +913,39 @@ void CTextureGroup::Sort(void)
 // Purpose: Retrieves a texture by index.
 // Input  : nIndex - Index of the texture in this group.
 //-----------------------------------------------------------------------------
-IEditorTexture *CTextureGroup::GetTexture(int nIndex)
+IEditorTexture* CTextureGroup::GetTexture( int nIndex )
 {
-	if ((nIndex >= m_Textures.Count()) || (nIndex < 0))
-	{
-		return(NULL);
-	}
-
-	return(m_Textures[nIndex]);
+	if ( nIndex >= m_Textures.Count() || nIndex < 0 )
+		return nullptr;
+	return m_Textures[nIndex];
 }
 
 
 //-----------------------------------------------------------------------------
 // finds a texture by name
 //-----------------------------------------------------------------------------
-IEditorTexture *CTextureGroup::GetTexture( char const* pName )
+IEditorTexture* CTextureGroup::GetTexture( char const* pName )
 {
-	for (int i = 0; i < m_Textures.Count(); i++)
-	{
-		if (!strcmp(pName, m_Textures[i]->GetName()))
-			return m_Textures[i];
-	}
-
-	return NULL;
+	for ( int i = 0; i < m_Textures.Count(); i++ )
+		if ( auto tex = m_Textures[i]; !V_strcmp( pName, tex->GetName() ) )
+			return tex;
+	return nullptr;
 }
 
 
 //-----------------------------------------------------------------------------
 // Quickly find a texture by name.
 //-----------------------------------------------------------------------------
-IEditorTexture* CTextureGroup::FindTextureByName( const char *pName, int *piIndex )
+IEditorTexture* CTextureGroup::FindTextureByName( const char* pName, int* piIndex )
 {
 	int iMapEntry = m_TextureNameMap.Find( pName );
 	if ( iMapEntry == m_TextureNameMap.InvalidIndex() )
-	{
-		return NULL;
-	}
+		return nullptr;
 
-    return m_Textures[ m_TextureNameMap[iMapEntry] ];
+	auto tex = m_Textures[m_TextureNameMap[iMapEntry]];
+	if ( piIndex )
+		*piIndex = (int)std::distance( m_Textures.begin(), &tex );
+	return tex;
 }
 
 
@@ -1113,9 +955,9 @@ IEditorTexture* CTextureGroup::FindTextureByName( const char *pName, int *piInde
 void CTextureGroup::LazyLoadTextures()
 {
 	// Load at most once per call
-	while (m_nTextureToLoad < m_Textures.Count())
+	while ( m_nTextureToLoad < m_Textures.Count() )
 	{
-		if (!m_Textures[m_nTextureToLoad]->IsLoaded())
+		if ( !m_Textures[m_nTextureToLoad]->IsLoaded() )
 		{
 			m_Textures[m_nTextureToLoad]->Load();
 			++m_nTextureToLoad;
@@ -1126,4 +968,3 @@ void CTextureGroup::LazyLoadTextures()
 		++m_nTextureToLoad;
 	}
 }
-
