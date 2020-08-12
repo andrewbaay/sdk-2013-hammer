@@ -309,6 +309,8 @@ void CStudioFileChangeWatcher::Init()
 
 		for ( int i=0; i < searchPathList.Count(); i++ )
 		{
+			if ( V_stristr( searchPathList[i], ".vpk" ) )
+				continue; // no vpks
 			m_Watcher.AddDirectory( searchPathList[i], "models", true );
 		}
 
