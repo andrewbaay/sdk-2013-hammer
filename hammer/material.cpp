@@ -634,7 +634,8 @@ CMaterial *CMaterial::CreateMaterial(const char *pszMaterialName, bool bLoadImme
 bool CMaterial::IsIgnoredMaterial( const char *pName )
 {
 	//TODO: make this a customizable user option?
-	if ( !Q_strnicmp(pName, ".svn", 4) || strstr (pName, ".svn") ||
+	if ( !Q_strnicmp(pName, "debug", 5) ||
+		!Q_strnicmp(pName, ".svn", 4) || strstr (pName, ".svn") ||
 		!Q_strnicmp(pName, "models", 6) || strstr (pName, "models") )
 		return true;
 
