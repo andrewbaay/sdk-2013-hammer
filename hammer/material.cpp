@@ -1252,7 +1252,7 @@ bool CMaterial::LoadMaterialImage( void )
 	if ( retVal == MATERIAL_PREVIEW_IMAGE_OK && m_TranslucentBaseTexture )
 	{
 		auto data = (unsigned char*)m_pData;
-		auto size = m_nWidth * size_t( m_nHeight );
+		auto size = m_nWidth * size_t( m_nHeight ) * 4;
 		for ( size_t i = 0; i < size; i += 4 )
 		{
 			auto a = data[i + 3];
