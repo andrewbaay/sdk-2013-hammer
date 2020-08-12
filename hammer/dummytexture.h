@@ -98,7 +98,7 @@ class CDummyTexture : public IEditorTexture
 
 		inline bool HasData() const
 		{
-			return(false);
+			return(true);
 		}
 
 		inline bool HasPalette() const
