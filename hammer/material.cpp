@@ -174,7 +174,6 @@ static CMaterialImageCache* g_pMaterialImageCache = NULL;
 CMaterial::CMaterial()
 {
 	memset( m_szName, 0, sizeof( m_szName ) );
-	memset( m_szFileName, 0, sizeof( m_szFileName ) );
 	memset( m_szKeywords, 0, sizeof( m_szKeywords ) );
 
 	m_nWidth = 0;
@@ -348,7 +347,6 @@ CMaterial* CMaterial::CreateMaterial( const char* pszMaterialName, bool bLoadImm
 	CMaterial* pMaterial = new CMaterial;
 
 	// Store off the material name so we can load it later if we need to
-	V_sprintf_safe( pMaterial->m_szFileName, pszMaterialName );
 	V_sprintf_safe( pMaterial->m_szName, pszMaterialName );
 
 	//
@@ -367,8 +365,7 @@ CMaterial* CMaterial::CreateMaterial( const char* pszMaterialName, bool bLoadImm
 bool CMaterial::IsIgnoredMaterial( const char* pName )
 {
 	// TODO: make this a customizable user option?
-	if ( !V_strnicmp( pName, "debug", 5 ) ||
-		!V_strnicmp( pName, ".svn", 4 ) || V_strstr( pName, ".svn" ) ||
+	if ( !V_strnicmp( pName, ".svn", 4 ) || V_strstr( pName, ".svn" ) ||
 		!V_strnicmp( pName, "models", 6 ) || V_strstr( pName, "models" ) )
 		return true;
 
@@ -383,12 +380,12 @@ bool CMaterial::LoadMaterial()
 	bool bFound = true;
 	if ( !m_bLoaded )
 	{
-		if ( IsIgnoredMaterial( m_szFileName ) )
+		if ( IsIgnoredMaterial( m_szName ) )
 			return false;
 
 		m_bLoaded = true;
 
-		IMaterial* pMat = materials->FindMaterial( m_szFileName, TEXTURE_GROUP_OTHER );
+		IMaterial* pMat = materials->FindMaterial( m_szName, TEXTURE_GROUP_OTHER );
 		if ( IsErrorMaterial( pMat ) )
 			bFound = false;
 
@@ -425,7 +422,7 @@ void CMaterial::Reload( bool bFullReload )
 		CPreviewImagePropertiesCache::InvalidateMaterial( m_pMaterial );
 		m_pMaterial->DecrementReferenceCount();
 	}
-	m_pMaterial = materials->FindMaterial( m_szFileName, TEXTURE_GROUP_OTHER );
+	m_pMaterial = materials->FindMaterial( m_szName, TEXTURE_GROUP_OTHER );
 	Assert( m_pMaterial );
 
 	if ( bFullReload )
@@ -763,7 +760,7 @@ int CMaterial::GetKeywords( char* pszKeywords ) const
 int CMaterial::GetShortName( char* pszName ) const
 {
 	if ( pszName == NULL )
-		return V_strlen(m_szName);
+		return V_strlen( m_szName );
 
 	V_strcpy( pszName, m_szName );
 	return V_strlen( m_szName );
@@ -812,7 +809,7 @@ bool CMaterial::LoadMaterialHeader( IMaterial* pMat )
 //-----------------------------------------------------------------------------
 const char* CMaterial::GetFileName() const
 {
-	return m_szFileName;
+	return m_szName;
 }
 
 //-----------------------------------------------------------------------------

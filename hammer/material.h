@@ -100,7 +100,6 @@ protected:
 	bool LoadMaterial();
 
 	char m_szName[MAX_PATH];
-	char m_szFileName[MAX_PATH];
 	char m_szKeywords[MAX_PATH];
 
 	int m_nWidth;				// Texture width in texels.
