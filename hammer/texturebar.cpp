@@ -225,8 +225,9 @@ void CTextureBar::UpdateTexture(void)
 	{
 		// Make sure the current material is loaded..
 		m_pCurTex->Load();
-		char szBuf[128];
-		sprintf(szBuf, "%dx%d", m_pCurTex->GetWidth(), m_pCurTex->GetHeight());
+		char szBuf[128] = { 0 };
+		if ( !m_pCurTex->IsDummy() )
+			sprintf( szBuf, "%dx%d", m_pCurTex->GetWidth(), m_pCurTex->GetHeight() );
 		GetDlgItem(IDC_TEXTURESIZE)->SetWindowText(szBuf);
 		m_pCurTex->GetShortName(szDefaultTexture);
 	}

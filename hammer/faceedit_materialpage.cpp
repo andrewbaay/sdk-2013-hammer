@@ -1365,8 +1365,9 @@ void CFaceEditMaterialPage::UpdateTexture( void )
 
 	if( m_pCurTex )
 	{
-		char szBuf[128];
-		sprintf( szBuf, "%dx%d", m_pCurTex->GetWidth(), m_pCurTex->GetHeight() );
+		char szBuf[128] = { 0 };
+		if ( !m_pCurTex->IsDummy() )
+			sprintf( szBuf, "%dx%d", m_pCurTex->GetWidth(), m_pCurTex->GetHeight() );
 		GetDlgItem( IDC_TEXTURESIZE )->SetWindowText( szBuf );
 
 		char szTexName[128];
