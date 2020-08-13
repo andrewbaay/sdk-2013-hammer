@@ -1597,22 +1597,22 @@ void CMapView2DBase::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
 	{
 		case SB_LINELEFT:
 		{
-			iPos = -int(viewWidth / 4);
+			iPos = -int(ceil(viewWidth / 4));
 			break;
 		}
 		case SB_LINERIGHT:
 		{
-			iPos = int(viewWidth / 4);
+			iPos = int(ceil(viewWidth / 4));
 			break;
 		}
 		case SB_PAGELEFT:
 		{
-			iPos = -int(viewWidth / 2);
+			iPos = -int(ceil(viewWidth / 2));
 			break;
 		}
 		case SB_PAGERIGHT:
 		{
-			iPos = int(viewWidth / 2);
+			iPos = int(ceil(viewWidth / 2));
 			break;
 		}
 		case SB_THUMBTRACK:
@@ -1649,22 +1649,22 @@ void CMapView2DBase::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
 	{
 		case SB_LINEUP:
 		{
-			iPos = -int(viewHeight / 4);
+			iPos = -int(ceil(viewHeight / 4));
 			break;
 		}
 		case SB_LINEDOWN:
 		{
-			iPos = int(viewHeight / 4);
+			iPos = int(ceil(viewHeight / 4));
 			break;
 		}
 		case SB_PAGEUP:
 		{
-			iPos = -int(viewHeight / 2);
+			iPos = -int(ceil(viewHeight / 2));
 			break;
 		}
 		case SB_PAGEDOWN:
 		{
-			iPos = int(viewHeight / 2);
+			iPos = int(ceil(viewHeight / 2));
 			break;
 		}
 		case SB_THUMBTRACK:
