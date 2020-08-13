@@ -1109,7 +1109,7 @@ int SortFuncCompareSaveOrder( const CUtlReference<CMapClass> *pClass1, const CUt
 //			pSaveInfo - Holds rules for which objects to save.
 // Output : Returns ChunkFile_Ok if the save was successful, or an error code.
 //-----------------------------------------------------------------------------
-ChunkFileResult_t CMapWorld::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo, int saveFlags)
+ChunkFileResult_t CMapWorld::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo, int saveFlags, const CMapObjectList* extraSolids)
 {
 	PresaveWorld();
 
@@ -1125,6 +1125,12 @@ ChunkFileResult_t CMapWorld::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo, in
 	//
 	SaveLists.Entities.InPlaceQuickSort( SortFuncCompareSaveOrder );
 	SaveLists.Groups.InPlaceQuickSort( SortFuncCompareSaveOrder );
+	if ( extraSolids )
+	{
+		SaveLists.Solids.EnsureCapacity( SaveLists.Solids.Count() + extraSolids->Count() );
+		for ( auto& s : *extraSolids )
+			SaveLists.Solids.AddToTail( s );
+	}
 	SaveLists.Solids.InPlaceQuickSort( SortFuncCompareSaveOrder );
 
 	//

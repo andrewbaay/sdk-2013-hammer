@@ -2093,15 +2093,11 @@ bool CHammer::CanAllocateVideo() const
 //			pstrMapTitle - the name of the current map to be saved
 // Output : returns an int containing the next number to use for the autosave
 //-------------------------------------------------------------------------------
-int CHammer::GetNextAutosaveNumber( CUtlMap<FILETIME, WIN32_FIND_DATA, int> *pFileMap, DWORD *pdwTotalDirSize, const CString *pstrMapTitle ) const
+int CHammer::GetNextAutosaveNumber( const CString& autoSaveDir, CUtlMap<FILETIME, WIN32_FIND_DATA, int> *pFileMap, DWORD *pdwTotalDirSize, const CString *pstrMapTitle )
 {
 	FILETIME oldestAutosaveTime;
 	oldestAutosaveTime.dwHighDateTime = 0;
 	oldestAutosaveTime.dwLowDateTime = 0;
-
-	char szRootDir[MAX_PATH];
-	GetDirectory(DIR_AUTOSAVE, szRootDir);
-	CString strAutosaveDirectory( szRootDir );
 
 	int nNumberActualAutosaves = 0;
 	int nCurrentAutosaveNumber = 1;
@@ -2114,7 +2110,7 @@ int CHammer::GetNextAutosaveNumber( CUtlMap<FILETIME, WIN32_FIND_DATA, int> *pFi
 	HANDLE hFile;
 	DWORD dwTotalAutosaveDirectorySize = 0;
 
-	hFile = FindFirstFile( strAutosaveDirectory + "*.vmf_autosave", &fileData );
+	hFile = FindFirstFile( autoSaveDir + "*.vmf_autosave", &fileData );
 
     if ( hFile != INVALID_HANDLE_VALUE )
 	{
@@ -2194,6 +2190,85 @@ static bool LessFunc( const FILETIME &lhs, const FILETIME &rhs )
 	return CompareFileTime(&lhs, &rhs) < 0;
 }
 
+struct AutoSaveData
+{
+	CString  autoSaveDir;
+	CMapDoc* pDoc;
+};
+
+unsigned CHammer::DoAutosave( void* _data )
+{
+	auto data = static_cast<AutoSaveData*>( _data );
+	auto pDoc = data->pDoc;
+	const auto& strAutosaveDirectory = data->autoSaveDir;
+
+	//value from options is in megs
+	DWORD dwMaxAutosaveSpace = Options.general.iMaxAutosaveSpace * 1024 * 1024;
+
+	CUtlMap<FILETIME, WIN32_FIND_DATA, int> autosaveFiles( LessFunc );
+
+	//this will hold the name of the map w/o leading directory info or file extension
+	CString strMapTitle;
+	//full path of map file
+	CString strMapFilename = pDoc->GetPathName();
+
+	DWORD dwTotalAutosaveDirectorySize = 0;
+	int nCurrentAutosaveNumber = 0;
+
+	// the map hasn't been saved before and doesn't have a filename; using default: 'autosave'
+	if ( strMapFilename.IsEmpty() )
+	{
+		strMapTitle = "autosave";
+	}
+	// the map already has a filename
+	else
+	{
+		int nFilenameBeginOffset = strMapFilename.ReverseFind( '\\' ) + 1;
+		int nFilenameEndOffset = strMapFilename.Find( '.' );
+		//get the filename of the map, between the leading '\' and the '.'
+		strMapTitle = strMapFilename.Mid( nFilenameBeginOffset, nFilenameEndOffset - nFilenameBeginOffset );
+	}
+
+	nCurrentAutosaveNumber = GetNextAutosaveNumber( strAutosaveDirectory, &autosaveFiles, &dwTotalAutosaveDirectorySize, &strMapTitle );
+
+	//creating the proper suffix for the autosave file
+	char szNumberChars[4];
+    CString strAutosaveString = itoa( nCurrentAutosaveNumber, szNumberChars, 10 );
+	CString strAutosaveNumber = "000";
+	strAutosaveNumber += strAutosaveString;
+	strAutosaveNumber = strAutosaveNumber.Right( 3 );
+	strAutosaveNumber = "_" + strAutosaveNumber;
+
+	CString strSaveName = strAutosaveDirectory + strMapTitle + strAutosaveNumber + ".vmf_autosave";
+
+	pDoc->SaveVMF( strSaveName, SAVEFLAGS_AUTOSAVE | SAVEFLAGS_NO_UI_UPDATE );
+	//don't autosave again unless they make changes
+	pDoc->SetAutosaveFlag( FALSE );
+
+	//if there is too much space used for autosaves, delete the oldest file until the size is acceptable
+	while( dwTotalAutosaveDirectorySize > dwMaxAutosaveSpace )
+	{
+		int nFirstElementIndex = autosaveFiles.FirstInorder();
+		if ( !autosaveFiles.IsValidIndex( nFirstElementIndex ) )
+		{
+			Assert( false );
+			break;
+		}
+
+		WIN32_FIND_DATA fileData = autosaveFiles.Element( nFirstElementIndex );
+		DWORD dwOldestFileSize =  fileData.nFileSizeLow;
+		char filename[MAX_PATH];
+		strcpy( filename, fileData.cFileName );
+		DeleteFile( strAutosaveDirectory + filename );
+		dwTotalAutosaveDirectorySize -= dwOldestFileSize;
+		autosaveFiles.RemoveAt( nFirstElementIndex );
+	}
+
+	autosaveFiles.RemoveAll();
+
+	delete data;
+	return 0;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: This is called when the autosave timer goes off.  It checks to
@@ -2203,95 +2278,35 @@ static bool LessFunc( const FILETIME &lhs, const FILETIME &rhs )
 void CHammer::Autosave( void )
 {
 	if ( !Options.general.bEnableAutosave )
-	{
 		return;
-	}
 
-	if ( VerifyAutosaveDirectory() != true )
+	if ( !VerifyAutosaveDirectory() )
 	{
 		Options.general.bEnableAutosave = false;
 		return;
 	}
 
-	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
+	CHammerDocTemplate* templates[] = { APP()->pMapDocTemplate, APP()->pManifestDocTemplate };
 
-	//value from options is in megs
-	DWORD dwMaxAutosaveSpace = Options.general.iMaxAutosaveSpace * 1024 * 1024;
+	char szRootDir[MAX_PATH];
+	APP()->GetDirectory( DIR_AUTOSAVE, szRootDir );
+	CString strAutosaveDirectory( szRootDir );
+	EditorUtil_ConvertPath( strAutosaveDirectory, true );
 
-	CUtlMap<FILETIME, WIN32_FIND_DATA, int> autosaveFiles;
-
-	autosaveFiles.SetLessFunc( LessFunc );
-
-	if ( pDoc && pDoc->NeedsAutosave() )
+	for ( CHammerDocTemplate* pTemplate : templates )
 	{
-		char szRootDir[MAX_PATH];
-		GetDirectory(DIR_AUTOSAVE, szRootDir);
-		CString strAutosaveDirectory( szRootDir );
-
-		//expand the path if $SteamUserDir etc are used for SDK users
-		EditorUtil_ConvertPath(strAutosaveDirectory, true);
-
-		CString strExtension  = ".vmf";
-		//this will hold the name of the map w/o leading directory info or file extension
-		CString strMapTitle;
-		//full path of map file
-		CString strMapFilename = pDoc->GetPathName();
-
-		DWORD dwTotalAutosaveDirectorySize = 0;
-		int nCurrentAutosaveNumber = 0;
-
-		// the map hasn't been saved before and doesn't have a filename; using default: 'autosave'
-		if ( strMapFilename.IsEmpty() )
+		for ( POSITION pos = pTemplate->GetFirstDocPosition(); pos != NULL; )
 		{
-			strMapTitle = "autosave";
+			CMapDoc* pDoc = static_cast<CMapDoc*>( pTemplate->GetNextDoc( pos ) );
+			if ( !pDoc->NeedsAutosave() )
+				continue;
+
+			auto data = new AutoSaveData{ strAutosaveDirectory, pDoc };
+
+			auto thread = CreateSimpleThread( DoAutosave, data );
+			ThreadDetach( thread );
+			ReleaseThreadHandle( thread );
 		}
-		// the map already has a filename
-		else
-		{
-			int nFilenameBeginOffset = strMapFilename.ReverseFind( '\\' ) + 1;
-			int nFilenameEndOffset = strMapFilename.Find( '.' );
-			//get the filename of the map, between the leading '\' and the '.'
-			strMapTitle = strMapFilename.Mid( nFilenameBeginOffset, nFilenameEndOffset - nFilenameBeginOffset );
-		}
-
-		nCurrentAutosaveNumber = GetNextAutosaveNumber( &autosaveFiles, &dwTotalAutosaveDirectorySize, &strMapTitle );
-
-		//creating the proper suffix for the autosave file
-		char szNumberChars[4];
-        CString strAutosaveString = itoa( nCurrentAutosaveNumber, szNumberChars, 10 );
-		CString strAutosaveNumber = "000";
-		strAutosaveNumber += strAutosaveString;
-		strAutosaveNumber = strAutosaveNumber.Right( 3 );
-		strAutosaveNumber = "_" + strAutosaveNumber;
-
-		CString strSaveName = strAutosaveDirectory + strMapTitle + strAutosaveNumber + strExtension + "_autosave";
-
-		pDoc->SaveVMF( strSaveName, SAVEFLAGS_AUTOSAVE );
-		//don't autosave again unless they make changes
-		pDoc->SetAutosaveFlag( FALSE );
-
-		//if there is too much space used for autosaves, delete the oldest file until the size is acceptable
-		while( dwTotalAutosaveDirectorySize > dwMaxAutosaveSpace )
-		{
-			int nFirstElementIndex = autosaveFiles.FirstInorder();
-			if ( !autosaveFiles.IsValidIndex( nFirstElementIndex ) )
-			{
-				Assert( false );
-				break;
-			}
-
-			WIN32_FIND_DATA fileData = autosaveFiles.Element( nFirstElementIndex );
-			DWORD dwOldestFileSize =  fileData.nFileSizeLow;
-			char filename[MAX_PATH];
-			strcpy( filename, fileData.cFileName );
-			DeleteFile( strAutosaveDirectory + filename );
-			dwTotalAutosaveDirectorySize -= dwOldestFileSize;
-			autosaveFiles.RemoveAt( nFirstElementIndex );
-		}
-
-		autosaveFiles.RemoveAll();
-
-
 	}
 }
 

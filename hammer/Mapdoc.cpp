@@ -10290,7 +10290,6 @@ bool CMapDoc::SaveVMF(const char *pszFileName, int saveFlags )
 	if (eResult == ChunkFile_Ok)
 	{
 		CSaveInfo SaveInfo;
-		CMapObjectList CordonList;
 		CMapWorld *pCordonWorld = NULL;
 
 		if (!m_bPrefab)
@@ -10307,15 +10306,6 @@ bool CMapDoc::SaveVMF(const char *pszFileName, int saveFlags )
 				// CordonList so we can remove them again.
 				//
 				pCordonWorld = Cordon_CreateWorld();
-
-				CMapObjectList pChildren;
-				pChildren = *pCordonWorld->GetChildren(); // do copy
-				for ( CMapClass* pChild : pChildren )
-				{
-					pChild->SetTemporary(TRUE);
-					m_pWorld->AddObjectToWorld(pChild);
-					CordonList.AddToTail(pChild);
-				}
 			}
 		}
 
@@ -10351,7 +10341,7 @@ bool CMapDoc::SaveVMF(const char *pszFileName, int saveFlags )
 		// Save the world.
 		if (eResult == ChunkFile_Ok)
 		{
-			eResult = m_pWorld->SaveVMF(&File, &SaveInfo, saveFlags);
+			eResult = m_pWorld->SaveVMF(&File, &SaveInfo, saveFlags, m_bIsCordoning ? pCordonWorld->GetChildren() : nullptr);
 		}
 
 		if (!m_bPrefab)
@@ -10361,12 +10351,13 @@ bool CMapDoc::SaveVMF(const char *pszFileName, int saveFlags )
 			//
 			if ( m_bIsCordoning )
 			{
-				FOR_EACH_OBJ( CordonList, pos )
+				auto& CordonList = *pCordonWorld->GetChildren();
+				for ( int i = CordonList.Count() - 1; i >= 0; --i )
 				{
-					CMapClass *pobj = CordonList.Element(pos);
-					m_pWorld->RemoveObjectFromWorld(pobj, true);
+					CMapClass *pobj = CordonList.Element(i);
+					pCordonWorld->RemoveObjectFromWorld(pobj, true);
 
-					delete (CMapSolid*)pobj; // delete here, since it is now orphaned
+					delete (CMapSolid*)pobj; // delete here, since world does not free children
 				}
 
 				delete pCordonWorld;

@@ -111,7 +111,7 @@ class CMapWorld : public CMapClass, public CEditGameClass
 
 		// saveFlags is a combination of SAVEFLAGS_ defines.
 		ChunkFileResult_t SaveSolids(CChunkFile *pFile, CSaveInfo *pSaveInfo, int saveFlags);
-		ChunkFileResult_t SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo, int saveFlags);
+		ChunkFileResult_t SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo, int saveFlags, const CMapObjectList* extraSolids = nullptr);
 
 		virtual void UpdateChild(CMapClass *pChild);
 

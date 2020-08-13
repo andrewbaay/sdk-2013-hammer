@@ -158,7 +158,7 @@ public:
 	void LoadLastGoodSave();
 	void ResetAutosaveTimer();
 	bool VerifyAutosaveDirectory( char *szAutosaveDir = 0 ) const;
-	int GetNextAutosaveNumber( CUtlMap<FILETIME, WIN32_FIND_DATA, int> *pFileMap, DWORD *pdwTotalDirSize, const CString * ) const;
+	static int GetNextAutosaveNumber( const CString& autoSaveDir, CUtlMap<FILETIME, WIN32_FIND_DATA, int> *pFileMap, DWORD *pdwTotalDirSize, const CString* );
 
 	// When in lighting preview, it will avoid rendering frames.
 	// This forces it to render the next frame.
@@ -180,6 +180,8 @@ public:
 	DECLARE_MESSAGE_MAP()
 
 protected:
+
+	static unsigned DoAutosave( void* );
 
 	// These execute inside a minidump handler.
 	static int StaticHammerInternalInit( void *pParam );
