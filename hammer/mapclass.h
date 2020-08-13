@@ -527,8 +527,7 @@ const Vector &CMapClass::GetCullBoxMaxs() const
 class CMapClassManager
 {
 public:
-
-	virtual ~CMapClassManager();
+	~CMapClassManager();
 	CMapClassManager(MAPCLASSTYPE Type, CMapClass * (*pfnNew)());
 
 	static CMapClass * CreateObject(MAPCLASSTYPE Type);

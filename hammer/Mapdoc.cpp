@@ -70,6 +70,8 @@
 
 #include "utlbuffer.h"
 
+#include <algorithm>
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
 
@@ -1483,7 +1485,7 @@ ChunkFileResult_t CMapDoc::LoadEntityCallback(CChunkFile *pFile, CMapDoc *pDoc)
 	else
 		delete pEntity;
 
-	return(ChunkFile_Ok);
+	return ChunkFile_Ok;
 }
 
 
@@ -1502,10 +1504,7 @@ ChunkFileResult_t CMapDoc::LoadHiddenCallback(CChunkFile *pFile, CMapDoc *pDoc)
 	ChunkFileResult_t eResult = pFile->ReadChunk();
 	pFile->PopHandlers();
 
-	if (eResult == ChunkFile_Ok)
-		pDoc->m_QuickHideGroup.AddToTail( pDoc->GetMapWorld()->GetChildren()->Tail() );
-
-	return(eResult);
+	return eResult;
 }
 
 
@@ -1518,7 +1517,7 @@ ChunkFileResult_t CMapDoc::LoadHiddenCallback(CChunkFile *pFile, CMapDoc *pDoc)
 //-----------------------------------------------------------------------------
 bool CMapDoc::HandleLoadError(CChunkFile *pFile, const char *szChunkName, CMapDoc *pDoc)
 {
-	return(false);
+	return false;
 }
 
 
@@ -1587,6 +1586,7 @@ bool CMapDoc::LoadVMF( const char *pszFileName, int LoadFlags )
 		Handlers.AddHandler("viewsettings", LoadViewSettingsCallback, this);
 		Handlers.AddHandler("cordons", LoadCordonsCallback, this);
 		Handlers.AddHandler("cordon", LoadCordonCallback_Legacy, this); // Legacy support for maps with only one cordon
+		Handlers.AddHandler("quickhide", LoadQuickHideCallback, this);
 
 		m_pToolManager->AddToolHandlers( &Handlers );
 
@@ -1594,7 +1594,7 @@ bool CMapDoc::LoadVMF( const char *pszFileName, int LoadFlags )
 
 		File.PushHandlers(&Handlers);
 
-		if ( ( LoadFlags & VMF_LOAD_ACTIVATE ) )
+		if ( LoadFlags & VMF_LOAD_ACTIVATE )
 		{
 			SetActiveMapDoc( this );
 		}
@@ -1706,7 +1706,7 @@ ChunkFileResult_t CMapDoc::LoadVersionInfoKeyCallback(const char *szKey, const c
 	KeyInt("formatversion", pDoc->m_nFileFormatVersion);
 	KeyBool("prefab", pDoc->m_bPrefab);
 
-	return(ChunkFile_Ok);
+	return ChunkFile_Ok;
 }
 
 ChunkFileResult_t CMapDoc::LoadAutosaveCallback( CChunkFile *pFile, CMapDoc *pDoc)
@@ -1726,7 +1726,7 @@ ChunkFileResult_t CMapDoc::LoadAutosaveKeyCallback(const char *szKey, const char
 
 	}
 
-	return(ChunkFile_Ok);
+	return ChunkFile_Ok;
 }
 
 
@@ -1775,7 +1775,7 @@ ChunkFileResult_t CMapDoc::LoadCordonCallback(CChunkFile *pFile, CMapDoc *pDoc)
 	ChunkFileResult_t eResult = pFile->ReadChunk( LoadCordonKeyCallback, &cordon );
 	pFile->PopHandlers();
 
-	return(eResult);
+	return eResult;
 }
 
 
@@ -1842,7 +1842,7 @@ ChunkFileResult_t CMapDoc::LoadCordonsCallback(CChunkFile *pFile, CMapDoc *pDoc)
 	ChunkFileResult_t eResult = pFile->ReadChunk( LoadCordonsKeyCallback, pDoc );
 	pFile->PopHandlers();
 
-	return(eResult);
+	return eResult;
 }
 
 
@@ -1894,8 +1894,52 @@ ChunkFileResult_t CMapDoc::LoadCordonKeyCallback_Legacy( const char *szKey, cons
 //-----------------------------------------------------------------------------
 ChunkFileResult_t CMapDoc::LoadCordonCallback_Legacy(CChunkFile *pFile, CMapDoc *pDoc)
 {
-	ChunkFileResult_t eResult = pFile->ReadChunk( LoadCordonKeyCallback_Legacy, pDoc );
-	return(eResult);
+	return pFile->ReadChunk( LoadCordonKeyCallback_Legacy, pDoc );
+}
+
+ChunkFileResult_t CMapDoc::LoadQuickHideKeyCallback( const char* pszKeyName, const char* pszValue, CUtlVector<int> *pVec )
+{
+	if ( !V_stricmp( pszKeyName, "id" ) )
+		pVec->AddToTail( V_atoi( pszValue ) );
+	return ChunkFile_Ok;
+}
+
+ChunkFileResult_t CMapDoc::LoadQuickHideListCallback(CChunkFile *pFile, CUtlVector<int> *pVec)
+{
+	return pFile->ReadChunk( LoadQuickHideKeyCallback, pVec );
+}
+
+ChunkFileResult_t CMapDoc::LoadQuickHideCallback(CChunkFile *pFile, CMapDoc *pDoc)
+{
+	CUtlVector<int> ids;
+	CChunkHandlerMap Handlers;
+	Handlers.AddHandler( "list", LoadQuickHideListCallback, &ids );
+
+	pFile->PushHandlers( &Handlers );
+	ChunkFileResult_t eResult = pFile->ReadChunk();
+	pFile->PopHandlers();
+
+	if ( !ids.IsEmpty() )
+	{
+		ids.Sort( []( const int* a, const int* b ) { return *a - *b; } );
+		struct Data
+		{
+			const CUtlVector<int>& ids;
+			CMapDoc* pDoc;
+			int count;
+		} data{ ids, pDoc, ids.Count() };
+		pDoc->GetMapWorld()->EnumChildrenRecurseGroupsOnly<Data>( []( CMapClass* pCls, Data* pData ) -> BOOL
+		{
+			if ( std::binary_search( pData->ids.begin(), pData->ids.end(), pCls->GetID() ) )
+			{
+				pData->pDoc->m_QuickHideGroup.AddToTail( pCls );
+				--pData->count;
+			}
+			return pData->count > 0;
+		}, &data );
+	}
+
+	return eResult;
 }
 
 //-----------------------------------------------------------------------------
@@ -1913,7 +1957,7 @@ ChunkFileResult_t CMapDoc::LoadViewSettingsKeyCallback(const char *szKey, const 
 	KeyBool( "bShow3DGrid", pDoc->m_bShow3DGrid);
 	KeyInt( "nInstanceVisibility", (int&)pDoc->m_tShowInstance);
 
-	return(ChunkFile_Ok);
+	return ChunkFile_Ok;
 }
 
 ChunkFileResult_t CMapDoc::LoadViewDataKeyCallback( CChunkFile* pFile, CMapDoc* pDoc, const char* chunkName )
@@ -1931,7 +1975,7 @@ ChunkFileResult_t CMapDoc::LoadViewDataKeyCallback( CChunkFile* pFile, CMapDoc* 
 		float zoom;
 	};
 
-	const auto& func = []( const char* szKey, const char* szValue, Data* pData ) -> ChunkFileResult_t
+	ChunkFileResult_t( *func )( const char*, const char*, Data* ) = []( const char* szKey, const char* szValue, Data* pData ) -> ChunkFileResult_t
 	{
 		if ( !V_stricmp( szKey, "3d" ) )
 			pData->bIs3d = V_atoi( szValue ) ? TRS_TRUE : TRS_FALSE;
@@ -1964,7 +2008,7 @@ ChunkFileResult_t CMapDoc::LoadViewDataKeyCallback( CChunkFile* pFile, CMapDoc* 
 
 	Data data{ pDoc, TRS_NONE, vec3_origin, vec3_origin, 1.0f };
 
-	auto res = pFile->ReadChunk( (ChunkFileResult_t( * )( const char*, const char*, Data* ))func, &data );
+	auto res = pFile->ReadChunk( func, &data );
 
 	if ( res != ChunkFile_Ok || data.bIs3d == TRS_NONE || static_cast<bool>( data.bIs3d ) != b3d )
 		return res;
@@ -1991,7 +2035,7 @@ ChunkFileResult_t CMapDoc::LoadViewSettingsCallback(CChunkFile *pFile, CMapDoc *
 {
 	CChunkHandlerMap Handlers;
 
-	const auto& viewsHandler = []( CChunkFile* file, CMapDoc* doc ) -> ChunkFileResult_t
+	ChunkFileResult_t( *viewsHandler )( CChunkFile*, CMapDoc* ) = []( CChunkFile* file, CMapDoc* doc ) -> ChunkFileResult_t
 	{
 		ChunkFileResult_t eResult;
 		char szName[MAX_KEYVALUE_LEN];
@@ -2012,7 +2056,7 @@ ChunkFileResult_t CMapDoc::LoadViewSettingsCallback(CChunkFile *pFile, CMapDoc *
 		return eResult == ChunkFile_EndOfChunk ? ChunkFile_Ok : eResult;
 	};
 
-	Handlers.AddHandler( "views", (ChunkFileResult_t( * )( CChunkFile*, CMapDoc* ))viewsHandler, pDoc );
+	Handlers.AddHandler( "views", viewsHandler, pDoc );
 	pFile->PushHandlers( &Handlers );
 	ChunkFileResult_t eResult = pFile->ReadChunk(LoadViewSettingsKeyCallback, pDoc);
 	pFile->PopHandlers();
@@ -2034,8 +2078,7 @@ ChunkFileResult_t CMapDoc::LoadViewSettingsCallback(CChunkFile *pFile, CMapDoc *
 ChunkFileResult_t CMapDoc::LoadWorldCallback(CChunkFile *pFile, CMapDoc *pDoc)
 {
 	CMapWorld *pWorld = pDoc->GetMapWorld();
-	ChunkFileResult_t eResult = pWorld->LoadVMF(pFile);
-	return(eResult);
+	return pWorld->LoadVMF(pFile);
 }
 
 
@@ -12356,25 +12399,36 @@ void CMapDoc::OnQuickHide_CreateVisGroupFromHidden( void )
 //-----------------------------------------------------------------------------
 ChunkFileResult_t CMapDoc::QuickHide_SaveVMF( CChunkFile *pFile, CSaveInfo *pSaveInfo )
 {
-	if ( m_QuickHideGroup.Count() == 0)
-	{
-		return( ChunkFile_Ok );
-	}
+	if ( m_QuickHideGroup.Count() == 0 )
+		return ChunkFile_Ok;
 
 	ChunkFileResult_t eResult = pFile->BeginChunk( "quickhide" );
+	if ( eResult != ChunkFile_Ok )
+		return eResult;
 
-	if ( eResult == ChunkFile_Ok )
+	int nCount = m_QuickHideGroup.Count();
+	eResult = pFile->WriteKeyValueInt( "count", nCount );
+	if ( eResult != ChunkFile_Ok )
+		return eResult;
+
+	eResult = pFile->BeginChunk( "list" );
+	if ( eResult != ChunkFile_Ok )
+		return eResult;
+
+	for ( CMapClass* e : m_QuickHideGroup )
 	{
-		int nCount = m_QuickHideGroup.Count();
-		eResult = pFile->WriteKeyValueInt( "count", nCount );
+		if ( dynamic_cast<CMapHelper*>( e ) )
+			continue;
+		eResult = pFile->WriteKeyValueInt( "id", e->GetID() );
+		if ( eResult != ChunkFile_Ok )
+			return eResult;
 	}
 
-	if ( eResult == ChunkFile_Ok )
-	{
-		eResult = pFile->EndChunk();
-	}
+	eResult = pFile->EndChunk();
+	if ( eResult != ChunkFile_Ok )
+		return eResult;
 
-	return( eResult );
+	return pFile->EndChunk();
 }
 
 //-----------------------------------------------------------------------------

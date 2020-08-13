@@ -649,6 +649,9 @@ class CMapDoc : public CDocument
 		static ChunkFileResult_t LoadViewSettingsKeyCallback(const char *szKey, const char *szValue, CMapDoc *pDoc);
 		static ChunkFileResult_t LoadViewDataKeyCallback(CChunkFile *pFile, CMapDoc *pDoc, const char *chunkName);
 
+		static ChunkFileResult_t LoadQuickHideCallback( CChunkFile *pFile, CMapDoc *pDoc );
+		static ChunkFileResult_t LoadQuickHideListCallback( CChunkFile *pFile, CUtlVector<int> *pVec );
+		static ChunkFileResult_t LoadQuickHideKeyCallback( const char *pszKey, const char *pszValue, CUtlVector<int> *pVec );
 		//
 		// Search functions.
 		//
