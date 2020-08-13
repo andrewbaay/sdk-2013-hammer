@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -90,6 +90,9 @@ BEGIN_MESSAGE_MAP(CProgressDlg, CDialog)
     //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
+BEGIN_MESSAGE_MAP(CProgressDlg::CStatic2, CStatic)
+	ON_WM_CTLCOLOR_REFLECT()
+END_MESSAGE_MAP()
 
 void CProgressDlg::OnCancel()
 {
@@ -102,7 +105,7 @@ void CProgressDlg::SetRange(int nLower,int nUpper)
     m_nUpper = nUpper;
     m_Progress.SetRange(nLower,nUpper);
 }
-  
+
 int CProgressDlg::SetPos(int nPos)
 {
     PumpMessages();
@@ -145,7 +148,7 @@ void CProgressDlg::PumpMessages()
       if(!IsDialogMessage(&msg))
       {
         TranslateMessage(&msg);
-        DispatchMessage(&msg);  
+        DispatchMessage(&msg);
       }
     }
 }
@@ -170,9 +173,8 @@ BOOL CProgressDlg::CheckCancelButton()
 
 void CProgressDlg::UpdatePercent(int nNewPos)
 {
-    CWnd *pWndPercent = GetDlgItem(CG_IDC_PROGDLG_PERCENT);
     int nPercent;
-    
+
     int nDivisor = m_nUpper - m_nLower;
     Assert(nDivisor>0);  // m_nLower should be smaller than m_nUpper
 
@@ -188,19 +190,19 @@ void CProgressDlg::UpdatePercent(int nNewPos)
 
     // Display the percentage
     CString strBuf;
-    strBuf.Format(_T("%d%c"),nPercent,_T('%'));
+    strBuf.Format(_T("%d%%"),nPercent);
 
 	CString strCur; // get current percentage
-    pWndPercent->GetWindowText(strCur);
+    m_WndPercent.GetWindowText(strCur);
 
 	if (strCur != strBuf)
-		pWndPercent->SetWindowText(strBuf);
+		m_WndPercent.SetWindowText(strBuf);
 }
-    
+
 /////////////////////////////////////////////////////////////////////////////
 // CProgressDlg message handlers
 
-BOOL CProgressDlg::OnInitDialog() 
+BOOL CProgressDlg::OnInitDialog()
 {
     CDialog::OnInitDialog();
     m_Progress.SetRange(m_nLower,m_nUpper);
@@ -210,6 +212,18 @@ BOOL CProgressDlg::OnInitDialog()
 	CString strCaption;
 	VERIFY(strCaption.LoadString(m_nCaptionID));
     SetWindowText(strCaption);
+	m_WndPercent.SubclassDlgItem( CG_IDC_PROGDLG_PERCENT, this );
 
-    return TRUE;  
+    return TRUE;
+}
+
+CProgressDlg::CStatic2::CStatic2()
+{
+	m_bkgnd.CreateStockObject( NULL_BRUSH );
+}
+
+HBRUSH CProgressDlg::CStatic2::CtlColor( CDC* pDC, UINT nCtlColor )
+{
+	pDC->SetBkMode(TRANSPARENT);
+	return m_bkgnd;
 }
