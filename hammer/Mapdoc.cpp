@@ -10293,7 +10293,7 @@ bool CMapDoc::SaveVMF(const char *pszFileName, int saveFlags )
 		CMapObjectList CordonList;
 		CMapWorld *pCordonWorld = NULL;
 
-		if (!m_bPrefab && !(saveFlags & SAVEFLAGS_LIGHTSONLY))
+		if (!m_bPrefab)
 		{
 			SaveInfo.SetVisiblesOnly(m_bSaveVisiblesOnly);
 
@@ -10335,7 +10335,7 @@ bool CMapDoc::SaveVMF(const char *pszFileName, int saveFlags )
 		//
 		// Save VisGroups information. Save this first so that we can assign visgroups while loading objects.
 		//
-		if (!m_bPrefab && !(saveFlags & SAVEFLAGS_LIGHTSONLY))
+		if (!m_bPrefab)
 		{
 			eResult = VisGroups_SaveVMF(&File, &SaveInfo);
 		}
@@ -10351,10 +10351,10 @@ bool CMapDoc::SaveVMF(const char *pszFileName, int saveFlags )
 		// Save the world.
 		if (eResult == ChunkFile_Ok)
 		{
-			eResult = m_pWorld->SaveVMF(&File, &SaveInfo, saveFlags & SAVEFLAGS_LIGHTSONLY);
+			eResult = m_pWorld->SaveVMF(&File, &SaveInfo, saveFlags);
 		}
 
-		if (!m_bPrefab && !(saveFlags & SAVEFLAGS_LIGHTSONLY))
+		if (!m_bPrefab)
 		{
 			//
 			// Remove cordon objects from the real world.

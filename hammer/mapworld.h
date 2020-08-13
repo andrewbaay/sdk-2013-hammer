@@ -17,9 +17,8 @@
 #include "MapPath.h"
 
 // Flags for SaveVMF.
-#define SAVEFLAGS_LIGHTSONLY	(1<<0)
-#define SAVEFLAGS_AUTOSAVE		(1<<1)
-#define SAVEFLAGS_NO_UI_UPDATE	(1<<2)
+#define SAVEFLAGS_AUTOSAVE		(1<<0)
+#define SAVEFLAGS_NO_UI_UPDATE	(1<<1)
 
 
 #define MAX_VISIBLE_OBJECTS		10000
@@ -177,7 +176,7 @@ class CMapWorld : public CMapClass, public CEditGameClass
 		ChunkFileResult_t LoadSolid(CChunkFile *pFile, bool bVisible);
 
 		static BOOL BuildSaveListsCallback(CMapClass *pObject, SaveLists_t *pSaveLists);
-		ChunkFileResult_t SaveObjectListVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo, const CMapObjectList *pList, int saveFlags);
+		static ChunkFileResult_t SaveObjectListVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo, const CMapObjectList *pList, int saveFlags);
 
 		//
 		// Culling tree operations.

@@ -1066,7 +1066,7 @@ ChunkFileResult_t CMapWorld::SaveSolids(CChunkFile *pFile, CSaveInfo *pSaveInfo,
 	PresaveWorld();
 
 	SaveLists_t SaveLists;
-	EnumChildrenRecurseGroupsOnly((ENUMMAPCHILDRENPROC)BuildSaveListsCallback, (DWORD)&SaveLists);
+	EnumChildrenRecurseGroupsOnly(BuildSaveListsCallback, &SaveLists);
 
 	return SaveObjectListVMF(pFile, pSaveInfo, &SaveLists.Solids, saveFlags);
 }
@@ -1130,59 +1130,54 @@ ChunkFileResult_t CMapWorld::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo, in
 	//
 	// Begin the world chunk.
 	//
-	ChunkFileResult_t  eResult = ChunkFile_Ok;
+	ChunkFileResult_t eResult = pFile->BeginChunk("world");
 
-	if( !(saveFlags & SAVEFLAGS_LIGHTSONLY) )
+	//
+	// Save world ID - it's always zero.
+	//
+	if (eResult == ChunkFile_Ok)
 	{
-		eResult = pFile->BeginChunk("world");
+		eResult = pFile->WriteKeyValueInt("id", GetID());
+	}
 
-		//
-		// Save world ID - it's always zero.
-		//
-		if (eResult == ChunkFile_Ok)
-		{
-			eResult = pFile->WriteKeyValueInt("id", GetID());
-		}
+	//
+	// HACK: Save map version. This is already being saved in the version info block by the doc.
+	//
+	if (eResult == ChunkFile_Ok)
+	{
+		eResult = pFile->WriteKeyValueInt("mapversion", CMapDoc::GetActiveMapDoc()->GetDocVersion());
+	}
 
-		//
-		// HACK: Save map version. This is already being saved in the version info block by the doc.
-		//
-		if (eResult == ChunkFile_Ok)
-		{
-			eResult = pFile->WriteKeyValueInt("mapversion", CMapDoc::GetActiveMapDoc()->GetDocVersion());
-		}
+	//
+	// Save world keys.
+	//
+	if (eResult == ChunkFile_Ok)
+	{
+		CEditGameClass::SaveVMF(pFile, pSaveInfo);
+	}
 
-		//
-		// Save world keys.
-		//
-		if (eResult == ChunkFile_Ok)
-		{
-			CEditGameClass::SaveVMF(pFile, pSaveInfo);
-		}
+	//
+	// Save world solids.
+	//
+	if (eResult == ChunkFile_Ok)
+	{
+		eResult = SaveObjectListVMF(pFile, pSaveInfo, &SaveLists.Solids, saveFlags);
+	}
 
-		//
-		// Save world solids.
-		//
-		if (eResult == ChunkFile_Ok)
-		{
-			eResult = SaveObjectListVMF(pFile, pSaveInfo, &SaveLists.Solids, saveFlags);
-		}
+	//
+	// Save groups.
+	//
+	if (eResult == ChunkFile_Ok)
+	{
+		eResult = SaveObjectListVMF(pFile, pSaveInfo, &SaveLists.Groups, saveFlags);
+	}
 
-		//
-		// Save groups.
-		//
-		if (eResult == ChunkFile_Ok)
-		{
-			eResult = SaveObjectListVMF(pFile, pSaveInfo, &SaveLists.Groups, saveFlags);
-		}
-
-		//
-		// End the world chunk.
-		//
-		if (eResult == ChunkFile_Ok)
-		{
-			pFile->EndChunk();
-		}
+	//
+	// End the world chunk.
+	//
+	if (eResult == ChunkFile_Ok)
+	{
+		pFile->EndChunk();
 	}
 
 	//
@@ -1193,7 +1188,7 @@ ChunkFileResult_t CMapWorld::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo, in
 		eResult = SaveObjectListVMF(pFile, pSaveInfo, &SaveLists.Entities, saveFlags);
 	}
 
-	return(eResult);
+	return eResult;
 }
 
 
@@ -1207,29 +1202,17 @@ ChunkFileResult_t CMapWorld::SaveObjectListVMF(CChunkFile *pFile, CSaveInfo *pSa
 {
 	FOR_EACH_OBJ( *pList, pos )
 	{
-		CMapClass *pObject = pList->Element(pos);
-
-		// Only save lights if that's what they want.
-		if( saveFlags & SAVEFLAGS_LIGHTSONLY )
-		{
-			CMapEntity *pMapEnt = dynamic_cast<CMapEntity*>( pObject );
-			bool bIsLight = pMapEnt && strncmp( pMapEnt->GetClassName(), "light", 5 ) == 0;
-			if( !bIsLight )
-				continue;
-		}
-
-
-		if (pObject != NULL)
+		if (CMapClass *pObject = pList->Element(pos))
 		{
 			ChunkFileResult_t eResult = pObject->SaveVMF(pFile, pSaveInfo);
 			if (eResult != ChunkFile_Ok)
 			{
-				return(eResult);
+				return eResult;
 			}
 		}
 	}
 
-	return(ChunkFile_Ok);
+	return ChunkFile_Ok;
 }
 
 
