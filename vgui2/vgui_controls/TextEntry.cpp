@@ -2875,7 +2875,11 @@ void TextEntry::InsertChar(wchar_t ch)
 
 	if (m_bAllowNumericInputOnly)
 	{
-		if (!iswdigit(ch) && ((char)ch != '.'))
+		if ((!iswdigit(ch) && ((char)ch != '.') && ((char)ch != '-')) ||
+			(((char)ch == '.' || (char)ch == '-') && m_TextStream.Find( ch ) != -1) || // only 1 of these
+			(((char)ch == '-') && _cursorPos != 0) || // minus only at start
+			(((char)ch == '.') && (_cursorPos == 0 || !iswdigit(m_TextStream[_cursorPos - 1]))) // dot only after number
+			)
 		{
 			surface()->PlaySound("Resource\\warning.wav");
 			return;

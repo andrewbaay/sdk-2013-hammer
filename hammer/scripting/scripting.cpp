@@ -32,6 +32,8 @@
 #include "docgen.h"
 #endif
 
+#include <charconv>
+
 #include "tier0/memdbgon.h"
 
 #pragma comment( lib, "angelscript.lib" )
@@ -166,16 +168,24 @@ public:
 	{
 		GuiElement_t element;
 		ScriptString text;
-		int defaultVal;
+		union
+		{
+			int64 defaultValI;
+			double defaultValD;
+		};
+		bool dbl;
 
-		GUIData( GuiElement_t el, const ScriptString& text, int def )
-			: element( el ), text( text ), defaultVal( def ) { Assert( el == TextBox ); }
+		GUIData( GuiElement_t el, const ScriptString& text, int64 def )
+			: element( el ), text( text ), defaultValI( def ), dbl( false ) { Assert( el == TextBox ); }
+
+		GUIData( GuiElement_t el, const ScriptString& text, double def )
+			: element( el ), text( text ), defaultValD( def ), dbl( true ) { Assert( el == TextBox ); }
 
 		GUIData( GuiElement_t el, const ScriptString& text )
-			: element( el ), text( text ), defaultVal( 0 ) { Assert( el == Label ); }
+			: element( el ), text( text ), defaultValI( 0 ), dbl( false ) { Assert( el != Divider ); }
 
 		GUIData( GuiElement_t el )
-			: element( el ), defaultVal( 0 ) { Assert( el == Divider ); }
+			: element( el ), defaultValI( 0 ), dbl( false ) { Assert( el == Divider ); }
 	};
 
 	bool ShowGui();
@@ -349,8 +359,14 @@ public:
 
 					auto entry = new vgui::TextEntry( this, "" );
 					entry->SetAllowNumericInputOnly( true );
-					if ( data.defaultVal )
-						entry->SetText( CNumStr( data.defaultVal ) );
+					if ( data.dbl )
+					{
+						char value[24] = { 0 };
+						std::to_chars( value, value + ARRAYSIZE( value ), data.defaultValD );
+						entry->SetText( value );
+					}
+					else if ( data.defaultValI )
+						entry->SetText( CNumStr( data.defaultValI ) );
 
 					row->AddPanel( entry, vgui::SizerAddArgs_t().Padding( 0 ).MinX( 48 ) );
 
@@ -556,7 +572,10 @@ bool ScriptSolid::ShowGui()
 		char _value[64];
 		entries.Element( i )->GetText( _value, 64 );
 
-		dict->Set( entries.GetElementName( i ), V_atoi64( _value ) );
+		if ( V_strrchr( _value, '.' ) )
+			dict->Set( entries.GetElementName( i ), V_atod( _value ) );
+		else
+			dict->Set( entries.GetElementName( i ), V_atoi64( _value ) );
 	}
 
 	return m_guiClosed( dict ) && !m_guiClosed.failed();
@@ -807,7 +826,8 @@ void ScriptInit()
 	ASBind::Enum{ engine, "GuiElement_t" }.all<ScriptSolid::GuiElement_t>();
 
 	ASBind::Class<ScriptSolid::GUIData, ASBind::class_pod>{ engine }
-		.constructor<void( ScriptSolid::GuiElement_t, const ScriptString&, int )>()
+		.constructor<void( ScriptSolid::GuiElement_t, const ScriptString&, int64 )>()
+		.constructor<void( ScriptSolid::GuiElement_t, const ScriptString&, double )>()
 		.constructor<void( ScriptSolid::GuiElement_t, const ScriptString& )>()
 		.constructor<void( ScriptSolid::GuiElement_t )>()
 		;
