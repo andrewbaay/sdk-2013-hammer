@@ -782,6 +782,7 @@ void ScriptInit()
 		;
 
 	ASBind::Class<CMapGroup, ASBind::class_nocount>{ engine }
+		.factory( &WrapCreateMapClass<CMapGroup> )
 		.method( &CMapGroup::AddChild, "AddChild" )
 		.method( &WrapCalcBounds<CMapGroup>, "CalcBounds" )
 		.method( &CMapClass::GetBoundsSize, "GetBoundsSize" )
@@ -792,6 +793,7 @@ void ScriptInit()
 		;
 
 	ASBind::Class<CMapSolid, ASBind::class_nocount>{ engine }
+		.factory( &WrapCreateMapClass<CMapSolid> )
 		.method( &WrapAddFace, "AddFace" )
 		.method( &CMapSolid::InitializeTextureAxes, "InitializeTextureAxes" )
 		.method( &WrapCalcBounds<CMapSolid>, "CalcBounds" )
@@ -822,8 +824,6 @@ void ScriptInit()
 		.constvar( vec3_angle, "vec3_angle" )
 		.constvar( vec4_origin, "vec4_origin" )
 		.function( &Print, "print" )
-		.function( &WrapCreateMapClass<CMapGroup>, "CreateMapGroup" )
-		.function( &WrapCreateMapClass<CMapSolid>, "CreateSolid" )
 		.function2( &RegisterScriptSolid, "void RegisterScriptSolid( const string &in name, ScriptSolid@ instance )" )
 		;
 
@@ -867,7 +867,6 @@ void ScriptInit()
 #ifdef DEBUG
 	if ( CommandLine_Tier0()->FindParm( "-doc" ) )
 	{
-
 		DocumentationGenerator doc{ engine, { "scripts/api_reference.html", true, true, false, false, false, true, true, true, true, "0.1", "Hammer", "AS Interface" } };
 		doc.Generate();
 	}

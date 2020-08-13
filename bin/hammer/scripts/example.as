@@ -21,7 +21,7 @@ class ExampleWedge : ScriptSolid
 		box.GetBoundsCenter(origin);
 
 		CMapFace face;
-		CMapSolid@ solid = CreateSolid();
+		CMapSolid@ solid = CMapSolid();
 		Vector[] points;
 		points.resize(4);
 
@@ -168,7 +168,7 @@ class ExampleSpike : ScriptSolid
 		polyMake(origin[0] - fWidth, origin[1] - fDepth, origin[0] + fWidth, origin[1] + fDepth, sides, 0, pmPoints);
 
 		CMapFace NewFace;
-		CMapSolid@ pSolid = CreateSolid();
+		CMapSolid@ pSolid = CMapSolid();
 
 		for(int i = 0; i < sides+1; i++)
 		{
