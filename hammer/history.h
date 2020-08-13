@@ -29,6 +29,7 @@ class CTrackEntry
 			ttCopy,
 			ttDelete,
 			ttCreate,
+			ttQuickHide
 		};
 
 		CTrackEntry();
@@ -45,7 +46,7 @@ class CTrackEntry
 		void OnRemoveVisGroup(CVisGroup *pGroup);
 
 		bool m_bAutoDestruct;
-	
+
 	protected:
 
 		size_t m_nDataSize;
@@ -73,6 +74,12 @@ class CTrackEntry
 			{
 				CMapClass *pCreated;		// Pointer to the object that was created and added to the world.
 			} m_Create;
+
+			struct
+			{
+				CMapObjectList* QuickHideGroup;
+				CMapObjectList* QuickHideGroupedParents;
+			} m_QuickHide;
 		};
 
 		bool m_bKeptChildren;
@@ -100,12 +107,13 @@ public:
 
 	void OnRemoveVisGroup(CVisGroup *pGroup);
 
+	void OnQuickHide( const CMapObjectList* pQuickHideGroup, const CMapObjectList* pQuickHideGroupParents );
 private:
 
 	BOOL CheckObjectFlag(CMapClass *pObject, int iFlag);
 
 	CUtlVector<CTrackEntry> Data;
-	
+
 	CHistory *Parent;
 	DWORD dwID;	// id of this tracker..
 	char szName[128];
@@ -149,16 +157,18 @@ public:
 	//
 	void KeepNew(CMapClass *pObject, bool bKeepChildren = true);
 	void KeepNew(const CMapObjectList *pList, bool bKeepChildren = true);
-	
+
 	void Undo(CMapObjectList *pNewSelection);
 
 	BOOL IsUndoable();	// anything to undo?
 
 	void OnRemoveVisGroup(CVisGroup *pVisGroup);
 
+	void OnQuickHide( const CMapObjectList* pQuickHideGroup, const CMapObjectList* pQuickHideGroupParents );
+
 	// returns current name
 	LPCTSTR GetCurTrackName() { return CurTrack ? CurTrack->szName : ""; }
-	
+
 	// total override:
 	void SetActive(BOOL bActive);
 	BOOL IsActive() { return m_bActive; }

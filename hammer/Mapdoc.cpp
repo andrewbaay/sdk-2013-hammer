@@ -12175,6 +12175,10 @@ void CMapDoc::QuickHide_HideObjects( void )
 {
 	const CMapObjectList *pSelList = m_pSelection->GetList();
 
+	GetHistory()->MarkUndoPosition( pSelList, "Quick Hide" );
+	GetHistory()->OnQuickHide( &m_QuickHideGroup, &m_QuickHideGroupedParents );
+	GetHistory()->Pause();
+
 	for ( int index = 0; index < pSelList->Count(); index++ )
 	{
 		CMapClass *pObject = pSelList->Element( index );
@@ -12259,6 +12263,7 @@ void CMapDoc::QuickHide_HideObjects( void )
 
 	m_pToolManager->GetActiveTool()->SetEmpty();
 	UpdateVisibilityAll();
+	GetHistory()->Resume();
 }
 
 //-----------------------------------------------------------------------------
@@ -12269,6 +12274,10 @@ void CMapDoc::QuickHide_HideUnselectedObjects( void )
 	EnumChildrenPos_t pos;
 	CMapWorld *pWorld = GetMapWorld();
 	CMapClass *pObject = pWorld->GetFirstDescendent( pos );
+
+	GetHistory()->MarkUndoPosition( m_pSelection->GetList(), "Quick Hide" );
+	GetHistory()->OnQuickHide( &m_QuickHideGroup, &m_QuickHideGroupedParents );
+	GetHistory()->Pause();
 
 	while ( pObject )
 	{
@@ -12296,6 +12305,7 @@ void CMapDoc::QuickHide_HideUnselectedObjects( void )
 	}
 
 	UpdateVisibilityAll();
+	GetHistory()->Resume();
 }
 
 //-----------------------------------------------------------------------------
@@ -12303,6 +12313,9 @@ void CMapDoc::QuickHide_HideUnselectedObjects( void )
 //-----------------------------------------------------------------------------
 void CMapDoc::QuickHide_Unhide( void )
 {
+	GetHistory()->MarkUndoPosition( m_pSelection->GetList(), "Quick Hide" );
+	GetHistory()->OnQuickHide( &m_QuickHideGroup, &m_QuickHideGroupedParents );
+	GetHistory()->Pause();
 	if ( m_QuickHideGroup.Count() > 0 )
 	{
 		m_QuickHideGroup.RemoveAll();
@@ -12310,6 +12323,7 @@ void CMapDoc::QuickHide_Unhide( void )
 
 		UpdateVisibilityAll();
 	}
+	GetHistory()->Resume();
 }
 
 //-----------------------------------------------------------------------------
