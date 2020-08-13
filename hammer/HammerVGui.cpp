@@ -18,6 +18,8 @@
 //-----------------------------------------------------------------------------
 static CHammerVGui s_HammerVGui;
 
+extern void VGui_PlaySound( const char* );
+
 CHammerVGui *HammerVGui()
 {
 	return &s_HammerVGui;
@@ -54,7 +56,7 @@ bool CHammerVGui::Init( HWND hWindow )
 	g_pMatSystemSurface->EnableWindowsMessages( true );
 
 	// Need to be able to play sounds through vgui
-	// g_pMatSystemSurface->InstallPlaySoundFunc( VGui_PlaySound );
+	g_pMatSystemSurface->InstallPlaySoundFunc( &VGui_PlaySound );
 
 	// load scheme
 	m_hHammerScheme = vgui::scheme()->LoadSchemeFromFile("//hammer/Resource/HammerScheme.res", "Hammer");

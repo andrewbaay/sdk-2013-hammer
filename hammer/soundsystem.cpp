@@ -586,7 +586,14 @@ void CSoundSystem::PlaySoundFromMemory( const byte* mem, size_t size )
 	info.length = size;
 	m_pSystem->createStream( reinterpret_cast<const char*>( mem ), FMOD_LOOP_OFF | FMOD_2D | FMOD_IGNORETAGS | FMOD_VIRTUAL_PLAYFROMSTART | FMOD_OPENMEMORY, &info, &m_pLastSound );
 	m_pSystem->playSound( m_pLastSound, nullptr, false, &m_pLastChannel );
-	m_pLastChannel->setVolume( 0.2f );
+	m_pLastChannel->setVolume( 0.25f );
+}
+
+void CSoundSystem::PlaySoundFromFile( const char* name )
+{
+	m_pSystem->createStream( name, FMOD_LOOP_OFF | FMOD_2D | FMOD_IGNORETAGS | FMOD_VIRTUAL_PLAYFROMSTART, nullptr, &m_pLastSound );
+	m_pSystem->playSound( m_pLastSound, nullptr, false, &m_pLastChannel );
+	m_pLastChannel->setVolume( 0.25f );
 }
 
 //-----------------------------------------------------------------------------
@@ -635,4 +642,9 @@ void CSoundSystem::SetVolume( float volume )
 	if ( m_pLastChannel )
 		m_pLastChannel->setVolume( volume );
 	m_flVolume = volume;
+}
+
+void VGui_PlaySound( const char* soundName )
+{
+	g_Sounds.PlaySoundFromFile( soundName );
 }

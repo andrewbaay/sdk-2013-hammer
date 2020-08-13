@@ -68,6 +68,7 @@ public:
 	void SetVolume( float value );
 
 	void PlaySoundFromMemory( const byte* mem, size_t memSize );
+	void PlaySoundFromFile( const char* name );
 
 private:
 	struct SoundInfo_t
