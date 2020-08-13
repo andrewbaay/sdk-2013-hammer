@@ -431,7 +431,7 @@ CTrackEntry::CTrackEntry(TrackType_t eType, ...)
 			m_QuickHide.QuickHideGroupedParents = new CMapObjectList();
 			*m_QuickHide.QuickHideGroupedParents = *va_arg( vl, CMapObjectList* );
 
-			m_nDataSize = sizeof(*this);
+			m_nDataSize = sizeof(*this) + 2 * sizeof(CMapObjectList) + (m_QuickHide.QuickHideGroup->Count() + m_QuickHide.QuickHideGroupedParents->Size()) * sizeof(CUtlReference<CMapClass>);
 			break;
 		}
 	}
