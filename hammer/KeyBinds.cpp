@@ -152,7 +152,7 @@ static constexpr KeyNames_t g_KeyNames[] =
 
 WORD GetKeyForStr(const char *pStr)
 {
-    for (KeyNames_t t : g_KeyNames)
+    for (const auto& t : g_KeyNames)
     {
         if (!Q_stricmp(pStr, t.displaystring) || !Q_stricmp(pStr, t.string))
             return t.code;
@@ -163,7 +163,7 @@ WORD GetKeyForStr(const char *pStr)
 
 const char *GetStrForKey(WORD key)
 {
-    for (KeyNames_t t : g_KeyNames)
+    for (const auto& t : g_KeyNames)
     {
         if (t.code == key)
             return t.string;
@@ -174,11 +174,11 @@ const char *GetStrForKey(WORD key)
 
 
 
-typedef struct
+struct CommandNames_t
 {
     const char *pKeyName;
     int iCommand;
-} CommandNames_t;
+};
 
 #define COM(x) {#x, x}
 
@@ -275,13 +275,13 @@ static constexpr CommandNames_t s_CommandNamesDoc[] =
 
 int GetIDForCommandStr(const char *pName)
 {
-    for (CommandNames_t t : s_CommandNamesMain)
+    for (const auto& t : s_CommandNamesMain)
     {
         if (!Q_stricmp(pName, t.pKeyName))
             return t.iCommand;
     }
 
-    for (CommandNames_t t : s_CommandNamesDoc)
+    for (const auto& t : s_CommandNamesDoc)
     {
         if (!Q_stricmp(pName, t.pKeyName))
             return t.iCommand;
@@ -292,13 +292,13 @@ int GetIDForCommandStr(const char *pName)
 
 const char *GetStrForCommandID(int ID)
 {
-    for (CommandNames_t t : s_CommandNamesMain)
+    for (const auto& t : s_CommandNamesMain)
     {
         if (t.iCommand == ID)
             return t.pKeyName;
     }
 
-    for (CommandNames_t t : s_CommandNamesDoc)
+    for (const auto& t : s_CommandNamesDoc)
     {
         if (t.iCommand == ID)
             return t.pKeyName;
@@ -873,11 +873,13 @@ public:
 	{
 		m_pList = new VControlsListPanel( this, "KeyBindings" );
 		m_pList->SetIgnoreDoubleClick( true );
-		m_pList->AddColumnHeader( 0, "Action", "#KBEditorBindingName", 175, vgui::ListPanel::COLUMN_UNHIDABLE );
-		m_pList->AddColumnHeader( 1, "Binding", "#KBEditorBinding", 150, vgui::ListPanel::COLUMN_UNHIDABLE );
-		m_pList->AddColumnHeader( 2, "Description", "#KBEditorDescription", 300, vgui::ListPanel::COLUMN_RESIZEWITHWINDOW | vgui::ListPanel::COLUMN_UNHIDABLE );
+		m_pList->AddColumnHeader( 0, "Action", "Binding name", 175, 175, 500, vgui::ListPanel::COLUMN_UNHIDABLE );
+		m_pList->AddColumnHeader( 1, "Binding", "Binding", 150, 150, 500, vgui::ListPanel::COLUMN_UNHIDABLE );
+		m_pList->AddColumnHeader( 2, "Description", "Description", 300, vgui::ListPanel::COLUMN_RESIZEWITHWINDOW | vgui::ListPanel::COLUMN_UNHIDABLE );
 
-		LoadControlSettings( "resource/KeyBoardEditorPage.res" );
+		auto s = new vgui::CBoxSizer( vgui::ESLD_VERTICAL );
+		s->AddPanel( m_pList, vgui::SizerAddArgs_t().Expand( 1.0f ) );
+		SetSizer( s );
 
 		SaveMappings( bindings );
 	}
@@ -1125,8 +1127,6 @@ public:
 			CKeyBoardEditorPage* newPage = new CKeyBoardEditorPage( this, bindList );
 			AddPage( newPage, iter->GetName() );
 		}
-
-		LoadControlSettings( "resource/KeyBoardEditorSheet.res" );
 	}
 
 	void OnSaveChanges()
@@ -1196,14 +1196,31 @@ class CKeyBoardEditorDialog : public vgui::EditablePanel
 public:
 	CKeyBoardEditorDialog( vgui::Panel* parent ) : BaseClass( parent, "KeyBoardEditorDialog" )
 	{
-		m_pSave = new vgui::Button( this, "Save", "#KBEditorSave", this, "save" );
-		m_pCancel = new vgui::Button( this, "Cancel", "#KBEditorCancel", this, "cancel" );
-		m_pRevert = new vgui::Button( this, "Revert", "#KBEditorRevert", this, "revert" );
-		m_pUseDefaults = new vgui::Button( this, "Defaults", "#KBEditorUseDefaults", this, "defaults" );
+		m_pSave = new vgui::Button( this, "Save", "Save", this, "save" );
+		m_pCancel = new vgui::Button( this, "Cancel", "Cancel", this, "cancel" );
+		m_pRevert = new vgui::Button( this, "Revert", "Revert", this, "revert" );
+		m_pUseDefaults = new vgui::Button( this, "Defaults", "Use defaults", this, "defaults" );
 
 		m_pKBEditor = new CKeyBoardEditorSheet( this );
 
-		LoadControlSettings( "resource/KeyBoardEditorDialog.res" );
+		auto s = new vgui::CBoxSizer( vgui::ESLD_VERTICAL );
+		s->AddPanel( m_pKBEditor, vgui::SizerAddArgs_t().Expand( 1.0f ) );
+
+		auto s2 = new vgui::CBoxSizer( vgui::ESLD_HORIZONTAL );
+		s2->AddSpacer( vgui::SizerAddArgs_t().Expand( 0.5f ).Padding( 4 ) );
+
+		s2->AddPanel( m_pUseDefaults, vgui::SizerAddArgs_t().Padding( 0 ) );
+		s2->AddSpacer( vgui::SizerAddArgs_t().Padding( 4 ) );
+		s2->AddPanel( m_pRevert, vgui::SizerAddArgs_t().Padding( 0 ) );
+		s2->AddSpacer( vgui::SizerAddArgs_t().Padding( 4 ) );
+		s2->AddPanel( m_pSave, vgui::SizerAddArgs_t().Padding( 0 ) );
+		s2->AddSpacer( vgui::SizerAddArgs_t().Padding( 4 ) );
+		s2->AddPanel( m_pCancel, vgui::SizerAddArgs_t().Padding( 0 ) );
+
+		s->AddSizer( s2, vgui::SizerAddArgs_t().Padding( 5 ) );
+		s->AddSpacer( vgui::SizerAddArgs_t().Padding( 3 ) );
+
+		SetSizer( s );
 
 		SetMinimumSize( 640, 200 );
 
