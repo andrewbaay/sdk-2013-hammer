@@ -314,7 +314,6 @@ class CMapDoc : public CDocument
 		CMapWorld *Cordon_CreateWorld();
 		CMapWorld *Cordon_AddCordonObjectsToWorld( CMapObjectList &CordonList );
 		ChunkFileResult_t Cordon_SaveVMF( CChunkFile *pFile, CSaveInfo *pSaveInfo );
-		CMapWorld *Cordon_AddTempObjectsToWorld( CMapObjectList &CordonList );
 		bool Cordon_IsCulledByCordon( CMapClass *pObject );
 
 		void Cordon_MoveUp( Cordon_t *cordon );
@@ -730,7 +729,7 @@ class CMapDoc : public CDocument
 
 		int	m_nLogicalPositionCount;
 
-        bool m_bSaveVisiblesOnly;
+		bool m_bSaveVisiblesOnly;
 
 		//
 		// Expands %i keyword in prefab targetnames to generate unique targetnames for this map.

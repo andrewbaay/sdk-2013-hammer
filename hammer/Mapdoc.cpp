@@ -2816,26 +2816,6 @@ BOOL CMapDoc::SelectDocType(void)
 }
 
 
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CMapWorld *CMapDoc::Cordon_AddTempObjectsToWorld( CMapObjectList &CordonList )
-{
-	CMapWorld *pCordonWorld = Cordon_CreateWorld();
-
-	CMapObjectList pChildren;
-	pChildren = *pCordonWorld->GetChildren(); // copy
-	for ( CMapClass* pChild : pChildren )
-	{
-		pChild->SetTemporary(TRUE);
-		m_pWorld->AddObjectToWorld(pChild);
-
-		CordonList.AddToTail(pChild);
-	}
-
-	return pCordonWorld;
-}
-
-
 #ifdef _DEBUG
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -4590,7 +4570,6 @@ void CMapDoc::OnEditToWorld(void)
 
 					pChild->SetRenderColor(0, 100 + (random() % 156), 100 + (random() % 156));
 					SelectObject(pChild, scSelect);
-
 				}
 
 				//
@@ -10442,7 +10421,7 @@ bool CMapDoc::SaveVMF(const char *pszFileName, int saveFlags )
 		}
 		EndWaitCursor();
 	}
-	return( eResult == ChunkFile_Ok );
+	return eResult == ChunkFile_Ok ;
 }
 
 //-----------------------------------------------------------------------------
@@ -10885,16 +10864,15 @@ CVisGroup *CMapDoc::VisGroups_AddGroup(LPCTSTR pszName, bool bAuto)
 	//
 	// Generate a unique id for this visgroup.
 	//
-	int id = 0;
-	while (id++ < 2000)
+	uint id = 0;
+	int c  = m_VisGroups->Count();
+	for ( int i = 0; i < c; ++i)
 	{
-		if (!VisGroups_GroupForID(id))
-		{
-			break;
-		}
+		if ( auto f = m_VisGroups->Element( i )->GetID(); f > id )
+			id = f;
 	}
 
-	pGroup->SetID(id);
+	pGroup->SetID(id + 1);
 
 	return VisGroups_AddGroup(pGroup);
 }
@@ -12350,7 +12328,7 @@ void CMapDoc::QuickHide_Unhide( void )
 	GetHistory()->MarkUndoPosition( m_pSelection->GetList(), "Quick Hide" );
 	GetHistory()->OnQuickHide( &m_QuickHideGroup, &m_QuickHideGroupedParents );
 	GetHistory()->Pause();
-	if ( m_QuickHideGroup.Count() > 0 )
+	if ( !m_QuickHideGroup.IsEmpty() )
 	{
 		m_QuickHideGroup.RemoveAll();
 		m_QuickHideGroupedParents.RemoveAll();
