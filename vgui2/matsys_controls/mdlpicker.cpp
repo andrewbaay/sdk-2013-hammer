@@ -80,15 +80,26 @@ CMDLPicker::CMDLPicker( vgui::Panel *pParent, int nFlags ) :
 
 	// property sheet - revisions, changes, etc.
 	m_pPreviewSplitter = new Splitter( pSplitterRightSide, "PreviewSplitter", SPLITTER_MODE_HORIZONTAL, 1 );
+	m_pPreviewSplitter->SetAutoResize( PIN_TOPLEFT, AUTORESIZE_DOWNANDRIGHT, 0, 0, 0, 0 );
+
+	float flFractions2[] = { 0.67f, 0.33f };
+
+	m_pPreviewSplitter->RespaceSplitters( flFractions2 );
 
 	vgui::Panel *pSplitterTopSide = m_pPreviewSplitter->GetChild( 0 );
 	vgui::Panel *pSplitterBottomSide = m_pPreviewSplitter->GetChild( 1 );
 
 	// MDL preview
 	m_pMDLPreview = new CMDLPanel( pSplitterTopSide, "MDLPreview" );
+	m_pMDLPreview->SetAutoResize( PIN_TOPLEFT, AUTORESIZE_RIGHT, 0, 0, -16, 0 );
+	pSplitterTopSide->SetSizer( new vgui::CBoxSizer( vgui::ESLD_VERTICAL ) );
+	pSplitterTopSide->GetSizer()->AddPanel( m_pMDLPreview, vgui::SizerAddArgs_t().Expand( 1.0f ) );
 	SetSkipChildDuringPainting( m_pMDLPreview );
 
 	m_pViewsSheet = new vgui::PropertySheet( pSplitterBottomSide, "ViewsSheet" );
+	m_pViewsSheet->SetAutoResize( PIN_TOPLEFT, AUTORESIZE_RIGHT, 0, 0, -16, 0 );
+	pSplitterBottomSide->SetSizer( new vgui::CBoxSizer( vgui::ESLD_VERTICAL ) );
+	pSplitterBottomSide->GetSizer()->AddPanel( m_pViewsSheet, vgui::SizerAddArgs_t().Expand( 1.0f ) );
 	m_pViewsSheet->AddActionSignalTarget( this );
 
 	// now add wanted features
@@ -98,13 +109,24 @@ CMDLPicker::CMDLPicker( vgui::Panel *pParent, int nFlags ) :
 
 		m_pRenderPage->AddActionSignalTarget( this );
 
-        m_pRenderPage->LoadControlSettingsAndUserConfig( "resource/mdlpickerrender.res" );
+		auto s = new vgui::CBoxSizer( vgui::ESLD_HORIZONTAL );
+		auto s2 = new vgui::CBoxSizer( vgui::ESLD_VERTICAL );
+		auto s3 = new vgui::CBoxSizer( vgui::ESLD_VERTICAL );
+
+		s2->AddPanel( new vgui::CheckButton( m_pRenderPage, "Wireframe", "Wireframe" ), vgui::SizerAddArgs_t().Padding( 0 ) );
+		s2->AddPanel( new vgui::CheckButton( m_pRenderPage, "Collision", "Collision Model" ), vgui::SizerAddArgs_t().Padding( 0 ) );
+		s2->AddPanel( new vgui::CheckButton( m_pRenderPage, "NoGround", "No Ground" ), vgui::SizerAddArgs_t().Padding( 0 ) );
+		s2->AddPanel( new vgui::CheckButton( m_pRenderPage, "LockView", "Lock View" ), vgui::SizerAddArgs_t().Padding( 0 ) );
+
+		s3->AddPanel( new vgui::CheckButton( m_pRenderPage, "LookAtCamera", "Look At Camera" ), vgui::SizerAddArgs_t().Padding( 0 ) );
+		s3->AddPanel( new vgui::Button( m_pRenderPage, "ChooseLightProbe", "&Select Light Probe", this, "ChooseLightProbe" ), vgui::SizerAddArgs_t().Padding( 0 ) );
+
+		s->AddSizer( s2, vgui::SizerAddArgs_t() );
+		s->AddSizer( s3, vgui::SizerAddArgs_t() );
+
+		m_pRenderPage->SetSizer( s );
 
 		RefreshRenderSettings();
-
-		// ground
-		Button *pSelectProbe = (Button*)m_pRenderPage->FindChildByName( "ChooseLightProbe" );
-		pSelectProbe->AddActionSignalTarget( this );
 	}
 
 	if ( nFlags & PAGE_SEQUENCES )
@@ -152,17 +174,29 @@ CMDLPicker::CMDLPicker( vgui::Panel *pParent, int nFlags ) :
 
 		m_pInfoPage->AddActionSignalTarget( this );
 
-		m_pInfoPage->LoadControlSettingsAndUserConfig( "resource/mdlpickerinfo.res" );
+		auto s = new CBoxSizer( vgui::ESLD_VERTICAL );
+		auto s2 = new CBoxSizer( vgui::ESLD_HORIZONTAL );
 
-		CheckButton * pTempCheck = (CheckButton *)m_pInfoPage->FindChildByName( "PhysicsObject" );
-		pTempCheck->SetDisabledFgColor1( pTempCheck->GetFgColor());
-		pTempCheck->SetDisabledFgColor2( pTempCheck->GetFgColor());
-		pTempCheck = (CheckButton *)m_pInfoPage->FindChildByName( "StaticObject" );
-		pTempCheck->SetDisabledFgColor1( pTempCheck->GetFgColor());
-		pTempCheck->SetDisabledFgColor2( pTempCheck->GetFgColor());
-		pTempCheck = (CheckButton *)m_pInfoPage->FindChildByName( "DynamicObject" );
-		pTempCheck->SetDisabledFgColor1( pTempCheck->GetFgColor());
-		pTempCheck->SetDisabledFgColor2( pTempCheck->GetFgColor());
+		vgui::CheckButton* btn;
+		s2->AddPanel( btn = new CheckButton( m_pInfoPage, "PhysicsObject", "physics" ), vgui::SizerAddArgs_t() );
+		btn->MakeReadyForUse();
+		btn->SetEnabled( false );
+		btn->SetDisabledFgColor2( btn->GetFgColor() );
+		s2->AddPanel( btn = new CheckButton( m_pInfoPage, "DynamicObject", "dynamic" ), vgui::SizerAddArgs_t() );
+		btn->MakeReadyForUse();
+		btn->SetEnabled( false );
+		btn->SetDisabledFgColor2( btn->GetFgColor() );
+		s2->AddPanel( btn = new CheckButton( m_pInfoPage, "StaticObject", "static" ), vgui::SizerAddArgs_t() );
+		btn->MakeReadyForUse();
+		btn->SetEnabled( false );
+		btn->SetDisabledFgColor2( btn->GetFgColor() );
+		s2->AddPanel( new Label( m_pInfoPage, "StaticText", "Model is missing $staticprop entry" ), vgui::SizerAddArgs_t() );
+		s2->AddSpacer( vgui::SizerAddArgs_t().Expand( 1.0f ) );
+		s2->AddPanel( new Label( m_pInfoPage, "Mass", "Mass" ), vgui::SizerAddArgs_t() );
+		s2->AddPanel( new Label( m_pInfoPage, "MassValue", "0" ), vgui::SizerAddArgs_t().MinX( 32 ) );
+		s2->AddSpacer( vgui::SizerAddArgs_t() );
+
+		s->AddSizer( s2, vgui::SizerAddArgs_t() );
 
 		m_pPropDataList = new vgui::ListPanel( m_pInfoPage, "PropData" );
 		m_pPropDataList->AddColumnHeader( 0, "key", "key", 250, ListPanel::COLUMN_FIXEDSIZE );
@@ -173,11 +207,12 @@ CMDLPicker::CMDLPicker( vgui::Panel *pParent, int nFlags ) :
 		m_pPropDataList->SetDragEnabled( true );
 		m_pPropDataList->SetAutoResize( Panel::PIN_TOPLEFT, Panel::AUTORESIZE_DOWNANDRIGHT, 6, 72, -6, -6 );
 
+		s->AddPanel( m_pPropDataList, vgui::SizerAddArgs_t().Expand( 1.0f ) );
+
+		m_pInfoPage->SetSizer( s );
+
 		RefreshRenderSettings();
 	}
-
-	// Load layout settings; has to happen before pinning occurs in code
-	LoadControlSettingsAndUserConfig( "resource/mdlpicker.res" );
 
 	// Pages must be added after control settings are set up
 	if ( m_pRenderPage )

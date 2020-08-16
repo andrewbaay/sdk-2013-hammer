@@ -209,11 +209,6 @@ void CModelBrowser::Resize()
 	GetClientRect(&rect);
 
 	m_VGuiWindow.MoveWindow( rect );
-
-	m_pPicker->SetBounds( 0,0, rect.Width(), rect.Height() - 32 );
-	m_pButtonCancel->SetPos( 8, rect.Height() - 30 );
-	m_pButtonOK->SetPos( 84, rect.Height() - 30 );
-	m_pStatusLine->SetBounds( 160, rect.Height() - 30, max( 100, rect.Width() - 166 ), 24 );
 }
 
 void CModelBrowser::OnSize(UINT nType, int cx, int cy)
@@ -246,7 +241,7 @@ BOOL CModelBrowser::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	m_VGuiWindow.Create( NULL, _T("ModelViewer"), WS_VISIBLE|WS_CHILD, CRect(0,0,100,100), this, 1001);
+	m_VGuiWindow.Create( NULL, _T("ModelViewer"), WS_VISIBLE|WS_CHILD, CRect(0,0,100,100), this, IDD_MODEL_BROWSER);
 
 	vgui::EditablePanel *pMainPanel = new CModelBrowserPanel( this, "ModelBrowerPanel", HammerVGui()->GetHammerScheme() );
 
@@ -272,6 +267,21 @@ BOOL CModelBrowser::OnInitDialog()
 
 	SaveLoadSettings( false ); // load
 
+	auto s = new vgui::CBoxSizer( vgui::ESLD_VERTICAL );
+	auto s2 = new vgui::CBoxSizer( vgui::ESLD_HORIZONTAL );
+	s->AddPanel( m_pPicker, vgui::SizerAddArgs_t().Expand( 1.0f ).Padding( 0 ) );
+
+	s2->AddPanel( m_pButtonOK, vgui::SizerAddArgs_t().Padding( 0 ) );
+	s2->AddSpacer( vgui::SizerAddArgs_t().Padding( 2 ) );
+	s2->AddPanel( m_pButtonCancel, vgui::SizerAddArgs_t().Padding( 0 ) );
+	s2->AddSpacer( vgui::SizerAddArgs_t().Padding( 2 ) );
+	s2->AddPanel( m_pStatusLine, vgui::SizerAddArgs_t().Expand( 1.0f ).Padding( 0 ) );
+	s2->AddSpacer( vgui::SizerAddArgs_t().Padding( 2 ) );
+
+	s->AddSpacer( vgui::SizerAddArgs_t().Padding( 2 ) );
+	s->AddSizer( s2, vgui::SizerAddArgs_t().Padding( 0 ) );
+
+	pMainPanel->SetSizer( s );
 	m_pPicker->Activate();
 
 	return TRUE;

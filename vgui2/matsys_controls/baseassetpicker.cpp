@@ -953,7 +953,7 @@ void CBaseAssetPicker::CreateStandardControls( vgui::Panel *pParent, bool bAllow
 	m_pAssetBrowser = new vgui::ListPanel( pSplitterBottomSide, "AssetBrowser" );
  	m_pAssetBrowser->AddColumnHeader( 0, "mod", "Mod", 52, 0 );
 	m_pAssetBrowser->AddColumnHeader( 1, "asset", m_pAssetType, 128, ListPanel::COLUMN_RESIZEWITHWINDOW );
-	m_pAssetBrowser->AddColumnHeader( 2, "timesused", "Times Used", 128, ListPanel::COLUMN_RESIZEWITHWINDOW );
+	m_pAssetBrowser->AddColumnHeader( 2, "timesused", "Times Used", 72, 72, 72, ListPanel::COLUMN_FIXEDSIZE );
     m_pAssetBrowser->SetSelectIndividualCells( false );
     m_pAssetBrowser->SetMultiselectEnabled( bAllowMultiselect );
 	m_pAssetBrowser->SetEmptyListText( pTemp );
