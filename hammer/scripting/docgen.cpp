@@ -855,7 +855,7 @@ void DocumentationGenerator::Impl::GenerateSubHeader( int level, const char* tit
 	if ( name )
 	{
 		output.appendRawF( R"^(<a name="%s"></a>)^", LowerCaseTempBuf( name ).c_str() );
-		output.appendRawF( R"^(<h%d name="%s">%s</h%d>)^" "\n", level, LowerCaseTempBuf( title ).c_str(), title, level );
+		output.appendRawF( R"^(<h%d name="%s">%s</h%d>)^" "\n", level, LowerCaseTempBuf( title ).c_str(), decorator.htmlSafe( title ).c_str(), level );
 		output.appendRawF( R"^(<div name="%s">)^", LowerCaseTempBuf( name ).c_str() );
 	}
 	else
