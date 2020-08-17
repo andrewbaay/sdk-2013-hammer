@@ -42,7 +42,7 @@
 #define NUM_MIPLEVELS			4
 
 #define CROSSHAIR_DIST_HORIZONTAL		5
-#define CROSSHAIR_DIST_VERTICAL			6
+#define CROSSHAIR_DIST_VERTICAL			5
 
 #define TEXTURE_AXIS_LENGTH				10	// Texture axis length in world units
 
@@ -2837,6 +2837,8 @@ void CRender3D::RenderNode(CCullTreeNode *pNode, bool bForce )
 
 void CRender3D::RenderCrossHair()
 {
+	if ( m_eCurrentRenderMode == RENDER_MODE_LIGHT_PREVIEW_RAYTRACED )
+		return;
 	int width, height;
 
 	GetCamera()->GetViewPort( width, height );
@@ -2851,25 +2853,25 @@ void CRender3D::RenderCrossHair()
 
 	SetDrawColor(0,0,0);
 
-	DrawLine(	Vector(nCenterX - CROSSHAIR_DIST_HORIZONTAL, nCenterY - 1, 0),
-				Vector(nCenterX + CROSSHAIR_DIST_HORIZONTAL + 1, nCenterY - 1, 0) );
+	DrawLine(	Vector(nCenterX - CROSSHAIR_DIST_HORIZONTAL - 1, nCenterY - 1, 0),
+				Vector(nCenterX + CROSSHAIR_DIST_HORIZONTAL, nCenterY - 1, 0) );
 
-	DrawLine(	Vector(nCenterX - CROSSHAIR_DIST_HORIZONTAL, nCenterY + 1, 0),
-				Vector(nCenterX + CROSSHAIR_DIST_HORIZONTAL + 1, nCenterY + 1, 0) );
+	DrawLine(	Vector(nCenterX - CROSSHAIR_DIST_HORIZONTAL - 1, nCenterY + 1, 0),
+				Vector(nCenterX + CROSSHAIR_DIST_HORIZONTAL, nCenterY + 1, 0) );
 
-	DrawLine(	Vector(nCenterX - 1, nCenterY - CROSSHAIR_DIST_VERTICAL, 0),
+	DrawLine(	Vector(nCenterX - 1, nCenterY - CROSSHAIR_DIST_VERTICAL - 1, 0),
 				Vector(nCenterX - 1, nCenterY + CROSSHAIR_DIST_VERTICAL, 0) );
 
-	DrawLine(	Vector(nCenterX + 1, nCenterY - CROSSHAIR_DIST_VERTICAL, 0),
+	DrawLine(	Vector(nCenterX + 1, nCenterY - CROSSHAIR_DIST_VERTICAL - 1, 0),
 				Vector(nCenterX + 1, nCenterY + CROSSHAIR_DIST_VERTICAL, 0) );
 
 	SetDrawColor(255,255,255);
 
 	DrawLine(	Vector(nCenterX - CROSSHAIR_DIST_HORIZONTAL, nCenterY, 0),
-				Vector(nCenterX + CROSSHAIR_DIST_HORIZONTAL + 1, nCenterY, 0) );
+				Vector(nCenterX + CROSSHAIR_DIST_HORIZONTAL - 1, nCenterY, 0) );
 
 	DrawLine(	Vector(nCenterX, nCenterY - CROSSHAIR_DIST_VERTICAL, 0),
-				Vector(nCenterX, nCenterY + CROSSHAIR_DIST_VERTICAL, 0) );
+				Vector(nCenterX, nCenterY + CROSSHAIR_DIST_VERTICAL - 1, 0) );
 
 	PopRenderMode();
 }
