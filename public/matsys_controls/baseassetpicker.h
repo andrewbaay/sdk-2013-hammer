@@ -107,7 +107,7 @@ public:
 protected:
 	// Creates standard controls. Allows the derived class to
 	// add these controls to various splitter windows
-	void CreateStandardControls( vgui::Panel *pParent, bool bAllowMultiselect = false );
+	void CreateStandardControls( vgui::Panel *pParent, bool bAllowMultiselect = false, bool bAllowAssetSearch = true );
 	void AutoLayoutStandardControls( );
 
 	// Allows the picker to browse multiple asset types
@@ -230,7 +230,6 @@ protected:
 	void PostMessageAndClose( KeyValues *pKeyValues );
 	virtual void CloseModal();
 
-private:
 	void CleanUpMessage();
 
 	CBaseAssetPicker *m_pPicker;

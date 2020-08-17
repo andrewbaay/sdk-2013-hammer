@@ -908,7 +908,7 @@ CBaseAssetPicker::~CBaseAssetPicker()
 //-----------------------------------------------------------------------------
 // Creates standard controls
 //-----------------------------------------------------------------------------
-void CBaseAssetPicker::CreateStandardControls( vgui::Panel *pParent, bool bAllowMultiselect )
+void CBaseAssetPicker::CreateStandardControls( vgui::Panel* pParent, bool bAllowMultiselect, bool bAllowAssetSearch )
 {
 	int nExtCount = 1 + m_ExtraAssetExt.Count();
 	const char **ppExt = (const char **)stackalloc( nExtCount * sizeof(const char *) );
@@ -973,6 +973,7 @@ void CBaseAssetPicker::CreateStandardControls( vgui::Panel *pParent, bool bAllow
 	m_pOnlyUsedCheck = new CheckButton( pSplitterBottomLeftSide, "OnlyUsedCheck", "Show used assets only" );
 	m_pOnlyUsedCheck->SetSelected( m_bOnlyUsedAssetsCheck );
 	m_pOnlyUsedCheck->AddActionSignalTarget( this );
+	m_pOnlyUsedCheck->SetVisible( bAllowAssetSearch );
 
 	// full path
 	m_pFullPath = new TextEntry( pSplitterBottomLeftSide, "FullPath" );
@@ -981,6 +982,7 @@ void CBaseAssetPicker::CreateStandardControls( vgui::Panel *pParent, bool bAllow
 
 	// Rescan button
 	m_pFindAssetButton = new Button( pSplitterBottomLeftSide, "FindButton", "Find Asset", this, "FindAsset" );
+	m_pFindAssetButton->SetVisible( bAllowAssetSearch );
 	//m_pFindAssetButton->SetWide(75);
 
 	m_nCurrentModFilter = -1;
@@ -988,43 +990,56 @@ void CBaseAssetPicker::CreateStandardControls( vgui::Panel *pParent, bool bAllow
 
 void CBaseAssetPicker::AutoLayoutStandardControls(  )
 {
-	vgui::Panel *pSplitterTopLeftSide = m_pAssetSplitter->GetChild( 0 );
-	CBoxSizer* pTopLeftSplitterLayout = new CBoxSizer(ESLD_VERTICAL);
+	vgui::Panel* pSplitterTopLeftSide = m_pAssetSplitter->GetChild( 0 );
+	CBoxSizer* pTopLeftSplitterLayout = new CBoxSizer( ESLD_VERTICAL );
 	{
-		CBoxSizer* pRow = new CBoxSizer(ESLD_HORIZONTAL);
-		pRow->AddPanel( new Label(pSplitterTopLeftSide,"ModFilterLabel","Mod Filter"), SizerAddArgs_t() );
-		pRow->AddPanel( m_pModSelector, SizerAddArgs_t().Expand( 1.0f ) );
-		pRow->AddPanel( m_pRescanButton, SizerAddArgs_t().MinX( 68 ) );
-		pTopLeftSplitterLayout->AddSizer( pRow, SizerAddArgs_t() );
+		CBoxSizer* pRow = new CBoxSizer( ESLD_HORIZONTAL );
+		pRow->AddSpacer( SizerAddArgs_t().Padding( 2 ) );
+		pRow->AddPanel( new Label( pSplitterTopLeftSide, "ModFilterLabel", "Mod Filter" ), SizerAddArgs_t().Padding( 0 ) );
+		pRow->AddSpacer( SizerAddArgs_t().Padding( 2 ) );
+		pRow->AddPanel( m_pModSelector, SizerAddArgs_t().Expand( 1.0f ).Padding( 0 ) );
+		pRow->AddSpacer( SizerAddArgs_t().Padding( 2 ) );
+		pRow->AddPanel( m_pRescanButton, SizerAddArgs_t().MinX( 50 ).Padding( 0 ) );
+		pRow->AddSpacer( SizerAddArgs_t().Padding( 2 ) );
+		pTopLeftSplitterLayout->AddSpacer( SizerAddArgs_t().Padding( 2 ) );
+		pTopLeftSplitterLayout->AddSizer( pRow, SizerAddArgs_t().Padding( 0 ) );
 	}
 	m_pSubDirCheck->SetEnabled( true );
 	m_pSubDirCheck->SetVisible( true );
-	pTopLeftSplitterLayout->AddPanel( m_pSubDirCheck, SizerAddArgs_t() );
-	pTopLeftSplitterLayout->AddPanel( m_pFileTree, SizerAddArgs_t().Expand( 1.0f ) );
-	pSplitterTopLeftSide->SetSizer(pTopLeftSplitterLayout);
+	pTopLeftSplitterLayout->AddPanel( m_pSubDirCheck, SizerAddArgs_t().Padding( 0 ) );
+	pTopLeftSplitterLayout->AddPanel( m_pFileTree, SizerAddArgs_t().Expand( 1.0f ).Padding( 2 ) );
+	pSplitterTopLeftSide->SetSizer( pTopLeftSplitterLayout );
 
-	vgui::Panel *pSplitterBottomLeftSide = m_pAssetSplitter->GetChild( 1 );
-	CBoxSizer* pBottomLeftSplitterLayout = new CBoxSizer(ESLD_VERTICAL);
-	pBottomLeftSplitterLayout->AddPanel( m_pAssetBrowser, SizerAddArgs_t().Expand( 1.0f ) );
+	vgui::Panel* pSplitterBottomLeftSide = m_pAssetSplitter->GetChild( 1 );
+	CBoxSizer* pBottomLeftSplitterLayout = new CBoxSizer( ESLD_VERTICAL );
+	pBottomLeftSplitterLayout->AddPanel( m_pAssetBrowser, SizerAddArgs_t().Expand( 1.0f ).Padding( 2 ) );
 	{
-		CBoxSizer* pRow = new CBoxSizer(ESLD_HORIZONTAL);
+		CBoxSizer* pRow = new CBoxSizer( ESLD_HORIZONTAL );
 		pRow->AddPanel( new Label(pSplitterBottomLeftSide,"FullPathLabel","Full Path"), SizerAddArgs_t() );
-		pRow->AddPanel( m_pFullPath, SizerAddArgs_t().Expand( 1.0f ) );
-		pRow->AddPanel( m_pFindAssetButton, SizerAddArgs_t().MinX( 68 ) );
-		pBottomLeftSplitterLayout->AddSizer( pRow, SizerAddArgs_t() );
-	}
-	{
-		CBoxSizer* pRow = new CBoxSizer(ESLD_HORIZONTAL);
-		pRow->AddPanel( new Label(pSplitterBottomLeftSide,"FilterLabel","Filter"), SizerAddArgs_t() );
-		pRow->AddPanel( m_pFilter, SizerAddArgs_t().Expand( 1.0f ) );
-		pBottomLeftSplitterLayout->AddSizer( pRow, SizerAddArgs_t() );
+		pRow->AddPanel( m_pFullPath, SizerAddArgs_t().Expand( 1.0f ).Padding( 0 ) );
+		if ( m_pFindAssetButton->IsVisible() )
+		{
+			pRow->AddSpacer( SizerAddArgs_t().Padding( 2 ) );
+			pRow->AddPanel( m_pFindAssetButton, SizerAddArgs_t().MinX( 68 ).Padding( 0 ) );
+		}
+		pRow->AddSpacer( SizerAddArgs_t().Padding( 2 ) );
+		pBottomLeftSplitterLayout->AddSizer( pRow, SizerAddArgs_t().Padding( 0 ) );
+		pBottomLeftSplitterLayout->AddSpacer( SizerAddArgs_t().Padding( 2 ) );
 	}
 	{
 		CBoxSizer* pRow = new CBoxSizer( ESLD_HORIZONTAL );
-		pRow->AddPanel( m_pOnlyUsedCheck, SizerAddArgs_t().Expand( 1.0f ) );
-		pBottomLeftSplitterLayout->AddSizer( pRow, SizerAddArgs_t() );
+		pRow->AddPanel( new Label(pSplitterBottomLeftSide,"FilterLabel","Filter"), SizerAddArgs_t() );
+		pRow->AddPanel( m_pFilter, SizerAddArgs_t().Expand( 1.0f ).Padding( 0 ) );
+		pRow->AddSpacer( SizerAddArgs_t().Padding( 2 ) );
+		pBottomLeftSplitterLayout->AddSizer( pRow, SizerAddArgs_t().Padding( 0 ) );
 	}
-	pSplitterBottomLeftSide->SetSizer(pBottomLeftSplitterLayout);
+	if ( m_pOnlyUsedCheck->IsVisible() )
+	{
+		CBoxSizer* pRow = new CBoxSizer( ESLD_HORIZONTAL );
+		pRow->AddPanel( m_pOnlyUsedCheck, SizerAddArgs_t().Expand( 1.0f ).Padding( 0 ) );
+		pBottomLeftSplitterLayout->AddSizer( pRow, SizerAddArgs_t().Padding( 0 ) );
+	}
+	pSplitterBottomLeftSide->SetSizer( pBottomLeftSplitterLayout );
 }
 
 //-----------------------------------------------------------------------------
@@ -1784,8 +1799,8 @@ CBaseAssetPickerFrame::CBaseAssetPickerFrame( vgui::Panel *pParent ) :
 {
 	m_pContextKeyValues = NULL;
 	SetDeleteSelfOnClose( true );
-	m_pOpenButton = new Button( this, "OpenButton", "#FileOpenDialog_Open", this, "Open" );
-	m_pCancelButton = new Button( this, "CancelButton", "#FileOpenDialog_Cancel", this, "Cancel" );
+	m_pOpenButton = new Button( this, "OpenButton", "Open", this, "Open" );
+	m_pCancelButton = new Button( this, "CancelButton", "Cancel", this, "Cancel" );
 	SetBlockDragChaining( true );
 }
 

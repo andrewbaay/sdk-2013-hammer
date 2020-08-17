@@ -284,10 +284,9 @@ BOOL CParticleBrowser::OnInitDialog()
 	s2->AddPanel( m_pButtonCancel, vgui::SizerAddArgs_t().Padding( 0 ) );
 	s2->AddSpacer( vgui::SizerAddArgs_t().Padding( 2 ) );
 	s2->AddPanel( m_pStatusLine, vgui::SizerAddArgs_t().Expand( 1.0f ).Padding( 0 ) );
-	s2->AddSpacer( vgui::SizerAddArgs_t().Padding( 2 ) );
 
 	s->AddSpacer( vgui::SizerAddArgs_t().Padding( 2 ) );
-	s->AddSizer( s2, vgui::SizerAddArgs_t().Padding( 0 ) );
+	s->AddSizer( s2, vgui::SizerAddArgs_t().Padding( 2 ) );
 
 	pMainPanel->SetSizer( s );
 	m_pPicker->Activate();

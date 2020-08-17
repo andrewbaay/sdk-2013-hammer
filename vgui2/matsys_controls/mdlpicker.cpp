@@ -113,16 +113,18 @@ CMDLPicker::CMDLPicker( vgui::Panel *pParent, int nFlags ) :
 		auto s2 = new vgui::CBoxSizer( vgui::ESLD_VERTICAL );
 		auto s3 = new vgui::CBoxSizer( vgui::ESLD_VERTICAL );
 
+		s2->AddSpacer( vgui::SizerAddArgs_t().Padding( 2 ) );
 		s2->AddPanel( new vgui::CheckButton( m_pRenderPage, "Wireframe", "Wireframe" ), vgui::SizerAddArgs_t().Padding( 0 ) );
 		s2->AddPanel( new vgui::CheckButton( m_pRenderPage, "Collision", "Collision Model" ), vgui::SizerAddArgs_t().Padding( 0 ) );
 		s2->AddPanel( new vgui::CheckButton( m_pRenderPage, "NoGround", "No Ground" ), vgui::SizerAddArgs_t().Padding( 0 ) );
 		s2->AddPanel( new vgui::CheckButton( m_pRenderPage, "LockView", "Lock View" ), vgui::SizerAddArgs_t().Padding( 0 ) );
 
+		s3->AddSpacer( vgui::SizerAddArgs_t().Padding( 2 ) );
 		s3->AddPanel( new vgui::CheckButton( m_pRenderPage, "LookAtCamera", "Look At Camera" ), vgui::SizerAddArgs_t().Padding( 0 ) );
 		s3->AddPanel( new vgui::Button( m_pRenderPage, "ChooseLightProbe", "&Select Light Probe", this, "ChooseLightProbe" ), vgui::SizerAddArgs_t().Padding( 0 ) );
 
-		s->AddSizer( s2, vgui::SizerAddArgs_t() );
-		s->AddSizer( s3, vgui::SizerAddArgs_t() );
+		s->AddSizer( s2, vgui::SizerAddArgs_t().Padding( 0 ) );
+		s->AddSizer( s3, vgui::SizerAddArgs_t().Padding( 0 ) );
 
 		m_pRenderPage->SetSizer( s );
 
@@ -178,25 +180,28 @@ CMDLPicker::CMDLPicker( vgui::Panel *pParent, int nFlags ) :
 		auto s2 = new CBoxSizer( vgui::ESLD_HORIZONTAL );
 
 		vgui::CheckButton* btn;
-		s2->AddPanel( btn = new CheckButton( m_pInfoPage, "PhysicsObject", "physics" ), vgui::SizerAddArgs_t() );
+		s2->AddPanel( btn = new CheckButton( m_pInfoPage, "PhysicsObject", "physics" ), vgui::SizerAddArgs_t().Padding( 2 ) );
 		btn->MakeReadyForUse();
 		btn->SetEnabled( false );
 		btn->SetDisabledFgColor2( btn->GetFgColor() );
-		s2->AddPanel( btn = new CheckButton( m_pInfoPage, "DynamicObject", "dynamic" ), vgui::SizerAddArgs_t() );
+		s2->AddPanel( btn = new CheckButton( m_pInfoPage, "DynamicObject", "dynamic" ), vgui::SizerAddArgs_t().Padding( 2 ) );
 		btn->MakeReadyForUse();
 		btn->SetEnabled( false );
 		btn->SetDisabledFgColor2( btn->GetFgColor() );
-		s2->AddPanel( btn = new CheckButton( m_pInfoPage, "StaticObject", "static" ), vgui::SizerAddArgs_t() );
+		s2->AddPanel( btn = new CheckButton( m_pInfoPage, "StaticObject", "static" ), vgui::SizerAddArgs_t().Padding( 2 ) );
 		btn->MakeReadyForUse();
 		btn->SetEnabled( false );
 		btn->SetDisabledFgColor2( btn->GetFgColor() );
-		s2->AddPanel( new Label( m_pInfoPage, "StaticText", "Model is missing $staticprop entry" ), vgui::SizerAddArgs_t() );
-		s2->AddSpacer( vgui::SizerAddArgs_t().Expand( 1.0f ) );
-		s2->AddPanel( new Label( m_pInfoPage, "Mass", "Mass" ), vgui::SizerAddArgs_t() );
-		s2->AddPanel( new Label( m_pInfoPage, "MassValue", "0" ), vgui::SizerAddArgs_t().MinX( 32 ) );
-		s2->AddSpacer( vgui::SizerAddArgs_t() );
+		s2->AddSpacer( vgui::SizerAddArgs_t().Padding( 2 ) );
+		s2->AddPanel( new Label( m_pInfoPage, "StaticText", "Model is missing $staticprop entry" ), vgui::SizerAddArgs_t().Padding( 2 ) );
+		s2->AddSpacer( vgui::SizerAddArgs_t().Padding( 2 ) );
+		s2->AddSpacer( vgui::SizerAddArgs_t().Expand( 1.0f ).Padding( 2 ) );
+		s2->AddPanel( new Label( m_pInfoPage, "Mass", "Mass" ), vgui::SizerAddArgs_t().Padding( 2 ) );
+		s2->AddSpacer( vgui::SizerAddArgs_t().Padding( 2 ) );
+		s2->AddPanel( new Label( m_pInfoPage, "MassValue", "0" ), vgui::SizerAddArgs_t().MinX( 32 ).Padding( 2 ) );
+		s2->AddSpacer( vgui::SizerAddArgs_t().Padding( 2 ) );
 
-		s->AddSizer( s2, vgui::SizerAddArgs_t() );
+		s->AddSizer( s2, vgui::SizerAddArgs_t().Padding( 0 ) );
 
 		m_pPropDataList = new vgui::ListPanel( m_pInfoPage, "PropData" );
 		m_pPropDataList->AddColumnHeader( 0, "key", "key", 250, ListPanel::COLUMN_FIXEDSIZE );
@@ -207,7 +212,7 @@ CMDLPicker::CMDLPicker( vgui::Panel *pParent, int nFlags ) :
 		m_pPropDataList->SetDragEnabled( true );
 		m_pPropDataList->SetAutoResize( Panel::PIN_TOPLEFT, Panel::AUTORESIZE_DOWNANDRIGHT, 6, 72, -6, -6 );
 
-		s->AddPanel( m_pPropDataList, vgui::SizerAddArgs_t().Expand( 1.0f ) );
+		s->AddPanel( m_pPropDataList, vgui::SizerAddArgs_t().Expand( 1.0f ).Padding( 6 ) );
 
 		m_pInfoPage->SetSizer( s );
 
@@ -335,6 +340,7 @@ void CMDLPicker::OnCommand( const char *pCommand )
 		CAssetPickerFrame *pPicker = new CAssetPickerFrame( this, "Select Light Probe (.prb) File",
 			"Light Probe", "prb", "materials/lightprobes", "lightprobe" );
 		pPicker->DoModal();
+		pPicker->SetPos( 10, 10 );
 		return;
 	}
 
@@ -792,7 +798,7 @@ int CMDLPicker::UpdatePropDataList( KeyValues *pkvPropData, bool &bIsStatic )
 				{
 					if ( !bIsStatic )
 					{
-							Label *pTempLabel = (Label *)m_pInfoPage->FindChildByName( "StaticText" );
+						Label *pTempLabel = (Label *)m_pInfoPage->FindChildByName( "StaticText" );
 						pTempLabel->SetVisible( true );
 					}
 					bIsStatic &= true;
