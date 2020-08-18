@@ -206,9 +206,11 @@ void CModelBrowser::Resize()
 {
 	// reposition controls
 	CRect rect;
-	GetClientRect(&rect);
+	GetClientRect( &rect );
 
 	m_VGuiWindow.MoveWindow( rect );
+
+	m_pPicker->SetBounds( 0, 0, rect.Width(), rect.Height() );
 }
 
 void CModelBrowser::OnSize(UINT nType, int cx, int cy)
@@ -281,7 +283,10 @@ BOOL CModelBrowser::OnInitDialog()
 	s->AddSizer( s2, vgui::SizerAddArgs_t().Padding( 2 ) );
 
 	pMainPanel->SetSizer( s );
+	pMainPanel->InvalidateLayout( true );
 	m_pPicker->Activate();
+
+	Resize();
 
 	return TRUE;
 }
