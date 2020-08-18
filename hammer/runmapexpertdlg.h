@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $Workfile:     $
 // $Date:         $
@@ -31,7 +31,6 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CRunMapExpertDlg)
 	enum { IDD = IDD_RUNMAPEXPERT };
-	CButton	m_cUseProcessWnd;
 	CComboBox	m_cCmdSequences;
 	CButton	m_cMoveUp;
 	CButton	m_cMoveDown;
@@ -43,6 +42,7 @@ public:
 	//}}AFX_DATA
 
 	BOOL m_bSwitchMode;
+	BOOL m_bWaitForKeypress;
 
 	CMyCheckListBox	m_cCommandList;
 	BOOL m_bNoUpdateCmd;

@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -28,6 +28,7 @@ CRunMapExpertDlg::CRunMapExpertDlg(CWnd* pParent /*=NULL*/)
 	m_pActiveSequence = NULL;
 	m_bNoUpdateCmd = FALSE;
 	m_bSwitchMode = FALSE;
+	m_bWaitForKeypress = FALSE;
 }
 
 
@@ -35,7 +36,6 @@ void CRunMapExpertDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CRunMapExpertDlg)
-	DDX_Control(pDX, IDC_USEPROCESSWND, m_cUseProcessWnd);
 	DDX_Control(pDX, IDC_CONFIGURATIONS, m_cCmdSequences);
 	DDX_Control(pDX, IDC_MOVEUP, m_cMoveUp);
 	DDX_Control(pDX, IDC_MOVEDOWN, m_cMoveDown);
@@ -43,6 +43,7 @@ void CRunMapExpertDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_ENSURECHECK, m_cEnsureCheck);
 	DDX_Control(pDX, IDC_PARAMETERS, m_cParameters);
 	DDX_Control(pDX, IDC_COMMAND, m_cCommand);
+	DDX_Check(pDX, IDC_WAITFORKEYPRESS, m_bWaitForKeypress);
 	//}}AFX_DATA_MAP
 
 	DDX_Control(pDX, IDC_COMMANDLIST, m_cCommandList);
@@ -96,7 +97,6 @@ BEGIN_MESSAGE_MAP(CRunMapExpertDlg, CDialog)
 	ON_EN_UPDATE(IDC_ENSUREFN, OnUpdateEnsurefn)
 	ON_CBN_SELCHANGE(IDC_CONFIGURATIONS, OnSelchangeConfigurations)
 	ON_BN_CLICKED(IDC_EDITCONFIGS, OnEditconfigs)
-	ON_BN_CLICKED(IDC_USEPROCESSWND, OnUseprocesswnd)
 	ON_COMMAND_EX_RANGE(id_InsertParmMapFileNoExt, id_InsertParmEnd, HandleInsertParm)
 	ON_COMMAND_EX_RANGE(id_BrExecutable, id_BrEnd, HandleInsertCommand)
 	//}}AFX_MSG_MAP
@@ -116,8 +116,8 @@ BOOL CRunMapExpertDlg::HandleInsertCommand(UINT nID)
 
 	if(nID == id_BrExecutable)
 	{
-		CFileDialog dlg(TRUE, "exe", NULL, OFN_HIDEREADONLY | 
-			OFN_FILEMUSTEXIST |	OFN_NOCHANGEDIR, 
+		CFileDialog dlg(TRUE, "exe", NULL, OFN_HIDEREADONLY |
+			OFN_FILEMUSTEXIST |	OFN_NOCHANGEDIR,
 			"Executable Files|*.exe||", this);
 		if(dlg.DoModal() == IDCANCEL)
 			return TRUE;
@@ -209,14 +209,14 @@ LPCTSTR CRunMapExpertDlg::GetCmdString(PCCOMMAND pCommand)
 	return "";
 }
 
-void CRunMapExpertDlg::OnSelchangeCommandlist() 
+void CRunMapExpertDlg::OnSelchangeCommandlist()
 {
 	int iIndex = -1;
 
 	// change the selection in the command list - update the command
 	//  and parameters edit boxes
 	PCCOMMAND pCommand = GetCommandAtIndex(&iIndex);
-	
+
 	// enable/disable controls
 	BOOL bEnable = pCommand ? TRUE : FALSE;
 	int iEnableCmds[] =
@@ -228,7 +228,6 @@ void CRunMapExpertDlg::OnSelchangeCommandlist()
 
 		// checkboxes/buttons:
 		IDC_ENSURECHECK,
-		IDC_USEPROCESSWND,
 		IDC_INSERTPARM,
 		IDC_BROWSECOMMAND,
 
@@ -257,14 +256,13 @@ void CRunMapExpertDlg::OnSelchangeCommandlist()
 	// set moveup/movedown buttons
 	m_cMoveUp.EnableWindow(iIndex != 0);
 	m_cMoveDown.EnableWindow(iIndex != m_cCommandList.GetCount() - 1);
-	
+
 	m_bNoUpdateCmd = TRUE;
 
 	m_cCommand.SetWindowText(GetCmdString(pCommand));
 	m_cParameters.SetWindowText(pCommand->szParms);
 	m_cEnsureCheck.SetCheck(pCommand->bEnsureCheck);
-	m_cEnsureFn.SetWindowText(pCommand->szEnsureFn);		
-	m_cUseProcessWnd.SetCheck(pCommand->bUseProcessWnd);
+	m_cEnsureFn.SetWindowText(pCommand->szEnsureFn);
 	// don't forget to call this:
 		OnEnsurecheck();
 
@@ -351,7 +349,7 @@ void CRunMapExpertDlg::DeleteCommand(int iIndex)
 void CRunMapExpertDlg::AddCommand(int iIndex, PCCOMMAND pCommand)
 {
 	// add a command to the list at the index specified in iIndex (-1 to add
-	//  at end of list.) 
+	//  at end of list.)
 	CString str;
 	str.Format("%s %s", GetCmdString(pCommand), pCommand->szParms);
 	iIndex = m_cCommandList.InsertString(iIndex, str);
@@ -384,29 +382,28 @@ void CRunMapExpertDlg::MoveCommand(int iIndex, BOOL bUp)
 }
 
 
-void CRunMapExpertDlg::OnMovedown() 
+void CRunMapExpertDlg::OnMovedown()
 {
 	MoveCommand(-1, FALSE);
 }
 
-void CRunMapExpertDlg::OnMoveup() 
+void CRunMapExpertDlg::OnMoveup()
 {
 	MoveCommand(-1, TRUE);
 }
 
-void CRunMapExpertDlg::OnNew() 
+void CRunMapExpertDlg::OnNew()
 {
 	// add a command
 	PCCOMMAND pCommand = new CCOMMAND;
 	memset(pCommand, 0, sizeof(CCOMMAND));
-	pCommand->bUseProcessWnd = TRUE;
 	AddCommand(-1, pCommand);
 	m_cCommandList.SetCurSel(m_cCommandList.GetCount()-1);
 	// sleection has changed
 	OnSelchangeCommandlist();
 }
 
-void CRunMapExpertDlg::OnNormal() 
+void CRunMapExpertDlg::OnNormal()
 {
 	m_bSwitchMode = TRUE;
 	SaveCommandsToSequence();
@@ -420,12 +417,11 @@ void CRunMapExpertDlg::OnNormal()
 void CRunMapExpertDlg::UpdateCommandWithEditFields(int iIndex)
 {
 	PCCOMMAND pCommand = GetCommandAtIndex(&iIndex);
-	
+
 	// update command struct with edit fields:
 	m_cCommand.GetWindowText(pCommand->szRun, MAX_PATH);
 	m_cParameters.GetWindowText(pCommand->szParms, MAX_PATH);
 	m_cEnsureFn.GetWindowText(pCommand->szEnsureFn, MAX_PATH);
-	pCommand->bUseProcessWnd = m_cUseProcessWnd.GetCheck();
 	pCommand->bEnsureCheck = m_cEnsureCheck.GetCheck();
 
 	// save checked state..
@@ -450,8 +446,8 @@ PCCOMMAND CRunMapExpertDlg::GetCommandAtIndex(int *piIndex)
 	int iIndex = -1;
 	if(piIndex == NULL)
 		piIndex = &iIndex;
-	
-	// return the current command structure 
+
+	// return the current command structure
 	if(piIndex[0] == -1)
 		piIndex[0] = m_cCommandList.GetCurSel();
 	if(piIndex[0] == LB_ERR)
@@ -460,7 +456,7 @@ PCCOMMAND CRunMapExpertDlg::GetCommandAtIndex(int *piIndex)
 	return pCommand;
 }
 
-void CRunMapExpertDlg::OnRemove() 
+void CRunMapExpertDlg::OnRemove()
 {
 	// kill the current command
 	int iIndex = m_cCommandList.GetCurSel();
@@ -469,7 +465,7 @@ void CRunMapExpertDlg::OnRemove()
 	DeleteCommand(iIndex);
 }
 
-void CRunMapExpertDlg::OnUpdateCommand() 
+void CRunMapExpertDlg::OnUpdateCommand()
 {
 	if(!m_bNoUpdateCmd)
 	{
@@ -490,13 +486,13 @@ void CRunMapExpertDlg::OnUpdateCommand()
 	}
 }
 
-void CRunMapExpertDlg::OnUpdateParameters() 
+void CRunMapExpertDlg::OnUpdateParameters()
 {
 	if(!m_bNoUpdateCmd)
-		UpdateCommandWithEditFields(-1);	
+		UpdateCommandWithEditFields(-1);
 }
 
-void CRunMapExpertDlg::OnEnsurecheck() 
+void CRunMapExpertDlg::OnEnsurecheck()
 {
 	if(!m_bNoUpdateCmd)
 		UpdateCommandWithEditFields(-1);
@@ -504,18 +500,10 @@ void CRunMapExpertDlg::OnEnsurecheck()
 	m_cEnsureFn.EnableWindow(m_cEnsureCheck.GetCheck());
 }
 
-void CRunMapExpertDlg::OnUpdateEnsurefn() 
+void CRunMapExpertDlg::OnUpdateEnsurefn()
 {
 	if(!m_bNoUpdateCmd)
 		UpdateCommandWithEditFields(-1);
-}
-
-void CRunMapExpertDlg::OnUseprocesswnd() 
-{
-	// update the command here..
-	PCCOMMAND pCommand = GetCommandAtIndex(NULL);
-	Assert(pCommand);
-	pCommand->bUseProcessWnd = m_cUseProcessWnd.GetCheck() ? TRUE : FALSE;
 }
 
 void CRunMapExpertDlg::InitSequenceList()
@@ -544,17 +532,17 @@ void CRunMapExpertDlg::InitSequenceList()
 		int iIndex = m_cCmdSequences.AddString(pSeq->m_szName);
 		m_cCmdSequences.SetItemDataPtr(iIndex, PVOID(pSeq));
 	}
-	
+
 	m_pActiveSequence = NULL;
 	m_cCmdSequences.SetCurSel(0);
 	OnSelchangeConfigurations();
 }
 
-BOOL CRunMapExpertDlg::OnInitDialog() 
+BOOL CRunMapExpertDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	
-	int iSequence = AfxGetApp()->GetProfileInt("RunMapExpert", 
+
+	int iSequence = AfxGetApp()->GetProfileInt("RunMapExpert",
 		"LastSequence", 0);
 
 	InitSequenceList();
@@ -565,12 +553,12 @@ BOOL CRunMapExpertDlg::OnInitDialog()
 	return TRUE;
 }
 
-void CRunMapExpertDlg::OnOK() 
+void CRunMapExpertDlg::OnOK()
 {
 	SaveCommandsToSequence();
 
 	CHammer *pApp = (CHammer*) AfxGetApp();
-	
+
 	pApp->SaveSequences();
 
 	CDialog::OnOK();
@@ -579,7 +567,7 @@ void CRunMapExpertDlg::OnOK()
 void CRunMapExpertDlg::SaveCommandsToSequence()
 {
 	if(!m_pActiveSequence)
-		return;	// nothing set yet 
+		return;	// nothing set yet
 
 	int nCommands = m_cCommandList.GetCount();
 	m_pActiveSequence->m_Commands.RemoveAll();
@@ -587,15 +575,13 @@ void CRunMapExpertDlg::SaveCommandsToSequence()
 	{
 		PCCOMMAND pCommand = PCCOMMAND(m_cCommandList.GetItemDataPtr(i));
 		pCommand->bEnable = m_cCommandList.GetCheck(i);
-		if (!strcmp(pCommand->szRun, "$game_exe"))
-			pCommand->bNoWait = TRUE;
 		m_pActiveSequence->m_Commands.Add(*pCommand);
 		// free the memory:
 		delete pCommand;
 	}
 }
 
-void CRunMapExpertDlg::OnSelchangeConfigurations() 
+void CRunMapExpertDlg::OnSelchangeConfigurations()
 {
 	// save the current command list back into the previously active
 	//  command sequence
@@ -610,11 +596,11 @@ void CRunMapExpertDlg::OnSelchangeConfigurations()
 
 	AfxGetApp()->WriteProfileInt("RunMapExpert", "LastSequence", iSel);
 
-	CCommandSequence *pSeq = (CCommandSequence*) 
+	CCommandSequence *pSeq = (CCommandSequence*)
 		m_cCmdSequences.GetItemDataPtr(iSel);
 
-	// delete strings from listbox (dataptrs already deleted 
-	//  in SaveCommandsToSequence()) 
+	// delete strings from listbox (dataptrs already deleted
+	//  in SaveCommandsToSequence())
 	m_cCommandList.ResetContent();
 
 	m_pActiveSequence = pSeq;
@@ -633,7 +619,7 @@ void CRunMapExpertDlg::OnSelchangeConfigurations()
 	OnSelchangeCommandlist();
 }
 
-void CRunMapExpertDlg::OnEditconfigs() 
+void CRunMapExpertDlg::OnEditconfigs()
 {
 	CRunMapCfgDlg dlg;
 	SaveCommandsToSequence();
@@ -642,7 +628,7 @@ void CRunMapExpertDlg::OnEditconfigs()
 }
 
 
-void CRunMapExpertDlg::OnCancel() 
+void CRunMapExpertDlg::OnCancel()
 {
 	SaveCommandsToSequence();
 

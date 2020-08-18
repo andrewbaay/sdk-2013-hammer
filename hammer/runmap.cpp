@@ -27,6 +27,7 @@ CRunMap::CRunMap(CWnd* pParent /*=NULL*/)
 	m_iLight = -1;
 	m_iQBSP = -1;
 	m_bHDRLight = FALSE;
+	m_bWaitForKeypress = FALSE;
 	//}}AFX_DATA_INIT
 
 	// read from ini
@@ -51,6 +52,7 @@ void CRunMap::DoDataExchange(CDataExchange* pDX)
 	DDX_Radio(pDX, IDC_VIS0, m_iVis);
 	DDX_Radio(pDX, IDC_RAD0, m_iLight);
 	DDX_Check(pDX, IDC_RAD_HDR, m_bHDRLight);
+	DDX_Check(pDX, IDC_WAITFORKEYPRESS, m_bWaitForKeypress);
 	//}}AFX_DATA_MAP
 }
 

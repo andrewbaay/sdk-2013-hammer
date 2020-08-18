@@ -34,8 +34,6 @@ typedef struct CCOMMAND
 	BOOL bLongFilenames;		// Obsolete, but kept here for file backwards compatibility
 	BOOL bEnsureCheck;
 	char szEnsureFn[MAX_PATH];
-	BOOL bUseProcessWnd;
-	BOOL bNoWait;
 
     void Save(KeyValues *pKv) const;
     void Load(KeyValues *pKv);
@@ -46,7 +44,7 @@ typedef struct CCOMMAND
 typedef CArray<CCOMMAND, CCOMMAND&> CCommandArray;
 
 // run a list of commands:
-bool RunCommands(CCommandArray& Commands, LPCTSTR pszDocName);
+bool RunCommands(CCommandArray& Commands, LPCTSTR pszDocName, bool bWaitForKeypress);
 void FixGameVars(char *pszSrc, char *pszDst, BOOL bUseQuotes = TRUE);
 bool IsRunningCommands();
 

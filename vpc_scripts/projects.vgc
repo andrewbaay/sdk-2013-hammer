@@ -73,6 +73,11 @@ $Project "hammer_launcher"
 	"hammer_launcher\hammer_launcher.vpc"
 }
 
+$Project "hammer_map_launcher"
+{
+	"utils\hammer_map_launcher\hammer_map_launcher.vpc"
+}
+
 $project "hammer_shader_dx9"
 {
 	"materialsystem\stdshaders\hammer_shader_dx9.vpc"

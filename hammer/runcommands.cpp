@@ -10,15 +10,75 @@
 #include "RunCommands.h"
 #include "Options.h"
 #include <process.h>
-#include "ProcessWnd.h"
 #include <io.h>
 #include <direct.h>
 #include "GlobalFunctions.h"
 #include "hammer.h"
 #include "KeyValues.h"
 
+#include <string_view>
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
+
+static constexpr const std::string_view base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+static FORCEINLINE bool is_base64( const unsigned char c ) { return ( isalnum( c ) || ( c == '+' ) || ( c == '/' ) ); }
+
+static size_t base64_encode( const void* pInput, unsigned int in_len, char* pOutput, const size_t nOutSize )
+{
+	const unsigned char* bytes_to_encode = static_cast<const unsigned char*>( pInput );
+	CUtlVector<char> ret;
+	ret.EnsureCapacity( 4 * ( ( in_len + 2 ) / 3 ) );
+	int i = 0;
+	unsigned char char_array_3[3];
+	unsigned char char_array_4[4];
+
+	while ( in_len-- )
+	{
+		char_array_3[i++] = *( bytes_to_encode++ );
+		if ( i == 3 )
+		{
+			char_array_4[0] = ( char_array_3[0] & 0xfc ) >> 2;
+			char_array_4[1] = ( ( char_array_3[0] & 0x03 ) << 4 ) + ( ( char_array_3[1] & 0xf0 ) >> 4 );
+			char_array_4[2] = ( ( char_array_3[1] & 0x0f ) << 2 ) + ( ( char_array_3[2] & 0xc0 ) >> 6 );
+			char_array_4[3] = char_array_3[2] & 0x3f;
+
+			for ( i = 0; i < 4; i++ )
+				ret.AddToTail( base64_chars[char_array_4[i]] );
+			i = 0;
+		}
+	}
+
+	if ( i )
+	{
+		for ( int j = i; j < 3; j++ )
+			char_array_3[j] = '\0';
+
+		char_array_4[0] = ( char_array_3[0] & 0xfc ) >> 2;
+		char_array_4[1] = ( ( char_array_3[0] & 0x03 ) << 4 ) + ( ( char_array_3[1] & 0xf0 ) >> 4 );
+		char_array_4[2] = ( ( char_array_3[1] & 0x0f ) << 2 ) + ( ( char_array_3[2] & 0xc0 ) >> 6 );
+
+		for ( int j = 0; j < i + 1; j++ )
+			ret.AddToTail( base64_chars[char_array_4[j]] );
+
+		while ( i++ < 3 )
+			ret.AddToTail( '=' );
+	}
+
+	if ( nOutSize <= static_cast<size_t>( ret.Count() ) )
+	{
+		Warning( "Base64 encode: insufficient output buffer size\n" );
+		memset( pOutput, 0, nOutSize );
+		return 0;
+	}
+
+	memcpy( pOutput, ret.Base(), ret.Count() );
+	pOutput[ret.Count()] = '\0';
+
+	return ret.Count();
+}
+
 
 static bool s_bRunsCommands = false;
 
@@ -26,7 +86,162 @@ bool IsRunningCommands() { return s_bRunsCommands; }
 
 static char *pszDocPath, *pszDocName, *pszDocExt;
 
-CProcessWnd procWnd;
+static void RemoveQuotes( char* pBuf )
+{
+	if ( pBuf[0] == '\"' )
+		strcpy( pBuf, pBuf + 1 );
+	if ( pBuf[strlen( pBuf ) - 1] == '\"' )
+		pBuf[strlen( pBuf ) - 1] = 0;
+}
+
+class CommandRunner
+{
+public:
+	CommandRunner( bool waitForKey ) : m_bWaitForKey( waitForKey ), m_cmdData( 1, 0 ), m_nCommands( 0 ) {}
+	~CommandRunner() = default;
+
+	void AddCommand( int specialID, const char* from, const char* to = nullptr )
+	{
+		CmdType type;
+		switch ( specialID )
+		{
+		case CCChangeDir:
+			type = CmdType::ChangeDir;
+			break;
+		case CCCopyFile:
+			type = CmdType::Copy;
+			break;
+		case CCDelFile:
+			type = CmdType::Delete;
+			break;
+		case CCRenameFile:
+			type = CmdType::Rename;
+			break;
+		NO_DEFAULT
+		}
+
+		int size = 0;
+		switch ( type )
+		{
+		case CommandRunner::CmdType::Delete:
+		case CommandRunner::CmdType::ChangeDir:
+			size = V_strlen( from ) + 1;
+			break;
+		case CommandRunner::CmdType::Copy:
+		case CommandRunner::CmdType::Rename:
+			size = V_strlen( from ) + V_strlen( to ) + 2; // \0 and |
+			break;
+		NO_DEFAULT
+		}
+
+		auto cmd = AllocCmd( size, type );
+		switch ( type )
+		{
+		case CommandRunner::CmdType::Delete:
+		case CommandRunner::CmdType::ChangeDir:
+			V_strncpy( cmd->command, from, cmd->size );
+			break;
+		case CommandRunner::CmdType::Copy:
+		case CommandRunner::CmdType::Rename:
+			V_snprintf( cmd->command, cmd->size, "%s|%s", from, to );
+			break;
+		NO_DEFAULT
+		}
+	}
+
+	void FileCheck( const char* filePath )
+	{
+		char file[MAX_PATH];
+		V_strcpy_safe( file, filePath );
+		RemoveQuotes( file );
+		auto cmd = AllocCmd( V_strlen( file ) + 1, CmdType::EnsureExists );
+		V_strncpy( cmd->command, file, cmd->size );
+	}
+
+	void AddCommand( const char* _cmd, const char* args )
+	{
+		const int size = V_strlen( _cmd ) + V_strlen( args ) + 2; // space + \0
+		auto cmd = AllocCmd( size, CmdType::Exec );
+		V_snprintf( cmd->command, cmd->size, "%s %s", _cmd, args );
+	}
+
+	void Launch()
+	{
+		if ( m_cmdData.IsEmpty() )
+			return;
+
+		CUtlVector<char> encCmd;
+		encCmd.SetCount( 4 * ( ( m_cmdData.Count() + 2 ) / 3 ) + 1 );
+		base64_encode( m_cmdData.Base(), m_cmdData.Count(), encCmd.Base(), encCmd.Count() );
+
+		char szFilename[MAX_PATH];
+		GetModuleFileName( NULL, szFilename, sizeof( szFilename ) );
+		V_StripLastDir( szFilename, sizeof( szFilename ) );
+		V_AppendSlash( szFilename, sizeof( szFilename ) );
+		V_strcat_safe( szFilename, "hammer_map_launcher.exe" );
+
+		CString launchCmd;
+		if ( m_bWaitForKey )
+			launchCmd.Format( "%s -WaitForKeypress %u %s", szFilename, m_nCommands, encCmd.Base() );
+		else
+			launchCmd.Format( "%s %u %s", szFilename, m_nCommands, encCmd.Base() );
+
+		PROCESS_INFORMATION pi;
+		STARTUPINFO si;
+		memset( &si, 0, sizeof( si ) );
+		si.cb = sizeof( si );
+
+		CreateProcess( NULL, (char*)(const char*)launchCmd, NULL, NULL, FALSE,
+						CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi );
+
+		CloseHandle( pi.hProcess );
+		CloseHandle( pi.hThread );
+	}
+
+private:
+
+	// keep in sync with hammer_map_launcher!
+	enum class CmdType : unsigned char
+	{
+		Exec,
+		ChangeDir,
+		Copy,
+		Delete,
+		Rename,
+		EnsureExists,
+
+		Last
+	};
+
+	#pragma pack(push, 1)
+	#pragma warning(push)
+	#pragma warning(disable: 4200)
+
+	struct Cmd
+	{
+		unsigned short size;
+		CmdType type;
+		char command[];
+	};
+
+	#pragma warning(pop)
+	#pragma pack(pop)
+
+	Cmd* AllocCmd( int size, CmdType type )
+	{
+		auto curPos = m_cmdData.Size();
+		m_cmdData.EnsureCount( curPos + sizeof( Cmd ) + size );
+		auto cmd = reinterpret_cast<Cmd*>( m_cmdData.Base() + curPos );
+		cmd->size = size;
+		cmd->type = type;
+		++m_nCommands;
+		return cmd;
+	}
+
+	bool             m_bWaitForKey;
+	CUtlVector<byte> m_cmdData;
+	size_t           m_nCommands;
+};
 
 void FixGameVars(char *pszSrc, char *pszDst, BOOL bUseQuotes)
 {
@@ -35,7 +250,7 @@ void FixGameVars(char *pszSrc, char *pszDst, BOOL bUseQuotes)
 	char *pSrc = pszSrc, *pDst = pszDst;
 	BOOL bInQuote = FALSE;
 	while(pSrc[0])
-	{	
+	{
 		if(pSrc[0] == '$')	// found a parm
 		{
 			if(pSrc[1] == '$')	// nope, it's a single symbol
@@ -45,9 +260,9 @@ void FixGameVars(char *pszSrc, char *pszDst, BOOL bUseQuotes)
 			}
 			else
 			{
-				// figure out which parm it is .. 
+				// figure out which parm it is ..
 				++pSrc;
-				
+
 				if (!bInQuote && bUseQuotes)
 				{
 					// not in quote, and subbing a variable.. start quote
@@ -139,24 +354,6 @@ void FixGameVars(char *pszSrc, char *pszDst, BOOL bUseQuotes)
 	pDst[0] = 0;
 }
 
-static void RemoveQuotes(char *pBuf)
-{
-	if(pBuf[0] == '\"')
-		strcpy(pBuf, pBuf+1);
-	if(pBuf[strlen(pBuf)-1] == '\"')
-		pBuf[strlen(pBuf)-1] = 0;
-}
-
-LPCTSTR GetErrorString()
-{
-	static char szBuf[200];
-	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), 0, 
-		szBuf, 200, NULL);
-	char *p = strchr(szBuf, '\r');	// get rid of \r\n
-	if(p) p[0] = 0;
-	return szBuf;
-}
-
 void CCOMMAND::Load(KeyValues* pKvCmd)
 {
     bEnable = pKvCmd->GetBool("enabled");
@@ -165,8 +362,6 @@ void CCOMMAND::Load(KeyValues* pKvCmd)
     Q_strncpy(szParms, pKvCmd->GetString("params"), MAX_PATH);
     bEnsureCheck = pKvCmd->GetBool("ensure_check");
     Q_strncpy(szEnsureFn, pKvCmd->GetString("ensure_fn"), MAX_PATH);
-    bUseProcessWnd = pKvCmd->GetBool("use_process_wnd");
-    bNoWait = pKvCmd->GetBool("no_wait");
 }
 
 void CCOMMAND::Save(KeyValues* pKvCmd) const
@@ -177,26 +372,19 @@ void CCOMMAND::Save(KeyValues* pKvCmd) const
     pKvCmd->SetString("params", szParms);
     pKvCmd->SetBool("ensure_check", bEnsureCheck);
     pKvCmd->SetString("ensure_fn", szEnsureFn);
-    pKvCmd->SetBool("use_process_wnd", bUseProcessWnd);
-    pKvCmd->SetBool("no_wait", bNoWait);
 }
 
-bool RunCommands(CCommandArray& Commands, LPCTSTR pszOrigDocName)
+bool RunCommands(CCommandArray& Commands, LPCTSTR pszOrigDocName, bool bWaitForKeypress)
 {
 	s_bRunsCommands = true;
-
-	char szCurDir[MAX_PATH];
-	_getcwd(szCurDir, MAX_PATH);
-
-	procWnd.GetReady();
 
 	// cut up document name into file and extension components.
 	//  create two sets of buffers - one set with the long filename
 	//  and one set with the 8.3 format.
 
-	char szDocLongPath[MAX_PATH] = {0}, szDocLongName[MAX_PATH] = {0}, 
+	char szDocLongPath[MAX_PATH] = {0}, szDocLongName[MAX_PATH] = {0},
 		szDocLongExt[MAX_PATH] = {0};
-	char szDocShortPath[MAX_PATH] = {0}, szDocShortName[MAX_PATH] = {0}, 
+	char szDocShortPath[MAX_PATH] = {0}, szDocShortName[MAX_PATH] = {0},
 		szDocShortExt[MAX_PATH] = {0};
 
 	GetFullPathName(pszOrigDocName, MAX_PATH, szDocLongPath, NULL);
@@ -240,204 +428,126 @@ bool RunCommands(CCommandArray& Commands, LPCTSTR pszOrigDocName)
 		p[0] = 0;
 	}
 
+	CommandRunner commandExecuter( bWaitForKeypress );
+
 	int iSize = Commands.GetSize(), i = 0;
 	char *ppParms[32];
 	while(iSize--)
 	{
-		CCOMMAND &cmd = Commands[i++];
+		CCOMMAND& cmd = Commands[i++];
 
 		// anything there?
-		if((!cmd.szRun[0] && !cmd.iSpecialCmd) || !cmd.bEnable)
+		if ( ( !cmd.szRun[0] && !cmd.iSpecialCmd ) || !cmd.bEnable )
 			continue;
 
 		// set name pointers for long filenames
 		pszDocExt = szDocLongExt;
 		pszDocName = szDocLongName;
 		pszDocPath = szDocLongPath;
-		
+
 		char szNewParms[MAX_PATH*5], szNewRun[MAX_PATH*5];
 
-		// HACK: force the spawnv call for launching the game
-		if (!Q_stricmp(cmd.szRun, "$game_exe"))
+		FixGameVars( cmd.szRun, szNewRun, TRUE );
+		FixGameVars( cmd.szParms, szNewParms, TRUE );
+
+		if ( !cmd.iSpecialCmd )
 		{
-			cmd.bUseProcessWnd = FALSE;
-		}
-
-		FixGameVars(cmd.szRun, szNewRun, TRUE);
-		FixGameVars(cmd.szParms, szNewParms, TRUE);
-
-		CString strTmp;
-		strTmp.Format("\r\n"
-			"** Executing...\r\n"
-			"** Command: %s\r\n"
-			"** Parameters: %s\r\n\r\n", szNewRun, szNewParms);
-		procWnd.Append(strTmp);
-		
-		// create a parameter list (not always required)
-		if(!cmd.bUseProcessWnd || cmd.iSpecialCmd)
-		{
-			char *p = szNewParms;
-			ppParms[0] = szNewRun;
-			int iArg = 1;
-			BOOL bDone = FALSE;
-			while(p[0])
-			{
-				ppParms[iArg++] = p;
-				while(p[0])
-				{
-					if(p[0] == ' ')
-					{
-						// found a space-separator
-						p[0] = 0;
-
-						p++;
-
-						// skip remaining white space
-						while (*p == ' ')
-							p++;
-
-						break;
-					}
-
-					// found the beginning of a quoted parameters
-					if(p[0] == '\"')
-					{
-						while(1)
-						{
-							p++;
-							if(p[0] == '\"')
-							{
-								// found the end
-								if(p[1] == 0)
-									bDone = TRUE;
-								p[1] = 0;	// kick its ass
-								p += 2;
-
-								// skip remaining white space
-								while (*p == ' ')
-									p++;
-
-								break;
-							}
-						}
-						break;
-					}
-
-					// else advance p
-					++p;
-				}
-
-				if(!p[0] || bDone)
-					break;	// done.
-			}
-
-			ppParms[iArg] = NULL;
-
-			if(cmd.iSpecialCmd)
-			{
-				BOOL bError = FALSE;
-				LPCTSTR pszError = "";
-
-				if(cmd.iSpecialCmd == CCCopyFile && iArg == 3)
-				{
-					RemoveQuotes(ppParms[1]);
-					RemoveQuotes(ppParms[2]);
-					
-					// don't copy if we're already there
-					if (stricmp(ppParms[1], ppParms[2]) && 					
-							(!CopyFile(ppParms[1], ppParms[2], FALSE)))
-					{
-						bError = TRUE;
-						pszError = GetErrorString();
-					}
-				}
-				else if(cmd.iSpecialCmd == CCDelFile && iArg == 2)
-				{
-					RemoveQuotes(ppParms[1]);
-					if(!DeleteFile(ppParms[1]))
-					{
-						bError = TRUE;
-						pszError = GetErrorString();
-					}
-				}
-				else if(cmd.iSpecialCmd == CCRenameFile && iArg == 3)
-				{
-					RemoveQuotes(ppParms[1]);
-					RemoveQuotes(ppParms[2]);
-					if(rename(ppParms[1], ppParms[2]))
-					{
-						bError = TRUE;
-						pszError = strerror(errno);
-					}
-				}
-				else if(cmd.iSpecialCmd == CCChangeDir && iArg == 2)
-				{
-					RemoveQuotes(ppParms[1]);
-					if(mychdir(ppParms[1]) == -1)
-					{
-						bError = TRUE;
-						pszError = strerror(errno);
-					}
-				}
-
-				if(bError)
-				{
-					CString str;
-					str.Format("The command failed. Windows reported the error:\r\n"
-						"  \"%s\"\r\n", pszError);
-					procWnd.Append(str);
-					procWnd.SetForegroundWindow();
-					str += "\r\nDo you want to continue?";
-					if(AfxMessageBox(str, MB_YESNO) == IDNO)
-						break;
-				}
-			}
-			else
+			if ( !V_stricmp( cmd.szRun, "$game_exe" ) )
 			{
 				// Change to the game exe folder before spawning the engine.
 				// This is necessary for Steam to find the correct Steam DLL (it
 				// uses the current working directory to search).
 				char szDir[MAX_PATH];
-				Q_strncpy(szDir, szNewRun, sizeof(szDir));
-				Q_StripFilename(szDir);
-
-				mychdir(szDir);
-
-				// YWB Force asynchronous operation so that engine doesn't hang on
-				//  exit???  Seems to work.
-				// spawnv doesn't like quotes
-				RemoveQuotes(szNewRun);
-				_spawnv(/*cmd.bNoWait ?*/ _P_NOWAIT /*: P_WAIT*/, szNewRun, 
-					(const char *const *)ppParms);
+				V_strncpy( szDir, szNewRun, sizeof(szDir) );
+				RemoveQuotes( szDir );
+				V_StripFilename( szDir );
+				commandExecuter.AddCommand( CCChangeDir, szDir );
 			}
+			commandExecuter.AddCommand( szNewRun, szNewParms );
+
+			// check for existence?
+			if ( cmd.bEnsureCheck )
+				commandExecuter.FileCheck( cmd.szEnsureFn );
+			continue;
 		}
-		else
+
+		// create a parameter list (not always required)
+		char* p = szNewParms;
+		int iArg = 0;
+		BOOL bDone = FALSE;
+		while ( p[0] )
 		{
-			procWnd.Execute(szNewRun, szNewParms);
+			ppParms[iArg++] = p;
+			while ( p[0] )
+			{
+				if ( p[0] == ' ' )
+				{
+					// found a space-separator
+					p[0] = 0;
+
+					p++;
+
+					// skip remaining white space
+					while ( *p == ' ' )
+						p++;
+
+					break;
+				}
+
+				// found the beginning of a quoted parameters
+				if ( p[0] == '\"' )
+				{
+					while ( true )
+					{
+						p++;
+						if ( p[0] == '\"' )
+						{
+							// found the end
+							if ( p[1] == 0 )
+								bDone = TRUE;
+							p[1] = 0;	// kick its ass
+							p += 2;
+
+							// skip remaining white space
+							while ( *p == ' ' )
+								p++;
+
+							break;
+						}
+					}
+					break;
+				}
+
+				// else advance p
+				++p;
+			}
+
+			if ( !p[0] || bDone )
+				break; // done.
+		}
+
+		ppParms[iArg] = NULL;
+
+		if ( ( cmd.iSpecialCmd == CCCopyFile || cmd.iSpecialCmd == CCRenameFile ) && iArg == 2 ) // 2 args
+		{
+			RemoveQuotes( ppParms[0] );
+			RemoveQuotes( ppParms[1] );
+			commandExecuter.AddCommand( cmd.iSpecialCmd, ppParms[0], ppParms[1] );
+		}
+		else if ( ( cmd.iSpecialCmd == CCChangeDir || cmd.iSpecialCmd == CCDelFile ) && iArg == 1 ) // 1 arg
+		{
+			RemoveQuotes( ppParms[0] );
+			commandExecuter.AddCommand( cmd.iSpecialCmd, ppParms[0] );
 		}
 
 		// check for existence?
-		if(cmd.bEnsureCheck)
-		{
-			char szFile[MAX_PATH];
-			FixGameVars(cmd.szEnsureFn, szFile, FALSE);
-			if(GetFileAttributes(szFile) == 0xFFFFFFFF)
-			{
-				// not there!
-				CString str;
-				str.Format("The file '%s' was not built.\n"
-					"Do you want to continue?", szFile);
-				procWnd.SetForegroundWindow();
-				if(AfxMessageBox(str, MB_YESNO) == IDNO)
-					break;	// outta here
-			}
-		}
+		if ( cmd.bEnsureCheck )
+			commandExecuter.FileCheck( cmd.szEnsureFn );
 	}
 
-	mychdir(szCurDir);
+	commandExecuter.Launch();
 
 	s_bRunsCommands = false;
 
 	return TRUE;
 }
-

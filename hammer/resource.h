@@ -499,6 +499,7 @@
 #define IDC_BSP0                        1137
 #define IDC_NOQUAKE                     1138
 #define IDC_NOGAME                      1138
+#define IDC_WAITFORKEYPRESS             1139
 #define IDC_CLASSPROMPT                 1140
 #define IDC_LIGHT2                      1140
 #define IDC_RAD1                        1140
@@ -615,7 +616,6 @@
 #define IDC_RADIO4                      1259
 #define IDC_ACTION                      1260
 #define IDC_VISIBLEONLY                 1261
-#define IDC_USEPROCESSWND               1262
 #define IDC_COPY                        1263
 #define IDC_SIZEPROMPT                  1265
 #define IDC_FILTERPROMPT                1266

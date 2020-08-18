@@ -5884,6 +5884,7 @@ void CMapDoc::OnFileRunmap(void)
 
 	CRunMap dlg;
 	CRunMapExpertDlg dlgExpert;
+	dlg.m_bWaitForKeypress = dlgExpert.m_bWaitForKeypress = AfxGetApp()->GetProfileInt("Run Map", "WaitForKeypress", 0) != 0;
 
 	CString strFile = GetPathName();
 
@@ -5943,6 +5944,7 @@ void CMapDoc::OnFileRunmap(void)
 			{
 				dlg.m_bSwitchMode = FALSE;
 				AfxGetApp()->WriteProfileInt("Run Map", "Mode", 1);
+				dlgExpert.m_bWaitForKeypress = dlg.m_bWaitForKeypress;
 			}
 			else
 			{
@@ -5961,11 +5963,13 @@ void CMapDoc::OnFileRunmap(void)
 			{
 				AfxGetApp()->WriteProfileInt("Run Map", "Mode", 0);
 				dlgExpert.m_bSwitchMode = FALSE;
+				dlg.m_bWaitForKeypress = dlgExpert.m_bWaitForKeypress;
 			}
 			else if (dlgExpert.m_pActiveSequence) // clicked ok
 			{
 				// run the commands in the active sequence
-				RunCommands(dlgExpert.m_pActiveSequence->m_Commands, strFile);
+				RunCommands(dlgExpert.m_pActiveSequence->m_Commands, strFile, dlgExpert.m_bWaitForKeypress);
+				AfxGetApp()->WriteProfileInt("Run Map", "WaitForKeypress", dlgExpert.m_bWaitForKeypress);
 				return;
 			}
 			else
@@ -5986,7 +5990,6 @@ void CMapDoc::OnFileRunmap(void)
 	CCOMMAND cmd;
 	memset(&cmd, 0, sizeof cmd);
 	cmd.bEnable = TRUE;
-	cmd.bUseProcessWnd = TRUE;
 	cmd.bLongFilenames = TRUE;
 
 	CCommandArray cmds;
@@ -6035,39 +6038,14 @@ void CMapDoc::OnFileRunmap(void)
 	// Run the game.
 	if (dlg.m_bNoQuake == FALSE)
 	{
-		cmd.bUseProcessWnd = FALSE;
-		cmd.bNoWait = TRUE;
-
-		// dvs: we should be able to run the game directly now, even under Steam
-		//CString strSteamExe;
-		//m_pGame->GetSteamExe(strSteamExe);
-
-		//if (strSteamExe.GetLength() != 0)
-		//{
-			//CString strSteamAppID;
-			//m_pGame->GetSteamAppID(strSteamAppID);
-
-			//strcpy(cmd.szRun, strSteamExe);
-
-			//if (strSteamAppID.GetLength() != 0)
-			//{
-			//	sprintf(cmd.szParms, "-applaunch %s -game $gamedir %s +map $file", strSteamAppID, dlg.m_strQuakeParms);
-			//}
-			//else
-			//{
-			//	sprintf(cmd.szParms, "-game $moddir %s +map $file", dlg.m_strQuakeParms);
-			//}
-		//}
-		//else
-		{
-			strcpy(cmd.szRun, "$game_exe");
-			sprintf(cmd.szParms, "-game $gamedir %s +map $file", (LPCTSTR)dlg.m_strQuakeParms);
-		}
+		strcpy(cmd.szRun, "$game_exe");
+		sprintf(cmd.szParms, "-game $gamedir %s +map $file", (LPCTSTR)dlg.m_strQuakeParms);
 
 		cmds.Add(cmd);
 	}
 
-	RunCommands(cmds, GetPathName());
+	RunCommands(cmds, GetPathName(), dlg.m_bWaitForKeypress);
+	AfxGetApp()->WriteProfileInt("Run Map", "WaitForKeypress", dlg.m_bWaitForKeypress);
 }
 
 

@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -23,6 +23,7 @@ public:
 	//}}AFX_DATA
 
 	BOOL m_bSwitchMode;
+	BOOL m_bWaitForKeypress;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
