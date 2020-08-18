@@ -581,6 +581,7 @@ bool COptions::Read(void)
 	view3d.bInvertDisplacementAlpha = APP()->GetProfileInt(pszView3D, "InvertDisplacementAlpha", TRUE);
 	view3d.fFOV = APP()->GetProfileInt(pszView3D, "FOV", 90);
 	view3d.fLightConeLength = APP()->GetProfileInt(pszView3D, "LightConeLength", 10);
+	view3d.fMouseSens = APP()->GetProfileInt(pszView3D, "MouseSens", 400) / 1000.0f;
 
 	// read color
 	colors.bUseCustom = APP()->GetProfileInt(pszColors, "UseCustom", 0) != 0;
@@ -792,6 +793,7 @@ void COptions::Write( BOOL fOverwrite, BOOL fSaveConfigs )
 	APP()->WriteProfileInt(pszView3D, "InvertDisplacementAlpha", view3d.bInvertDisplacementAlpha);
 	APP()->WriteProfileInt(pszView3D, "FOV", view3d.fFOV);
 	APP()->WriteProfileInt(pszView3D, "LightConeLength", view3d.fLightConeLength);
+	APP()->WriteProfileInt(pszView3D, "MouseSens", static_cast<int>( view3d.fMouseSens * 1000.0f ));
 
 	// write color
 	APP()->WriteProfileInt(pszColors, "UseCustom", colors.bUseCustom);
@@ -910,6 +912,7 @@ void COptions::SetDefaults(void)
 	view3d.bPreviewModelFade = false;
 	view3d.fFOV = 90;
 	view3d.fLightConeLength = 10;
+	view3d.fMouseSens = 0.4f;
 
 	if ( bWrite )
 	{

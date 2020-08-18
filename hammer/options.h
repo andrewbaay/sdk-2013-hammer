@@ -107,20 +107,21 @@ struct COptionsView2D
 
 struct COptionsView3D
 {
-	BOOL bReverseY;			// Wether to reverse the mouse's Y axis when mouse looking.
-	BOOL bUseMouseLook;		// Whether to use the engine's default movement controls.
-	int iBackPlane;			// Distance to far clipping plane in world units.
-	int nModelDistance;		// Distance in world units within which studio models render.
-	int nDetailDistance;	// Distance in world units within which detail props render.
-	BOOL bAnimateModels;	// Whether to animate studio models.
-	int nForwardSpeedMax;	// Max forward speed in world units per second.
-	int nTimeToMaxSpeed;	// Time to max forward speed in milliseconds.
-	BOOL bFilterTextures;	// Whether to filter textures.
-	BOOL bReverseSelection;	// Whether to animate studio models.
-	BOOL bInvertDisplacementAlpha; // Whether to invert displacement alpha
-	bool bPreviewModelFade; // Whether to preview model fade in the 3D view.
-	float fFOV;				// FOV of 3D Camera
-	float fLightConeLength;  // Multiplier for light_spot cone length
+	BOOL bReverseY;					// Wether to reverse the mouse's Y axis when mouse looking.
+	BOOL bUseMouseLook;				// Whether to use the engine's default movement controls.
+	int iBackPlane;					// Distance to far clipping plane in world units.
+	int nModelDistance;				// Distance in world units within which studio models render.
+	int nDetailDistance;			// Distance in world units within which detail props render.
+	BOOL bAnimateModels;			// Whether to animate studio models.
+	int nForwardSpeedMax;			// Max forward speed in world units per second.
+	int nTimeToMaxSpeed;			// Time to max forward speed in milliseconds.
+	BOOL bFilterTextures;			// Whether to filter textures.
+	BOOL bReverseSelection;			// Whether to animate studio models.
+	BOOL bInvertDisplacementAlpha;	// Whether to invert displacement alpha
+	bool bPreviewModelFade;			// Whether to preview model fade in the 3D view.
+	float fFOV;						// FOV of 3D Camera
+	float fLightConeLength;			// Multiplier for light_spot cone length
+	float fMouseSens;				// Mouse sensitivity
 };
 
 

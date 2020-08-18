@@ -69,6 +69,8 @@ void COPTView3D::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_FORWARD_SPEED, m_ForwardSpeedMax);
 	DDX_Control(pDX, IDC_FORWARD_ACCEL_TEXT, m_TimeToMaxSpeedText);
 	DDX_Control(pDX, IDC_FORWARD_ACCELERATION, m_TimeToMaxSpeed);
+	DDX_Control(pDX, IDC_MOUSE_SENS_TEXT, m_MouseSensText);
+	DDX_Control(pDX, IDC_MOUSE_SENS, m_MouseSens);
 	DDX_Check(pDX, IDC_FILTER_TEXTURES, Options.view3d.bFilterTextures);
 	DDX_Check(pDX, IDC_REVERSEY, Options.view3d.bReverseY);
 	DDX_Check(pDX, IDC_USEMOUSELOOK, Options.view3d.bUseMouseLook);
@@ -86,6 +88,7 @@ void COPTView3D::DoDataExchange(CDataExchange* pDX)
 	m_DetailDistance.SetRange(0, 30000, TRUE);
 	m_ForwardSpeedMax.SetRange(100, 30000, TRUE);
 	m_TimeToMaxSpeed.SetRange(0, 30000, TRUE);
+	m_MouseSens.SetRange(1, 1000, TRUE);
 
 	//
 	// If going from controls to data.
@@ -97,6 +100,7 @@ void COPTView3D::DoDataExchange(CDataExchange* pDX)
 		Options.view3d.nDetailDistance = m_DetailDistance.GetPos();
 		Options.view3d.nForwardSpeedMax = m_ForwardSpeedMax.GetPos();
 		Options.view3d.nTimeToMaxSpeed = m_TimeToMaxSpeed.GetPos();
+		Options.view3d.fMouseSens = m_MouseSens.GetPos() / 1000.0f;
 	}
 	//
 	// Else going from data to controls.
@@ -144,6 +148,13 @@ void COPTView3D::DoDataExchange(CDataExchange* pDX)
 		int nTime = m_TimeToMaxSpeed.GetPos();
 		str.Format("%.2f sec", (float)nTime / 1000.0f);
 		m_TimeToMaxSpeedText.SetWindowText(str);
+
+		//
+		// Mouse sensitivity.
+		//
+		m_MouseSens.SetPos( static_cast<int>( Options.view3d.fMouseSens * 1000.0f ) );
+		str.Format("%.3f", Options.view3d.fMouseSens);
+		m_MouseSensText.SetWindowText(str);
 	}
 }
 
@@ -257,11 +268,23 @@ void COPTView3D::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
 	//
 	else if (pScrollBar->m_hWnd == m_TimeToMaxSpeed.m_hWnd)
 	{
-		float fTimeSeconds = (float)m_TimeToMaxSpeed.GetPos() / 1000.0f;
+		float fTimeSeconds = m_TimeToMaxSpeed.GetPos() / 1000.0f;
 
 		CString str;
 		str.Format("%.2f sec", fTimeSeconds);
 		m_TimeToMaxSpeedText.SetWindowText(str);
+	}
+
+	//
+	// Else if it is mouse sensitivity.
+	//
+	else if (pScrollBar->m_hWnd == m_MouseSens.m_hWnd)
+	{
+		float fSensScale = m_MouseSens.GetPos() / 1000.0f;
+
+		CString str;
+		str.Format("%.3f", fSensScale);
+		m_MouseSensText.SetWindowText(str);
 	}
 
 	CPropertyPage::OnHScroll(nSBCode, nPos, pScrollBar);

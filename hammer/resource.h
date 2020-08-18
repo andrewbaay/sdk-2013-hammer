@@ -743,8 +743,10 @@
 #define IDC_FORWARD_ACCEL_TEXT          1427
 #define IDC_TIMESLIDER                  1428
 #define IDC_LIST                        1428
+#define IDC_MOUSE_SENS                  1428
 #define IDC_ANIMATIONPLAY               1429
 #define IDC_EDIT_CONN_TARGET            1429
+#define IDC_MOUSE_SENS_TEXT             1429
 #define IDC_EDIT_CONN_INPUT             1430
 #define IDC_ANIMATIONCREATEKEYFRAME     1431
 #define IDC_EDIT_CONN_PARAMETER         1431

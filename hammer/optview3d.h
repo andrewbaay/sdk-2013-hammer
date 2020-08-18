@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -33,6 +33,8 @@ public:
 	CSliderCtrl	m_ForwardSpeedMax;
 	CStatic	m_TimeToMaxSpeedText;
 	CSliderCtrl	m_TimeToMaxSpeed;
+	CStatic	m_MouseSensText;
+	CSliderCtrl m_MouseSens;
 	//}}AFX_DATA
 
 // Overrides
