@@ -340,7 +340,6 @@ void CMDLPicker::OnCommand( const char *pCommand )
 		CAssetPickerFrame *pPicker = new CAssetPickerFrame( this, "Select Light Probe (.prb) File",
 			"Light Probe", "prb", "materials/lightprobes", "lightprobe" );
 		pPicker->DoModal();
-		pPicker->SetPos( 10, 10 );
 		return;
 	}
 

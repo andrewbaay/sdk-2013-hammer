@@ -59,6 +59,7 @@ static float GetAutoPlayTime( void )
 CMDLPanel::CMDLPanel( vgui::Panel *pParent, const char *pName ) : BaseClass( pParent, pName )
 {
 	SetVisible( true );
+	SetRender3DSupersampled( true ); // draw to texture, avoids stencil bug
 
 	// Used to poll input
 	vgui::ivgui()->AddTickSignal( GetVPanel() );

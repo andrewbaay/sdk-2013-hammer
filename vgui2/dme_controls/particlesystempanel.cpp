@@ -59,6 +59,7 @@ CParticleSystemPanel::CParticleSystemPanel( vgui::Panel *pParent, const char *pN
 	InvalidateUniqueId( &m_RenderHelperId );
 
 	LookAt( SPHERE_RADIUS );
+	SetRender3DSupersampled( true ); // draw to texture, avoids stencil bug
 
 	m_pLightmapTexture.Init( "//platform/materials/debug/defaultlightmap", "editor" );
 	m_DefaultEnvCubemap.Init( "editor/cubemap", "editor", true );

@@ -744,16 +744,7 @@ void CPotteryWheelPanel::Paint()
 	vgui::surface()->GetScreenSize( screenw, screenh );
 
 	int windowposx = 0, windowposy = 0;
-	if ( Panel* par = GetParent() )
-	{
-		int px, py, x, y;
-		par->GetPos( px, py );
-		GetPos( x, y );
-		windowposx = px + x;
-		windowposy = py + y;
-	}
-	else
-		ipanel()->GetAbsPos( GetVPanel(), windowposx, windowposy );
+	GetPos( windowposx, windowposy );
 
 	int windowposright = windowposx + iWidth;
 	int windowposbottom = windowposy + iHeight;
@@ -789,7 +780,9 @@ void CPotteryWheelPanel::Paint()
 		RenderCapture();
 	}
 
-	vgui::MatSystemSurface()->Begin3DPaint( 0, 0, iWidth, iHeight, m_bRender3DSupersampled );
+	int w, h;
+	GetSize( w, h );
+	vgui::MatSystemSurface()->Begin3DPaint( 0, 0, w, h, m_bRender3DSupersampled );
 
 	if ( m_pCurrentManip )
 	{

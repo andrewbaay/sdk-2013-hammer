@@ -994,8 +994,7 @@ void CBaseAssetPicker::AutoLayoutStandardControls(  )
 	CBoxSizer* pTopLeftSplitterLayout = new CBoxSizer( ESLD_VERTICAL );
 	{
 		CBoxSizer* pRow = new CBoxSizer( ESLD_HORIZONTAL );
-		pRow->AddSpacer( SizerAddArgs_t().Padding( 2 ) );
-		pRow->AddPanel( new Label( pSplitterTopLeftSide, "ModFilterLabel", "Mod Filter" ), SizerAddArgs_t().Padding( 0 ) );
+		pRow->AddPanel( new Label( pSplitterTopLeftSide, "ModFilterLabel", "Mod Filter" ), SizerAddArgs_t() );
 		pRow->AddSpacer( SizerAddArgs_t().Padding( 2 ) );
 		pRow->AddPanel( m_pModSelector, SizerAddArgs_t().Expand( 1.0f ).Padding( 0 ) );
 		pRow->AddSpacer( SizerAddArgs_t().Padding( 2 ) );
