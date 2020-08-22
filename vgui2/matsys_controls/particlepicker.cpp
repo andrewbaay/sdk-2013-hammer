@@ -47,12 +47,14 @@ struct CachedParticleInfo_t
 {
 	CachedAssetInfo_t m_AssetInfo;
 	CUtlString m_FileName;
+	bool m_bInManifest;
 };
 
 struct PCFToLoad_t
 {
 	CUtlString m_FileName;
 	int m_ModId;
+	bool m_bInManifest;
 };
 
 static CUtlVector<PCFToLoad_t> sCacheUnloadedPCFs;
@@ -133,6 +135,15 @@ CParticleSnapshotPanel::CParticleSnapshotPanel( vgui::Panel *pParent, const char
 
 		m_pChildrenButton = new MenuButton( this, "ChildrenButton", "C" );
 		pRow->AddPanel( m_pChildrenButton, SizerAddArgs_t().Expand( 0.0f ).Padding( 0 ) );
+
+		auto warn = new Label( this, "ManifestWarn", "!!" );
+		warn->MakeReadyForUse();
+		warn->SetVisible( false );
+		warn->SetEnabled( false );
+		warn->SetPaintBackgroundEnabled( false );
+		warn->SetDisabledFgColor1( Color( 255, 48, 48, 255 ) );
+		warn->SetDisabledFgColor2( Color( 255, 0, 0, 255 ) );
+		pRow->AddPanel( warn, SizerAddArgs_t().Expand( 0.0f ).Padding( 2 ) );
 
 		pRow->AddPanel( m_pLabel, SizerAddArgs_t().Expand( 0.0f ).Padding( 2 ) );
 
@@ -558,19 +569,19 @@ static int PanelSortHelperI( CParticleSnapshotPanel *const *a, CParticleSnapshot
 	return V_stricmp((*a)->GetSystemName(),(*b)->GetSystemName());
 }
 
-void CParticleSnapshotGrid::SetParticleList( const CUtlVector<const char *>& ParticleNames )
+void CParticleSnapshotGrid::SetParticleList( const CUtlVector<ParticleLoadData>& ParticleData )
 {
 	bool bPreviewEnabled = m_pPreviewCheckbox->IsSelected();
 
 	// might have too many panels
-	while ( m_Panels.Count() > ParticleNames.Count() )
+	while ( m_Panels.Count() > ParticleData.Count() )
 	{
 		delete m_Panels.Tail();
 		m_Panels.RemoveMultipleFromTail(1);
 	}
 
 	// might have too few panels
-	while ( m_Panels.Count() < ParticleNames.Count() )
+	while ( m_Panels.Count() < ParticleData.Count() )
 	{
 		char szPanelName[32];
 		V_snprintf( szPanelName, sizeof(szPanelName), "ParticlePanel%d", m_Panels.Count() );
@@ -584,9 +595,10 @@ void CParticleSnapshotGrid::SetParticleList( const CUtlVector<const char *>& Par
 	// reinit them all, with the new system names
 	for ( int i = 0; i < m_Panels.Count(); ++i )
 	{
-		if( i < ParticleNames.Count() )
+		if ( i < ParticleData.Count() )
 		{
-			m_Panels[i]->SetParticleSystem( ParticleNames[i], i );
+			m_Panels[i]->SetParticleSystem( ParticleData[i].pName, i );
+			m_Panels[i]->SetControlVisible( "ManifestWarn", !ParticleData[i].bInManifest );
 		}
 		else
 		{
@@ -968,21 +980,21 @@ void CParticleSnapshotGrid::OnKeyCodeTyped( vgui::KeyCode code )
 //
 //-----------------------------------------------------------------------------
 
-static int StringSortHelperI( const char * const *a, const char * const *b )
+static int StringSortHelperI( const CParticleSnapshotGrid::ParticleLoadData *a, const CParticleSnapshotGrid::ParticleLoadData *b )
 {
-	return V_stricmp(*a,*b);
+	return V_stricmp( a->pName, b->pName );
 }
 
 void CParticlePicker::OnAssetListChanged( )
 {
-	CUtlVector<const char*> assetNames;
+	CUtlVector<CParticleSnapshotGrid::ParticleLoadData> assetNames;
 
 	int nCount = GetAssetCount();
 	for ( int i = 0; i < nCount; ++i )
 	{
 		if ( IsAssetVisible( i ) )
 		{
-			assetNames.AddToTail( GetAssetName(i) );
+			assetNames.AddToTail( { GetAssetName( i ), sCacheParticleList[i].m_bInManifest } );
 		}
 	}
 
@@ -1055,7 +1067,10 @@ void CParticlePicker::OnSelectedAssetPicked( const char *pParticleSysName )
 {
 	SelectParticleSys( pParticleSysName );
 
+	bool requestFocus = m_pFilter->HasFocus();
 	m_pSnapshotGrid->SelectSystem( pParticleSysName, false, false );
+	if ( requestFocus )
+		m_pFilter->RequestFocus();
 }
 
 
@@ -1118,7 +1133,7 @@ int CParticlePicker::GetCachedAssetCount()
 	return sCacheParticleList.Count();
 }
 
-void CParticlePicker::CachePCFInfo( int nModIndex, const char *pFileName  )
+void CParticlePicker::CachePCFInfo( int nModIndex, const char *pFileName, bool bInManifest )
 {
 	const CacheModInfo_t& modInfo = ModInfo(nModIndex);
 
@@ -1156,6 +1171,7 @@ void CParticlePicker::CachePCFInfo( int nModIndex, const char *pFileName  )
 		info.m_AssetInfo.m_AssetName = pRoot->GetName();
 		info.m_AssetInfo.m_nModIndex = nModIndex;
 		info.m_FileName = pFileName;
+		info.m_bInManifest = bInManifest;
 
 		return;
 	}
@@ -1175,6 +1191,7 @@ void CParticlePicker::CachePCFInfo( int nModIndex, const char *pFileName  )
 		info.m_AssetInfo.m_AssetName = definitions[i]->GetName();
 		info.m_AssetInfo.m_nModIndex = nModIndex;
 		info.m_FileName = pFileName;
+		info.m_bInManifest = bInManifest;
 	}
 
 	CleanupDMX( pRoot );
@@ -1207,7 +1224,7 @@ void GetParticleManifest( CUtlVector<CUtlString>& list, const char *pFile )
 
 void CParticlePicker::HandleModParticles( int nModIndex )
 {
-	const CacheModInfo_t &modInfo = ModInfo(nModIndex);
+	const CacheModInfo_t& modInfo = ModInfo(nModIndex);
 
 	CUtlString manifestPath = modInfo.m_Path;
 	manifestPath += "/particles/particles_manifest.txt" ;
@@ -1215,13 +1232,22 @@ void CParticlePicker::HandleModParticles( int nModIndex )
 	CUtlVector<CUtlString> pcfList;
 	GetParticleManifest( pcfList, manifestPath );
 
-	int nCount = pcfList.Count();
-	for ( int i = 0; i < nCount; ++i )
+	g_pFullFileSystem->AddSearchPath( modInfo.m_Path, "__HAMMER_PLS__" );
+
+	FileFindHandle_t h = 0;
+	auto particle = g_pFullFileSystem->FindFirstEx( "particles/*.pcf", "__HAMMER_PLS__", &h );
+	const CUtlString particles = "particles/";
+	while ( particle )
 	{
-		PCFToLoad_t &p = sCacheUnloadedPCFs[sCacheUnloadedPCFs.AddToTail()];
-		p.m_FileName = pcfList[i];
+		PCFToLoad_t& p = sCacheUnloadedPCFs[sCacheUnloadedPCFs.AddToTail()];
+		p.m_FileName = particles + particle;
 		p.m_ModId = nModIndex;
+		p.m_bInManifest = pcfList.FindMatch( [s = p.m_FileName]( const CUtlString& f ) { return V_stristr( f, s ) != nullptr; } ) != pcfList.InvalidIndex();
+
+		particle = g_pFullFileSystem->FindNext( h );
 	}
+	g_pFullFileSystem->FindClose( h );
+	g_pFullFileSystem->RemoveSearchPath( modInfo.m_Path, "__HAMMER_PLS__" );
 }
 
 bool CParticlePicker::BeginCacheAssets( bool bForceRecache )
@@ -1255,7 +1281,7 @@ bool CParticlePicker::IncrementalCacheAssets( float flTimeAllowed )
 	{
 		PCFToLoad_t &p = sCacheUnloadedPCFs.Tail();
 
-		CachePCFInfo( p.m_ModId, p.m_FileName );
+		CachePCFInfo( p.m_ModId, p.m_FileName, p.m_bInManifest );
 
 		sCacheUnloadedPCFs.RemoveMultipleFromTail(1);
 

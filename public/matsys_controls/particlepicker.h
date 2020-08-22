@@ -54,7 +54,13 @@ public:
 	- "id" is the location of the system in the original SetParticleList() array that was handed in (useful for clients)
 	*/
 
-	void SetParticleList( const CUtlVector<const char *>& ParticleNames );
+	struct ParticleLoadData
+	{
+		const char* pName;
+		bool bInManifest;
+	};
+
+	void SetParticleList( const CUtlVector<ParticleLoadData>& ParticleData );
 	void LayoutScrolled();
 
 	const char *GetSystemName( int nId );
@@ -151,7 +157,7 @@ private:
 	MESSAGE_FUNC_CHARPTR( OnParticleSystemPicked, "ParticleSystemPicked", SystemName );
 
 	virtual void OnSelectedAssetPicked( const char *pParticleSysName );
-	void CachePCFInfo( int nModIndex, const char *pFileName );
+	void CachePCFInfo( int nModIndex, const char *pFileName, bool bInManifest );
 	void HandleModParticles( int nModIndex );
 
 	vgui::Splitter* m_pFileBrowserSplitter;
