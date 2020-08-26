@@ -371,6 +371,30 @@ CTrackEntry::CTrackEntry()
 }
 
 
+CTrackEntry::CTrackEntry( CTrackEntry&& other ) : CTrackEntry()
+{
+	V_swap( m_bAutoDestruct, other.m_bAutoDestruct );
+	V_swap( m_nDataSize, other.m_nDataSize );
+	V_swap( m_eType, other.m_eType );
+	V_swap( m_Copy, other.m_Copy ); // swap always the largest
+	V_swap( m_bKeptChildren, other.m_bKeptChildren );
+	V_swap( m_bUndone, other.m_bUndone );
+}
+
+
+CTrackEntry& CTrackEntry::operator=( CTrackEntry&& other )
+{
+	V_swap( m_bAutoDestruct, other.m_bAutoDestruct );
+	V_swap( m_nDataSize, other.m_nDataSize );
+	V_swap( m_eType, other.m_eType );
+	V_swap( m_Copy, other.m_Copy ); // swap always the largest
+	V_swap( m_bKeptChildren, other.m_bKeptChildren );
+	V_swap( m_bUndone, other.m_bUndone );
+
+	return *this;
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructs a track entry from a list of parameters.
 // Input  : t -
@@ -777,10 +801,9 @@ void CHistoryTrack::Keep(CMapClass *pObject, bool bKeepChildren)
 	Parent->Pause();
 	CTrackEntry te(CTrackEntry::ttCopy, pObject);
 	te.SetKeptChildren(bKeepChildren);
-	Data.AddToTail(te);
-	te.m_bAutoDestruct = false;
-
 	uDataSize += te.GetSize();
+	Data.AddToTail( std::move( te ) );
+
 	Parent->Resume();
 }
 
@@ -800,10 +823,9 @@ void CHistoryTrack::KeepForDestruction(CMapClass *pObject)
 
 	Parent->Pause();
 	CTrackEntry te(CTrackEntry::ttDelete, pObject);
-	Data.AddToTail(te);
-
-	te.m_bAutoDestruct = false;
 	uDataSize += te.GetSize();
+	Data.AddToTail( std::move( te ) );
+
 	Parent->Resume();
 }
 
@@ -822,10 +844,9 @@ void CHistoryTrack::KeepNew(CMapClass *pObject)
 
 	Parent->Pause();
 	CTrackEntry te(CTrackEntry::ttCreate, pObject);
-	Data.AddToTail(te);
-
-	te.m_bAutoDestruct = false;
 	uDataSize += te.GetSize();
+	Data.AddToTail( std::move( te ) );
+
 	Parent->Resume();
 }
 
@@ -857,9 +878,8 @@ void CHistoryTrack::OnQuickHide( const CMapObjectList* pQuickHideGroup, const CM
 
 	Parent->Pause();
 	CTrackEntry te(CTrackEntry::ttQuickHide, pQuickHideGroup, pQuickHideGroupParents);
-	Data.AddToTail(te);
-
-	te.m_bAutoDestruct = false;
 	uDataSize += te.GetSize();
+	Data.AddToTail( std::move( te ) );
+
 	Parent->Resume();
 }

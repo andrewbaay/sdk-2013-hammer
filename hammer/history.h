@@ -33,6 +33,7 @@ class CTrackEntry
 		};
 
 		CTrackEntry();
+		CTrackEntry( CTrackEntry&& );
 		CTrackEntry(TrackType_t eType, ...);
 		~CTrackEntry();
 
@@ -46,6 +47,8 @@ class CTrackEntry
 		void OnRemoveVisGroup(CVisGroup *pGroup);
 
 		bool m_bAutoDestruct;
+
+		CTrackEntry& operator=( CTrackEntry&& other );
 
 	protected:
 
