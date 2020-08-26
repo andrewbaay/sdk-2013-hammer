@@ -6,6 +6,7 @@
 
 
 #include "MapHelper.h"
+#include "tier1/utlstring.h"
 
 class CRender3D;
 
@@ -18,49 +19,38 @@ public:
 	//
 	// Factories.
 	//
-	static CMapClass *CreateWorldText(CHelperInfo *pHelperInfo, CMapEntity *pParent);
+	static CMapClass* CreateWorldText( CHelperInfo* pHelperInfo, CMapEntity* pParent );
 
 	//
 	// Construction/destruction:
 	//
 	CWorldTextHelper();
-	virtual ~CWorldTextHelper();
+	~CWorldTextHelper() override = default;
 
 	DECLARE_MAPCLASS( CWorldTextHelper, CMapHelper )
 
-	void SetText( const char *pNewText );
+	void CalcBounds( BOOL bFullUpdate = FALSE ) override;
 
-	void CalcBounds(BOOL bFullUpdate = FALSE);
+	CMapClass* Copy( bool bUpdateDependencies ) override;
+	CMapClass* CopyFrom( CMapClass* pFrom, bool bUpdateDependencies ) override;
 
-	virtual CMapClass *Copy(bool bUpdateDependencies);
-	virtual CMapClass *CopyFrom(CMapClass *pFrom, bool bUpdateDependencies);
+	void Render2D( CRender2D* pRender ) override;
+	void Render3D( CRender3D* pRender ) override;
 
-	void Initialize();
-	void Render2D(CRender2D *pRender);
-	void Render3D(CRender3D *pRender);
-	void Render3DText( CRender3D *pRender, const char* szText, const float flTextSize );
-
-	void GetAngles(QAngle &Angles);
-
-	int SerializeRMF(std::fstream &File, BOOL bRMF);
-	int SerializeMAP(std::fstream &File, BOOL bRMF);
-
-	static void SetRenderDistance(float fRenderDistance);
-
-	bool ShouldRenderLast(void);
-
-	bool IsVisualElement(void) { return(true); }
-	
-	const char* GetDescription() { return("WorldText"); }
-
-	void OnParentKeyChanged(const char* szKey, const char* szValue);
+	bool ShouldRenderLast() override { return false; }
+	bool IsVisualElement() override { return true; }
+	const char* GetDescription() override { return "WorldText"; }
+	void OnParentKeyChanged( const char* szKey, const char* szValue ) override;
 
 protected:
+	void SetText( const char* pNewText );
+	void Initialize();
+	void Render3DText( CRender3D *pRender, const char* szText, const float flTextSize );
 
 	//
 	// Implements CMapAtom transformation functions.
 	//
-	void DoTransform(const VMatrix &matrix);
+	void DoTransform( const VMatrix& matrix ) override;
 	void SetRenderMode( int mode );
 
 	QAngle m_Angles;
@@ -68,11 +58,10 @@ protected:
 	int m_eRenderMode;				// Our render mode (transparency, etc.).
 	colorVec m_RenderColor;			// Our render color.
 	float m_flTextSize;
-	char *m_pText;
+	CUtlString m_pText;
 
 private:
-	void ComputeCornerVertices( Vector *pVerts, float flBloat = 0.0f ) const;
-
+	void ComputeCornerVertices( Vector* pVerts, float flBloat = 0.0f ) const;
 };
 
 #endif // WORLDTEXTHELPER_H
