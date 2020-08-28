@@ -46,6 +46,7 @@ CHistory::CHistory(void)
 	bPaused = bFirst ? 2 : FALSE;	// if 2, never unpaused
 	bFirst = FALSE;
 	m_bActive = TRUE;
+	uDataSize = 0;
 }
 
 
@@ -219,6 +220,7 @@ void CHistory::Keep(CMapClass *pObject)
 		MarkUndoPosition();
 	}
 
+	const auto oldSize = CurTrack->uDataSize;
 	CurTrack->Keep(pObject, true);
 
 	//
@@ -231,6 +233,8 @@ void CHistory::Keep(CMapClass *pObject)
 		CurTrack->Keep(pChild, true);
 		pChild = pObject->GetNextDescendent(pos);
 	}
+
+	uDataSize += CurTrack->uDataSize - oldSize;
 }
 
 
@@ -245,7 +249,9 @@ void CHistory::KeepNoChildren(CMapClass *pObject)
 		MarkUndoPosition();
 	}
 
+	const auto oldSize = CurTrack->uDataSize;
 	CurTrack->Keep(pObject, false);
+	uDataSize += CurTrack->uDataSize - oldSize;
 }
 
 
@@ -274,7 +280,9 @@ void CHistory::KeepForDestruction(CMapClass *pObject)
 		MarkUndoPosition();
 	}
 
+	const auto oldSize = CurTrack->uDataSize;
 	CurTrack->KeepForDestruction(pObject);
+	uDataSize += CurTrack->uDataSize - oldSize;
 }
 
 
@@ -288,6 +296,8 @@ void CHistory::KeepNew(CMapClass *pObject, bool bKeepChildren)
 	{
 		MarkUndoPosition();
 	}
+
+	const auto oldSize = CurTrack->uDataSize;
 
 	//
 	// Keep this object's children.
@@ -304,6 +314,8 @@ void CHistory::KeepNew(CMapClass *pObject, bool bKeepChildren)
 	}
 
 	CurTrack->KeepNew(pObject);
+
+	uDataSize += CurTrack->uDataSize - oldSize;
 }
 
 
@@ -324,7 +336,7 @@ void CHistory::KeepNew( const CMapObjectList *pList, bool bKeepChildren)
 //-----------------------------------------------------------------------------
 // Purpose: Sets the given history object as the one to use for all Undo operations.
 //-----------------------------------------------------------------------------
-void CHistory::SetHistory(class CHistory *pHistory)
+void CHistory::SetHistory(CHistory *pHistory)
 {
 	pCurHistory = pHistory;
 }
@@ -354,7 +366,9 @@ void CHistory::OnQuickHide( const CMapObjectList* pQuickHideGroup, const CMapObj
 		MarkUndoPosition();
 	}
 
+	const auto oldSize = CurTrack->uDataSize;
 	CurTrack->OnQuickHide( pQuickHideGroup, pQuickHideGroupParents );
+	uDataSize += CurTrack->uDataSize - oldSize;
 }
 
 
