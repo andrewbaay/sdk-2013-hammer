@@ -378,17 +378,12 @@ void CMapEntity::AddHelpersForClass(GDclass *pClass, bool bLoading)
 	if (pClass != NULL)
 	{
 		//
-		// Add all the helpers that this class declares in the FGD.
-		//
-		GDclass *pClassLocal = GetClass();
-
-		//
 		// For every helper in the class definition...
 		//
-		int nHelperCount = pClassLocal->GetHelperCount();
+		int nHelperCount = pClass->GetHelperCount();
 		for (int i = 0; i < nHelperCount; i++)
 		{
-			CHelperInfo *pHelperInfo = pClassLocal->GetHelper(i);
+			CHelperInfo *pHelperInfo = pClass->GetHelper(i);
 
 			//
 			// Create the helper and attach it to this entity.
@@ -409,10 +404,10 @@ void CMapEntity::AddHelpersForClass(GDclass *pClass, bool bLoading)
 		//
 		// FIXME: make this totally data driven like the helper factory, or better
 		//		  yet, like the LINK_ENTITY_TO_CLASS stuff in the game DLL
-		int nVarCount = pClassLocal->GetVariableCount();
+		int nVarCount = pClass->GetVariableCount();
 		for (int i = 0; i < nVarCount; i++)
 		{
-			GDinputvariable *pVar = pClassLocal->GetVariableAt(i);
+			GDinputvariable *pVar = pClass->GetVariableAt(i);
 			GDIV_TYPE eType = pVar->GetType();
 
 			CHelperInfo HelperInfo;
