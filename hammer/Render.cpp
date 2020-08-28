@@ -75,6 +75,7 @@ CRender::CRender(void)
 	m_pBoundMaterial = NULL;
 
 	m_nDecalMode = 0;
+	m_nFrameCount = 0;
 
 	m_bIsRendering = false;
 	m_bIsClientSpace = false;
