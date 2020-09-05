@@ -118,8 +118,6 @@ IBaseFileSystem* g_pFileSystem;
 IStudioDataCache* g_pStudioDataCache;
 CreateInterfaceFn g_Factory;
 
-bool g_bHDR = true;
-
 struct MinidumpWrapperHelper_t
 {
 	int ( *m_pfn )( void* pParam );

@@ -439,7 +439,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Move Selection To V&isgroup", ID_VIEW_HIDESELECTEDOBJECTS
         MENUITEM "&Draw Materials Opaque",      ID_VIEW_OPAQUE_MATERIALS
-        MENUITEM "HDR",                         ID_HDR
     END
     POPUP "&Tools"
     BEGIN

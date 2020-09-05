@@ -1376,7 +1376,6 @@
 #define ID_VIEW_DISPEDITTOOLBAR         0xE80E
 #define ID_VIEW_SELECTION_MODE_BAR      0xE80F
 #define ID_VIEW_MANIFEST_BAR            0xE811
-#define ID_HDR                          0xf000
 #define IDC_LPRVWINDOW                  0xf010
 
 // Next default values for new objects

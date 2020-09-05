@@ -225,7 +225,6 @@ void SignalGlobalUpdate(void);								// flag ALL events, such as on map load
 #define EVTYPE_LIGHTING_CHANGED 1
 #define EVTYPE_BITMAP_RECEIVED_FROM_LPREVIEW 2
 
-extern bool g_bHDR;											// should we act like we're in hdr mode?
 extern int g_nBitmapGenerationCounter;
 
 

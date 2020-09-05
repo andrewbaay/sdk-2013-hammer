@@ -1013,9 +1013,7 @@ static bool LightForString( char const *pLight, Vector& intensity )
 
 	// scanf into doubles, then assign, so it is vec_t size independent
 	r = g = b = scaler = 0;
-	double r_hdr,g_hdr,b_hdr,scaler_hdr;
-	int argCnt = sscanf ( pLight, "%lf %lf %lf %lf %lf %lf %lf %lf",
-						  &r, &g, &b, &scaler, &r_hdr,&g_hdr,&b_hdr,&scaler_hdr );
+	int argCnt = sscanf ( pLight, "%lf %lf %lf %lf", &r, &g, &b, &scaler );
 
 	// This is a special case for HDR lights.  If we have a vector of [-1, -1, -1, 1], then we
 	// need to fall back to the non-HDR lighting since the HDR lighting hasn't been defined
@@ -1025,18 +1023,6 @@ static bool LightForString( char const *pLight, Vector& intensity )
 	{
 		intensity.Init( -1.0f, -1.0f, -1.0f );
 		return true;
-	}
-
-	if (argCnt==8) 											// 2 4-tuples
-	{
-		if (g_bHDR)
-		{
-			r=r_hdr;
-			g=g_hdr;
-			b=b_hdr;
-			scaler=scaler_hdr;
-		}
-		argCnt=4;
 	}
 
 	intensity[0] = pow( r / 255.0, 2.2 ) * 255;				// convert to linear
@@ -1121,7 +1107,6 @@ static bool ParseLightAmbient( CMapEntity *e, CLightingPreviewLightDescription &
 	if( LightForKey( e, "_ambient", out.m_Color ) == 0 )
 		return false;
 	return true;
-
 }
 
 static bool ParseLightGeneric( CMapEntity *e, CLightingPreviewLightDescription &out )
@@ -1129,17 +1114,8 @@ static bool ParseLightGeneric( CMapEntity *e, CLightingPreviewLightDescription &
 	// returns false if it doesn't like the light
 
 	// get intensity
-	if( g_bHDR )
-	{
-		if( LightForKey( e, "_lightHDR", out.m_Color ) == 0 ||
-			( out.m_Color.x == -1.0f &&
-			  out.m_Color.y == -1.0f &&
-			  out.m_Color.z == -1.0f ) )
-		{
-			LightForKey( e, "_light", out.m_Color );
-		}
-	}
-	else
+	if( LightForKey( e, "_lightHDR", out.m_Color ) == 0 ||
+		( out.m_Color.x == -1.0f && out.m_Color.y == -1.0f && out.m_Color.z == -1.0f ) )
 	{
 		LightForKey( e, "_light", out.m_Color );
 	}
@@ -1182,8 +1158,7 @@ static bool ParseLightGeneric( CMapEntity *e, CLightingPreviewLightDescription &
 		GetVectorForKey( e, "angles", &angles );
 		float pitch = GetFloatForKey( e,"pitch");
 		float angle = GetFloatForKey( e,"angle" );
-		SetupLightNormalFromProps( QAngle( angles.x, angles.y, angles.z ), angle, pitch,
-								   out.m_Direction );
+		SetupLightNormalFromProps( QAngle( angles.x, angles.y, angles.z ), angle, pitch, out.m_Direction );
 	}
 	if ( out.m_Type == MATERIAL_LIGHT_DIRECTIONAL )
 	{
@@ -1202,16 +1177,15 @@ static bool s_bAddedLightEnvironmentAlready;
 
 void CRender3D::AddEntityLightToLightList( CMapEntity* e, CUtlIntrusiveList<CLightingPreviewLightDescription>& listout ) const
 {
-	char const *pszClassName=e->GetClassName();
-	if (pszClassName)
+	char const* pszClassName = e->GetClassName();
+	if ( pszClassName )
 	{
 		CLightingPreviewLightDescription new_l;
 		new_l.Init( e->m_nObjectID );
 		e->GetOrigin( new_l.m_Position );
 		new_l.m_Range = 0;
 
-		if ( !s_bAddedLightEnvironmentAlready &&
-			 !stricmp( pszClassName, "light_environment" ) )
+		if ( !s_bAddedLightEnvironmentAlready && !stricmp( pszClassName, "light_environment" ) )
 		{
 			const int N_FAKE_LIGHTS_FOR_AMBIENT = 100.0;
 			const float AMBIENT_LIGHT_DISTANCE = 100000;
@@ -1219,7 +1193,7 @@ void CRender3D::AddEntityLightToLightList( CMapEntity* e, CUtlIntrusiveList<CLig
 				sqrt( AMBIENT_LIGHT_DISTANCE * AMBIENT_LIGHT_DISTANCE * 2 * M_PI / N_FAKE_LIGHTS_FOR_AMBIENT );
 			// lets add the sun to the list!
 			new_l.m_Type = MATERIAL_LIGHT_DIRECTIONAL;
-			if ( ParseLightGeneric(e, new_l) )
+			if ( ParseLightGeneric( e, new_l ) )
 			{
 				new_l.m_Position = new_l.m_Direction * AMBIENT_LIGHT_DISTANCE;
 				new_l.RecalculateDerivedValues();
@@ -1239,45 +1213,42 @@ void CRender3D::AddEntityLightToLightList( CMapEntity* e, CUtlIntrusiveList<CLig
 					new_l.m_Type = MATERIAL_LIGHT_DIRECTIONAL;
 					Vector dir = sampler.NextValue();
 					if ( dir.z < 0 )
-					{
 						continue;
-					}
 					new_l.m_Direction = dir;
 					new_l.m_Position = new_l.m_Direction * AMBIENT_LIGHT_DISTANCE;
 					new_l.m_flJitterAmount = AMBIENT_LIGHT_JITTER;
-					new_l.m_Color = color * ( 1.0 / N_FAKE_LIGHTS_FOR_AMBIENT );
+					new_l.m_Color = color * ( 1.0f / N_FAKE_LIGHTS_FOR_AMBIENT );
 					new_l.RecalculateDerivedValues();
-					CLightingPreviewLightDescription *pNew = new CLightingPreviewLightDescription;
+					CLightingPreviewLightDescription* pNew = new CLightingPreviewLightDescription;
 					*pNew = new_l;
 					listout.AddToHead( pNew );
 				}
 			}
 		}
-		else if ( (! stricmp( pszClassName, "light" ) ))
+		else if ( !stricmp( pszClassName, "light" ) )
 		{
 			// add point light to list
 			new_l.m_Type = MATERIAL_LIGHT_POINT;
-			if ( ParseLightGeneric(e,new_l) )
+			if ( ParseLightGeneric( e, new_l ) )
 			{
 				new_l.RecalculateDerivedValues();
-				CLightingPreviewLightDescription *pNew = new CLightingPreviewLightDescription;
+				CLightingPreviewLightDescription* pNew = new CLightingPreviewLightDescription;
 				*pNew = new_l;
 				listout.AddToHead( pNew );
 			}
 		}
-		else if ( (! stricmp( pszClassName, "light_spot" ) ))
+		else if ( !stricmp( pszClassName, "light_spot" ) )
 		{
 			// add point light to list
 			new_l.m_Type = MATERIAL_LIGHT_SPOT;
-			if ( ParseLightGeneric(e,new_l) )
+			if ( ParseLightGeneric( e, new_l ) )
 			{
 				new_l.RecalculateDerivedValues();
-				CLightingPreviewLightDescription *pNew = new CLightingPreviewLightDescription;
+				CLightingPreviewLightDescription* pNew = new CLightingPreviewLightDescription;
 				*pNew = new_l;
 				listout.AddToHead( pNew );
 			}
 		}
-
 	}
 }
 
@@ -1292,12 +1263,11 @@ CUtlIntrusiveList<CLightingPreviewLightDescription> CRender3D::BuildLightList( v
 	if ( pWorld )
 	{
 		EnumChildrenPos_t pos;
-		CMapClass *pChild = pWorld->GetFirstDescendent( pos );
+		CMapClass* pChild = pWorld->GetFirstDescendent( pos );
 		while ( pChild )
 		{
 			CMapEntity *pLightEntity=dynamic_cast<CMapEntity*>( pChild );
-			if (pLightEntity && (pLightEntity->m_EntityTypeFlags & ENTITY_FLAG_IS_LIGHT ) &&
-				(pLightEntity->IsVisible()) )
+			if ( pLightEntity && ( pLightEntity->m_EntityTypeFlags & ENTITY_FLAG_IS_LIGHT ) && pLightEntity->IsVisible() )
 				AddEntityLightToLightList( pLightEntity, pRet );
 			pChild = pWorld->GetNextDescendent( pos );
 		}

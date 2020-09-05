@@ -1006,7 +1006,7 @@ struct CClassNameFlagsMatcher
 	int m_nFlagsToOR;
 };
 
-static CClassNameFlagsMatcher s_ClassFlagsTable[]={
+static constexpr CClassNameFlagsMatcher s_ClassFlagsTable[]={
 	{ "light_environment", ENTITY_FLAG_IS_LIGHT },
 	{ "light", ENTITY_FLAG_IS_LIGHT },
 	{ "light_spot", ENTITY_FLAG_IS_LIGHT },

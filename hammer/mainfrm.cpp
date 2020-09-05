@@ -138,7 +138,6 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_COMMAND(ID_HELP, CMDIFrameWnd::OnHelp)
 	ON_COMMAND(ID_CONTEXT_HELP, CMDIFrameWnd::OnContextHelp)
 	ON_COMMAND(ID_DEFAULT_HELP, CMDIFrameWnd::OnHelpFinder)
-	ON_COMMAND(ID_HDR, OnHDR)
 	ON_WM_HELPINFO()
 	ON_WM_SYSCOMMAND()
 	ON_WM_ENTERMENULOOP()
@@ -1593,26 +1592,6 @@ void CMainFrame::LoadWindowStates()
 
 void CMainFrame::OnInitMenu( CMenu *pMenu )
 {
-}
-
-void CMainFrame::OnHDR( void )
-{
-	CMenu *pMenu= GetMenu();
-
-	UINT state = pMenu->GetMenuState(ID_HDR, MF_BYCOMMAND);
-
-	if (state & MF_CHECKED)
-	{
-		pMenu->CheckMenuItem(ID_HDR, MF_UNCHECKED | MF_BYCOMMAND);
-		g_bHDR = false;
-	}
-	else
-	{
-		pMenu->CheckMenuItem(ID_HDR, MF_CHECKED | MF_BYCOMMAND);
-		g_bHDR = true;
-	}
-	DrawMenuBar();
-	SignalUpdate( EVTYPE_LIGHTING_CHANGED );
 }
 
 //-----------------------------------------------------------------------------
