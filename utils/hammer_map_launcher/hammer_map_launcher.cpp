@@ -10,6 +10,7 @@
 #include <Windows.h>
 #include <processenv.h>
 #include <direct.h>
+#include <conio.h>
 
 #include <charconv>
 #include <iostream>
@@ -127,7 +128,7 @@ static int mychdir( const char* pszDir )
 	if ( _chdir( pszDir ) == -1 )
 	{
 		// change back to original disk
-		_chdrive( curdrive );
+		(void)_chdrive( curdrive );
 		return -1;
 	}
 
@@ -306,7 +307,7 @@ int main( int argc, const char* argv[] )
 	if ( waitForKey )
 	{
 		std::cout << "press any key to continue..." << std::endl;
-		(void)getchar();
+		(void)_getch();
 	}
 	return 0;
 }
