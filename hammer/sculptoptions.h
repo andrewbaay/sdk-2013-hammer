@@ -307,8 +307,6 @@ public:
 	virtual BOOL PreTranslateMessage( MSG* pMsg );
 };
 
-#if 1
-
 class ITexture;
 
 // CSculptProjectOptions dialog
@@ -334,13 +332,12 @@ public:
 	virtual bool	OnMouseMove3D( CMapView3D *pView, UINT nFlags, const Vector2D &vPoint );
 
 protected:
-	typedef enum
+	enum ToolMode
 	{
-		PROJECT_MODE_NONE,
 		PROJECT_MODE_SIZE,
 		PROJECT_MODE_POSITION,
-		PROJECT_MODE_TILE,
-	} ToolMode;
+		PROJECT_MODE_TILE
+	};
 
 	CFileDialog			*m_FileDialog;
 	unsigned char		*m_ImagePixels;
@@ -349,8 +346,7 @@ protected:
 	ITexture			*m_pTexture;
 	IMaterial			*m_pMaterial;
 
-	Vector				m_ProjectLocation, m_ProjectSize;
-	Vector				m_OriginalProjectLocation, m_OriginalProjectSize;
+	Vector2D			m_ProjectLocation, m_ProjectSize;
 	int					m_ProjectX, m_ProjectY, m_ProjectWidth, m_ProjectHeight;
 	float				m_TileWidth, m_TileHeight;
 	float				m_OriginalTileWidth, m_OriginalTileHeight;
@@ -362,7 +358,7 @@ protected:
 	virtual bool	DoSizing( const Vector2D &vPoint );
 	virtual bool	DoPosition( const Vector2D &vPoint );
 	virtual bool	DoTiling( const Vector2D &vPoint );
-			bool	ReadImage( CString &FileName );
+			bool	ReadImage( const CString &FileName );
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -379,6 +375,5 @@ public:
 public:
 	CStatic m_ProjectSizeNumControl;
 };
-#endif
 
 #endif // SCULPTOPTIONS_H

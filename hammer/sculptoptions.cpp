@@ -18,7 +18,6 @@
 #include "MapDoc.h"
 #include "ChunkFile.h"
 #include "ToolManager.h"
-#include "bitmap/tgaloader.h"
 #include "tier1/utlbuffer.h"
 #include "Material.h"
 #include "materialsystem/imaterial.h"
@@ -33,6 +32,16 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_FAILURE_USERMSG
+#define STB_IMAGE_STATIC
+#define STBI_NO_HDR
+#define STBI_NO_PIC
+#define STBI_NO_PNM
+#define STBI_MAX_DIMENSIONS 4096
+#define STBI_ASSERT(x) Assert(x)
+#include "stb_image.h"
 
 
 extern CToolDisplace* GetDisplacementTool();
@@ -3451,7 +3460,7 @@ CSculptProjectOptions::CSculptProjectOptions(CWnd* pParent /*=NULL*/) :
 	CDialog(CSculptProjectOptions::IDD, pParent),
 	CSculptTool()
 {
-	m_FileDialog = new CFileDialog(TRUE, NULL, NULL, OFN_LONGNAMES | OFN_NOCHANGEDIR | OFN_FILEMUSTEXIST, "Image Files (*.tga)|*.tga||");
+	m_FileDialog = new CFileDialog(TRUE, NULL, NULL, OFN_LONGNAMES | OFN_NOCHANGEDIR | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_READONLY, "Image Files (*.jpg;*.png;*.bmp;*.tga;*.psd)|*.jpg; *.png; *.bmp; *.tga; *.psd||");
 	m_FileDialog->m_ofn.lpstrInitialDir = "";
 
 	m_ImagePixels = NULL;
@@ -3467,12 +3476,11 @@ CSculptProjectOptions::CSculptProjectOptions(CWnd* pParent /*=NULL*/) :
 	m_OriginalTileWidth = m_TileWidth;
 	m_OriginalTileHeight = m_TileHeight;
 
-	m_ProjectLocation.Init( 100.0f, 100.0f, 0.0f );
-	m_OriginalProjectLocation = m_ProjectLocation;
-	m_ProjectSize.Init( 100.0f, 100.0f, 0.0f );
-	m_OriginalProjectSize = m_ProjectSize;
+	m_ProjectLocation.Init( 100.0f, 100.0f );
+	m_ProjectSize.Init( 100.0f, 100.0f );
+	m_StartSizingPoint.Init();
 
-	m_ToolMode = PROJECT_MODE_NONE;
+	m_ToolMode = PROJECT_MODE_POSITION;
 }
 
 CSculptProjectOptions::~CSculptProjectOptions()
@@ -3480,9 +3488,7 @@ CSculptProjectOptions::~CSculptProjectOptions()
 	delete m_FileDialog;
 
 	if ( m_ImagePixels )
-	{
-		delete [] m_ImagePixels;
-	}
+		free( m_ImagePixels );
 
 	if ( m_pTexture )
 	{
@@ -3514,21 +3520,6 @@ bool CSculptProjectOptions::Paint( CMapView3D *pView, const Vector2D &vPoint, Sp
 {
 	CSculptTool::Paint( pView, vPoint, spatialData );
 
-	switch( m_ToolMode )
-	{
-		case PROJECT_MODE_SIZE:
-			DoSizing( vPoint );
-			break;
-
-		case PROJECT_MODE_POSITION:
-			DoPosition( vPoint );
-			break;
-
-		case PROJECT_MODE_TILE:
-			DoTiling( vPoint );
-			break;
-	}
-
 	return true;
 }
 
@@ -3539,47 +3530,58 @@ bool CSculptProjectOptions::Paint( CMapView3D *pView, const Vector2D &vPoint, Sp
 void CSculptProjectOptions::RenderTool3D(CRender3D *pRender)
 {
 	if ( !m_pMaterial )
-	{
 		return;
-	}
 
 	pRender->PushRenderMode( RENDER_MODE_TEXTURED );
 	bool bPopMode = pRender->BeginClientSpace();
 
 	CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
 	pRender->BindMaterial( m_pMaterial );
-	IMesh* pMesh = pRenderContext->GetDynamicMesh();
 
 	CMeshBuilder meshBuilder;
-	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 4 );
+	meshBuilder.Begin( pRenderContext->GetDynamicMesh(), MATERIAL_QUADS, 4 );
 
-	meshBuilder.Position3f( m_ProjectLocation.x, m_ProjectLocation.y, m_ProjectLocation.z );
+	meshBuilder.Position3f( m_ProjectLocation.x, m_ProjectLocation.y, 0.0f );
 	meshBuilder.TexCoord2f( 0, 0.0f, 0.0f );
 	meshBuilder.Color4ub( 255, 255, 255, 128 );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Position3f( m_ProjectLocation.x + m_ProjectSize.x, m_ProjectLocation.y, m_ProjectLocation.z );
+	meshBuilder.Position3f( m_ProjectLocation.x + m_ProjectSize.x, m_ProjectLocation.y, 0.0f );
 	meshBuilder.TexCoord2f( 0, m_TileWidth, 0.0f );
 	meshBuilder.Color4ub( 255, 255, 255, 128 );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Position3f( m_ProjectLocation.x + m_ProjectSize.x, m_ProjectLocation.y + m_ProjectSize.y, m_ProjectLocation.z );
+	meshBuilder.Position3f( m_ProjectLocation.x + m_ProjectSize.x, m_ProjectLocation.y + m_ProjectSize.y, 0.0f );
 	meshBuilder.TexCoord2f( 0, m_TileWidth, m_TileHeight );
 	meshBuilder.Color4ub( 255, 255, 255, 128 );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Position3f( m_ProjectLocation.x, m_ProjectLocation.y + m_ProjectSize.y, m_ProjectLocation.z );
+	meshBuilder.Position3f( m_ProjectLocation.x, m_ProjectLocation.y + m_ProjectSize.y, 0.0f );
 	meshBuilder.TexCoord2f( 0, 0.0f, m_TileHeight );
 	meshBuilder.Color4ub( 255, 255, 255, 128 );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.End();
-	pMesh->Draw();
+	meshBuilder.End( false, true );
+
+	pRenderContext.SafeRelease();
+
+	if ( m_ToolMode != PROJECT_MODE_POSITION )
+	{
+		pRender->PushRenderMode( RENDER_MODE_WIREFRAME );
+		const Vector p[] = {
+			{ m_ProjectLocation.x, m_ProjectLocation.y, 0.0f },
+			{ m_ProjectLocation.x + m_ProjectSize.x, m_ProjectLocation.y, 0.0f },
+			{ m_ProjectLocation.x + m_ProjectSize.x, m_ProjectLocation.y + m_ProjectSize.y, 0.0f },
+			{ m_ProjectLocation.x, m_ProjectLocation.y + m_ProjectSize.y, 0.0f }
+		};
+		pRender->SetDrawColor( 255, 0, 0 );
+		pRender->DrawPolyLine( 4, p );
+		pRender->PopRenderMode();
+	}
 
 	if ( bPopMode )
-	{
 		pRender->EndClientSpace();
-	}
+
 	pRender->PopRenderMode();
 }
 
@@ -3640,8 +3642,6 @@ bool CSculptProjectOptions::OnRMouseUp3D( CMapView3D *pView, UINT nFlags, const 
 {
 	CSculptTool::OnRMouseUp3D( pView, nFlags, vPoint );
 
-	m_ToolMode = PROJECT_MODE_NONE;
-
 	return true;
 }
 
@@ -3656,25 +3656,6 @@ bool CSculptProjectOptions::OnRMouseDown3D( CMapView3D *pView, UINT nFlags, cons
 {
 	CSculptTool::OnRMouseDown3D( pView, nFlags, vPoint );
 
-	m_OriginalProjectSize = m_ProjectSize;
-	m_OriginalProjectLocation = m_ProjectLocation;
-	m_StartSizingPoint = vPoint;
-
-	if ( m_bCtrlDown )
-	{
-		m_ToolMode = PROJECT_MODE_SIZE;
-	}
-	else if ( m_bShiftDown )
-	{
-		m_ToolMode = PROJECT_MODE_TILE;
-	}
-	else
-	{
-		m_ToolMode = PROJECT_MODE_POSITION;
-	}
-
-	m_StartSizingPoint = vPoint;
-
 	return true;
 }
 
@@ -3688,6 +3669,33 @@ bool CSculptProjectOptions::OnRMouseDown3D( CMapView3D *pView, UINT nFlags, cons
 bool CSculptProjectOptions::OnMouseMove3D( CMapView3D *pView, UINT nFlags, const Vector2D &vPoint )
 {
 	CSculptTool::OnMouseMove3D( pView, nFlags, vPoint );
+
+	ToolMode newMode = PROJECT_MODE_POSITION;
+	if ( m_bCtrlDown )
+		newMode = PROJECT_MODE_SIZE;
+	else if ( m_bShiftDown )
+		newMode = PROJECT_MODE_TILE;
+
+	if ( newMode != m_ToolMode )
+	{
+		m_StartSizingPoint.Init();
+		m_ToolMode = newMode;
+	}
+
+	switch ( m_ToolMode )
+	{
+		case PROJECT_MODE_SIZE:
+			DoSizing( vPoint );
+			break;
+
+		case PROJECT_MODE_POSITION:
+			DoPosition( vPoint );
+			break;
+
+		case PROJECT_MODE_TILE:
+			DoTiling( vPoint );
+			break;
+	}
 
 	return true;
 }
@@ -3741,9 +3749,9 @@ void CSculptProjectOptions::DoPaintOperation( CMapView3D *pView, const Vector2D 
 			unsigned char *pos = &m_ImagePixels[ ( y * m_Width * mult ) + ( x * mult ) ];
 			float gray;
 			if ( m_bHasAlpha )
-				gray = ( ( 0.3f * pos[ 3 ] ) + ( 0.59f * pos[ 2 ] ) + ( 0.11f * pos[ 1 ] ) ) * ( pos[ 0 ] / 255.f );
+				gray = ( ( 0.2126f * pos[ 0 ] ) + ( 0.7152f * pos[ 1 ] ) + ( 0.0722f * pos[ 2 ] ) ) * ( pos[ 3 ] / 255.f );
 			else
-				gray = ( 0.3f * pos[ 2 ] ) + ( 0.59f * pos[ 1 ] ) + ( 0.11f * pos[ 0 ] );
+				gray = ( 0.2126f * pos[ 0 ] ) + ( 0.7152f * pos[ 1 ] ) + ( 0.0722f * pos[ 2 ] );
 			gray /= 255.0f;
 
 			vPaintPos = vVert + ( vPaintAxis * gray );
@@ -3764,19 +3772,20 @@ void CSculptProjectOptions::OnBnClickedLoadImage()
 	ReadImage( m_FileDialog->GetPathName() );
 }
 
-bool CSculptProjectOptions::ReadImage( CString &FileName )
+bool CSculptProjectOptions::ReadImage( const CString &FileName )
 {
-	enum ImageFormat	imageFormat;
-	float				sourceGamma;
-	CUtlBuffer			buf;
-
-	if ( !g_pFullFileSystem->ReadFile( FileName, NULL, buf ) )
+	int comp;
+	auto newPixels = stbi_load( FileName, &m_Width, &m_Height, &comp, 0 );
+	if ( !newPixels )
 	{
+		MessageBoxA( stbi_failure_reason(), "Image load failed", MB_OK | MB_ICONEXCLAMATION );
 		return false;
 	}
 
-	if ( !TGALoader::GetInfo( buf, &m_Width, &m_Height, &imageFormat, &sourceGamma ) )
+	if ( comp < 3 )
 	{
+		free( newPixels );
+		MessageBoxA( "Image has too few channels!", "Image load failed", MB_OK | MB_ICONEXCLAMATION );
 		return false;
 	}
 
@@ -3787,22 +3796,13 @@ bool CSculptProjectOptions::ReadImage( CString &FileName )
 	}
 
 	if ( m_ImagePixels )
-	{
-		delete [] m_ImagePixels;
-	}
+		free( m_ImagePixels );
+	m_ImagePixels = newPixels;
 
-	int memRequired = ImageLoader::GetMemRequired( m_Width, m_Height, 1, imageFormat, false );
-	m_ImagePixels = new unsigned char[ memRequired ];
+	m_pTexture = g_pMaterialSystem->CreateNamedTextureFromBitsEx( "SculptProject", TEXTURE_GROUP_OTHER, m_Width, m_Height, 1, comp == 3 ? IMAGE_FORMAT_RGB888 : IMAGE_FORMAT_RGBA8888,
+		m_Width * m_Height * comp, m_ImagePixels, TEXTUREFLAGS_NOMIP | TEXTUREFLAGS_NOLOD | TEXTUREFLAGS_PROCEDURAL );
 
-	buf.SeekGet( CUtlBuffer::SEEK_HEAD, 0 );
-	TGALoader::Load( m_ImagePixels, buf, m_Width, m_Height, imageFormat, sourceGamma, false );
-
-	m_pTexture = g_pMaterialSystem->CreateNamedTextureFromBitsEx( "SculptProject", TEXTURE_GROUP_OTHER, m_Width, m_Height, 1, imageFormat,
-		memRequired, m_ImagePixels, TEXTUREFLAGS_NOMIP | TEXTUREFLAGS_NOLOD | TEXTUREFLAGS_PROCEDURAL );
-
-	KeyValues* tex = new KeyValues( "UnlitGeneric" );
-	tex->SetString( "$translucent", "1" );
-	m_pMaterial = g_pMaterialSystem->CreateMaterial( "editor/sculpt", tex );
+	m_pMaterial = g_pMaterialSystem->CreateMaterial( "editor/sculpt", new KeyValues( "UnlitGeneric", "$translucent", "1" ) );
 	m_pMaterial->FindVar( "$BaseTexture", nullptr )->SetTextureValue( m_pTexture );
 	m_bHasAlpha = m_pTexture->IsTranslucent();
 
@@ -3811,30 +3811,31 @@ bool CSculptProjectOptions::ReadImage( CString &FileName )
 
 bool CSculptProjectOptions::DoSizing( const Vector2D &vPoint )
 {
-	m_ProjectSize.x = m_OriginalProjectSize.x + ( vPoint.x - m_StartSizingPoint.x );
+	if ( m_StartSizingPoint == vec2_origin )
+		m_StartSizingPoint = vPoint;
+	m_ProjectSize.x += vPoint.x - m_StartSizingPoint.x;
 	if ( m_ProjectSize.x < 1.0f )
-	{
 		m_ProjectSize.x = 1.0f;
-	}
-	m_ProjectSize.y = m_OriginalProjectSize.y + ( vPoint.y - m_StartSizingPoint.y );
+	m_ProjectSize.y += vPoint.y - m_StartSizingPoint.y;
 	if ( m_ProjectSize.y < 1.0f )
-	{
 		m_ProjectSize.y = 1.0f;
-	}
+
+	m_StartSizingPoint = vPoint;
 
 	return true;
 }
 
 bool CSculptProjectOptions::DoPosition( const Vector2D &vPoint )
 {
-	m_ProjectLocation.x = m_OriginalProjectLocation.x + ( vPoint.x - m_StartSizingPoint.x );
-	m_ProjectLocation.y = m_OriginalProjectLocation.y + ( vPoint.y - m_StartSizingPoint.y );
+	m_ProjectLocation = vPoint - m_ProjectSize / 2;
 
 	return true;
 }
 
 bool CSculptProjectOptions::DoTiling( const Vector2D &vPoint )
 {
+	if ( m_StartSizingPoint == vec2_origin )
+		m_StartSizingPoint = vPoint;
 	m_TileWidth += ( vPoint.x - m_StartSizingPoint.x ) / m_ProjectSize.x;
 	m_TileHeight += ( vPoint.y - m_StartSizingPoint.y ) / m_ProjectSize.y;
 
