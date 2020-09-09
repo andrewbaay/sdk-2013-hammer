@@ -33,6 +33,7 @@ class IWorldEditDispMgr;
 class CToolDisplace;
 class Color;
 class CSelection;
+class IMesh;
 
 struct Shoreline_t;
 struct ExportDXFInfo_s;
@@ -217,7 +218,7 @@ public:
 	inline bool IsTriBuildable( int iTri )															  { return m_CoreDispInfo.IsTriBuildable( iTri ); }
 
 	// this is gone in m_CoreDispInfo.
-    inline bool IsTriRemove( int iTri )                                                               { return false; } //m_CoreDispInfo.IsTriRemove( iTri ); }
+    inline bool IsTriRemove( int iTri )                                                               { return m_CoreDispInfo.IsTriRemove( iTri ); }
 
 	int CollideWithDispTri( const Vector &rayStart, const Vector &rayEnd, float &flFraction, bool OneSided = false );
 
@@ -307,6 +308,8 @@ public:
 
 private:
 
+	void UpdateMesh();
+
 	enum { NUM_EDGES_CORNERS = 4 };
 	enum { MAX_CORNER_NEIGHBORS = 4 };
 
@@ -360,6 +363,8 @@ private:
 	};
 
 	PaintCanvas_t	m_Canvas;
+
+	IMesh* m_pMesh;
 
 	//=========================================================================
 	//

@@ -45,6 +45,8 @@ bool CMapDisp::m_bGridMask = false;
 //-----------------------------------------------------------------------------
 CMapDisp::CMapDisp()
 {
+	m_pMesh = nullptr;
+
 	// clear neighbor data
 	ResetNeighbors();
 
@@ -84,6 +86,13 @@ CMapDisp::~CMapDisp()
 
 	m_aRemoveVerts.Purge();
 	m_aRemoveIndices.Purge();
+
+	if ( m_pMesh && MaterialSystemInterface() )
+	{
+		CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
+		pRenderContext->DestroyStaticMesh( m_pMesh );
+		m_pMesh = nullptr;
+	}
 }
 
 
@@ -213,6 +222,7 @@ void CMapDisp::PostCreate( void )
 	UpdateLightmapExtents();
 	UpdateWalkable();
 	UpdateBuildable();
+	UpdateMesh();
 
 	// Get the current face and create/update any detail objects
 	CMapFace *pFace = static_cast<CMapFace*>( GetParent() );
@@ -1521,6 +1531,71 @@ void CMapDisp::UpdateBuildable( void )
 	}
 }
 
+void CMapDisp::UpdateMesh()
+{
+	Color color( 255, 255, 255, 255 );
+
+	int numVerts = m_CoreDispInfo.GetSize();
+	int numIndices = m_CoreDispInfo.GetRenderIndexCount();
+
+	CMeshBuilder meshBuilder;
+	CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
+	if ( m_pMesh )
+		pRenderContext->DestroyStaticMesh( m_pMesh );
+	constexpr VertexFormat_t fmt = VERTEX_POSITION | VERTEX_COLOR | VERTEX_NORMAL | VERTEX_TANGENT_SPACE | VERTEX_TEXCOORD_SIZE( 0, 2 ) | VERTEX_TEXCOORD_SIZE( 1, 2 );
+	m_pMesh = pRenderContext->CreateStaticMesh( fmt, TEXTURE_GROUP_WORLD );
+	meshBuilder.Begin( m_pMesh, MATERIAL_TRIANGLES, numVerts, numIndices );
+
+	CoreDispVert_t *pVert = m_CoreDispInfo.GetDispVertList();
+	if ( Options.view3d.bInvertDisplacementAlpha )
+	{
+		for ( int i = 0; i < numVerts; ++i )
+		{
+			const auto& vert = pVert[i];
+			meshBuilder.Position3fv( vert.m_Vert.Base() );
+			meshBuilder.Color4ub( color[0], color[1], color[2], 255 - (unsigned char)( vert.m_Alpha ) );
+			meshBuilder.Normal3fv( vert.m_Normal.Base() );
+			meshBuilder.TangentS3fv( vert.m_TangentS.Base() );
+			meshBuilder.TangentT3fv( vert.m_TangentT.Base() );
+			meshBuilder.TexCoord2fv( 0, vert.m_TexCoord.Base() );
+			meshBuilder.TexCoord2fv( 1, vert.m_LuxelCoords[0].Base() );
+			meshBuilder.AdvanceVertex();
+		}
+	}
+	else
+	{
+		for ( int i = 0; i < numVerts; ++i )
+		{
+			const auto& vert = pVert[i];
+			meshBuilder.Position3fv( vert.m_Vert.Base() );
+			meshBuilder.Color4ub( color[0], color[1], color[2], (unsigned char)( vert.m_Alpha ) );
+			meshBuilder.Normal3fv( vert.m_Normal.Base() );
+			meshBuilder.TangentS3fv( vert.m_TangentS.Base() );
+			meshBuilder.TangentT3fv( vert.m_TangentT.Base() );
+			meshBuilder.TexCoord2fv( 0, vert.m_TexCoord.Base() );
+			meshBuilder.TexCoord2fv( 1, vert.m_LuxelCoords[0].Base() );
+			meshBuilder.AdvanceVertex();
+		}
+	}
+
+	unsigned short *pIndex = m_CoreDispInfo.GetRenderIndexList();
+	int nTriCount = numIndices / 3;
+	for ( int nTri = 0; nTri < nTriCount; ++nTri )
+	{
+		if ( !IsTriRemove( nTri ) )
+		{
+			int nIndex = nTri * 3;
+			meshBuilder.Index( pIndex[nIndex] );
+			meshBuilder.AdvanceIndex();
+			meshBuilder.Index( pIndex[nIndex+1] );
+			meshBuilder.AdvanceIndex();
+			meshBuilder.Index( pIndex[nIndex+2] );
+			meshBuilder.AdvanceIndex();
+		}
+	}
+
+	meshBuilder.End();
+}
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -2118,65 +2193,70 @@ void CMapDisp::RenderOverlaySurface( CRender3D *pRender, bool bIsSelected, Selec
 //-----------------------------------------------------------------------------
 void CMapDisp::RenderSurface( CRender3D *pRender, bool bIsSelected, SelectionState_t faceSelectionState )
 {
-	Color color( 255, 255, 255, 255 );
-	CalcColor( pRender, bIsSelected, faceSelectionState, color );
-
-	int numVerts = m_CoreDispInfo.GetSize();
-	int numIndices = m_CoreDispInfo.GetRenderIndexCount();
-
-	CMeshBuilder meshBuilder;
-	CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
-	meshBuilder.Begin( pRenderContext->GetDynamicMesh(), MATERIAL_TRIANGLES, numVerts,	numIndices );
-
-	CoreDispVert_t *pVert = m_CoreDispInfo.GetDispVertList();
-	if ( Options.view3d.bInvertDisplacementAlpha )
+	if ( bIsSelected || faceSelectionState != SELECT_NONE || pRender->IsPicking() || !m_pMesh )
 	{
-		for ( int i = 0; i < numVerts; ++i )
+		Color color( 255, 255, 255, 255 );
+		CalcColor( pRender, bIsSelected, faceSelectionState, color );
+
+		int numVerts = m_CoreDispInfo.GetSize();
+		int numIndices = m_CoreDispInfo.GetRenderIndexCount();
+
+		CMeshBuilder meshBuilder;
+		CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
+		meshBuilder.Begin( pRenderContext->GetDynamicMesh(), MATERIAL_TRIANGLES, numVerts, numIndices );
+
+		CoreDispVert_t* pVert = m_CoreDispInfo.GetDispVertList();
+		if ( Options.view3d.bInvertDisplacementAlpha )
 		{
-			const auto& vert = pVert[i];
-			meshBuilder.Position3fv( vert.m_Vert.Base() );
-			meshBuilder.Color4ub( color[0], color[1], color[2], 255 - (unsigned char)( vert.m_Alpha ) );
-			meshBuilder.Normal3fv( vert.m_Normal.Base() );
-			meshBuilder.TangentS3fv( vert.m_TangentS.Base() );
-			meshBuilder.TangentT3fv( vert.m_TangentT.Base() );
-			meshBuilder.TexCoord2fv( 0, vert.m_TexCoord.Base() );
-			meshBuilder.TexCoord2fv( 1, vert.m_LuxelCoords[0].Base() );
-			meshBuilder.AdvanceVertex();
+			for ( int i = 0; i < numVerts; ++i )
+			{
+				const auto& vert = pVert[i];
+				meshBuilder.Position3fv( vert.m_Vert.Base() );
+				meshBuilder.Color4ub( color[0], color[1], color[2], 255 - (unsigned char)( vert.m_Alpha ) );
+				meshBuilder.Normal3fv( vert.m_Normal.Base() );
+				meshBuilder.TangentS3fv( vert.m_TangentS.Base() );
+				meshBuilder.TangentT3fv( vert.m_TangentT.Base() );
+				meshBuilder.TexCoord2fv( 0, vert.m_TexCoord.Base() );
+				meshBuilder.TexCoord2fv( 1, vert.m_LuxelCoords[0].Base() );
+				meshBuilder.AdvanceVertex();
+			}
 		}
+		else
+		{
+			for ( int i = 0; i < numVerts; ++i )
+			{
+				const auto& vert = pVert[i];
+				meshBuilder.Position3fv( vert.m_Vert.Base() );
+				meshBuilder.Color4ub( color[0], color[1], color[2], (unsigned char)( vert.m_Alpha ) );
+				meshBuilder.Normal3fv( vert.m_Normal.Base() );
+				meshBuilder.TangentS3fv( vert.m_TangentS.Base() );
+				meshBuilder.TangentT3fv( vert.m_TangentT.Base() );
+				meshBuilder.TexCoord2fv( 0, vert.m_TexCoord.Base() );
+				meshBuilder.TexCoord2fv( 1, vert.m_LuxelCoords[0].Base() );
+				meshBuilder.AdvanceVertex();
+			}
+		}
+
+		unsigned short* pIndex = m_CoreDispInfo.GetRenderIndexList();
+		int nTriCount = numIndices / 3;
+		for ( int nTri = 0; nTri < nTriCount; ++nTri )
+		{
+			if ( !IsTriRemove( nTri ) )
+			{
+				int nIndex = nTri * 3;
+				meshBuilder.Index( pIndex[nIndex] );
+				meshBuilder.AdvanceIndex();
+				meshBuilder.Index( pIndex[nIndex + 1] );
+				meshBuilder.AdvanceIndex();
+				meshBuilder.Index( pIndex[nIndex + 2] );
+				meshBuilder.AdvanceIndex();
+			}
+		}
+
+		meshBuilder.End( false, true );
 	}
 	else
-	{
-		for ( int i = 0; i < numVerts; ++i )
-		{
-			const auto& vert = pVert[i];
-			meshBuilder.Position3fv( vert.m_Vert.Base() );
-			meshBuilder.Color4ub( color[0], color[1], color[2], (unsigned char)( vert.m_Alpha ) );
-			meshBuilder.Normal3fv( vert.m_Normal.Base() );
-			meshBuilder.TangentS3fv( vert.m_TangentS.Base() );
-			meshBuilder.TangentT3fv( vert.m_TangentT.Base() );
-			meshBuilder.TexCoord2fv( 0, vert.m_TexCoord.Base() );
-			meshBuilder.TexCoord2fv( 1, vert.m_LuxelCoords[0].Base() );
-			meshBuilder.AdvanceVertex();
-		}
-	}
-
-	unsigned short *pIndex = m_CoreDispInfo.GetRenderIndexList();
-	int nTriCount = numIndices / 3;
-	for ( int nTri = 0; nTri < nTriCount; ++nTri )
-	{
-		if ( !IsTriRemove( nTri ) )
-		{
-			int nIndex = nTri * 3;
-			meshBuilder.Index( pIndex[nIndex] );
-			meshBuilder.AdvanceIndex();
-			meshBuilder.Index( pIndex[nIndex+1] );
-			meshBuilder.AdvanceIndex();
-			meshBuilder.Index( pIndex[nIndex+2] );
-			meshBuilder.AdvanceIndex();
-		}
-	}
-
-	meshBuilder.End( false, true );
+		m_pMesh->Draw();
 }
 
 //-----------------------------------------------------------------------------
