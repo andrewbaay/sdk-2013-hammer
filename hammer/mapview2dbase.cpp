@@ -2053,11 +2053,6 @@ LRESULT CMapView2DBase::WindowProc( UINT message, WPARAM wParam, LPARAM lParam )
 					// render the view now since were not running the main loop
                     RenderView();
 				}
-				else
-				{
-					// just flag view to be update with next main loop
-					m_bUpdateView = true;
-				}
 
 				return CView::WindowProc( message, wParam, lParam ) ;
 			}
