@@ -191,6 +191,7 @@
 #define IDD_ENTITY_SPRINKLE             357
 #define IDD_DIALOG_SYNC_FILE            358
 #define IDD_SCRIPT_GUI                  358
+#define IDD_OPTIONS_DISCORD             359
 #define IDD_KEYBIND_EDITOR              360
 #define IDC_BRDLG_FLIPHORIZ             1000
 #define IDC_BRDLG_FLIPVERT              1001
@@ -269,6 +270,7 @@
 #define IDC_SCULPT_PUSH_OPTION_OFFSET_DISTANCE 1009
 #define IDC_CHECKIN_DESCRIPTION         1009
 #define IDC_SPRINKLE_GRID_OFFSET_X      1009
+#define IDC_DISCORD_TEMPLATE_L1         1009
 #define IDC_BUTTON1                     1010
 #define IDC_CONTROLHEIGHT               1010
 #define IDC_EDITCLASSCODE               1010
@@ -291,6 +293,7 @@
 #define IDC_LOAD_IMAGE                  1010
 #define IDC_SPRINKLE_GRID_SIZE_X        1010
 #define IDC_COLOR_AXIS                  1010
+#define IDC_DISCORD_TEMPLATE_L2         1010
 #define IDC_REVERT                      1011
 #define IDC_TMOVEDOWN                   1011
 #define IDC_FILTER_GROUPS               1011
@@ -988,6 +991,7 @@
 #define IDC_SCALE_DOT_GRID              1697
 #define IDC_SCALE_10_GRID               1698
 #define IDC_SCALE_1024_GRID             1699
+#define IDC_DISCORD_ENABLE              1700
 #define IDC_CHECKIN_STATUS              1702
 #define IDC_SPRINKLE_DENSITY            1703
 #define IDC_SPRINKLE_MODE               1704
@@ -1385,7 +1389,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        360
 #define _APS_NEXT_COMMAND_VALUE         33290
-#define _APS_NEXT_CONTROL_VALUE         1700
+#define _APS_NEXT_CONTROL_VALUE         1701
 #define _APS_NEXT_SYMED_VALUE           116
 #endif
 #endif

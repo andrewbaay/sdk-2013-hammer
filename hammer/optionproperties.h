@@ -18,6 +18,7 @@
 #include "optconfigs.h"
 #include "optbuild.h"
 #include "optcolor.h"
+#include "optdiscord.h"
 
 class COptionProperties : public CPropertySheet
 {
@@ -37,6 +38,7 @@ public:
 	COPTConfigs Configs;
 	COPTBuild Build;
 	COPTColor Color;
+	COPTDiscord Discord;
 
 // Operations
 public:

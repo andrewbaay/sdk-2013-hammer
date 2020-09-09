@@ -124,6 +124,12 @@ struct COptionsView3D
 	float fMouseSens;				// Mouse sensitivity
 };
 
+struct COptionsDiscord
+{
+	BOOL bEnable;
+	CString sLine1Template;
+	CString sLine2Template;
+};
 
 struct COptionsConfigs
 {
@@ -216,6 +222,7 @@ struct COptions
 	COptionsTextures textures;
 	COptionsConfigs configs;
 	COptionsColors colors;
+	COptionsDiscord discord;
 
 private:
 

@@ -1532,10 +1532,10 @@ BEGIN
     DEFPUSHBUTTON   "Close",IDOK,129,82,50,14
 END
 
-IDD_OPTIONS_BUILD DIALOG 0, 0, 234, 223
+IDD_OPTIONS_BUILD DIALOGEX 0, 0, 234, 223
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Build Programs"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     LTEXT           "&Configuration:",IDC_STATIC,8,7,44,8
     COMBOBOX        IDC_CONFIGS,8,18,173,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -2251,6 +2251,22 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
 END
 
+IDD_OPTIONS_DISCORD DIALOGEX 0, 0, 257, 229
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Discord"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "Enable",IDC_DISCORD_ENABLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,8,37,10
+    GROUPBOX        "Discord",IDC_STATIC,7,23,243,121
+    LTEXT           "Template to use for rich presence.\nIf field is left empty, it will not be used.",IDC_STATIC,14,36,236,19
+    LTEXT           "Line 1",IDC_STATIC,14,108,20,8
+    EDITTEXT        IDC_DISCORD_TEMPLATE_L1,37,105,205,14,ES_AUTOHSCROLL
+    GROUPBOX        "Templates",IDC_STATIC,10,95,238,47
+    LTEXT           "Line 2",IDC_STATIC,14,125,20,8
+    EDITTEXT        IDC_DISCORD_TEMPLATE_L2,37,122,205,14,ES_AUTOHSCROLL
+    LTEXT           "These special keywords will be replaced:\n\t- %(filename) - map file name without extension\n\t- %(file) - file with extension\n\t- %(moddir) - current mod's directory\n\t- %(mod) - name of current mod (from GameConfig.txt)",IDC_STATIC,13,53,234,41
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2882,6 +2898,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 165
     END
+
+    IDD_OPTIONS_DISCORD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 250
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 222
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -3195,6 +3219,16 @@ BEGIN
 END
 
 IDD_RUNMAP AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_OPTIONS_DISCORD AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_OPTIONS_BUILD AFX_DIALOG_LAYOUT
 BEGIN
     0
 END

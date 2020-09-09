@@ -487,6 +487,7 @@ CMapDoc::CMapDoc(void)
 	m_bDeferredSave = false;
 
 	m_bSaveVisiblesOnly = false;
+	m_openTime = 0;
 }
 
 
@@ -1421,6 +1422,7 @@ void CMapDoc::Initialize(void)
 
 	m_pWorld = new CMapWorld( this );
 	m_pWorld->CullTree_Build();
+	m_openTime = time( nullptr );
 }
 
 
@@ -3351,6 +3353,7 @@ BOOL CMapDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	return(TRUE);
 }
 
+void DiscordUpdatePresence();
 
 //-----------------------------------------------------------------------------
 // Purpose: Called when the document is closed.
@@ -3367,6 +3370,7 @@ void CMapDoc::OnCloseDocument(void)
 			OnOpenDocument( m_strPathName );
 		}
 
+		DiscordUpdatePresence();
 		return;
 	}
 
@@ -3385,6 +3389,7 @@ void CMapDoc::OnCloseDocument(void)
 	SetActiveMapDoc(this);
 
 	CDocument::OnCloseDocument();
+	DiscordUpdatePresence();
 }
 
 
@@ -4012,6 +4017,8 @@ void CMapDoc::SetActiveMapDoc(CMapDoc *pDoc)
 
 	// Update everything the first time we create a document.
 	static bool bFirst = true;
+	if ( !bFirst && m_nInLevelLoad == 0  )
+		DiscordUpdatePresence();
 	if (bFirst)
 	{
 		bFirst = false;
@@ -5688,6 +5695,7 @@ void CMapDoc::OnFileSave(void)
 		if(m_strPathName.IsEmpty())
 		{
 			OnFileSaveAs();
+			DiscordUpdatePresence();
 		}
 		else
 		{

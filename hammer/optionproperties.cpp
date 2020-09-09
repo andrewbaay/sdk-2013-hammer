@@ -55,6 +55,7 @@ void COptionProperties::DoStandardInit()
 	AddPage(&Textures);
 	AddPage(&Build);
 	AddPage(&Color);
+	AddPage(&Discord);
 }
 
 void COptionProperties::OnClose()

@@ -22,6 +22,7 @@ static constexpr const char *pszGeneral = "General";
 static constexpr const char *pszView2D = "2D Views";
 static constexpr const char *pszView3D = "3D Views";
 static constexpr const char *pszColors = "Custom2DColors";
+static constexpr const char *pszDiscord = "Discord";
 
 const int iThisVersion = 2;
 
@@ -608,6 +609,10 @@ bool COptions::Read(void)
 	colors.clrSelection = APP()->GetProfileColor(pszColors, "Selection", 220, 0, 0);
 	colors.clrToolDrag = APP()->GetProfileColor(pszColors, "ToolDrag", 255, 255, 0);
 
+	discord.bEnable = APP()->GetProfileInt( pszDiscord, "Enable", 1 ) != 0;
+	discord.sLine1Template = APP()->GetProfileString( pszDiscord, "Line1", "Editing %(file)" );
+	discord.sLine2Template = APP()->GetProfileString( pszDiscord, "Line2", "" );
+
 	ReadColorSettings();
 
 	//
@@ -819,6 +824,10 @@ void COptions::Write( BOOL fOverwrite, BOOL fSaveConfigs )
 	APP()->WriteProfileColor(pszColors, "Path", colors.clrToolPath);
 	APP()->WriteProfileColor(pszColors, "Selection", colors.clrSelection);
 	APP()->WriteProfileColor(pszColors, "ToolDrag", colors.clrToolDrag);
+
+	APP()->WriteProfileInt( pszDiscord, "Enable", discord.bEnable );
+	APP()->WriteProfileString( pszDiscord, "Line1", discord.sLine1Template );
+	APP()->WriteProfileString( pszDiscord, "Line2", discord.sLine2Template );
 
 	// Write out the game configurations
 	if ( fSaveConfigs )

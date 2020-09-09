@@ -511,6 +511,8 @@ class CMapDoc : public CDocument
 		// Default logical placement for new entities
 		void GetDefaultNewLogicalPosition( Vector2D &vecPosition );
 
+		int64 OpenTime() const { return m_openTime; }
+
 	private:
 
 		void VisGroups_Validate();
@@ -728,6 +730,8 @@ class CMapDoc : public CDocument
 		int	m_nLogicalPositionCount;
 
 		bool m_bSaveVisiblesOnly;
+
+		int64 m_openTime;
 
 		//
 		// Expands %i keyword in prefab targetnames to generate unique targetnames for this map.

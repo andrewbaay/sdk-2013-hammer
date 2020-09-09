@@ -86,9 +86,9 @@
 //
 
 // dvs: hack
-extern LPCTSTR GetErrorString(void);
-extern void MakePrefabLibrary(LPCTSTR pszName);
 void EditorUtil_ConvertPath(CString &str, bool bSave);
+
+void DiscordUpdatePresence();
 
 CHammer theApp;
 COptions Options;
@@ -1662,6 +1662,7 @@ void CHammer::OnFileNew(void)
 	{
 		::GetMainWnd()->LoadWindowStates();
 	}
+	DiscordUpdatePresence();
 }
 
 
@@ -1796,6 +1797,7 @@ CDocument *CHammer::OpenDocumentOrInstanceFile(LPCTSTR lpszFileName)
 		}
 	}
 
+	DiscordUpdatePresence();
 	return pDoc;
 }
 

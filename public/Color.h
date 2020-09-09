@@ -103,6 +103,13 @@ public:
 		return { _color[0], _color[1], _color[2], _color[3] };
 	}
 
+	static constexpr FORCEINLINE Color RawColor( uint32 rawColor )
+	{
+		Color clr;
+		clr.SetRawColor( rawColor );
+		return clr;
+	}
+
 private:
 	union
 	{

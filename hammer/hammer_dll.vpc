@@ -98,6 +98,25 @@ $Project "hammer_dll"
 					}
 				}
 
+		$Folder "Discord"
+		{
+			$File	"$SRCDIR\thirdparty\discord\discord-rpc.cpp"		\
+					"$SRCDIR\thirdparty\discord\rpc_connection.cpp"	\
+					"$SRCDIR\thirdparty\discord\serialization.cpp"	\
+					"$SRCDIR\thirdparty\discord\connection_win.cpp"
+					{
+						$Configuration
+						{
+							$Compiler
+							{
+								$AdditionalIncludeDirectories	"$BASE;$SRCDIR\thirdparty\discord\"
+								$Create/UsePrecompiledHeader	"Not Using Precompiled Headers"
+							}
+						}
+					}
+			$File	"discord.cpp"
+		}
+
 		$File	"$SRCDIR\public\tier0\afxmem_override.cpp"
 		$File	"AngleBox.cpp"
 		$File	"AngleBox.h"
@@ -246,6 +265,7 @@ $Project "hammer_dll"
 		$File	"OP_Output.h"
 		$File	"optbuild.h"
 		$File	"optcolor.h"
+		$File	"optdiscord.h"
 		$File	"OPTConfigs.h"
 		$File	"OPTGeneral.h"
 		$File	"OptionProperties.h"
@@ -531,6 +551,7 @@ $Project "hammer_dll"
 			$File	"OP_Output.cpp"
 			$File	"OPTBuild.cpp"
 			$File	"OPTColor.cpp"
+			$File	"OPTDiscord.cpp"
 			$File	"OPTConfigs.cpp"
 			$File	"OPTGeneral.cpp"
 			$File	"OptionProperties.cpp"
