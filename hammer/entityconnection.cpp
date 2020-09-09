@@ -15,10 +15,10 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "EntityConnection.h"
-#include "MapEntity.h"
-#include "MapDoc.h"
-#include "MapWorld.h"
+#include "entityconnection.h"
+#include "mapentity.h"
+#include "mapdoc.h"
+#include "mapworld.h"
 #include "hammer.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -282,7 +282,7 @@ bool CEntityConnection::ValidateTarget( const CMapEntityList* pEntityList, bool 
 	FOR_EACH_OBJ( *pEntityList, pos )
 	{
 		CMapEntity *pEntity = pEntityList->Element(pos);
-		if ( !pEntity || bVisibilityCheck && !pEntity->IsVisible() )
+		if ( !pEntity || ( bVisibilityCheck && !pEntity->IsVisible() ) )
 			continue;
 
 		if (pEntity->NameMatches(pszTarget))

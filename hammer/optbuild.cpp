@@ -1,15 +1,14 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "GameConfig.h"
-#include "OPTBuild.h"
-#include "Options.h"
-#include "shlobj.h"
+#include "gameconfig.h"
+#include "optbuild.h"
+#include "options.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -63,23 +62,23 @@ void COPTBuild::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(COPTBuild, CPropertyPage)
 	//{{AFX_MSG_MAP(COPTBuild)
-	ON_BN_CLICKED(IDC_BROWSE_BSP, OnBrowseBsp)
-	ON_BN_CLICKED(IDC_BROWSE_GAME, OnBrowseGame)
-	ON_BN_CLICKED(IDC_BROWSE_LIGHT, OnBrowseLight)
-	ON_BN_CLICKED(IDC_BROWSE_VIS, OnBrowseVis)
-	ON_CBN_SELCHANGE(IDC_CONFIGS, OnSelchangeConfigs)
-	ON_BN_CLICKED(IDC_PARMS_BSP, OnParmsBsp)
-	ON_BN_CLICKED(IDC_PARMS_GAME, OnParmsGame)
-	ON_BN_CLICKED(IDC_PARMS_LIGHT, OnParmsLight)
-	ON_BN_CLICKED(IDC_PARMS_VIS, OnParmsVis)
-	ON_BN_CLICKED(IDC_BROWSE_BSPDIR, OnBrowseBspdir)
-	ON_COMMAND_EX_RANGE(id_InsertParmMapFileNoExt, id_InsertParmEnd, HandleInsertParm)
+	ON_BN_CLICKED(IDC_BROWSE_BSP, &ThisClass::OnBrowseBsp)
+	ON_BN_CLICKED(IDC_BROWSE_GAME, &ThisClass::OnBrowseGame)
+	ON_BN_CLICKED(IDC_BROWSE_LIGHT, &ThisClass::OnBrowseLight)
+	ON_BN_CLICKED(IDC_BROWSE_VIS, &ThisClass::OnBrowseVis)
+	ON_CBN_SELCHANGE(IDC_CONFIGS, &ThisClass::OnSelchangeConfigs)
+	ON_BN_CLICKED(IDC_PARMS_BSP, &ThisClass::OnParmsBsp)
+	ON_BN_CLICKED(IDC_PARMS_GAME, &ThisClass::OnParmsGame)
+	ON_BN_CLICKED(IDC_PARMS_LIGHT, &ThisClass::OnParmsLight)
+	ON_BN_CLICKED(IDC_PARMS_VIS, &ThisClass::OnParmsVis)
+	ON_BN_CLICKED(IDC_BROWSE_BSPDIR, &ThisClass::OnBrowseBspdir)
+	ON_COMMAND_EX_RANGE(id_InsertParmMapFileNoExt, id_InsertParmEnd, &ThisClass::HandleInsertParm)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void COPTBuild::DoBrowse(CWnd *pWnd)
 {
@@ -98,41 +97,41 @@ void COPTBuild::DoBrowse(CWnd *pWnd)
 	pWnd->SetWindowText(str);
 }
 
-void COPTBuild::OnBrowseBsp() 
+void COPTBuild::OnBrowseBsp()
 {
 	DoBrowse(&m_cBSP);
 }
 
-void COPTBuild::OnBrowseGame() 
+void COPTBuild::OnBrowseGame()
 {
 	DoBrowse(&m_cGame);
 }
 
-void COPTBuild::OnBrowseLight() 
+void COPTBuild::OnBrowseLight()
 {
 	DoBrowse(&m_cLIGHT);
 }
 
-void COPTBuild::OnBrowseVis() 
+void COPTBuild::OnBrowseVis()
 {
 	DoBrowse(&m_cVIS);
 }
 
-void COPTBuild::OnSelchangeConfigs() 
+void COPTBuild::OnSelchangeConfigs()
 {
 	SaveInfo(m_pConfig);
 
 	m_pConfig = NULL;
 
 	int iCurSel = m_cConfigs.GetCurSel();
-	
+
 	BOOL bKillFields = (iCurSel == CB_ERR) ? FALSE : TRUE;
 	m_cBSP.EnableWindow(bKillFields);
 	m_cLIGHT.EnableWindow(bKillFields);
 	m_cVIS.EnableWindow(bKillFields);
 	m_cGame.EnableWindow(bKillFields);
 	m_cBSPDir.EnableWindow(bKillFields);
-	
+
 	if(iCurSel == CB_ERR)
 		return;
 
@@ -174,20 +173,20 @@ void COPTBuild::UpdateConfigList()
 	SetModified();
 }
 
-BOOL COPTBuild::OnInitDialog() 
+BOOL COPTBuild::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
-	
+
 	UpdateConfigList();
 	SetModified(TRUE);
-	
+
 	return TRUE;
 }
 
-BOOL COPTBuild::OnApply() 
+BOOL COPTBuild::OnApply()
 {
 	SaveInfo(m_pConfig);
-	
+
 	return CPropertyPage::OnApply();
 }
 
@@ -254,27 +253,27 @@ void COPTBuild::InsertParm(UINT nID, CEdit *pEdit)
 }
 
 
-void COPTBuild::OnParmsBsp() 
+void COPTBuild::OnParmsBsp()
 {
-	InsertParm(IDC_PARMS_BSP, &m_cBSP);	
+	InsertParm(IDC_PARMS_BSP, &m_cBSP);
 }
 
-void COPTBuild::OnParmsGame() 
+void COPTBuild::OnParmsGame()
 {
 	InsertParm(IDC_PARMS_GAME, &m_cGame);
 }
 
-void COPTBuild::OnParmsLight() 
+void COPTBuild::OnParmsLight()
 {
 	InsertParm(IDC_PARMS_LIGHT, &m_cLIGHT);
 }
 
-void COPTBuild::OnParmsVis() 
+void COPTBuild::OnParmsVis()
 {
 	InsertParm(IDC_PARMS_VIS, &m_cVIS);
 }
 
-void COPTBuild::OnBrowseBspdir() 
+void COPTBuild::OnBrowseBspdir()
 {
 	CString str;
 	m_cBSPDir.GetWindowText(str);

@@ -18,9 +18,9 @@
 
 #include "tier0/basetypes.h"
 
-#include "BoundBox.h"
-#include "MapPoint.h"
-#include "UtlVector.h"
+#include "boundbox.h"
+#include "mappoint.h"
+#include "utlvector.h"
 #include "visgroup.h"
 #include "fgdlib/wckeyvalues.h"
 #include "tier1/smartptr.h"
@@ -46,7 +46,7 @@ class CMapFaceList;
 
 struct MapError;
 
-enum ChunkFileResult_t;
+enum ChunkFileResult_t : unsigned char;
 
 struct MapObjectPair_t
 {
@@ -284,7 +284,7 @@ public:
 	void PostUpdate(Notify_Dependent_t eNotifyType);
 	static void UpdateAllDependencies(CMapClass *pObject);
 
-	void SetOrigin(Vector& origin);
+	void SetOrigin(const Vector& origin);
 
 	// hierarchy
 	virtual void UpdateAnimation( float animTime ) {}

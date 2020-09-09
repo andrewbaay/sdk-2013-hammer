@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2001, Valve LLC, All rights reserved. ============
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================
@@ -20,11 +20,11 @@
 #include "vgui_controls/ListPanel.h"
 #include "vgui_controls/Image.h"
 #include "vgui_controls/TextImage.h"
-#include "vgui/isurface.h"
-#include "vgui/ischeme.h"
-#include "vgui/iinput.h"
-#include "vgui/ivgui.h"
-#include "vgui/cursor.h"
+#include "vgui/ISurface.h"
+#include "vgui/IScheme.h"
+#include "vgui/IInput.h"
+#include "vgui/IVGui.h"
+#include "vgui/Cursor.h"
 #include "movieobjects/dmemakefile.h"
 #include "movieobjects/dmemdlmakefile.h"
 #include "movieobjects/dmedccmakefile.h"
@@ -34,7 +34,7 @@
 #include "movieobjects/dmecombinationoperator.h"
 #include "movieobjects/dmeanimationset.h"
 
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "materialsystem/imesh.h"
 #include "dme_controls/BaseAnimationSetEditor.h"
 #include "dme_controls/BaseAnimSetAttributeSliderPanel.h"
@@ -168,7 +168,7 @@ void CDmeAnimationListPanel::OnItemDeselected( )
 }
 
 class CDmeCombinationOperatorPanel : public CBaseAnimationSetEditor
-{	
+{
 	DECLARE_CLASS_SIMPLE( CDmeCombinationOperatorPanel, CBaseAnimationSetEditor );
 public:
 	CDmeCombinationOperatorPanel( vgui::Panel *parent, const char *panelName );
@@ -413,7 +413,7 @@ void CDmeCombinationOperatorPanel::RemoveUnusedAnimationSetControls()
 		// Look for a match
 		if ( m_hCombinationOperator.Get() && m_hCombinationOperator->FindControlIndex( pControlName ) >= 0 )
 			continue;
-	
+
 		// No match, blow the control away.
 		RemoveAnimationControlFromPresets( pControlName );
 		RemoveAnimationControlFromSelectionGroups( pControlName );
@@ -590,7 +590,7 @@ void CDmeCombinationOperatorPanel::AddNewAnimationSetControls()
 		pControl->SetValue( "multi", bIsMultiControl );
 
 		if ( bIsStereoControl )
-		{ 
+		{
 			const Vector2D &value = m_hCombinationOperator->GetStereoControlValue(i);
 
 			pControl->SetValue( "value", value.x );
@@ -706,7 +706,7 @@ void CDmeCombinationOperatorPanel::RefreshAnimationSet()
 
 	// Modify controls in the presets which have had stereo or multilevel settings changed
 	ModifyExistingAnimationSetControls();
-	
+
 	// Add all controls not in the animation set but which do exist in the combination system
 	AddNewAnimationSetControls();
 
@@ -757,11 +757,11 @@ void CDmeCombinationOperatorPanel::OnTick()
 				}
 				if ( m_hCombinationOperator->IsMultiControl( i ) )
 				{
-					m_hCombinationOperator->SetMultiControlLevel( i, value.m_pValue[ANIM_CONTROL_MULTILEVEL] ); 
+					m_hCombinationOperator->SetMultiControlLevel( i, value.m_pValue[ANIM_CONTROL_MULTILEVEL] );
 				}
 			}
 		}
-    
+
 		// FIXME: Shouldn't this happen at the application level?
 		// run the machinery - apply, resolve, dependencies, operate, resolve
 		CUtlVector< IDmeOperator* > operators;

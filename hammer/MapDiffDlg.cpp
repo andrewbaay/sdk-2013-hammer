@@ -1,18 +1,18 @@
 // MapDiffDlg.cpp : implementation file
 //
 #include "stdafx.h"
-#include "GlobalFunctions.h"
-#include "History.h"
-#include "MainFrm.h"
+#include "globalfunctions.h"
+#include "history.h"
+#include "mainfrm.h"
 #include "MapDiffDlg.h"
-#include "MapDoc.h"
-#include "MapView2D.h"
-#include "MapWorld.h"
-#include "Options.h"
-#include "VisGroup.h"
+#include "mapdoc.h"
+#include "mapview2d.h"
+#include "mapworld.h"
+#include "options.h"
+#include "visgroup.h"
 #include "hammer.h"
-#include "MapOverlay.h"
-#include "GameConfig.h"
+#include "mapoverlay.h"
+#include "gameconfig.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -38,10 +38,10 @@ void CMapDiffDlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CMapDiffDlg, CDialog)
-	ON_BN_CLICKED(IDC_SIMILARCHECK, OnBnClickedSimilarcheck)
-	ON_BN_CLICKED(IDC_MAPBROWSE, OnBnClickedMapbrowse)
-	ON_BN_CLICKED(IDOK, OnBnClickedOk)
-	ON_BN_CLICKED(IDCANCEL, OnBnClickedCancel)
+	ON_BN_CLICKED(IDC_SIMILARCHECK, &ThisClass::OnBnClickedSimilarcheck)
+	ON_BN_CLICKED(IDC_MAPBROWSE, &ThisClass::OnBnClickedMapbrowse)
+	ON_BN_CLICKED(IDOK, &ThisClass::OnBnClickedOk)
+	ON_BN_CLICKED(IDCANCEL, &ThisClass::OnBnClickedCancel)
 	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
@@ -53,7 +53,7 @@ void CMapDiffDlg::MapDiff(CWnd *pwndParent, CMapDoc *pCurrentMapDoc)
 		s_pDlg->Create(IDD, pwndParent);
 		s_pDlg->ShowWindow(SW_SHOW);
 		s_pCurrentMap = pCurrentMapDoc;
-	}	
+	}
 }
 
 // MapDiffDlg message handlers
@@ -66,7 +66,7 @@ void CMapDiffDlg::OnBnClickedSimilarcheck()
 void CMapDiffDlg::OnBnClickedMapbrowse()
 {
 	CString	m_pszFilename;
-	
+
 	static char szInitialDir[MAX_PATH] = "";
 	if (szInitialDir[0] == '\0')
 	{
@@ -96,27 +96,27 @@ void CMapDiffDlg::OnBnClickedOk()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CMapDiffDlg::OnOK()
 {
 	CString strFilename;
 	m_mapName.GetWindowText( strFilename );
 	CHammer *pApp = (CHammer*) AfxGetApp();
-	CMapDoc *pDoc = (CMapDoc*) pApp->pMapDocTemplate->OpenDocumentFile( strFilename );	
+	CMapDoc *pDoc = (CMapDoc*) pApp->pMapDocTemplate->OpenDocumentFile( strFilename );
     CUtlVector <int> IDList;
-	
+
 	const CMapObjectList *pChildren = pDoc->GetMapWorld()->GetChildren();
 
 	FOR_EACH_OBJ( *pChildren, pos )
-	{		
+	{
 		int nID = pChildren->Element(pos)->GetID();
 		IDList.AddToTail( nID );
-	}	
+	}
 
 	pDoc->OnCloseDocument();
-	
-	CVisGroup *resultsVisGroup = NULL;	
+
+	CVisGroup *resultsVisGroup = NULL;
 	pChildren = s_pCurrentMap->GetMapWorld()->GetChildren();
 	int nTotalSimilarities = 0;
 	if ( m_bCheckSimilar )
@@ -126,7 +126,7 @@ void CMapDiffDlg::OnOK()
 			CMapClass *pChild = pChildren->Element(pos)	;
 			int ID = pChild->GetID();
 			if ( IDList.Find( ID ) != -1 )
-			{	
+			{
 				if ( resultsVisGroup == NULL )
 				{
 					resultsVisGroup = s_pCurrentMap->VisGroups_AddGroup( "Similar" );
@@ -134,7 +134,7 @@ void CMapDiffDlg::OnOK()
 				}
 				pChild->AddVisGroup( resultsVisGroup );
 			}
-		}	
+		}
 	}
 	if ( nTotalSimilarities > 0 )
 	{

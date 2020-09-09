@@ -1,19 +1,19 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
 #include "dme_controls/DmeSourceDCCFilePanel.h"
-#include "dme_controls/DmePanel.h"
+#include "dme_controls/dmepanel.h"
 #include "movieobjects/dmedccmakefile.h"
 #include "vgui_controls/TextEntry.h"
 #include "vgui_controls/ListPanel.h"
 #include "vgui_controls/Button.h"
 #include "vgui_controls/InputDialog.h"
 #include "vgui_controls/MessageBox.h"
-#include "vgui/keycode.h"
-#include "tier1/keyvalues.h"
+#include "vgui/KeyCode.h"
+#include "tier1/KeyValues.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -44,9 +44,9 @@ static int __cdecl DccObjectSortFunc( vgui::ListPanel *pPanel, const ListPanelIt
 //-----------------------------------------------------------------------------
 // Purpose: Constructor, destructor
 //-----------------------------------------------------------------------------
-CDmeSourceDCCFilePanel::CDmeSourceDCCFilePanel( vgui::Panel *pParent, const char *pPanelName ) : 
+CDmeSourceDCCFilePanel::CDmeSourceDCCFilePanel( vgui::Panel *pParent, const char *pPanelName ) :
 	BaseClass( pParent, pPanelName )
-{	
+{
 	m_pRootDCCObjects = new vgui::ListPanel( this, "DCCObjectList" );
 	m_pRootDCCObjects->AddColumnHeader( 0, "dccobject", "Maya/XSI Object Name", 100, 0 );
 	m_pRootDCCObjects->AddActionSignalTarget( this );
@@ -249,7 +249,7 @@ void CDmeSourceDCCFilePanel::OnDCCObjectAdded( const char *pDCCObjectName, KeyVa
 void CDmeSourceDCCFilePanel::OnInputCompleted( KeyValues *kv )
 {
 	const char *pDCCObjectName = kv->GetString( "text", NULL );
-	if ( !pDCCObjectName )						  
+	if ( !pDCCObjectName )
 		return;
 
 	KeyValues *pDialogKeys = kv->FindKey( "ChangeDCCObject" );

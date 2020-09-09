@@ -5,16 +5,16 @@
 //===========================================================================//
 
 #include "stdafx.h"
-#include "Box3D.h"
-#include "BSPFile.h"
+#include "box3d.h"
+#include "bspfile.h"
 #include "const.h"
-#include "MapEntity.h"
-#include "MapSprite.h"
-#include "Render2D.h"
-#include "Render3D.h"
-#include "materialsystem/IMesh.h"
-#include "Material.h"
-#include "Options.h"
+#include "mapentity.h"
+#include "mapsprite.h"
+#include "render2d.h"
+#include "render3d.h"
+#include "materialsystem/imesh.h"
+#include "material.h"
+#include "options.h"
 #include "camera.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -157,7 +157,7 @@ void CMapSprite::CalcBounds(BOOL bFullUpdate)
 	CMapClass::CalcBounds(bFullUpdate);
 
 	float fRadius = 8;
-	
+
 	if (m_pSpriteInfo)
 	{
 		fRadius = max(m_pSpriteInfo->GetWidth(), m_pSpriteInfo->GetHeight()) * m_fScale / 2.0;
@@ -241,8 +241,8 @@ CMapClass *CMapSprite::CopyFrom(CMapClass *pObject, bool bUpdateDependencies)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : bEnable - 
+// Purpose:
+// Input  : bEnable -
 //-----------------------------------------------------------------------------
 void CMapSprite::EnableAnimation(BOOL bEnable)
 {
@@ -251,8 +251,8 @@ void CMapSprite::EnableAnimation(BOOL bEnable)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : Angles - 
+// Purpose:
+// Input  : Angles -
 //-----------------------------------------------------------------------------
 void CMapSprite::GetAngles(QAngle &Angles)
 {
@@ -261,7 +261,7 @@ void CMapSprite::GetAngles(QAngle &Angles)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CMapSprite::Initialize(void)
 {
@@ -312,8 +312,8 @@ int CMapSprite::GetNextSpriteFrame( CRender3D* pRender )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pRender - 
+// Purpose:
+// Input  : pRender -
 //-----------------------------------------------------------------------------
 void CMapSprite::Render3D(CRender3D *pRender)
 {
@@ -404,7 +404,7 @@ void CMapSprite::Render3D(CRender3D *pRender)
 				//
 				if ( nPass > 0 )
 				{
-					color[0] = color[1] = 255; 
+					color[0] = color[1] = 255;
 					color[2] = 0;
 				}
 			}
@@ -438,8 +438,8 @@ void CMapSprite::Render3D(CRender3D *pRender)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pTransBox - 
+// Purpose:
+// Input  : pTransBox -
 //-----------------------------------------------------------------------------
 void CMapSprite::DoTransform(const VMatrix &matrix)
 {
@@ -453,10 +453,10 @@ void CMapSprite::DoTransform(const VMatrix &matrix)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pColor - 
-//			pEntity - 
-//			alpha - 
+// Purpose:
+// Input  : pColor -
+//			pEntity -
+//			alpha -
 //-----------------------------------------------------------------------------
 void CMapSprite::SpriteColor(unsigned char *pColor, int eRenderMode, colorVec RenderColor, int alpha)
 {
@@ -470,7 +470,7 @@ void CMapSprite::SpriteColor(unsigned char *pColor, int eRenderMode, colorVec Re
 	{
 		a = 256;
 	}
-	
+
 	if ((RenderColor.r == 0) && (RenderColor.g == 0) && (RenderColor.b == 0))
 	{
 		pColor[0] = pColor[1] = pColor[2] = (255 * a) >> 8;
@@ -579,7 +579,7 @@ void CMapSprite::OnParentKeyChanged(const char* szKey, const char* szValue)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CMapSprite::ShouldRenderLast(void)
@@ -589,7 +589,7 @@ bool CMapSprite::ShouldRenderLast(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CMapSprite::Render2D(CRender2D *pRender)
 {
@@ -613,7 +613,7 @@ void CMapSprite::Render2D(CRender2D *pRender)
 	}
 
 	// Draw the bounding box.
-		
+
 	pRender->DrawBox( vecMins, vecMaxs );
 
 	//

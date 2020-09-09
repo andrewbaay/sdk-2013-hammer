@@ -5,6 +5,7 @@
 #include "tier1/strtools.h"
 #include "mathlib/mathlib.h"
 
+#undef _tzcnt_u32
 #include <new>
 #include <algorithm> // std::sort
 

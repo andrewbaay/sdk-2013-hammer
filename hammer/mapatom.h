@@ -16,7 +16,7 @@ class Box3D;
 class CRender2D;
 class CRender3D;
 
-enum SelectionState_t
+enum SelectionState_t : unsigned char
 {
 	SELECT_NONE = 0,			// unselected
 	SELECT_NORMAL,				// selected

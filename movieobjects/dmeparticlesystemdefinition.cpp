@@ -1,19 +1,19 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
 #include "movieobjects/dmeparticlesystemdefinition.h"
 #include "datamodel/dmelementfactoryhelper.h"
 #include "movieobjects/dmeeditortypedictionary.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "tier1/utlbuffer.h"
 #include "tier1/convar.h"
 #include "particles/particles.h"
-#include "dme_controls/attributeintchoicepanel.h"
-#include "dme_controls/attributeboolchoicepanel.h"
-#include "dme_controls/attributestringchoicepanel.h"
+#include "dme_controls/AttributeIntChoicePanel.h"
+#include "dme_controls/AttributeBoolChoicePanel.h"
+#include "dme_controls/AttributeStringChoicePanel.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -41,13 +41,13 @@ const char *GetParticleFunctionTypeName( ParticleFunctionType_t type )
 
 
 //-----------------------------------------------------------------------------
-// Expose this class to the scene database 
+// Expose this class to the scene database
 //-----------------------------------------------------------------------------
 IMPLEMENT_ELEMENT_FACTORY_INSTALL_EXPLICITLY( DmeParticleFunction, CDmeParticleFunction );
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CDmeParticleFunction::OnConstruction()
 {
@@ -73,7 +73,7 @@ static void CreateEditorAttributeInfo( CDmeEditorType *pEditorType, const char *
 	if ( parse.ArgC() == 1 )
 	{
 		CDmeEditorAttributeInfo *pInfo = CreateElement< CDmeEditorAttributeInfo >( "field info" );
-		pEditorType->AddAttributeInfo( pAttributeName, pInfo ); 
+		pEditorType->AddAttributeInfo( pAttributeName, pInfo );
 		pInfo->m_Widget = parse[0];
 		return;
 	}
@@ -104,7 +104,7 @@ static void CreateEditorAttributeInfo( CDmeEditorType *pEditorType, const char *
 		if ( pInfo )
 		{
 			pInfo->SetChoiceType( parse[1] );
-			pEditorType->AddAttributeInfo( pAttributeName, pInfo ); 
+			pEditorType->AddAttributeInfo( pAttributeName, pInfo );
 			pInfo->m_Widget = parse[0];
 			return;
 		}
@@ -201,7 +201,7 @@ void CDmeParticleFunction::Resolve()
 		if ( !pAttr->IsFlagSet( FATTRIB_DIRTY ) )
 			continue;
 
-		// Find all CDmeParticleSystemDefinitions referring to this function 
+		// Find all CDmeParticleSystemDefinitions referring to this function
 		DmAttributeReferenceIterator_t i = g_pDataModel->FirstAttributeReferencingElement( GetHandle() );
 		while ( i != DMATTRIBUTE_REFERENCE_ITERATOR_INVALID )
 		{
@@ -233,13 +233,13 @@ CDmeEditorTypeDictionary* CDmeParticleFunction::GetEditorTypeDictionary()
 
 
 //-----------------------------------------------------------------------------
-// Expose this class to the scene database 
+// Expose this class to the scene database
 //-----------------------------------------------------------------------------
 IMPLEMENT_ELEMENT_FACTORY_INSTALL_EXPLICITLY( DmeParticleOperator, CDmeParticleOperator );
 
 
 //-----------------------------------------------------------------------------
-// Constructor, destructor 
+// Constructor, destructor
 //-----------------------------------------------------------------------------
 void CDmeParticleOperator::OnConstruction()
 {
@@ -268,13 +268,13 @@ const char *CDmeParticleOperator::GetFunctionType() const
 
 
 //-----------------------------------------------------------------------------
-// Expose this class to the scene database 
+// Expose this class to the scene database
 //-----------------------------------------------------------------------------
 IMPLEMENT_ELEMENT_FACTORY_INSTALL_EXPLICITLY( DmeParticleChild, CDmeParticleChild );
 
 
 //-----------------------------------------------------------------------------
-// Constructor, destructor 
+// Constructor, destructor
 //-----------------------------------------------------------------------------
 void CDmeParticleChild::OnConstruction()
 {
@@ -291,7 +291,7 @@ void CDmeParticleChild::OnDestruction()
 //-----------------------------------------------------------------------------
 void CDmeParticleChild::SetChildParticleSystem( CDmeParticleSystemDefinition *pDef, IParticleOperatorDefinition *pDefinition )
 {
-	// FIXME: Convert system name into a 
+	// FIXME: Convert system name into a
 	m_Child = pDef;
 	const DmxElementUnpackStructure_t *pUnpack = pDefinition->GetUnpackStructure();
 	UpdateAttributes( pUnpack );
@@ -305,14 +305,14 @@ const char *CDmeParticleChild::GetFunctionType() const
 
 
 //-----------------------------------------------------------------------------
-// Expose this class to the scene database 
+// Expose this class to the scene database
 //-----------------------------------------------------------------------------
 IMPLEMENT_ELEMENT_FACTORY_INSTALL_EXPLICITLY( DmeParticleSystemDefinition, CDmeParticleSystemDefinition );
 
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CDmeParticleSystemDefinition::OnConstruction()
 {
@@ -419,7 +419,7 @@ void CDmeParticleSystemDefinition::OnElementUnserialized()
 
 			for ( int k = 0; k < nAvailType; ++k )
 			{
-				if ( Q_stricmp( pFunction->GetName(), list[k]->GetName() ) ) 
+				if ( Q_stricmp( pFunction->GetName(), list[k]->GetName() ) )
 					continue;
 
 				RemoveObsoleteAttributes( pFunction, list[k]->GetUnpackStructure() );
@@ -458,7 +458,7 @@ CDmeParticleFunction* CDmeParticleSystemDefinition::AddOperator( ParticleFunctio
 	int nCount = list.Count();
 	for ( int i = 0; i < nCount; ++i )
 	{
-		if ( Q_stricmp( pFunctionName, list[i]->GetName() ) ) 
+		if ( Q_stricmp( pFunctionName, list[i]->GetName() ) )
 			continue;
 
 		CDmeParticleOperator *pFunction = CreateElement< CDmeParticleOperator >( pFunctionName, GetFileId() );

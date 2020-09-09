@@ -38,7 +38,7 @@
 // the SSE2 registers, which lessens this problem a little.
 
 // permitted only on 360, as we've done careful tuning on its Altivec math:
-#ifdef _X360
+#if defined(_X360) || ( defined(WIN32) && _M_IX86_FP == 2 ) || ( defined(__linux__) && defined(__SSE2__) )
 #define ALLOW_SIMD_QUATERNION_MATH 1  // not on PC!
 #endif
 
@@ -50,19 +50,17 @@
 #ifndef _X360
 #if ALLOW_SIMD_QUATERNION_MATH
 // Using STDC or SSE
-FORCEINLINE fltx4 LoadAlignedSIMD( const QuaternionAligned & pSIMD )
+FORCEINLINE fltx4 LoadAlignedSIMD( const QuaternionAligned& pSIMD )
 {
-	fltx4 retval = LoadAlignedSIMD( pSIMD.Base() );
-	return retval;
+	return LoadAlignedSIMD( pSIMD.Base() );
 }
 
-FORCEINLINE fltx4 LoadAlignedSIMD( const QuaternionAligned * RESTRICT pSIMD )
+FORCEINLINE fltx4 LoadAlignedSIMD( const QuaternionAligned* RESTRICT pSIMD )
 {
-	fltx4 retval = LoadAlignedSIMD( pSIMD );
-	return retval;
+	return LoadAlignedSIMD( *pSIMD );
 }
 
-FORCEINLINE void StoreAlignedSIMD( QuaternionAligned * RESTRICT pSIMD, const fltx4 & a )
+FORCEINLINE void StoreAlignedSIMD( QuaternionAligned* RESTRICT pSIMD, const fltx4& a )
 {
 	StoreAlignedSIMD( pSIMD->Base(), a );
 }
@@ -102,8 +100,7 @@ FORCEINLINE fltx4 QuaternionAlignSIMD( const fltx4 &p, const fltx4 &q )
 	a = Dot4SIMD( a, a );
 	b = Dot4SIMD( b, b );
 	fltx4 cmp = CmpGtSIMD( a, b );
-	fltx4 result = MaskedAssign( cmp, NegSIMD(q), q );
-	return result;
+	return MaskedAssign( cmp, NegSIMD( q ), q );
 }
 
 //---------------------------------------------------------------------

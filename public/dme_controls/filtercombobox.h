@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -11,7 +11,7 @@
 #pragma once
 #endif
 
-#include "vgui_controls/combobox.h"
+#include "vgui_controls/ComboBox.h"
 
 
 //-----------------------------------------------------------------------------
@@ -29,4 +29,4 @@ public:
 
 #endif // FILTERCOMBOBOX_H
 
-	
+

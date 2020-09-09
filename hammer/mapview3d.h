@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -11,9 +11,9 @@
 #pragma once
 #endif
 
-#include "Keyboard.h"
-#include "MapView.h"
-#include "Render3D.h"
+#include "keyboard.h"
+#include "mapview.h"
+#include "render3d.h"
 
 namespace vgui
 {
@@ -47,7 +47,7 @@ typedef enum
     LOGICAL_KEY_BACKPLANE_INCR,
     LOGICAL_KEY_BACKPLANE_DECR,
     LOGICAL_KEY_TOGGLE_GRID
-} CMapView3D_LogicalKeys_t; 
+} CMapView3D_LogicalKeys_t;
 
 
 class CMapView3D : public CView, public CMapView
@@ -83,7 +83,7 @@ public:
 	void ClientToWorld(Vector &vecWorld, const Vector2D &ptClient);
 	bool HitTest( const Vector2D &vPoint, const Vector& mins, const Vector& maxs );
 	void GetBestTransformPlane( Vector &horzAxis, Vector &vertAxis, Vector &thirdAxis);
-				
+
 	void GetHitPos(const Vector2D &point, PLANE &plane, Vector &pos);
 	void ProcessInput(void);
 
@@ -110,7 +110,7 @@ public:
 	int			ObjectsAt( const Vector2D &point, HitInfo_t *pObjects, int nMaxObjects, unsigned int nFlags = 0 );
 
 	CMapClass	*NearestObjectAt( const Vector2D &point, ULONG &ulFace, unsigned int nFlags = 0, VMatrix *pLocalMatrix = NULL );
-		
+
 	void RenderPreloadObject(CMapAtom *pObject);
 
 	void SetCursor( vgui::HCursor hCursor );
@@ -140,8 +140,8 @@ private:
 	void Render();
 
 	void EnableCrosshair(bool bEnable);
-		
-	
+
+
 	bool ControlCamera(const CPoint &point);
 
 	//

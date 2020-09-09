@@ -39,6 +39,8 @@
 #define ROBIN_HOOD_VERSION_MINOR 8 // for adding functionality in a backwards-compatible manner
 #define ROBIN_HOOD_VERSION_PATCH 0 // for backwards-compatible bug fixes
 
+#pragma push_macro("_tzcnt_u32")
+#undef _tzcnt_u32
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
@@ -47,6 +49,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#pragma pop_macro("_tzcnt_u32")
 
 // #define ROBIN_HOOD_LOG_ENABLED
 #ifdef ROBIN_HOOD_LOG_ENABLED

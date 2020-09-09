@@ -8,7 +8,7 @@
 #include "lpreview_thread.h"
 #include "floatbitmap.h"
 
-#define HAMMER_RAYTRACE
+//#define HAMMER_RAYTRACE
 #include "raytrace.h"
 #include "hammer.h"
 #include "mainfrm.h"
@@ -17,6 +17,7 @@
 #include "threadtools.h"
 #include "vstdlib/jobthread.h"
 #include "mathlib/halton.h"
+#include "tier1/fmtstr.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -26,14 +27,12 @@ extern const int32 ALIGN16 g_SIMD_EveryOtherMask[4] = { 0, ~0, 0, ~0 };
 #define LPREVIEW_MULTITHREAD 1
 
 CInterlockedInt n_gbufs_queued;
-CInterlockedInt n_result_bms_queued;
 
 #define NUMBER_OF_LINES_TO_CALCULATE_PER_STEP 8
 
 // the current lighting preview output, if we have one
 Bitmap_t * g_pLPreviewOutputBitmap;
 IThreadPool *s_pThreadPool;
-static class CLightingPreviewThread *s_pThis;
 static int s_nNumThreads;
 
 enum IncrementalLightState
@@ -673,14 +672,18 @@ void CLightingPreviewThread::HandleGBuffersMessage( MessageToLPreview& msg_in )
 
 
 	m_LastEyePosition = msg_in.m_EyePosition;
-	for ( int i = 0;i < ARRAYSIZE( msg_in.m_pDefferedRenderingBMs ); i++ )
+	for ( uint i = 0;i < ARRAYSIZE( msg_in.m_pDefferedRenderingBMs ); i++ )
 		delete msg_in.m_pDefferedRenderingBMs[i];
 	n_gbufs_queued--;
 	m_nBitmapGenerationCounter = msg_in.m_nBitmapGenerationCounter;
 	CalculateSceneBounds();
 }
 
-
+#ifdef __clang__
+__attribute__((optnone))
+#else
+#pragma optimize( "", off )
+#endif
 void CLightingPreviewThread::AccumulateOuput( int nLineMask, CSOAContainer* rslt, CSOAContainer* rslt1 )
 {
 	for ( CLightingPreviewLightDescription* l = m_LightList.Head(); l; l = l->m_pNext )
@@ -707,7 +710,7 @@ void CLightingPreviewThread::AccumulateOuput( int nLineMask, CSOAContainer* rslt
 					break;
 			}
 			fltx4 fl4NormalFactorScale = ReplicateX4( 4.0f );
-			fltx4 fl4NormalBias = ReplicateX4( 0.0f ); //1.01 );		// prevent 0.
+			fltx4 fl4NormalBias = ReplicateX4( 0.01f ); //1.01 );		// prevent 0.
 			for ( int y = 0; y < pGB->NumRows(); y++ )
 			{
 				if ( nLineMask & ( 1 << ( y & 31 ) ) )
@@ -990,8 +993,6 @@ int InsideOut( int nTotal, int nCounter )
 	return b;
 }
 
-#pragma optimize( "", off )
-
 void CLightingPreviewThread::CalculateForLightTask( int nLineStart, int nLineEnd, CLightingPreviewLightDescription* l, float* fContributionOut, CIncrementalLightInfo* pLInfo )
 {
 	FourVectors zero_vector;
@@ -1054,7 +1055,7 @@ void CLightingPreviewThread::CalculateForLightTask( int nLineStart, int nLineEnd
 				myray.origin += pos;
 
 				RayTracingResult r_rslt;
-				m_pRtEnv->Trace4Rays( myray, Four_Zeros, ReplicateX4( 1.0e9f ), &r_rslt );
+				m_pRtEnv->Trace4Rays( myray, Four_Zeros, ReplicateX4( 1.0e9f ), &r_rslt, -1, nullptr );
 
 				fltx4 mask = _mm_castsi128_ps( _mm_andnot_si128(
 					_mm_cmplt_epi32( _mm_load_si128( reinterpret_cast<__m128i*>( r_rslt.HitIds ) ), _mm_setzero_si128() ),
@@ -1084,7 +1085,7 @@ void CLightingPreviewThread::CalculateForLightTask( int nLineStart, int nLineEnd
 	}
 	ReleaseSIMDRandContext( nCtx );
 	fltx4 lmag = total_light.length();
-	*fContributionOut = lmag.m128_f32[0]+ lmag.m128_f32[1]+ lmag.m128_f32[2]+ lmag.m128_f32[3];
+	*fContributionOut = SubFloat(lmag, 0) + SubFloat(lmag, 1) + SubFloat(lmag, 2) + SubFloat(lmag, 3);
 }
 
 #define N_FAKE_LIGHTS_FOR_INDIRECT 50
@@ -1105,7 +1106,7 @@ void CLightingPreviewThread::CalculateForLight( CLightingPreviewLightDescription
 			rayDirs[i] = sampler.NextValue();
 			m_pRtEnv->AddToRayStream( myStream, rayStart, rayStart + lrad * rayDirs[i], rslts + i );
 		}
-		m_pRtEnv->FinishRayStream( myStream);
+		m_pRtEnv->FinishRayStream( myStream );
 		// now, we have a bunch of raytracing results
 		for ( int i = 0; i < N_FAKE_LIGHTS_FOR_INDIRECT; i++ )
 		{
@@ -1130,7 +1131,6 @@ void CLightingPreviewThread::CalculateForLight( CLightingPreviewLightDescription
 					pNew->m_Direction = rslts[i].surface_normal;
 					pNew->m_Theta = 0;
 					pNew->m_Phi = M_PI;
-					pNew->RecalculateDerivedValues();
 					pNew->m_Falloff = 5.0f;
 					pNew->m_Range = 0.0f;
 					pNew->m_Attenuation0 = 0;
@@ -1138,6 +1138,7 @@ void CLightingPreviewThread::CalculateForLight( CLightingPreviewLightDescription
 					pNew->m_Attenuation2 = 1;
 					pNew->m_bDidIndirect = true;
 					pNew->m_bLowRes = l->m_bLowRes;
+					pNew->RecalculateDerivedValues();
 					l->m_TempChildren.AddToTail( pNew );
 				}
 			}
@@ -1175,7 +1176,9 @@ void CLightingPreviewThread::CalculateForLight( CLightingPreviewLightDescription
 		l_info->m_eIncrState = INCR_STATE_PARTIAL_RESULTS;
 }
 
+#ifndef __clang__
 #pragma optimize( "", on )
+#endif
 
 void CLightingPreviewThread::SendResultRendering( CSOAContainer& rsltBuffer )
 {
@@ -1185,6 +1188,7 @@ void CLightingPreviewThread::SendResultRendering( CSOAContainer& rsltBuffer )
 	for ( int y = 0; y < ret_bm->Height(); y++ )
 	{
 		float const* pRGBData = rsltBuffer.RowPtr<float>( RSLT_BUFFER_RSLT_RGB, y );
+		OutputDebugStringA( CFmtStr( "%g %g %g\n", pRGBData[0], pRGBData[4], pRGBData[8] ) );
 		for ( int x = 0; x < ret_bm->Width(); x++ )
 		{
 			Vector color( pRGBData[0], pRGBData[4], pRGBData[8] );
@@ -1199,7 +1203,6 @@ void CLightingPreviewThread::SendResultRendering( CSOAContainer& rsltBuffer )
 		}
 	}
 	MessageFromLPreview ret_msg( LPREVIEW_MSG_DISPLAY_RESULT );
-//	n_result_bms_queued++;
 	ret_msg.m_pBitmapToDisplay = ret_bm;
 	ret_msg.m_nBitmapGenerationCounter = m_nBitmapGenerationCounter;
 	g_LPreviewToHammerMsgQueue.QueueMessage( ret_msg );
@@ -1212,20 +1215,26 @@ void CLightingPreviewThread::SendResultRendering( CSOAContainer& rsltBuffer )
 unsigned LightingPreviewThreadFN( void* )
 {
 	CLightingPreviewThread LPreviewObject;
-	s_pThis = &LPreviewObject;
 	ThreadSetPriority( -2 );								// low
 	s_pThreadPool = CreateThreadPool();
 
 	const CPUInformation* pCPUInfo = GetCPUInformation();
 	ThreadPoolStartParams_t startParams;
-	startParams.nThreads = pCPUInfo->m_nPhysicalProcessors - 1;
-	s_nNumThreads = startParams.nThreads;
-	startParams.nStackSize = 4*1024*1024;
+	s_nNumThreads = startParams.nThreads = Clamp( pCPUInfo->m_nLogicalProcessors - 1, 1, TP_MAX_POOL_THREADS );
+	startParams.nStackSize = 4 * 1024 * 1024;
 	startParams.fDistribute = TRS_TRUE;
 	startParams.iThreadPriority = -2;
-	s_pThreadPool->Start( startParams );
+	startParams.bUseAffinityTable = true;
+	for ( int i = 0; i < s_nNumThreads; i++ )
+		startParams.iAffinityTable[i] = 1 << ( i + 1 );
+	s_pThreadPool->Start( startParams, "hammer_lighting" );
+	CSOAContainer::SetThreadPool( s_pThreadPool );
 
 	LPreviewObject.Run();
+
+	CSOAContainer::SetThreadPool( nullptr );
+	s_pThreadPool->Stop();
+	DestroyThreadPool( s_pThreadPool );
 	return 0;
 }
 
@@ -1249,49 +1258,48 @@ void HandleLightingPreview()
 			{
 				if ( !CMapDoc::GetActiveMapDoc() || !CMapDoc::GetActiveMapDoc()->HasAnyLPreview() )
 					break;
-				n_result_bms_queued--;
 				if ( g_pLPreviewOutputBitmap )
 					delete g_pLPreviewOutputBitmap;
 				g_pLPreviewOutputBitmap = NULL;
-//				if ( msg.m_nBitmapGenerationCounter == g_nBitmapGenerationCounter )
-			{
-				g_pLPreviewOutputBitmap = msg.m_pBitmapToDisplay;
-				if ( g_pLPreviewOutputBitmap && g_pLPreviewOutputBitmap->Width() > 10 )
+				if ( msg.m_nBitmapGenerationCounter == g_nBitmapGenerationCounter )
 				{
-					SignalUpdate( EVTYPE_BITMAP_RECEIVED_FROM_LPREVIEW );
-					CLightingPreviewResultsWindow *w=GetMainWnd()->m_pLightingPreviewOutputWindow;
-					if ( !GetMainWnd()->m_bLightingPreviewOutputWindowShowing )
+					g_pLPreviewOutputBitmap = msg.m_pBitmapToDisplay;
+					if ( g_pLPreviewOutputBitmap && g_pLPreviewOutputBitmap->Width() > 10 )
 					{
-						w = new CLightingPreviewResultsWindow;
-						GetMainWnd()->m_pLightingPreviewOutputWindow = w;
-						w->Create( GetMainWnd() );
-						GetMainWnd()->m_bLightingPreviewOutputWindowShowing = true;
-					}
-					if ( !w->IsWindowVisible() )
-						w->ShowWindow( SW_SHOW );
-					RECT existing_rect;
-					w->GetClientRect( &existing_rect );
-					if (existing_rect.right != g_pLPreviewOutputBitmap->Width() - 1 ||
-						existing_rect.bottom != g_pLPreviewOutputBitmap->Height() - 1 )
-					{
-						CRect myRect;
-						myRect.top = 0;
-						myRect.left = 0;
-						myRect.right = g_pLPreviewOutputBitmap->Width() - 1;
-						myRect.bottom = g_pLPreviewOutputBitmap->Height() - 1;
-						w->CalcWindowRect( & myRect );
-						w->SetWindowPos(
-							NULL, 0, 0,
-							myRect.Width(), myRect.Height(),
-							SWP_NOMOVE | SWP_NOZORDER );
-					}
+						SignalUpdate( EVTYPE_BITMAP_RECEIVED_FROM_LPREVIEW );
+						CLightingPreviewResultsWindow *w=GetMainWnd()->m_pLightingPreviewOutputWindow;
+						if ( !GetMainWnd()->m_bLightingPreviewOutputWindowShowing )
+						{
+							w = new CLightingPreviewResultsWindow;
+							GetMainWnd()->m_pLightingPreviewOutputWindow = w;
+							w->Create( GetMainWnd() );
+							GetMainWnd()->m_bLightingPreviewOutputWindowShowing = true;
+						}
+						if ( !w->IsWindowVisible() )
+							w->ShowWindow( SW_SHOW );
+						RECT existing_rect;
+						w->GetClientRect( &existing_rect );
+						if (existing_rect.right != g_pLPreviewOutputBitmap->Width() - 1 ||
+							existing_rect.bottom != g_pLPreviewOutputBitmap->Height() - 1 )
+						{
+							CRect myRect;
+							myRect.top = 0;
+							myRect.left = 0;
+							myRect.right = g_pLPreviewOutputBitmap->Width() - 1;
+							myRect.bottom = g_pLPreviewOutputBitmap->Height() - 1;
+							w->CalcWindowRect( &myRect );
+							w->SetWindowPos(
+								NULL, 0, 0,
+								myRect.Width(), myRect.Height(),
+								SWP_NOMOVE | SWP_NOZORDER );
+						}
 
-					w->Invalidate( false );
-					w->UpdateWindow();
+						w->Invalidate( false );
+						w->UpdateWindow();
+					}
 				}
-			}
-// 				else
-// 					delete msg.m_pBitmapToDisplay;			// its old
+				else
+					delete msg.m_pBitmapToDisplay;			// its old
 			break;
 			}
 		}

@@ -9,8 +9,8 @@
 #pragma once
 
 
-#include "BaseTypes.h"
-#include "UtlVector.h"
+#include "basetypes.h"
+#include "utlvector.h"
 
 
 class CChunkFile;
@@ -20,7 +20,7 @@ class CMapDoc;
 struct LoadVisGroupData_t;
 
 
-enum ChunkFileResult_t;
+enum ChunkFileResult_t : unsigned char;
 
 
 enum VisGroupState_t

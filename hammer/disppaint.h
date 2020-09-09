@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -10,8 +10,8 @@
 #pragma once
 
 #include "mathlib/vector.h"
-#include "UtlVector.h"
-#include "DispManager.h"
+#include "utlvector.h"
+#include "dispmanager.h"
 
 class CMapDisp;
 

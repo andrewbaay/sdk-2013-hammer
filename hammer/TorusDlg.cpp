@@ -10,7 +10,7 @@
 #include "stdafx.h"
 #include "hammer.h"
 #include "hammer_mathlib.h"
-#include "TorusDlg.h"
+#include "torusdlg.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -130,14 +130,14 @@ void CTorusDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CTorusDlg, CDialog)
 	//{{AFX_MSG_MAP(CTorusDlg)
-	ON_EN_CHANGE(IDC_ARC, OnChangeArc)
-	ON_EN_CHANGE(IDC_ROTATION_ARC, OnChangeTorusArc)
-	ON_BN_CLICKED(IDC_CIRCLE, OnCircle)
-	ON_BN_CLICKED(IDC_TORUS_COMPUTE_RADIUS, OnComputeRadius)
-	ON_EN_UPDATE(IDC_SIDES, OnUpdateSides)
-	ON_EN_UPDATE(IDC_WALLWIDTH, OnUpdateWallwidth)
+	ON_EN_CHANGE(IDC_ARC, &ThisClass::OnChangeArc)
+	ON_EN_CHANGE(IDC_ROTATION_ARC, &ThisClass::OnChangeTorusArc)
+	ON_BN_CLICKED(IDC_CIRCLE, &ThisClass::OnCircle)
+	ON_BN_CLICKED(IDC_TORUS_COMPUTE_RADIUS, &ThisClass::OnComputeRadius)
+	ON_EN_UPDATE(IDC_SIDES, &ThisClass::OnUpdateSides)
+	ON_EN_UPDATE(IDC_WALLWIDTH, &ThisClass::OnUpdateWallwidth)
 	ON_WM_PAINT()
-	ON_BN_CLICKED(IDC_TORUS_PREVIEW, OnTorusPreview)
+	ON_BN_CLICKED(IDC_TORUS_PREVIEW, &ThisClass::OnTorusPreview)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 

@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2001, Valve LLC, All rights reserved. ============
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================
@@ -15,7 +15,7 @@
 #include "tier1/utlvector.h"
 #include "vgui_controls/Frame.h"
 #include "datamodel/dmehandle.h"
-#include "vgui_controls/fileopenstatemachine.h"
+#include "vgui_controls/FileOpenStateMachine.h"
 
 
 //-----------------------------------------------------------------------------
@@ -94,8 +94,8 @@ private:
 	MESSAGE_FUNC( OnRenamePreset, "RenamePreset" );
 	MESSAGE_FUNC( OnToggleGroupVisibility, "ToggleGroupVisibility" );
 	MESSAGE_FUNC( OnToggleGroupSharing, "ToggleGroupSharing" );
-	MESSAGE_FUNC_PARAMS( OnItemSelected, "ItemSelected", kv );	
-	MESSAGE_FUNC_PARAMS( OnItemDeselected, "ItemDeselected", kv );	
+	MESSAGE_FUNC_PARAMS( OnItemSelected, "ItemSelected", kv );
+	MESSAGE_FUNC_PARAMS( OnItemDeselected, "ItemDeselected", kv );
 	MESSAGE_FUNC( OnImportPresets, "ImportPresets" );
 	MESSAGE_FUNC( OnExportPresets, "ExportPresets" );
 	MESSAGE_FUNC( OnImportPresetGroups, "ImportPresetGroups" );

@@ -6,19 +6,19 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "ObjectBar.h"
-#include "Options.h"
-#include "ControlBarIDs.h"
-#include "Prefabs.h"
-#include "Prefab3D.h"
-#include "StockSolids.h"
+#include "objectbar.h"
+#include "options.h"
+#include "controlbarids.h"
+#include "prefabs.h"
+#include "prefab3d.h"
+#include "stocksolids.h"
 #include "mainfrm.h"
-#include "MapSolid.h"
-#include "MapWorld.h"
-#include "MapDoc.h"
-#include "GlobalFunctions.h"
-#include "ArchDlg.h"
-#include "TorusDlg.h"
+#include "mapsolid.h"
+#include "mapworld.h"
+#include "mapdoc.h"
+#include "globalfunctions.h"
+#include "archdlg.h"
+#include "torusdlg.h"
 #include "ToolManager.h"
 #include "mathlib/vector.h"
 #include "mapview2d.h"
@@ -67,13 +67,13 @@ SolidTypeInfo_t SolidTypes[] =
 
 
 BEGIN_MESSAGE_MAP(CObjectBar, CHammerBar)
-	ON_UPDATE_COMMAND_UI(IDC_CREATELIST, UpdateControl)
-	ON_UPDATE_COMMAND_UI(IDC_CATEGORYLIST, UpdateControl)
-	ON_UPDATE_COMMAND_UI(IDC_FACES, UpdateFaceControl)
-	ON_UPDATE_COMMAND_UI(IDC_FACESSPIN, UpdateFaceControl)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_CREATEPREFAB, UpdateControl)
-	ON_UPDATE_COMMAND_UI(ID_CREATEOBJECT, UpdateControl)
-	ON_CBN_SELCHANGE(IDC_CATEGORYLIST, OnChangeCategory)
+	ON_UPDATE_COMMAND_UI(IDC_CREATELIST, &ThisClass::UpdateControl)
+	ON_UPDATE_COMMAND_UI(IDC_CATEGORYLIST, &ThisClass::UpdateControl)
+	ON_UPDATE_COMMAND_UI(IDC_FACES, &ThisClass::UpdateFaceControl)
+	ON_UPDATE_COMMAND_UI(IDC_FACESSPIN, &ThisClass::UpdateFaceControl)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_CREATEPREFAB, &ThisClass::UpdateControl)
+	ON_UPDATE_COMMAND_UI(ID_CREATEOBJECT, &ThisClass::UpdateControl)
+	ON_CBN_SELCHANGE(IDC_CATEGORYLIST, &ThisClass::OnChangeCategory)
 END_MESSAGE_MAP()
 
 
@@ -82,7 +82,7 @@ END_MESSAGE_MAP()
 //-----------------------------------------------------------------------------
 static int FindSolidType( const char *pName )
 {
-	for ( int i=0; i < ARRAYSIZE( SolidTypes ); i++ )
+	for ( uint i=0; i < ARRAYSIZE( SolidTypes ); i++ )
 	{
 		if ( Q_stricmp( pName, SolidTypes[i].pszName ) == 0 )
 			return i;
@@ -604,7 +604,7 @@ void CObjectBar::LoadBlockItems( void )
 
 		// set list type (primitives)
 		CUtlVector<CString> suggestions;
-		for( int i = 0; i < sizeof( SolidTypes ) / sizeof( SolidTypes[0] ); i++)
+		for( uint i = 0; i < ARRAYSIZE( SolidTypes ); i++)
 			suggestions.AddToTail( SolidTypes[i].pszName );
 
 		m_CreateList.SetSuggestions( suggestions );

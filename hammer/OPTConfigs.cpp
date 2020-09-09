@@ -5,15 +5,14 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include <shlobj.h>
-#include "GameConfig.h"
-#include "EditGameConfigs.h"
+#include "gameconfig.h"
+#include "editgameconfigs.h"
 #include "hammer.h"
-#include "OPTConfigs.h"
+#include "optconfigs.h"
 #include "ConfigManager.h"
 #include "process.h"
-#include "Options.h"
-#include "TextureBrowser.h"
+#include "options.h"
+#include "texturebrowser.h"
 #include "filesystem_tools.h"
 
 #include "tier2/vconfig.h"
@@ -199,16 +198,16 @@ void COPTConfigs::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(COPTConfigs, CPropertyPage)
 	//{{AFX_MSG_MAP(COPTConfigs)
-	ON_BN_CLICKED(IDC_EDITCONFIGS, OnEditconfigs)
-	ON_BN_CLICKED(IDC_GDFILE_ADD, OnGdfileAdd)
-	ON_BN_CLICKED(IDC_GDFILE_EDIT, OnGdfileEdit)
-	ON_BN_CLICKED(IDC_GDFILE_REMOVE, OnGdfileRemove)
-	ON_CBN_SELCHANGE(IDC_CONFIGURATIONS, OnSelchangeConfigurations)
-	ON_BN_CLICKED(IDC_BROWSEMAPDIR, OnBrowsemapdir)
-	ON_BN_CLICKED(IDC_BROWSEGAMEEXEDIR, OnBrowseGameExeDir)
-	ON_BN_CLICKED(IDC_BROWSEMODDIR, OnBrowseModDir)
-	ON_BN_CLICKED(IDC_BROWSE_CORDON_TEXTURE, OnBrowseCordonTexture)
-	ON_MESSAGE( WM_SETTINGCHANGE, OnSettingChange )
+	ON_BN_CLICKED(IDC_EDITCONFIGS, &ThisClass::OnEditconfigs)
+	ON_BN_CLICKED(IDC_GDFILE_ADD, &ThisClass::OnGdfileAdd)
+	ON_BN_CLICKED(IDC_GDFILE_EDIT, &ThisClass::OnGdfileEdit)
+	ON_BN_CLICKED(IDC_GDFILE_REMOVE, &ThisClass::OnGdfileRemove)
+	ON_CBN_SELCHANGE(IDC_CONFIGURATIONS, &ThisClass::OnSelchangeConfigurations)
+	ON_BN_CLICKED(IDC_BROWSEMAPDIR, &ThisClass::OnBrowsemapdir)
+	ON_BN_CLICKED(IDC_BROWSEGAMEEXEDIR, &ThisClass::OnBrowseGameExeDir)
+	ON_BN_CLICKED(IDC_BROWSEMODDIR, &ThisClass::OnBrowseModDir)
+	ON_BN_CLICKED(IDC_BROWSE_CORDON_TEXTURE, &ThisClass::OnBrowseCordonTexture)
+	ON_MESSAGE( WM_SETTINGCHANGE, &ThisClass::OnSettingChange )
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -635,7 +634,7 @@ BOOL COPTConfigs::OnApply(void)
 //			*pszDirectory -
 // Output : Returns TRUE on success, FALSE on failure.
 //-----------------------------------------------------------------------------
-BOOL COPTConfigs::BrowseForFolder(char *pszTitle, char *pszDirectory)
+BOOL COPTConfigs::BrowseForFolder(const char *pszTitle, char *pszDirectory)
 {
 	char szTmp[MAX_PATH];
 

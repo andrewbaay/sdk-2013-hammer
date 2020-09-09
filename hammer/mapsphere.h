@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -10,9 +10,9 @@
 #pragma once
 #endif
 
-#include "fgdlib/WCKeyValues.h"
+#include "fgdlib/wckeyvalues.h"
 #include "MapHelper.h"
-#include "ToolInterface.h"
+#include "toolinterface.h"
 
 
 class CToolSphere;
@@ -57,7 +57,7 @@ class CMapSphere : public CMapHelper
 		virtual bool CanBeCulledByCordon() const { return false; } // We don't hide unless our parent hides.
 
 		virtual CBaseTool *GetToolObject(int nHitData, bool bAttachObject );
-		
+
 		virtual bool HitTest2D(CMapView2D *pView, const Vector2D &point, HitInfo_t &HitData);
 
 		virtual const char* GetDescription() { return "Sphere helper"; }

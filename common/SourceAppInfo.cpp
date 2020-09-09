@@ -8,15 +8,15 @@
 #include "tier0/dbg.h"
 
 struct SourceAppInfo_t
-{	
-	char *m_pchFullName;
-	char *m_pchModName;
+{
+	const char *m_pchFullName;
+	const char *m_pchModName;
 	int m_nSteamAppId;
 	ESourceApp m_ESourceApp;
 };
 
 
-static SourceAppInfo_t s_SteamAppInfo[] = 
+static SourceAppInfo_t s_SteamAppInfo[] =
 {
 	{	"Source SDK Base",				"sourcetest",	215,	k_App_SDK_BASE },
 	{	"Half-Life 2",					"hl2",			220,	k_App_HL2 } ,
@@ -66,7 +66,7 @@ const char *GetAppModName( ESourceApp eSourceApp )
 //-----------------------------------------------------------------------------
 // Purpose: return the short string name used for this language by SteamUI
 //-----------------------------------------------------------------------------
-const int GetAppSteamAppId( ESourceApp eSourceApp )
+int GetAppSteamAppId( ESourceApp eSourceApp )
 {
 	Assert( Q_ARRAYSIZE(s_SteamAppInfo) == k_App_MAX );
 	if ( s_SteamAppInfo[ eSourceApp ].m_ESourceApp == eSourceApp )

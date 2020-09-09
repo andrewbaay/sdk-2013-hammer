@@ -1,14 +1,14 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
 //=============================================================================//
 
-#include "dme_controls/AttributeSurfacePropertyPickerPanel.h"
+#include "dme_controls/attributesurfacepropertypickerpanel.h"
 #include "dme_controls/AttributeTextEntry.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "filesystem.h"
 
 
@@ -43,7 +43,7 @@ void CAttributeSurfacePropertyPickerPanel::AddSurfacePropertiesToList( PickerLis
 		{
 			if ( Q_stricmp( sub->GetName(), "file" ) )
 				continue;
-							  
+
 			KeyValues *file = new KeyValues( SURFACEPROP_MANIFEST_FILE );
 			if ( file->LoadFromFile( g_pFullFileSystem, sub->GetString(), "GAME" ) )
 			{

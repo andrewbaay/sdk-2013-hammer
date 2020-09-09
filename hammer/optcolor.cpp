@@ -6,9 +6,9 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "GameConfig.h"
-#include "OPTColor.h"
-#include "Options.h"
+#include "gameconfig.h"
+#include "optcolor.h"
+#include "options.h"
 #include "shlobj.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -71,12 +71,12 @@ void COPTColor::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(COPTColor, CPropertyPage)
 	//{{AFX_MSG_MAP(COPTColor)
-	ON_BN_CLICKED( IDC_COLOR_ENABLE, &COPTColor::OnCustomClick )
-	ON_COMMAND_EX( IDC_SCALE_AXIS, &COPTColor::OnCheckBoxClicked )
-	ON_COMMAND_EX( IDC_SCALE_GRID, &COPTColor::OnCheckBoxClicked )
-	ON_COMMAND_EX( IDC_SCALE_DOT_GRID, &COPTColor::OnCheckBoxClicked )
-	ON_COMMAND_EX( IDC_SCALE_10_GRID, &COPTColor::OnCheckBoxClicked )
-	ON_COMMAND_EX( IDC_SCALE_1024_GRID, &COPTColor::OnCheckBoxClicked )
+	ON_BN_CLICKED( IDC_COLOR_ENABLE, &ThisClass::OnCustomClick )
+	ON_COMMAND_EX( IDC_SCALE_AXIS, &ThisClass::OnCheckBoxClicked )
+	ON_COMMAND_EX( IDC_SCALE_GRID, &ThisClass::OnCheckBoxClicked )
+	ON_COMMAND_EX( IDC_SCALE_DOT_GRID, &ThisClass::OnCheckBoxClicked )
+	ON_COMMAND_EX( IDC_SCALE_10_GRID, &ThisClass::OnCheckBoxClicked )
+	ON_COMMAND_EX( IDC_SCALE_1024_GRID, &ThisClass::OnCheckBoxClicked )
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 

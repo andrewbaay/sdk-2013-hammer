@@ -10,7 +10,7 @@
 #pragma once
 #endif
 
-#include "fgdlib/GameData.h"
+#include "fgdlib/gamedata.h"
 
 class MDkeyvalue;
 class KeyValues;

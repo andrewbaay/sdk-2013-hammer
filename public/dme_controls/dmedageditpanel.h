@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2001, Valve LLC, All rights reserved. ============
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================
@@ -13,7 +13,7 @@
 #endif
 
 #include "tier1/utlvector.h"
-#include "vgui_controls/editablepanel.h"
+#include "vgui_controls/EditablePanel.h"
 #include "datamodel/dmehandle.h"
 
 

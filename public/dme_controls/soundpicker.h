@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -10,7 +10,7 @@
 #pragma once
 #endif
 
-#include "matsys_controls/BaseAssetPicker.h"
+#include "matsys_controls/baseassetpicker.h"
 #include "vgui_controls/Frame.h"
 #include "datamodel/dmehandle.h"
 #include "tier1/utlstring.h"

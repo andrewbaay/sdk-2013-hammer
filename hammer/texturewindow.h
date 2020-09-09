@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -10,8 +10,8 @@
 #pragma once
 #endif
 
-#include "IEditorTexture.h"
-#include "UtlVector.h"
+#include "ieditortexture.h"
+#include "utlvector.h"
 
 
 struct TextureWindowTex_t
@@ -33,7 +33,7 @@ public:
 			{
 				return i;
 			}
-		}	
+		}
 
 		return -1;
 	}

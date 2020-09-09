@@ -9,7 +9,7 @@
 #include "matsys_controls/matsyscontrols.h"
 #include "VGuiMatSurface/IMatSystemSurface.h"
 #include "materialsystem/imaterial.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "psheet.h"
 #include "vgui/IScheme.h"
 #include "vgui/IVGui.h"
@@ -342,8 +342,8 @@ void CSheetSequencePanel::Paint( void )
 		float x = i % nGridCount;
 		float y = i / nGridCount;
 
-		if ( bOnlyColor && !m_pSheet->SequenceHasColorData( i )
-		  || bOnlyAlpha && !m_pSheet->SequenceHasAlphaData( i ) )
+		if ( ( bOnlyColor && !m_pSheet->SequenceHasColorData( i ) )
+		  || ( bOnlyAlpha && !m_pSheet->SequenceHasAlphaData( i ) ) )
 		{
 			continue;
 		}
@@ -383,8 +383,8 @@ void CSheetSequencePanel::Paint( void )
 		vgui::surface()->DrawSetTextPos(flOffset+x*flGridSquareSize+2, flOffset+y*flGridSquareSize+1);
 		vgui::surface()->DrawUnicodeString( strBuffer );
 
-		if ( bOnlyColor && !m_pSheet->SequenceHasColorData( i )
-		  || bOnlyAlpha && !m_pSheet->SequenceHasAlphaData( i ) )
+		if ( ( bOnlyColor && !m_pSheet->SequenceHasColorData( i ) )
+		  || ( bOnlyAlpha && !m_pSheet->SequenceHasAlphaData( i ) ) )
 		{
 			vgui::surface()->DrawSetTextColor( Color(255,0,0,255) );
 			vgui::surface()->DrawSetTextPos(flOffset+(x+0.5f)*flGridSquareSize, flOffset+(y+0.5f)*flGridSquareSize+1);

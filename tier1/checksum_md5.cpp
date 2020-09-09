@@ -285,7 +285,7 @@ void MD5Value_t::Zero()
 //-----------------------------------------------------------------------------
 bool MD5Value_t::IsZero() const
 {
-	for ( int i = 0 ; i < Q_ARRAYSIZE( bits ) ; ++i )
+	for ( uint i = 0 ; i < Q_ARRAYSIZE( bits ) ; ++i )
 	{
 		if ( bits[i] != 0 )
 			return false;

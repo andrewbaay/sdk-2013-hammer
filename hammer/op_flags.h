@@ -14,7 +14,7 @@
 #pragma once
 
 
-#include "ObjectPage.h"
+#include "objectpage.h"
 
 class GDclass;
 class CEditGameClass;

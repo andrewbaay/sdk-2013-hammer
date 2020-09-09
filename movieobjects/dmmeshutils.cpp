@@ -19,7 +19,7 @@
 #include "tier1/utlstack.h"
 #include "tier2/p4helpers.h"
 #include "tier1/utlstring.h"
-#include "tier1/utlstringmap.h"
+#include "tier1/UtlStringMap.h"
 #include "tier1/utlbuffer.h"
 #include "filesystem.h"
 
@@ -29,7 +29,7 @@
 
 
 //-----------------------------------------------------------------------------
-// 
+//
 //-----------------------------------------------------------------------------
 bool CDmMeshUtils::RemoveLargeAxisAlignedPlanarFaces( CDmeMesh *pMesh )
 {
@@ -89,7 +89,7 @@ bool CDmMeshUtils::RemoveLargeAxisAlignedPlanarFaces( CDmeMesh *pMesh )
 
 		removeStart.RemoveAll();
 		removeCount.RemoveAll();
-		
+
 		p = posData[ posIndices[ faceCurrentIndex ] ];
 
 		for ( int j = 1; j < nFaceIndices; ++j )
@@ -242,7 +242,7 @@ bool CDmMeshUtils::RemoveFacesWithMoreThanNVerts( CDmeMesh *pMesh, const int nVe
 
 		removeStart.RemoveAll();
 		removeCount.RemoveAll();
-		
+
 		for ( int j = 1; j < nFaceIndices; ++j )
 		{
 			faceCurrentIndex = pFaceSet->GetIndex( j );
@@ -435,9 +435,9 @@ void RemoveUnusedData(
 	const char *pFieldName,
 	int *pIndices,
 	int nIndicesCount,
-	CDmrGenericArray &data )
+	CDmAttribute* pDataAttr )
 {
-	const int nDataCount = data.Count();
+	const int nDataCount = CDmrGenericArray(pDataAttr).Count();
 
 	bool *pDataIndexFound = reinterpret_cast< bool * >( alloca( nDataCount * sizeof( bool ) ) );
 	memset( pDataIndexFound, 0, nDataCount * sizeof( bool ) );
@@ -475,7 +475,6 @@ void RemoveUnusedData(
 	}
 
 	// Fix up the data
-	CDmAttribute *pDataAttr = data.GetAttribute();
 	const DmAttributeType_t dataAttrType = pDataAttr->GetType();
 	switch ( dataAttrType )
 	{
@@ -605,7 +604,7 @@ void RemoveUnusedVerticesFromBaseState(
 		CDmrGenericArray data = pVertexData->GetVertexData( i );
 
 		// This will also update pNewVertexIndices
-		RemoveUnusedData( pMesh, pVertexData, bBind, pFieldName, pNewVertexIndices, nNewToOldIndexMapCount, CDmrGenericArray( pVertexData->GetVertexData( i ) ) );
+		RemoveUnusedData( pMesh, pVertexData, bBind, pFieldName, pNewVertexIndices, nNewToOldIndexMapCount, pVertexData->GetVertexData( i ) );
 
 		// Shrink the indices array
 		indices.RemoveMultiple( nNewToOldIndexMapCount, indices.Count() - nNewToOldIndexMapCount );
@@ -638,7 +637,7 @@ bool CDmMeshUtils::PurgeUnusedData( CDmeMesh *pMesh )
 	CUtlVector< int > vertexIndexMap;
 	ComputeVertexIndexMap( pMesh, nMaxVertexCount, vertexIndexMap );
 
-	// Remove the redundant vertices from all base states 
+	// Remove the redundant vertices from all base states
 	for ( int i = pMesh->BaseStateCount() - 1; i >= 0; --i )
 	{
 		RemoveUnusedVerticesFromBaseState( pMesh, pMesh->GetBaseState( i ), vertexIndexMap );
@@ -840,7 +839,7 @@ const int *CDmMeshUtils::BuildDataMirrorMap( CDmeVertexData *pBase, int axis, CD
 //-----------------------------------------------------------------------------
 // y = mirrorMap[ x ] means that if y < 0 then original position x is not
 // mirrored.  Otherwise y is the index into the vertex indices of the mirrored
-// version of vertex 
+// version of vertex
 //-----------------------------------------------------------------------------
 bool CDmMeshUtils::MirrorVertices( CDmeMesh *pMesh, CDmeVertexData *pBase, int axis, CUtlVector< int > &mirrorMap )
 {
@@ -964,7 +963,6 @@ void MirrorVertexData(
 	T_t *pMirrorData = reinterpret_cast< T_t * >( alloca( nMirrorCount * sizeof( T_t ) ) );
 	int *pMirrorIndices = reinterpret_cast< int * >( alloca( nMirrorCount * sizeof( int ) ) );
 
-	T_t mirrorData;
 	int nMirrorIndex = 0;
 	int nMirrorDataCount = -1;
 	for ( int i = 0; i < nOrigVertexCount; ++i )
@@ -976,8 +974,7 @@ void MirrorVertexData(
 			if ( dataMirrorMap[ origIndices[ i ] ] != origIndices[ i ] )
 			{
 				// Data referred to by vertex i must be mirror (this may be done a redundant number of times)
-				const T_t &origData( origData[ origIndices[ i ] ] );
-				mirrorData = origData;
+				T_t mirrorData = origData[ origIndices[ i ] ];
 				MirrorData( mirrorData, axis );
 				pMirrorData[ dataMirrorMap[ origIndices[ i ] ] - nData ] = mirrorData;
 				if ( ( dataMirrorMap[ origIndices[ i ] ] - nData ) > nMirrorDataCount )
@@ -1402,10 +1399,11 @@ bool CDmMeshUtils::Merge( CDmeMesh *pSrcMesh, CDmElement *pRoot )
 template < class T_t >
 void AppendData(
 	const CDmrArrayConst< T_t > &srcData,
-	CDmrArray< T_t > &dstData,
+	CDmAttribute *pDstData,
 	const matrix3x4_t *pMat = NULL )
 {
 	const int nSrcCount = srcData.Count();
+	CDmrArray<T_t> dstData( pDstData );
 	const int nDstCount = dstData.Count();
 
 	dstData.AddMultipleToTail( nSrcCount );
@@ -1419,10 +1417,11 @@ void AppendData(
 template <>
 void AppendData(
 	const CDmrArrayConst< Vector > &srcData,
-	CDmrArray< Vector > &dstData,
+	CDmAttribute *pDstData,
 	const matrix3x4_t *pMat )
 {
 	const int nSrcCount = srcData.Count();
+	CDmrArray<Vector> dstData( pDstData );
 	const int nDstCount = dstData.Count();
 
 	dstData.AddMultipleToTail( nSrcCount );
@@ -1539,33 +1538,33 @@ int MergeBaseState(
 			switch ( pSrcData->GetType() )
 			{
 			case AT_FLOAT_ARRAY:
-				AppendData( CDmrArrayConst< float >( pSrcData ), CDmrArray< float >( pDstData ) );
+				AppendData( CDmrArrayConst< float >( pSrcData ), pDstData );
 				break;
 			case AT_VECTOR2_ARRAY:
-				AppendData( CDmrArrayConst< Vector2D >( pSrcData ), CDmrArray< Vector2D >( pDstData ) );
+				AppendData( CDmrArrayConst< Vector2D >( pSrcData ), pDstData );
 				break;
 			case AT_VECTOR3_ARRAY:
 				if ( i == nSrcPositionIndex )
 				{
-					AppendData( CDmrArrayConst< Vector >( pSrcData ), CDmrArray< Vector >( pDstData ), &pMat );
+					AppendData( CDmrArrayConst< Vector >( pSrcData ), pDstData, &pMat );
 				}
 				else if ( i == nSrcNormalIndex )
 				{
-					AppendData( CDmrArrayConst< Vector >( pSrcData ), CDmrArray< Vector >( pDstData ), &nMat );
+					AppendData( CDmrArrayConst< Vector >( pSrcData ), pDstData, &nMat );
 				}
 				else
 				{
-					AppendData( CDmrArrayConst< Vector >( pSrcData ), CDmrArray< Vector >( pDstData ) );
+					AppendData( CDmrArrayConst< Vector >( pSrcData ), pDstData );
 				}
 				break;
 			case AT_VECTOR4_ARRAY:
-				AppendData( CDmrArrayConst< Vector4D >( pSrcData ), CDmrArray< Vector4D >( pDstData ) );
+				AppendData( CDmrArrayConst< Vector4D >( pSrcData ), pDstData );
 				break;
 			case AT_QUATERNION_ARRAY:
-				AppendData( CDmrArrayConst< Quaternion >( pSrcData ), CDmrArray< Quaternion >( pDstData ) );
+				AppendData( CDmrArrayConst< Quaternion >( pSrcData ), pDstData );
 				break;
 			case AT_COLOR_ARRAY:
-				AppendData( CDmrArrayConst< Color >( pSrcData ), CDmrArray< Color >( pDstData ) );
+				AppendData( CDmrArrayConst< Color >( pSrcData ), pDstData );
 				break;
 			default:
 				Assert( 0 );
@@ -1725,22 +1724,22 @@ void MergeDeltaState( CDmeVertexDeltaData *pSrcDelta, CDmeVertexDeltaData *pDstD
 			switch ( pSrcData->GetType() )
 			{
 			case AT_FLOAT_ARRAY:
-				AppendData( CDmrArrayConst< float >( pSrcData ), CDmrArray< float >( pDstData ) );
+				AppendData( CDmrArrayConst< float >( pSrcData ), pDstData );
 				break;
 			case AT_VECTOR2_ARRAY:
-				AppendData( CDmrArrayConst< Vector2D >( pSrcData ), CDmrArray< Vector2D >( pDstData ) );
+				AppendData( CDmrArrayConst< Vector2D >( pSrcData ), pDstData );
 				break;
 			case AT_VECTOR3_ARRAY:
-				AppendData( CDmrArrayConst< Vector >( pSrcData ), CDmrArray< Vector >( pDstData ) );
+				AppendData( CDmrArrayConst< Vector >( pSrcData ), pDstData );
 				break;
 			case AT_VECTOR4_ARRAY:
-				AppendData( CDmrArrayConst< Vector4D >( pSrcData ), CDmrArray< Vector4D >( pDstData ) );
+				AppendData( CDmrArrayConst< Vector4D >( pSrcData ), pDstData );
 				break;
 			case AT_QUATERNION_ARRAY:
-				AppendData( CDmrArrayConst< Quaternion >( pSrcData ), CDmrArray< Quaternion >( pDstData ) );
+				AppendData( CDmrArrayConst< Quaternion >( pSrcData ), pDstData );
 				break;
 			case AT_COLOR_ARRAY:
-				AppendData( CDmrArrayConst< Color >( pSrcData ), CDmrArray< Color >( pDstData ) );
+				AppendData( CDmrArrayConst< Color >( pSrcData ), pDstData );
 				break;
 			default:
 				Assert( 0 );
@@ -2261,7 +2260,7 @@ DmFileId_t CreateUniqueFileId()
 	UniqueId_t uniqueId;
 	char fileIdBuf[ MAX_PATH ];
 
-	do 
+	do
 	{
 		CreateUniqueId( &uniqueId );
 		UniqueIdToString( uniqueId, fileIdBuf, sizeof( fileIdBuf ) );
@@ -3068,7 +3067,7 @@ void CDmMeshUtils::PurgeUnreferencedDeltas( CDmeMesh *pMesh, CUtlStringMap< CDme
 {
 	// Loop because deleting changes indexing
 	bool bDeleted = false;
-	do 
+	do
 	{
 		bDeleted = false;
 		for ( int i = 0; i < pMesh->DeltaStateCount(); ++i )
@@ -3115,7 +3114,7 @@ void CDmMeshUtils::PurgeUnreferencedDeltas( CDmeMesh *pMesh, CUtlStringMap< CDme
 	} while( bDeleted );
 
 	// Loop because deleting changes indexing
-	do 
+	do
 	{
 		bDeleted = false;
 		for ( int i = 0; i < pComboOp->GetControlCount(); ++i )

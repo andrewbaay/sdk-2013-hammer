@@ -15,8 +15,8 @@
 #pragma once
 #endif
 
-#include "MapEntity.h"
-#include "ToolInterface.h"
+#include "mapentity.h"
+#include "toolinterface.h"
 
 
 class CMapView3D;
@@ -29,7 +29,7 @@ class CToolPickEntity;
 //
 enum EntityState_t
 {
-	EntityState_Select = 0,			// 
+	EntityState_Select = 0,			//
 	EntityState_Partial,			// Used for multiselect; the face is in at least one of the face lists being edited.
 	EntityState_None,				// Used for multiselect; to deselect partially selected faces. Otherwise they are removed from the list.
 };

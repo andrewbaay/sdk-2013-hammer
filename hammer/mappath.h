@@ -1,12 +1,12 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
 #pragma once
 
-#include "fgdlib/WCKeyValues.h"
+#include "fgdlib/wckeyvalues.h"
 #include "mathlib/vector.h"
 
 class BoundBox;
@@ -46,7 +46,7 @@ class CMapPath
 		CMapPath();
 		~CMapPath();
 
-		enum
+		enum : DWORD
 		{
 			ADD_START	= 0xfffffff0L,
 			ADD_END		= 0xfffffff1L
@@ -86,7 +86,7 @@ class CMapPath
 
 		// nodes + number of:
 		CUtlVector<CMapPathNode> m_Nodes;
-		
+
 		DWORD GetNewNodeID();
 
 		// name:

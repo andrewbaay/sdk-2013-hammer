@@ -11,8 +11,8 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "ToolPickEntity.h"
-#include "MapViewLogical.h"
-#include "MapView3D.h"
+#include "mapviewlogical.h"
+#include "mapview3d.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -234,19 +234,19 @@ bool CToolPickEntity::OnMouseMoveLogical(CMapViewLogical *pView, UINT nFlags, co
 void CToolPickEntity::SetEyedropperCursor(void)
 {
 	static HCURSOR hcurEyedropper = NULL;
-	
+
 	if (!hcurEyedropper)
 	{
 		hcurEyedropper = LoadCursor(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDC_EYEDROPPER));
 	}
-	
+
 	SetCursor(hcurEyedropper);
 }
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pEntity - 
+// Purpose:
+// Input  : pEntity -
 //-----------------------------------------------------------------------------
 void CToolPickEntity::CycleSelectEntity(CMapEntity *pEntity)
 {
@@ -291,8 +291,8 @@ void CToolPickEntity::CycleSelectEntity(CMapEntity *pEntity)
 
 //-----------------------------------------------------------------------------
 // Purpose: Sets the fully selected and partially selected entities for the picker.
-// Input  : EntityListFull - 
-//			EntityListPartial - 
+// Input  : EntityListFull -
+//			EntityListPartial -
 //-----------------------------------------------------------------------------
 void CToolPickEntity::SetSelectedEntities(CMapEntityList &EntityListFull, CMapEntityList &EntityListPartial)
 {
@@ -317,8 +317,8 @@ void CToolPickEntity::SetSelectedEntities(CMapEntityList &EntityListFull, CMapEn
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pEntity - 
+// Purpose:
+// Input  : pEntity -
 //-----------------------------------------------------------------------------
 int CToolPickEntity::FindEntity(CMapEntity *pEntity)
 {
@@ -419,9 +419,9 @@ void CToolPickEntity::DeselectEntity(int nIndex)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pEntity - 
-//			eState - 
+// Purpose:
+// Input  : pEntity -
+//			eState -
 //-----------------------------------------------------------------------------
 void CToolPickEntity::AddToList(CMapEntity *pEntity, EntityState_t eState)
 {
@@ -433,8 +433,8 @@ void CToolPickEntity::AddToList(CMapEntity *pEntity, EntityState_t eState)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : nIndex - 
+// Purpose:
+// Input  : nIndex -
 //-----------------------------------------------------------------------------
 void CToolPickEntity::RemoveFromList(int nIndex)
 {

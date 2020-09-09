@@ -17,13 +17,13 @@
 
 //=============================================================================
 
-#include <UtlVector.h>
-#include "MapAtom.h"
-#include "Render3D.h"
-#include "mathlib/VMatrix.h"
-#include "DispMapImageFilter.h"
+#include "utlvector.h"
+#include "mapatom.h"
+#include "render3d.h"
+#include "mathlib/vmatrix.h"
+#include "dispmapimagefilter.h"
 #include "builddisp.h"
-#include "DispManager.h"
+#include "dispmanager.h"
 
 class CChunkFile;
 class CMapClass;
@@ -37,7 +37,7 @@ class CSelection;
 struct Shoreline_t;
 struct ExportDXFInfo_s;
 
-enum ChunkFileResult_t;
+enum ChunkFileResult_t : unsigned char;
 
 // Painting Defines
 #define DISPPAINT_CHANNEL_POSITION		0
@@ -50,7 +50,7 @@ enum ChunkFileResult_t;
 //
 // Displacement Map Class
 //
-class CMapDisp : public CMapAtom
+class CMapDisp final : public CMapAtom
 {
 private:
 

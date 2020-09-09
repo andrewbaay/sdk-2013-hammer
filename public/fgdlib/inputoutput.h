@@ -9,8 +9,8 @@
 #endif
 
 
-#include <utlvector.h>
-#include "fgdlib/EntityDefs.h"
+#include "utlvector.h"
+#include "fgdlib/entitydefs.h"
 
 
 enum InputOutputType_t

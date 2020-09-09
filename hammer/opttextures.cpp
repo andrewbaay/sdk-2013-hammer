@@ -6,12 +6,11 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "GameConfig.h"
-#include "OptionProperties.h"
-#include "OPTTextures.h"
-#include "Options.h"
+#include "gameconfig.h"
+#include "optionproperties.h"
+#include "opttextures.h"
+#include "options.h"
 #include "tier1/strtools.h"
-#include <shlobj.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -47,9 +46,9 @@ void COPTTextures::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(COPTTextures, CPropertyPage)
 	//{{AFX_MSG_MAP(COPTTextures)
 	ON_WM_HSCROLL()
-	ON_BN_CLICKED( ID_MATERIALEXCLUDE_ADD, OnMaterialExcludeAdd )
-	ON_BN_CLICKED( ID_MATERIALEXCLUDE_REM, OnMaterialExcludeRemove )
-	ON_LBN_SELCHANGE(ID_MATERIALEXCLUDE_LIST, OnMaterialExcludeListSel)
+	ON_BN_CLICKED( ID_MATERIALEXCLUDE_ADD, &ThisClass::OnMaterialExcludeAdd )
+	ON_BN_CLICKED( ID_MATERIALEXCLUDE_REM, &ThisClass::OnMaterialExcludeRemove )
+	ON_LBN_SELCHANGE(ID_MATERIALEXCLUDE_LIST, &ThisClass::OnMaterialExcludeListSel)
 
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()

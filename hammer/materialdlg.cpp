@@ -1,12 +1,12 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
 #include <stdafx.h>
 #include "materialdlg.h"
-#include "FaceEditSheet.h"
+#include "faceeditsheet.h"
 #include "mapdoc.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -18,41 +18,41 @@
 //
 BEGIN_MESSAGE_MAP( CFaceSmoothingDlg, CDialog )
 	//{{AFX_MSG_MAP(CFaceSmoothingDlg)
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_1, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_2, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_3, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_4, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_5, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_6, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_7, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_8, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_9, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_10, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_11, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_12, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_13, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_14, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_15, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_16, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_17, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_18, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_19, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_20, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_21, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_22, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_23, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_24, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_25, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_26, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_27, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_28, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_29, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_30, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_31, OnButtonGroup )
-	ON_COMMAND_EX( ID_SMOOTHING_GROUP_32, OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_1, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_2, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_3, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_4, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_5, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_6, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_7, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_8, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_9, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_10, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_11, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_12, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_13, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_14, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_15, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_16, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_17, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_18, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_19, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_20, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_21, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_22, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_23, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_24, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_25, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_26, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_27, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_28, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_29, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_30, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_31, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SMOOTHING_GROUP_32, &ThisClass::OnButtonGroup )
 
 	ON_WM_CLOSE()
-	ON_WM_DESTROY()	
+	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -72,7 +72,7 @@ CFaceSmoothingDlg::~CFaceSmoothingDlg()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 BOOL CFaceSmoothingDlg::OnInitDialog( void )
 {
@@ -96,7 +96,7 @@ BOOL CFaceSmoothingDlg::OnInitDialog( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CFaceSmoothingDlg::OnClose( void )
 {
@@ -109,7 +109,7 @@ void CFaceSmoothingDlg::OnClose( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CFaceSmoothingDlg::OnDestroy( void )
 {
@@ -118,7 +118,7 @@ void CFaceSmoothingDlg::OnDestroy( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CFaceSmoothingDlg::InitButtonIDs( void )
 {
@@ -158,7 +158,7 @@ void CFaceSmoothingDlg::InitButtonIDs( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 BOOL CFaceSmoothingDlg::OnButtonGroup( UINT uCmd )
 {
@@ -201,7 +201,7 @@ BOOL CFaceSmoothingDlg::OnButtonGroup( UINT uCmd )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 UINT CFaceSmoothingDlg::GetSmoothingGroup( UINT uCmd )
 {
@@ -215,7 +215,7 @@ UINT CFaceSmoothingDlg::GetSmoothingGroup( UINT uCmd )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 int CFaceSmoothingDlg::GetActiveSmoothingGroup( void )
 {
@@ -233,7 +233,7 @@ int CFaceSmoothingDlg::GetActiveSmoothingGroup( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CFaceSmoothingDlg::UpdateControls( void )
 {
@@ -273,7 +273,7 @@ void CFaceSmoothingDlg::UpdateControls( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CFaceSmoothingDlg::CheckGroupButtons( int *pGroupCounts, int nFaceCount )
 {
@@ -284,7 +284,7 @@ void CFaceSmoothingDlg::CheckGroupButtons( int *pGroupCounts, int nFaceCount )
 		CButton *pGroupButton = ( CButton* )GetDlgItem( m_ButtonIDs[iButton] );
 		if ( !pGroupButton )
 			continue;
-		
+
 		pGroupButton->SetCheck( FALSE );
 
 		if ( pGroupCounts[iButton] == 0 )
@@ -314,38 +314,38 @@ void CFaceSmoothingDlg::CheckGroupButtons( int *pGroupCounts, int nFaceCount )
 
 BEGIN_MESSAGE_MAP( CFaceSmoothingVisualDlg, CDialog )
 	//{{AFX_MSG_MAP(CFaceSmoothingVisualDlg)
-	ON_COMMAND_EX( ID_SG_VISUAL_1, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_2, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_3, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_4, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_5, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_6, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_7, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_8, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_9, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_10, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_11, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_12, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_13, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_14, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_15, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_16, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_17, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_18, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_19, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_20, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_21, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_22, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_23, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_24, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_25, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_26, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_27, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_28, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_29, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_30, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_31, OnButtonGroup )
-	ON_COMMAND_EX( ID_SG_VISUAL_32, OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_1, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_2, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_3, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_4, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_5, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_6, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_7, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_8, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_9, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_10, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_11, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_12, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_13, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_14, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_15, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_16, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_17, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_18, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_19, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_20, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_21, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_22, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_23, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_24, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_25, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_26, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_27, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_28, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_29, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_30, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_31, &ThisClass::OnButtonGroup )
+	ON_COMMAND_EX( ID_SG_VISUAL_32, &ThisClass::OnButtonGroup )
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -365,7 +365,7 @@ CFaceSmoothingVisualDlg::~CFaceSmoothingVisualDlg()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 BOOL CFaceSmoothingVisualDlg::OnInitDialog( void )
 {
@@ -378,7 +378,7 @@ BOOL CFaceSmoothingVisualDlg::OnInitDialog( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 BOOL CFaceSmoothingVisualDlg::OnButtonGroup( UINT uCmd )
 {
@@ -396,7 +396,7 @@ BOOL CFaceSmoothingVisualDlg::OnButtonGroup( UINT uCmd )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CFaceSmoothingVisualDlg::InitButtonIDs( void )
 {
@@ -436,7 +436,7 @@ void CFaceSmoothingVisualDlg::InitButtonIDs( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 UINT CFaceSmoothingVisualDlg::GetSmoothingGroup( UINT uCmd )
 {

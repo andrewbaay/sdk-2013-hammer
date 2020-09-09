@@ -5,13 +5,13 @@
 //===========================================================================//
 
 #include "dme_controls/presetpicker.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "tier1/utlbuffer.h"
-#include "vgui/ivgui.h"
-#include "vgui_controls/button.h"
-#include "vgui_controls/listpanel.h"
-#include "vgui_controls/splitter.h"
-#include "vgui_controls/messagebox.h"
+#include "vgui/IVGui.h"
+#include "vgui_controls/Button.h"
+#include "vgui_controls/ListPanel.h"
+#include "vgui_controls/Splitter.h"
+#include "vgui_controls/MessageBox.h"
 #include "movieobjects/dmeanimationset.h"
 #include "datamodel/dmelement.h"
 #include "matsys_controls/picker.h"
@@ -29,7 +29,7 @@ static int __cdecl PresetNameSortFunc( vgui::ListPanel *pPanel, const vgui::List
 	return Q_stricmp( string1, string2 );
 }
 
-CPresetPickerFrame::CPresetPickerFrame( vgui::Panel *pParent, const char *pTitle, bool bAllowMultiSelect ) : 
+CPresetPickerFrame::CPresetPickerFrame( vgui::Panel *pParent, const char *pTitle, bool bAllowMultiSelect ) :
 	BaseClass( pParent, "PresetPickerFrame" )
 {
 	SetDeleteSelfOnClose( true );
@@ -85,7 +85,7 @@ void CPresetPickerFrame::RefreshPresetList( CDmElement *pPresetGroup, bool bSele
 		}
 
 		KeyValues *kv = new KeyValues( "node" );
-		kv->SetString( "name", pName ); 
+		kv->SetString( "name", pName );
 		SetElementKeyValue( kv, "preset", pPreset );
 
 		int nItemID = m_pPresetList->AddItem( kv, 0, false, false );

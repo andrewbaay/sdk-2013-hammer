@@ -1,15 +1,15 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
 
 #include "stdafx.h"
-#include "MapPath.h"
+#include "mappath.h"
 #include "hammer.h"
-#include "EditPathDlg.h"
-#include "MapEntity.h"
+#include "editpathdlg.h"
+#include "mapentity.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -19,7 +19,7 @@ float GetFileVersion(void);
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CMapPath::CMapPath(void)
 {
@@ -30,7 +30,7 @@ CMapPath::CMapPath(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CMapPath::~CMapPath(void)
 {
@@ -38,7 +38,7 @@ CMapPath::~CMapPath(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CMapPathNode::CMapPathNode(void)
 {
@@ -54,8 +54,8 @@ CMapPathNode::CMapPathNode(const CMapPathNode& src)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : src - 
+// Purpose:
+// Input  : src -
 // Output : CMapPathNode
 //-----------------------------------------------------------------------------
 CMapPathNode &CMapPathNode::operator=(const CMapPathNode &src)
@@ -77,9 +77,9 @@ CMapPathNode &CMapPathNode::operator=(const CMapPathNode &src)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : dwID - 
-//			piIndex - 
+// Purpose:
+// Input  : dwID -
+//			piIndex -
 // Output : CMapPathNode *
 //-----------------------------------------------------------------------------
 CMapPathNode *CMapPath::NodeForID(DWORD dwID, int* piIndex)
@@ -99,7 +99,7 @@ CMapPathNode *CMapPath::NodeForID(DWORD dwID, int* piIndex)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 // Output : DWORD
 //-----------------------------------------------------------------------------
 DWORD CMapPath::GetNewNodeID(void)
@@ -123,10 +123,10 @@ DWORD CMapPath::GetNewNodeID(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : dwAfterID - 
-//			vecPos - 
-// Output : 
+// Purpose:
+// Input  : dwAfterID -
+//			vecPos -
+// Output :
 //-----------------------------------------------------------------------------
 DWORD CMapPath::AddNode(DWORD dwAfterID, const Vector &vecPos)
 {
@@ -159,9 +159,9 @@ DWORD CMapPath::AddNode(DWORD dwAfterID, const Vector &vecPos)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : dwID - 
-//			*pt - 
+// Purpose:
+// Input  : dwID -
+//			*pt -
 //-----------------------------------------------------------------------------
 void CMapPath::SetNodePosition(DWORD dwID, Vector& pt)
 {
@@ -173,8 +173,8 @@ void CMapPath::SetNodePosition(DWORD dwID, Vector& pt)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : dwID - 
+// Purpose:
+// Input  : dwID -
 //-----------------------------------------------------------------------------
 void CMapPath::DeleteNode(DWORD dwID)
 {
@@ -187,10 +187,10 @@ void CMapPath::DeleteNode(DWORD dwID)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : iIndex - 
-//			iName - 
-//			str - 
+// Purpose:
+// Input  : iIndex -
+//			iName -
+//			str -
 //-----------------------------------------------------------------------------
 void CMapPath::GetNodeName(int iIndex, int iName, CString& str)
 {
@@ -213,7 +213,7 @@ void CMapPath::EditInfo()
 	dlg.m_strName = m_szName;
 	dlg.m_strClass = m_szClass;
 	dlg.m_iDirection = m_iDirection;
-	
+
 	if(dlg.DoModal() != IDOK)
 		return;
 
@@ -224,8 +224,8 @@ void CMapPath::EditInfo()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : dwNodeID - 
+// Purpose:
+// Input  : dwNodeID -
 // Output : CMapEntity *
 //-----------------------------------------------------------------------------
 CMapEntity *CMapPath::CreateEntityForNode(DWORD dwNodeID)
@@ -243,7 +243,7 @@ CMapEntity *CMapPath::CreateEntityForNode(DWORD dwNodeID)
 	{
 		pEntity->SetKeyValue(pNode->kv.GetKey(k), pNode->kv.GetValue(k));
 	}
-	
+
 	// store target/targetname properties:
 	CString str;
 	str.Format("%s%02d", m_szName, iIndex);
@@ -263,9 +263,9 @@ CMapEntity *CMapPath::CreateEntityForNode(DWORD dwNodeID)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : dwNodeID - 
-//			*pEntity - 
+// Purpose:
+// Input  : dwNodeID -
+//			*pEntity -
 //-----------------------------------------------------------------------------
 void CMapPath::CopyNodeFromEntity(DWORD dwNodeID, CMapEntity *pEntity)
 {
@@ -294,10 +294,10 @@ void CMapPath::CopyNodeFromEntity(DWORD dwNodeID, CMapEntity *pEntity)
 
 /*
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *szKey - 
-//			*szValue - 
-//			*pNode - 
+// Purpose:
+// Input  : *szKey -
+//			*szValue -
+//			*pNode -
 // Output : CChunkFileResult_t
 //-----------------------------------------------------------------------------
 
@@ -322,8 +322,8 @@ CChunkFileResult_t CMapPathNode::LoadKeyCallback(const char *szKey, const char *
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pFile - 
+// Purpose:
+// Input  : *pFile -
 // Output : ChunkFileResult_t
 //-----------------------------------------------------------------------------
 ChunkFileResult_t CMapPathNode::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo)
@@ -344,7 +344,7 @@ ChunkFileResult_t CMapPathNode::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo)
 	{
 		eResult = pFile->WriteKeyValue("name", node.szName);
 	}
-	
+
 	if (eResult == ChunkFile_Ok)
 	{
 		eResult = pFile->BeginChunk("keys");
@@ -382,10 +382,10 @@ ChunkFileResult_t CMapPathNode::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *szKey - 
-//			*szValue - 
-//			*pPath - 
+// Purpose:
+// Input  : *szKey -
+//			*szValue -
+//			*pPath -
 // Output : CChunkFileResult_t
 //-----------------------------------------------------------------------------
 CChunkFileResult_t CMapPath::LoadKeyCallback(const char *szKey, const char *szValue, CMapPath *pPath)
@@ -406,8 +406,8 @@ CChunkFileResult_t CMapPath::LoadKeyCallback(const char *szKey, const char *szVa
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pFile - 
+// Purpose:
+// Input  : *pFile -
 //-----------------------------------------------------------------------------
 void CMapPath::LoadVMF(CChunkFile *pFile)
 {
@@ -434,8 +434,8 @@ void CMapPath::LoadVMF(CChunkFile *pFile)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pFile - 
+// Purpose:
+// Input  : *pFile -
 //-----------------------------------------------------------------------------
 void CMapPath::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo)
 {

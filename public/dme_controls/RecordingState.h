@@ -11,7 +11,7 @@
 #endif
 
 // Animation set editor recording states
-enum RecordingState_t
+enum RecordingState_t : unsigned char
 {
 	AS_OFF = 0,
 	AS_PREVIEW,

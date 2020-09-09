@@ -10,8 +10,8 @@
 #pragma once
 
 
-#include "IEditorTexture.h"
-#include "materialsystem/IMaterial.h"
+#include "ieditortexture.h"
+#include "materialsystem/imaterial.h"
 
 class IMaterial;
 class IMaterialSystem;

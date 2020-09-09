@@ -6,8 +6,8 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "OPTGeneral.h"
-#include "Options.h"
+#include "optgeneral.h"
+#include "options.h"
 
 
 #pragma warning(disable:4244)
@@ -23,9 +23,9 @@ IMPLEMENT_DYNCREATE(COPTGeneral, CPropertyPage)
 
 BEGIN_MESSAGE_MAP(COPTGeneral, CPropertyPage)
 	//{{AFX_MSG_MAP(COPTGeneral)
-	ON_BN_CLICKED(IDC_INDEPENDENTWINDOWS, OnIndependentwindows)
-	ON_BN_CLICKED(IDC_BROWSEAUTOSAVEDIR, OnBrowseAutosaveDir)
-	ON_BN_CLICKED(IDC_ENABLEAUTOSAVE, OnEnableAutosave)
+	ON_BN_CLICKED(IDC_INDEPENDENTWINDOWS, &ThisClass::OnIndependentwindows)
+	ON_BN_CLICKED(IDC_BROWSEAUTOSAVEDIR, &ThisClass::OnBrowseAutosaveDir)
+	ON_BN_CLICKED(IDC_ENABLEAUTOSAVE, &ThisClass::OnEnableAutosave)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -281,7 +281,7 @@ void COPTGeneral::OnBrowseAutosaveDir(void)
 	m_cAutosaveDir.SetWindowText(str);
 }
 
-BOOL COPTGeneral::BrowseForFolder(char *pszTitle, char *pszDirectory)
+BOOL COPTGeneral::BrowseForFolder(const char *pszTitle, char *pszDirectory)
 {
 	char szTmp[MAX_PATH];
 

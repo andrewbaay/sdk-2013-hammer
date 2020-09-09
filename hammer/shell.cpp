@@ -6,10 +6,10 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "MainFrm.h"
-#include "MapDoc.h"
-#include "MapEntity.h"
-#include "Shell.h"
+#include "mainfrm.h"
+#include "mapdoc.h"
+#include "mapentity.h"
+#include "shell.h"
 #include "hammer.h"
 #include "filesystem_helpers.h"
 
@@ -115,8 +115,8 @@ bool CShell::CheckMapVersion(const char *pszCommand, const char *pszArguments)
 // Purpose: Verifies that the map being edited in the engine is the same name
 //			and version as the active document. This prevents problems with
 //			editing out of sync versions of the map via the engine.
-// Input  : pszCommand - 
-//			pszArguments - 
+// Input  : pszCommand -
+//			pszArguments -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CShell::DoVersionCheck(const char *pszArguments)
@@ -318,7 +318,7 @@ bool CShell::EntitySetKeyValue(const char *pszCommand, const char *pszArguments)
 				{
 					QAngle angles;
 					sscanf(szArgs[5], "%f %f %f", &angles[0], &angles[1], &angles[2]);
-					
+
 					// build a relative transform from the previous state to the current state
 					// NOTE: This only works once since solid classes destructively modify transform info (GetAngles always returns identity)
 					// NOTE: Use rotateIncremental instead!
@@ -488,7 +488,7 @@ bool CShell::NodeLinkDelete(const char *pszCommand, const char *pszArguments)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Releases all video memory 
+// Purpose: Releases all video memory
 // Input  : pszCommand - Should be "release_video_memory".
 //			pszArguments - None.
 // Output : Returns true on success, false on failure.
@@ -522,7 +522,7 @@ bool CShell::GrabVideoMemory(const char *pszCommand, const char *pszArguments)
 //-----------------------------------------------------------------------------
 bool CShell::RunCommand(const char *pszCommand)
 {
-	for (int nCommand = 0; nCommand < sizeof(m_DispatchTable) / sizeof(m_DispatchTable[0]); nCommand++)
+	for (uint nCommand = 0; nCommand < ARRAYSIZE(m_DispatchTable); nCommand++)
 	{
 		int nCommandLen = strlen(m_DispatchTable[nCommand].pszCommand);
 

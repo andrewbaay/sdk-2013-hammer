@@ -1,12 +1,12 @@
 //====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 #include "movieobjects/dmefaceset.h"
 #include "movieobjects/dmematerial.h"
 #include "tier0/dbg.h"
-#include "UtlBuffer.h"
+#include "utlbuffer.h"
 #include "datamodel/dmelementfactoryhelper.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -14,7 +14,7 @@
 
 
 //-----------------------------------------------------------------------------
-// Expose this class to the scene database 
+// Expose this class to the scene database
 //-----------------------------------------------------------------------------
 IMPLEMENT_ELEMENT_FACTORY( DmeFaceSet, CDmeFaceSet );
 

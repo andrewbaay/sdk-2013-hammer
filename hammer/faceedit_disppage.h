@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -10,7 +10,7 @@
 #pragma once
 
 #include "resource.h"
-#include "DispDlg.h"
+#include "dispdlg.h"
 
 class CMapSolid;
 class CMapFace;

@@ -26,18 +26,17 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "GlobalFunctions.h"
-#include "MapDoc.h"
-#include "MapEntity.h"
-#include "MapWorld.h"
+#include "globalfunctions.h"
+#include "mapdoc.h"
+#include "mapentity.h"
+#include "mapworld.h"
 #include "MapInstance.h"
-#include "ObjectProperties.h"
-#include "OP_Output.h"
+#include "objectproperties.h"
+#include "op_output.h"
 #include "ToolManager.h"
-#include "MainFrm.h"
+#include "mainfrm.h"
 #include "utlrbtree.h"
 #include "options.h"
-#include ".\op_output.h"
 #include "hammer.h"
 #include "custommessages.h"
 
@@ -74,22 +73,22 @@ IMPLEMENT_DYNCREATE(COP_Output, CObjectPage)
 
 BEGIN_MESSAGE_MAP(COP_Output, CObjectPage)
 	//{{AFX_MSG_MAP(COP_Output)
-	ON_BN_CLICKED(IDC_ADD,		OnAdd)
-	ON_BN_CLICKED(IDC_DELETE,	OnDelete)
-	ON_BN_CLICKED(IDC_COPY,		OnCopy)
-	ON_BN_CLICKED(IDC_PASTE,	OnPaste)
-	ON_BN_CLICKED(IDC_MARK,		OnMark)
-	ON_BN_CLICKED(IDC_PICK_ENTITY, OnPickEntity)
-	ON_BN_CLICKED(IDC_PICK_ENTITY_PARAM,	OnPickEntityParam)
-	ON_CBN_SELCHANGE(IDC_EDIT_CONN_INPUT,	OnSelChangeInput)
-	ON_CBN_EDITUPDATE(IDC_EDIT_CONN_INPUT,	OnEditUpdateInput)
-	ON_CBN_SELCHANGE(IDC_EDIT_CONN_OUTPUT,	OnSelChangeOutput)
-	ON_CBN_EDITUPDATE(IDC_EDIT_CONN_OUTPUT, OnEditUpdateOutput)
-	ON_CBN_SELCHANGE(IDC_EDIT_CONN_PARAM,	OnSelChangeParam)
-	ON_CBN_EDITUPDATE(IDC_EDIT_CONN_PARAM,	OnEditUpdateParam)
-	ON_EN_CHANGE(IDC_EDIT_CONN_DELAY,		OnEditDelay)
-	ON_BN_CLICKED(IDC_EDIT_CONN_FIRE_ONCE,	OnFireOnce)
-	ON_BN_CLICKED(IDC_SHOWHIDDENTARGETS,	OnShowHiddenTargetsAsBroken)
+	ON_BN_CLICKED(IDC_ADD,		&ThisClass::OnAdd)
+	ON_BN_CLICKED(IDC_DELETE,	&ThisClass::OnDelete)
+	ON_BN_CLICKED(IDC_COPY,		&ThisClass::OnCopy)
+	ON_BN_CLICKED(IDC_PASTE,	&ThisClass::OnPaste)
+	ON_BN_CLICKED(IDC_MARK,		&ThisClass::OnMark)
+	ON_BN_CLICKED(IDC_PICK_ENTITY, &ThisClass::OnPickEntity)
+	ON_BN_CLICKED(IDC_PICK_ENTITY_PARAM,	&ThisClass::OnPickEntityParam)
+	ON_CBN_SELCHANGE(IDC_EDIT_CONN_INPUT,	&ThisClass::OnSelChangeInput)
+	ON_CBN_EDITUPDATE(IDC_EDIT_CONN_INPUT,	&ThisClass::OnEditUpdateInput)
+	ON_CBN_SELCHANGE(IDC_EDIT_CONN_OUTPUT,	&ThisClass::OnSelChangeOutput)
+	ON_CBN_EDITUPDATE(IDC_EDIT_CONN_OUTPUT, &ThisClass::OnEditUpdateOutput)
+	ON_CBN_SELCHANGE(IDC_EDIT_CONN_PARAM,	&ThisClass::OnSelChangeParam)
+	ON_CBN_EDITUPDATE(IDC_EDIT_CONN_PARAM,	&ThisClass::OnEditUpdateParam)
+	ON_EN_CHANGE(IDC_EDIT_CONN_DELAY,		&ThisClass::OnEditDelay)
+	ON_BN_CLICKED(IDC_EDIT_CONN_FIRE_ONCE,	&ThisClass::OnFireOnce)
+	ON_BN_CLICKED(IDC_SHOWHIDDENTARGETS,	&ThisClass::OnShowHiddenTargetsAsBroken)
 	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()

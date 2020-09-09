@@ -12,6 +12,7 @@
 #endif
 
 #pragma warning(push, 1)
+#undef _tzcnt_u32
 #include <list>
 #include <stack>
 #pragma warning(pop)
@@ -174,9 +175,10 @@ public:
 class RICHED_DECL CManip
 {
 protected:
+	using BaseFuncPtr = void(*)();
 	CString m_strVal;
 	int m_nVal;
-	LPVOID m_pFunc;
+	BaseFuncPtr m_pFunc;
 	bool m_bVal;
 
 public:
@@ -189,19 +191,19 @@ public:
 		m_strVal = "";
 	}
 
-	CManip( LPVOID p, CString s )
+	CManip( BaseFuncPtr p, CString s )
 	{
 		m_pFunc = p;
 		m_strVal = s;
 	}
 
-	CManip( LPVOID p, int n )
+	CManip( BaseFuncPtr p, int n )
 	{
 		m_pFunc = p;
 		m_nVal = n;
 	}
 
-	CManip( LPVOID p, bool b )
+	CManip( BaseFuncPtr p, bool b )
 	{
 		m_pFunc = p;
 		m_bVal = b;
@@ -212,14 +214,13 @@ public:
 class RICHED_DECL CStringManip : public CManip
 {
 public:
-
-	CStringManip( RTFSM_STRINGPFUNC p, const CString& s = "" ) : CManip( static_cast<LPVOID>(p), s )
+	CStringManip( RTFSM_STRINGPFUNC p, const CString& s = "" ) : CManip( reinterpret_cast<BaseFuncPtr>(p), s )
 	{
-	};
+	}
 
 	CRTFBuilder& go( CRTFBuilder& b ) const override
 	{
-		return static_cast<RTFSM_STRINGPFUNC>(m_pFunc)( b, m_strVal );
+		return reinterpret_cast<RTFSM_STRINGPFUNC>(m_pFunc)( b, m_strVal );
 	}
 };
 
@@ -232,13 +233,13 @@ protected:
 
 public:
 
-	CControlManip( RTFSM_CONTROLPFUNC p, CRichEditCtrl& c ) : CManip( static_cast<LPVOID>(p), "" ), m_control( c )
+	CControlManip( RTFSM_CONTROLPFUNC p, CRichEditCtrl& c ) : CManip( reinterpret_cast<BaseFuncPtr>(p), "" ), m_control( c )
 	{
-	};
+	}
 
 	CRTFBuilder& go( CRTFBuilder& b ) const override
 	{
-		return static_cast<RTFSM_CONTROLPFUNC>(m_pFunc)( b, m_control );
+		return reinterpret_cast<RTFSM_CONTROLPFUNC>(m_pFunc)( b, m_control );
 	}
 };
 
@@ -247,13 +248,13 @@ class RICHED_DECL CIntManip : public CManip
 {
 public:
 
-	CIntManip( RTFSM_INTPFUNC p, int n = 0 ) : CManip( static_cast<LPVOID>(p), n )
+	CIntManip( RTFSM_INTPFUNC p, int n = 0 ) : CManip( reinterpret_cast<BaseFuncPtr>(p), n )
 	{
-	};
+	}
 
 	CRTFBuilder& go( CRTFBuilder& b ) const override
 	{
-		return static_cast<RTFSM_INTPFUNC>(m_pFunc)( b, m_nVal );
+		return reinterpret_cast<RTFSM_INTPFUNC>(m_pFunc)( b, m_nVal );
 	}
 };
 
@@ -262,13 +263,13 @@ class RICHED_DECL CBoolManip : public CManip
 {
 public:
 
-	CBoolManip( RTFSM_BOOLPFUNC p, bool b ) : CManip( static_cast<LPVOID>(p), b )
+	CBoolManip( RTFSM_BOOLPFUNC p, bool b ) : CManip( reinterpret_cast<BaseFuncPtr>(p), b )
 	{
-	};
+	}
 
 	CRTFBuilder& go( CRTFBuilder& b ) const override
 	{
-		return static_cast<RTFSM_BOOLPFUNC>(m_pFunc)( b, m_bVal );
+		return reinterpret_cast<RTFSM_BOOLPFUNC>(m_pFunc)( b, m_bVal );
 	}
 };
 

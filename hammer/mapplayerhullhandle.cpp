@@ -1,25 +1,25 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
 #include "stdafx.h"
-#include "Box3D.h"
-#include "GlobalFunctions.h"
-#include "fgdlib/HelperInfo.h"
-#include "materialsystem/IMaterialSystem.h"
-#include "MainFrm.h"			// For refreshing the object properties dialog
-#include "MapDoc.h"
-#include "MapPlayerHullHandle.h"
-#include "MapSweptPlayerHull.h"
-#include "MapView2D.h"
-#include "Material.h"
-#include "Options.h"
-#include "ObjectProperties.h"	// For refreshing the object properties dialog
-#include "Render2D.h"
-#include "Render3D.h"
-#include "StatusBarIDs.h"		// For updating status bar text
+#include "box3d.h"
+#include "globalfunctions.h"
+#include "fgdlib/helperinfo.h"
+#include "materialsystem/imaterialsystem.h"
+#include "mainfrm.h"			// for refreshing the object properties dialog
+#include "mapdoc.h"
+#include "mapplayerhullhandle.h"
+#include "mapsweptplayerhull.h"
+#include "mapview2d.h"
+#include "material.h"
+#include "options.h"
+#include "objectproperties.h"	// for refreshing the object properties dialog
+#include "render2d.h"
+#include "render3d.h"
+#include "statusbarids.h"		// For updating status bar text
 #include "ToolManager.h"
 #include "vgui/Cursor.h"
 
@@ -39,7 +39,7 @@ IMPLEMENT_MAPCLASS(CMapPlayerHullHandle);
 //-----------------------------------------------------------------------------
 CMapClass *CMapPlayerHullHandle::Create(CHelperInfo *pHelperInfo, CMapEntity *pParent)
 {
-	static char *pszDefaultKeyName = "origin";
+	constexpr const char *pszDefaultKeyName = "origin";
 
 	bool bDrawLineToParent = !stricmp(pHelperInfo->GetName(), "vecline");
 
@@ -56,9 +56,9 @@ CMapClass *CMapPlayerHullHandle::Create(CHelperInfo *pHelperInfo, CMapEntity *pP
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pfMins - 
-//			pfMaxs - 
+// Purpose:
+// Input  : pfMins -
+//			pfMaxs -
 //-----------------------------------------------------------------------------
 CMapPlayerHullHandle::CMapPlayerHullHandle(void)
 {
@@ -67,9 +67,9 @@ CMapPlayerHullHandle::CMapPlayerHullHandle(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pszKey - 
-//			bDrawLineToParent - 
+// Purpose:
+// Input  : pszKey -
+//			bDrawLineToParent -
 //-----------------------------------------------------------------------------
 CMapPlayerHullHandle::CMapPlayerHullHandle(const char *pszKey, bool bDrawLineToParent)
 {
@@ -80,7 +80,7 @@ CMapPlayerHullHandle::CMapPlayerHullHandle(const char *pszKey, bool bDrawLineToP
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CMapPlayerHullHandle::Initialize(void)
 {
@@ -95,7 +95,7 @@ void CMapPlayerHullHandle::Initialize(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CMapPlayerHullHandle::~CMapPlayerHullHandle(void)
 {
@@ -112,8 +112,8 @@ void CMapPlayerHullHandle::Attach( CMapSweptPlayerHull *pOwner )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : bFullUpdate - 
+// Purpose:
+// Input  : bFullUpdate -
 //-----------------------------------------------------------------------------
 void CMapPlayerHullHandle::CalcBounds(BOOL bFullUpdate)
 {
@@ -131,8 +131,8 @@ void CMapPlayerHullHandle::CalcBounds(BOOL bFullUpdate)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Output : 
+// Purpose:
+// Output :
 //-----------------------------------------------------------------------------
 CMapClass *CMapPlayerHullHandle::Copy(bool bUpdateDependencies)
 {
@@ -148,9 +148,9 @@ CMapClass *CMapPlayerHullHandle::Copy(bool bUpdateDependencies)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pObject - 
-// Output : 
+// Purpose:
+// Input  : pObject -
+// Output :
 //-----------------------------------------------------------------------------
 CMapClass *CMapPlayerHullHandle::CopyFrom(CMapClass *pObject, bool bUpdateDependencies)
 {
@@ -165,11 +165,11 @@ CMapClass *CMapPlayerHullHandle::CopyFrom(CMapClass *pObject, bool bUpdateDepend
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pView - 
-//			point - 
-//			nData - 
-// Output : 
+// Purpose:
+// Input  : pView -
+//			point -
+//			nData -
+// Output :
 //-----------------------------------------------------------------------------
 bool CMapPlayerHullHandle::HitTest2D(CMapView2D *pView, const Vector2D &point, HitInfo_t &HitData)
 {
@@ -191,8 +191,8 @@ bool CMapPlayerHullHandle::HitTest2D(CMapView2D *pView, const Vector2D &point, H
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pRender - 
+// Purpose:
+// Input  : pRender -
 //-----------------------------------------------------------------------------
 void CMapPlayerHullHandle::Render2D(CRender2D *pRender)
 {
@@ -217,15 +217,15 @@ void CMapPlayerHullHandle::Render2D(CRender2D *pRender)
 	pRender->PopRenderMode();
 
 	// Draw center handle.
-	
+
 	color32 rgbColor = GetRenderColor();
-	
+
 	pRender->SetDrawColor( rgbColor.r, rgbColor.g, rgbColor.b );
 
 	if (eState == SELECT_NONE)
 	{
 		pRender->SetHandleStyle( HANDLE_RADIUS, CRender::HANDLE_CROSS );
-		
+
 	}
 	else
 	{
@@ -237,8 +237,8 @@ void CMapPlayerHullHandle::Render2D(CRender2D *pRender)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pRender - 
+// Purpose:
+// Input  : pRender -
 //-----------------------------------------------------------------------------
 void CMapPlayerHullHandle::Render3D(CRender3D *pRender)
 {
@@ -273,7 +273,7 @@ void CMapPlayerHullHandle::Render3D(CRender3D *pRender)
 //-----------------------------------------------------------------------------
 // Purpose: Overridden because origin helpers don't take the color of their
 //			parent entity.
-// Input  : red, green, blue - 
+// Input  : red, green, blue -
 //-----------------------------------------------------------------------------
 void CMapPlayerHullHandle::SetRenderColor(unsigned char red, unsigned char green, unsigned char blue)
 {
@@ -283,7 +283,7 @@ void CMapPlayerHullHandle::SetRenderColor(unsigned char red, unsigned char green
 //-----------------------------------------------------------------------------
 // Purpose: Overridden because origin helpers don't take the color of their
 //			parent entity.
-// Input  : red, green, blue - 
+// Input  : red, green, blue -
 //-----------------------------------------------------------------------------
 void CMapPlayerHullHandle::SetRenderColor(color32 rgbColor)
 {
@@ -291,9 +291,9 @@ void CMapPlayerHullHandle::SetRenderColor(color32 rgbColor)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : szKey - 
-//			szValue - 
+// Purpose:
+// Input  : szKey -
+//			szValue -
 //-----------------------------------------------------------------------------
 void CMapPlayerHullHandle::OnParentKeyChanged(const char *szKey, const char *szValue)
 {
@@ -306,8 +306,8 @@ void CMapPlayerHullHandle::OnParentKeyChanged(const char *szKey, const char *szV
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : vecOrigin - 
+// Purpose:
+// Input  : vecOrigin -
 //-----------------------------------------------------------------------------
 void CMapPlayerHullHandle::UpdateOrigin(const Vector &vecOrigin)
 {
@@ -318,7 +318,7 @@ void CMapPlayerHullHandle::UpdateOrigin(const Vector &vecOrigin)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CMapPlayerHullHandle::UpdateParentKey(void)
 {
@@ -343,8 +343,8 @@ void CMapPlayerHullHandle::UpdateParentKey(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pTransBox - 
+// Purpose:
+// Input  : pTransBox -
 //-----------------------------------------------------------------------------
 void CMapPlayerHullHandle::DoTransform(const VMatrix &matrix)
 {
@@ -354,7 +354,7 @@ void CMapPlayerHullHandle::DoTransform(const VMatrix &matrix)
 
 //-----------------------------------------------------------------------------
 // Purpose: Sets the keyvalue in our parent when we are	added to the world.
-// Input  : pWorld - 
+// Input  : pWorld -
 //-----------------------------------------------------------------------------
 void CMapPlayerHullHandle::OnAddToWorld(CMapWorld *pWorld)
 {
@@ -375,7 +375,7 @@ void CMapPlayerHullHandle::OnUndoRedo(void)
 
 //-----------------------------------------------------------------------------
 // Purpose: Sets the keyvalue in our parent after the map is loaded.
-// Input  : pWorld - 
+// Input  : pWorld -
 //-----------------------------------------------------------------------------
 void CMapPlayerHullHandle::PostloadWorld(CMapWorld *pWorld)
 {

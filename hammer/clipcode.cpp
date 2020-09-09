@@ -1,14 +1,14 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
 
 
 #include "stdafx.h"
-#include "IEditorTexture.h"
-#include "MapFace.h"
+#include "ieditortexture.h"
+#include "mapface.h"
 #include "clipcode.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -87,12 +87,12 @@ void Intersect( float *one, float *two, int edge, float *out )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *vert - 
-//			vertCount - 
-//			*out - 
-//			outSize - 
-//			edge - 
+// Purpose:
+// Input  : *vert -
+//			vertCount -
+//			*out -
+//			outSize -
+//			edge -
 // Output : int
 //-----------------------------------------------------------------------------
 int SHClip( float *vert, int vertCount, float *out, int outSize, int edge )
@@ -137,7 +137,7 @@ int SHClip( float *vert, int vertCount, float *out, int outSize, int edge )
 
 		s = p;
 	}
-				
+
 	return outCount;
 }
 
@@ -145,11 +145,11 @@ int SHClip( float *vert, int vertCount, float *out, int outSize, int edge )
 #define SIN_45_DEGREES ( 0.70710678118654752440084436210485f )
 
 // The world coordinate system is right handed with Z up.
-// 
+//
 //      ^ Z
 //      |
-//      |   
-//      | 
+//      |
+//      |
 //X<----|
 //       \
 //		  \
@@ -159,21 +159,22 @@ int SHClip( float *vert, int vertCount, float *out, int outSize, int edge )
 // compute the decal basis based on surface normal, and preferred saxis
 //-----------------------------------------------------------------------------
 
-static void R_DecalComputeBasis( Vector const& surfaceNormal, Vector const* pSAxis, 
+static void R_DecalComputeBasis( Vector const& surfaceNormal, Vector const* pSAxis,
 								 bool flipNormal, Vector* textureSpaceBasis )
 {
-	// s, t, textureSpaceNormal (T cross S = textureSpaceNormal(N))
-	//   N     
-	//   \   
-	//    \     
-	//     \  
+	/*// s, t, textureSpaceNormal (T cross S = textureSpaceNormal(N))
+	//   N
+	//   \
+	//    \
+	//     \
 	//      |---->S
-	//      | 
-	//		|  
-	//      |T    
+	//      |
+	//		|
+	//      |T
 	// S = textureSpaceBasis[0]
 	// T = textureSpaceBasis[1]
 	// N = textureSpaceBasis[2]
+	*/
 
 	// Get the surface normal.
 	textureSpaceBasis[2] = surfaceNormal;
@@ -235,9 +236,9 @@ static void R_DecalComputeBasis( Vector const& surfaceNormal, Vector const* pSAx
 // Purpose: Clips a texture to a face. Used for decal application.
 // NOTE	  : HL and HL2 generate texcoords for decals differently!!!
 // Input  : pFace -
-//			pDecalTex - 
-//			org - 
-//			pOutPoints - 
+//			pDecalTex -
+//			org -
+//			pOutPoints -
 // Output : Returns the number of points places in the pOutPoints array.
 //-----------------------------------------------------------------------------
 int CreateClippedPoly(CMapFace *pFace, IEditorTexture *pDecalTex, Vector& org, vec5_t *pOutPoints, int nOutSize)
@@ -298,14 +299,14 @@ int CreateClippedPoly(CMapFace *pFace, IEditorTexture *pDecalTex, Vector& org, v
 	float decalHeight = pDecalTex->GetHeight();
 
 	Vector textureSpaceBasis[3];
-	
+
 	R_DecalComputeBasis( pFace->plane.normal, NULL,
 						 false, textureSpaceBasis );
 
 	float u = DotProduct(textureSpaceBasis[0], org);
 	float v = DotProduct(textureSpaceBasis[1], org);
 
-	// subtract the world space dist from the center of the 
+	// subtract the world space dist from the center of the
 	// decal to the origin of the decal
 	u -= decalWidth * decalScale / 2.0f;
 	v -= decalHeight * decalScale / 2.0f;

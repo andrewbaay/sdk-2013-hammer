@@ -3638,7 +3638,6 @@ int TextEntry::GetValueAsInt()
 //-----------------------------------------------------------------------------
 void TextEntry::GetText(OUT_Z_BYTECAP(bufLenInBytes) char *buf, int bufLenInBytes)
 {
-	Assert(bufLenInBytes >= sizeof(buf[0]));
 	if (m_TextStream.Count())
 	{
 		// temporarily null terminate the text stream so we can use the conversion function
@@ -3660,7 +3659,6 @@ void TextEntry::GetText(OUT_Z_BYTECAP(bufLenInBytes) char *buf, int bufLenInByte
 //-----------------------------------------------------------------------------
 void TextEntry::GetText(OUT_Z_BYTECAP(bufLenInBytes) wchar_t *wbuf, int bufLenInBytes)
 {
-	Assert(bufLenInBytes >= sizeof(wbuf[0]));
 	int len = m_TextStream.Count();
 	if (m_TextStream.Count())
 	{

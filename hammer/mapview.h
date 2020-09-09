@@ -28,7 +28,7 @@ class CToolManager;
 typedef struct HitInfo_s HitInfo_t;
 
 
-enum DrawType_t
+enum DrawType_t : signed char
 {
 	VIEW_INVALID = -1,
 	VIEW2D_XY = 0,

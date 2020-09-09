@@ -430,7 +430,7 @@ void *__cdecl operator new( size_t nSize, int nBlockUse, const char *pFileName, 
 #ifdef OSX
 void __cdecl operator delete( void *pMem ) throw()
 #else
-void __cdecl operator delete( void *pMem )
+void __cdecl operator delete( void *pMem ) noexcept
 #endif
 {
 	g_pMemAlloc->Free( pMem );
@@ -453,7 +453,7 @@ void *__cdecl operator new[] ( size_t nSize, int nBlockUse, const char *pFileNam
 #ifdef OSX
 void __cdecl operator delete[]( void *pMem ) throw()
 #else
-void __cdecl operator delete[]( void *pMem )
+void __cdecl operator delete[]( void *pMem ) noexcept
 #endif
 {
 	g_pMemAlloc->Free( pMem );
@@ -815,7 +815,7 @@ _HFILE __cdecl _CrtSetReportFile( int nRptType, _HFILE hFile )
 
 _CRT_REPORT_HOOK __cdecl _CrtSetReportHook( _CRT_REPORT_HOOK pfnNewHook )
 {
-	return ( _CRT_REPORT_HOOK )g_pMemAlloc->CrtSetReportHook( pfnNewHook );
+	return ( _CRT_REPORT_HOOK )g_pMemAlloc->CrtSetReportHook( (void*)pfnNewHook );
 }
 #endif // DEBUG
 
@@ -1722,6 +1722,7 @@ class _LocaleUpdate
 };
 
 
+#ifndef WIN32_CLANG
 #pragma warning(push)
 #pragma warning(disable: 4483)
 #if _MSC_FULL_VER >= 140050415
@@ -1780,6 +1781,7 @@ namespace _NATIVE_STARTUP_NAMESPACE
     };
 }
 #pragma warning(pop)
+#endif
 
 #endif // _MSC_VER >= 1400
 

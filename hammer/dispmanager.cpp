@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $Workfile:     $
 // $Date:         $
@@ -8,12 +8,12 @@
 //=============================================================================//
 
 #include <stdafx.h>
-#include "UtlLinkedList.h"
+#include "utllinkedlist.h"
 //#include "DispManager.h"
-#include "MapFace.h"
-#include "MapDisp.h"
-#include "DispSubdiv.h"
-#include "History.h"
+#include "mapface.h"
+#include "mapdisp.h"
+#include "dispsubdiv.h"
+#include "history.h"
 #include "tier0/minidump.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -23,7 +23,7 @@
 //
 // Global Displacement Manager
 //
-class CEditDispMgr : public IEditDispMgr
+class CEditDispMgr final : public IEditDispMgr
 {
 public: // functions
 
@@ -99,11 +99,11 @@ void CEditDispMgr::Destroy( EditDispHandle_t handle )
 		static bool bNoToAll = false;
 		if ( !bNoToAll )
 		{
-			int result = AfxMessageBox( 
+			int result = AfxMessageBox(
 				"CEditDispMgr::Destroy - invalid handle.\n"
 				"Write minidump?\n",
 				MB_YESNO );
-			
+
 			if ( result == IDYES )
 			{
 				// Generate a minidump.
@@ -149,9 +149,9 @@ public: // functions
 	CMapDisp *GetFromWorld( int iWorldList );
 	CMapDisp *GetFromWorld( EditDispHandle_t handle );
 
-	void AddToWorld( EditDispHandle_t handle );	
+	void AddToWorld( EditDispHandle_t handle );
 	void RemoveFromWorld( EditDispHandle_t handle );
-	
+
 	void FindWorldNeighbors( EditDispHandle_t handle );
 
 	// selection list functions
@@ -393,7 +393,7 @@ bool ComparePoints( const Vector& v1, const Vector& v2, float tolerance )
 		if( fabs( v1[axis] - v2[axis] ) > tolerance )
 			return false;
 	}
-	
+
 	return true;
 }
 
@@ -455,7 +455,7 @@ int CWorldEditDispMgr::GetEdgeIndex( int *edge )
 
     if( ( edge[0] == 1 && edge[1] == 2 ) || ( edge[0] == 2 && edge[1] == 1 ) )
         return 1;
-    
+
     if( ( edge[0] == 2 && edge[1] == 3 ) || ( edge[0] == 3 && edge[1] == 2 ) )
         return 2;
 
@@ -474,7 +474,7 @@ int CWorldEditDispMgr::SelectCount( void )
 	return m_SelectList.Count();
 }
 
-	
+
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
@@ -483,7 +483,7 @@ void CWorldEditDispMgr::SelectClear( void )
 	m_SelectList.RemoveAll();
 }
 
-	
+
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
@@ -491,7 +491,7 @@ CMapDisp *CWorldEditDispMgr::GetFromSelect( int iSelectList )
 {
 	// no assert because the .Element( ) takes care of that!
 	EditDispHandle_t handle = m_SelectList.Element( iSelectList );
-	return EditDispMgr()->GetDisp( handle );	
+	return EditDispMgr()->GetDisp( handle );
 }
 
 
@@ -507,7 +507,7 @@ void CWorldEditDispMgr::AddToSelect( EditDispHandle_t handle )
 		m_SelectList[ndx] = handle;
 	}
 }
-	
+
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
@@ -520,7 +520,7 @@ void CWorldEditDispMgr::RemoveFromSelect( EditDispHandle_t handle )
 	}
 }
 
-	
+
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
@@ -561,9 +561,9 @@ void CWorldEditDispMgr::CatmullClarkSubdivide( void )
 
 	// initialize the subdivision mesh
 	m_pSubdivMesh->Init();
-	
+
 	//
-	// add all of the displacements in the selection list into the 
+	// add all of the displacements in the selection list into the
 	// subdivision mesh
 	//
 	for( int ndxSelect = 0; ndxSelect < selectCount; ndxSelect++ )
@@ -671,10 +671,10 @@ void CWorldEditDispMgr::Undo( EditDispHandle_t hDisp, bool bAddNeighbors )
 					{
 						m_aKeptList.AddToTail( pNeighborObject );
 						GetHistory()->Keep( pNeighborObject );
-					}					
+					}
 				}
 			}
-			
+
 			pDisp = EditDispMgr()->GetDisp( hDisp );
 			if ( pDisp )
 			{
@@ -688,13 +688,13 @@ void CWorldEditDispMgr::Undo( EditDispHandle_t hDisp, bool bAddNeighbors )
 					if ( pDisp )
 					{
 						pDisp->GetCornerNeighbor( iNeighbor, iCorner, hNeighbor, nNeighborOrient );
-						
+
 						CMapDisp *pNeighborDisp = EditDispMgr()->GetDisp( hNeighbor );
 						if ( pNeighborDisp )
 						{
 							CMapFace *pNeighborFace = ( CMapFace* )pNeighborDisp->GetParent();
 							CMapSolid *pNeighborSolid = ( CMapSolid* )pNeighborFace->GetParent();
-							CMapClass *pNeighborObject = ( CMapClass* )pNeighborSolid;	
+							CMapClass *pNeighborObject = ( CMapClass* )pNeighborSolid;
 							if ( !IsInKeptList( pNeighborObject ) )
 							{
 								m_aKeptList.AddToTail( pNeighborObject );
@@ -703,7 +703,7 @@ void CWorldEditDispMgr::Undo( EditDispHandle_t hDisp, bool bAddNeighbors )
 						}
 					}
 				}
-			}			
+			}
 		}
 	}
 }

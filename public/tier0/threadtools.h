@@ -937,7 +937,7 @@ public:
 	//-----------------------------------------------------
 #ifdef _WIN32
 	operator HANDLE() { return GetHandle(); }
-	const HANDLE GetHandle() const { return m_hSyncObject; }
+	HANDLE GetHandle() const { return m_hSyncObject; }
 #endif
 	//-----------------------------------------------------
 	// Wait for a signal from the object

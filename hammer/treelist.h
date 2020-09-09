@@ -8,7 +8,7 @@
 #pragma once
 #endif
 
-#include "UtlVector.h"
+#include "utlvector.h"
 
 
 #define TREELIST_MSG_TOGGLE_STATE		"TreeList_ToggleState"
@@ -49,15 +49,15 @@ public:
 	void EnableChecks();
 
 	void UpdateItem(void *pItem, const char *pszText);
-	
+
 	void *GetSelectedItem();
 	int GetSelectedIndex();
-	
+
 	int GetItemCount();
 	void *GetItem(int nIndex);
 	void SetCheck(void *pItem, int nCheckState);
 	int GetCheck(void *pItem);
-	
+
 	void ExpandItem(void *pItem);
 	void CollapseItem(void *pItem);
 

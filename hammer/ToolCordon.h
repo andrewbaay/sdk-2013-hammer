@@ -15,8 +15,8 @@
 #pragma once
 
 
-#include "Box3D.h"
-#include "ToolInterface.h"
+#include "box3d.h"
+#include "toolinterface.h"
 
 
 class CChunkFile;
@@ -26,7 +26,7 @@ class CMapView2D;
 class CMapView3D;
 
 
-enum ChunkFileResult_t;
+enum ChunkFileResult_t : unsigned char;
 
 
 class Cordon3D : public Box3D
@@ -47,9 +47,9 @@ class Cordon3D : public Box3D
 		virtual bool OnMouseMove2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoint);
 		virtual bool OnKeyDown2D(CMapView2D *pView, UINT nChar, UINT nRepCnt, UINT nFlags);
 		virtual bool OnKeyDown3D(CMapView3D *pView, UINT nChar, UINT nRepCnt, UINT nFlags);
-		
+
 		virtual void RenderTool2D( CRender2D *pRender );
-		
+
 	private:
 
 		void OnDelete();

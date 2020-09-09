@@ -7,32 +7,31 @@
 
 #include "stdafx.h"
 #include <math.h>
-#include <mmsystem.h>
-#include "Camera.h"
-#include "CullTreeNode.h"
-#include "MapDoc.h"
-#include "MapEntity.h"
-#include "MapWorld.h"
-#include "Render3DMS.h"
-#include "SSolid.h"
-#include "MapStudioModel.h"
-#include "Material.h"
-#include "materialsystem/IMaterialSystem.h"
-#include "materialsystem/IMesh.h"
-#include "TextureSystem.h"
-#include "ToolInterface.h"
-#include "StudioModel.h"
+#include "camera.h"
+#include "culltreenode.h"
+#include "mapdoc.h"
+#include "mapentity.h"
+#include "mapworld.h"
+#include "render3dms.h"
+#include "ssolid.h"
+#include "mapstudiomodel.h"
+#include "material.h"
+#include "materialsystem/imaterialsystem.h"
+#include "materialsystem/imesh.h"
+#include "texturesystem.h"
+#include "toolinterface.h"
+#include "studiomodel.h"
 #include "ToolManager.h"
 #include "mapview.h"
 #include "hammer.h"
-#include "IStudioRender.h"
+#include "istudiorender.h"
 #include "materialsystem/itexture.h"
 #include "map_utils.h"
 #include "floatbitmap.h"
 #include "lpreview_thread.h"
 #include "mainfrm.h"
 #include "mathlib/halton.h"
-#include "Manifest.h"
+#include "manifest.h"
 #include "materialsystem/imaterialvar.h"
 #include "MapInstance.h"
 
@@ -1399,7 +1398,7 @@ void CRender3D::SendGBuffersToLightingThread( int nTargetWidth, int nTargetHeigh
 	static char const *rts_to_transmit[]={ "_rt_albedo","_rt_normal","_rt_position" };
 	MessageToLPreview Msg(LPREVIEW_MSG_G_BUFFERS);
 	float *pTmpData = new float[ nTargetWidth * nTargetHeight * 4 ];
-	for(int i=0; i < NELEMS( rts_to_transmit ); i++)
+	for(uint i=0; i < NELEMS( rts_to_transmit ); i++)
 	{
 		SetRenderTargetNamed(0,rts_to_transmit[i]);
 		FloatBitMap_t *fbm = new FloatBitMap_t( nTargetWidth, nTargetHeight );
@@ -1655,7 +1654,7 @@ void CRender3D::EndRenderFrame(void)
 }
 
 
-void CRender3D::PushInstanceData( CMapInstance *pInstanceClass, Vector &InstanceOrigin, QAngle &InstanceAngles )
+void CRender3D::PushInstanceData( CMapInstance *pInstanceClass, const Vector &InstanceOrigin, const QAngle &InstanceAngles )
 {
 	__super::PushInstanceData( pInstanceClass, InstanceOrigin, InstanceAngles );
 
@@ -2023,7 +2022,7 @@ void CRender3D::RenderBox(const Vector &Mins, const Vector &Maxs,
 					(eRenderModeThisPass != RENDER_MODE_LIGHT_PREVIEW2) &&
 					(eRenderModeThisPass != RENDER_MODE_LIGHT_PREVIEW_RAYTRACED) &&
 					(eRenderModeThisPass != RENDER_MODE_LIGHTMAP_GRID) );
-			if ((eRenderModeThisPass == RENDER_MODE_FLAT))
+			if (eRenderModeThisPass == RENDER_MODE_FLAT)
 			{
 				float fShade = LightPlane(Normal);
 

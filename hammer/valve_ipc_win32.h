@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -84,7 +84,8 @@ private:
 	public:
 		explicit Iterator( char *m_pMemory = NULL )
 		{
-			m_szServerName = m_pMemory ? m_pMemory : "";
+			static char empty[] = "";
+			m_szServerName = m_pMemory ? m_pMemory : empty;
 			if ( *m_szServerName )
 			{
 				memcpy( &m_uuid, m_szServerName + strlen( m_szServerName ) + 1, sizeof( UUID ) );
@@ -101,7 +102,7 @@ private:
 			return m_szServerName && *m_szServerName &&
 				memcmp( &m_uuid, &GUID_NULL, sizeof( UUID ) );
 		}
-		
+
 		Iterator Next() const
 		{
 			return IsValid() ?
@@ -151,7 +152,7 @@ public:
 	{
 		if ( IsRunning() )
 			return TRUE;
-		
+
 		if ( Register() &&
 			 Start() &&
 			 IsRunning() )
@@ -179,7 +180,7 @@ protected:
 protected:
 	char *m_szServerName;
 	RPC_CSTR m_szServerUID;
-	
+
 	HANDLE m_hMemorySegment;
 	HANDLE m_hServerAlive;
 
@@ -316,7 +317,7 @@ VALVE_IPC_IMPL BOOL CValveIpcMgr::Init( DWORD dwTimeout )
 		::CloseHandle( m_hMutex );
 		m_hMutex = NULL;
 	}
-	
+
 	// Otherwise shutdown due to an init error
 	Shutdown();
 	return FALSE;
@@ -491,7 +492,7 @@ VALVE_IPC_IMPL CValveIpcServer::CValveIpcServer( char const *szServerName )
 	m_hPipeEvent = NULL;
 	m_hThread = NULL;
 	m_bRunning = FALSE;
-	
+
 	m_pBufferRead = NULL;
 	m_cbBufferRead = 0;
 	m_pBufferWrite = NULL;
@@ -521,10 +522,10 @@ VALVE_IPC_IMPL BOOL CValveIpcServer::Register()
 	// Try registering the server
 	if ( !mgr.RegisterServer( m_szServerName, &m_szServerUID ) )
 		return FALSE;
-	
+
 	// Server got registered, duplicate memory segment handle
 	m_hMemorySegment = mgr.DuplicateMemorySegmentHandle();
-	
+
 	// create the "server alive" object
 	char chAliveName[ MAX_PATH ];
 	sprintf( chAliveName, "%s" "_ALIVE_" VALVE_IPC_PROTOCOL_VER, m_szServerUID );
@@ -644,12 +645,12 @@ VALVE_IPC_IMPL BOOL CValveIpcServer::WaitForEvent()
 		{
 		case WAIT_TIMEOUT:
 			continue;
-		
+
 		case WAIT_OBJECT_0:
 		case WAIT_ABANDONED_0:
 			::ResetEvent( m_hPipeEvent );
 			return m_bRunning;
-		
+
 		default:
 			return FALSE;
 		}
@@ -663,7 +664,7 @@ VALVE_IPC_IMPL BOOL CValveIpcServer::WaitForClient()
 	OVERLAPPED ov;
 	memset( &ov, 0, sizeof( ov ) );
 	ov.hEvent = m_hPipeEvent;
-	
+
 	BOOL bResult = ::ConnectNamedPipe( m_hServerPipe, &ov );
 	if ( bResult )	// Overlapped "ConnectNamedPipe" always returns FALSE
 		return FALSE;
@@ -729,7 +730,7 @@ VALVE_IPC_IMPL BOOL CValveIpcServer::WaitForResult()
 
 	DWORD cbWrite;
 	BOOL bWrite = ::WriteFile( m_hServerPipe, m_pBufferWrite, m_cbBufferWrite, &cbWrite, &ov );
-	
+
 	if ( bWrite &&
 		 cbWrite == m_cbBufferWrite )
 		return TRUE;
@@ -774,7 +775,7 @@ VALVE_IPC_IMPL DWORD CValveIpcServer::RunImpl()
 
 		::DisconnectNamedPipe( m_hServerPipe );
 	}
-	
+
 	m_bRunning = FALSE;
 	return FALSE;
 }
@@ -790,7 +791,7 @@ VALVE_IPC_IMPL BOOL CValveIpcServer::Start()
 
 	m_bRunning = TRUE;
 	::ResumeThread( m_hThread );
-	
+
 	return TRUE;
 }
 
@@ -856,7 +857,7 @@ VALVE_IPC_IMPL BOOL CValveIpcClient::Connect()
 	// check the "server alive" object
 	char chAliveName[ MAX_PATH ];
 	sprintf( chAliveName, "%s" "_ALIVE_" VALVE_IPC_PROTOCOL_VER, m_szServerUID );
-	
+
 	HANDLE hServerAlive = ::OpenMutex( MUTEX_ALL_ACCESS, FALSE, chAliveName );
 	if ( !hServerAlive )
 	{
@@ -886,7 +887,7 @@ VALVE_IPC_IMPL BOOL CValveIpcClient::Connect()
 		Disconnect();
 		return FALSE;
 	}
-	
+
 	DWORD dwPipeMode = PIPE_READMODE_MESSAGE;
 	SetNamedPipeHandleState( m_hClientPipe, &dwPipeMode, NULL, NULL );
 

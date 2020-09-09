@@ -7,7 +7,7 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "AutoSelCombo.h"
+#include "autoselcombo.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -16,7 +16,7 @@
 BEGIN_MESSAGE_MAP(CAutoSelComboBox, CComboBox)
 	//{{AFX_MSG_MAP(CAutoSelComboBox)
 	ON_WM_CTLCOLOR()
-	ON_CONTROL_REFLECT_EX(CBN_EDITUPDATE, OnEditUpdate)
+	ON_CONTROL_REFLECT_EX(CBN_EDITUPDATE, &ThisClass::OnEditUpdate)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -133,7 +133,7 @@ void CAutoSelComboBox::OnUpdateText(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 BOOL CAutoSelComboBox::OnEditUpdate(void)
 {
@@ -157,8 +157,8 @@ void CAutoSelComboBox::OnSetFocus(CWnd *pOldWnd)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : dwColor - 
+// Purpose:
+// Input  : dwColor -
 //-----------------------------------------------------------------------------
 void CAutoSelComboBox::SetTextColor(COLORREF dwColor)
 {

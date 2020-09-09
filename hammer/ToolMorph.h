@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -11,12 +11,12 @@
 #pragma once
 #endif
 
-#include "MapClass.h"			// dvs: For CMapObjectList
-#include "Box3D.h"
-#include "SSolid.h"
-#include "Resource.h"
-#include "ScaleVerticesDlg.h"
-#include "ToolInterface.h"
+#include "mapclass.h"			// dvs: For CMapObjectList
+#include "box3d.h"
+#include "ssolid.h"
+#include "resource.h"
+#include "scaleverticesdlg.h"
+#include "toolinterface.h"
 #include "mathlib/vector.h"
 
 
@@ -77,7 +77,7 @@ public:
 
 	inline int GetObjectCount(void);
 	inline CSSolid *GetObject(int pos);
-	
+
 	//
 	// Tool3D implementation.
 	//
@@ -113,7 +113,7 @@ private:
 
 	void OnEscape(void);
 	bool NudgeHandles(CMapView *pView, UINT nChar, bool bSnap);
-	
+
 	bool MorphHitTest(CMapView *pView, const Vector2D &vPoint, MORPHHANDLE *pInfo);
 
 	void GetHandlePos(MORPHHANDLE *pInfo, Vector& pt);
@@ -123,12 +123,12 @@ private:
 	void StartTranslation(CMapView *pView, const Vector2D &vPoint, MORPHHANDLE *pInfo );
 
 	void RenderSolid3D(CRender3D *pRender, CSSolid *pSolid);
-	
+
 	//
 	// Tool3D implementations.
 	//
 	int HitTest(CMapView *pView, const Vector2D &ptClient, bool bTestHandles = false);
-	
+
 	virtual bool UpdateTranslation( const Vector &pos, UINT uFlags );
 
 	bool StartBoxSelection( CMapView *pView, const Vector2D &vPoint, const Vector &vStart);
@@ -140,10 +140,10 @@ private:
 
 	// list of active Structured Solids:
 	CUtlVector<CSSolid*> m_StrucSolids;
-	
+
 	// list of selected nodes:
 	CUtlVector<MORPHHANDLE> m_SelectedHandles;
-	
+
 	// type of selected handles:
 	SSHANDLETYPE m_SelectedType;
 
@@ -153,7 +153,7 @@ private:
 
 	// morph bounds:
 	BoundBox m_MorphBounds;
-	
+
 	// handle mode:
 	enum
 	{

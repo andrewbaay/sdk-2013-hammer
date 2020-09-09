@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "PasteSpecialDlg.h"
+#include "pastespecialdlg.h"
 
 #pragma warning(disable:4244)
 
@@ -119,10 +119,10 @@ void CPasteSpecialDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CPasteSpecialDlg, CDialog)
 	//{{AFX_MSG_MAP(CPasteSpecialDlg)
-	ON_BN_CLICKED(IDC_GETOFFSETX, OnGetoffsetx)
-	ON_BN_CLICKED(IDC_GETOFFSETY, OnGetoffsety)
-	ON_BN_CLICKED(IDC_GETOFFSETZ, OnGetoffsetz)
-	ON_BN_CLICKED(IDC_PASTE_SPECIAL_ADD_PREFIX, OnCheckUncheckAddPrefix)
+	ON_BN_CLICKED(IDC_GETOFFSETX, &ThisClass::OnGetoffsetx)
+	ON_BN_CLICKED(IDC_GETOFFSETY, &ThisClass::OnGetoffsety)
+	ON_BN_CLICKED(IDC_GETOFFSETZ, &ThisClass::OnGetoffsetz)
+	ON_BN_CLICKED(IDC_PASTE_SPECIAL_ADD_PREFIX, &ThisClass::OnCheckUncheckAddPrefix)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 

@@ -18,7 +18,7 @@
 #include "movieobjects/dmedrawsettings.h"
 #include "dme_controls/dmepanel.h"
 #include "tier1/KeyValues.h"
-#include "vguimatsurface/IMatSystemSurface.h"
+#include "VGuiMatSurface/IMatSystemSurface.h"
 #include "tier3/tier3.h"
 #include "materialsystem/imaterialsystemhardwareconfig.h"
 #include "materialsystem/imesh.h"

@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -42,7 +42,7 @@ public:
 	void Render3D(CRender3D *pRender);
 	virtual CMapClass *Copy(bool bUpdateDependencies);
 	virtual CMapClass *CopyFrom(CMapClass *pFrom, bool bUpdateDependencies);
-	virtual void SetOrigin( Vector& pfOrigin );
+	virtual void SetOrigin( const Vector& pfOrigin );
 	virtual void GetQuatAngles( Quaternion &outQuat );
 
 	virtual void OnClone( CMapClass *pClone, CMapWorld *pWorld, const CMapObjectList &OriginalList, CMapObjectList &NewList );

@@ -12,7 +12,7 @@
 
 #include <afxtempl.h>
 #include "resource.h"
-#include "MapDoc.h"
+#include "mapdoc.h"
 
 
 //
@@ -98,7 +98,7 @@ protected:
 
 	bool m_bFilterTextChanged : 1;
 	bool m_bGotoFirstMatch: 1;
-	
+
 	DWORD m_dwFilterTime;
 
 	// Generated message map functions

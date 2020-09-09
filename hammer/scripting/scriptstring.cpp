@@ -933,7 +933,7 @@ static CScriptArray* StringSplit( const ScriptString& delim, const ScriptString&
 
 	// Find the existence of the delimiter in the input string
 	int pos = 0, prev = 0, count = 0;
-	while ( ( pos = str.Find( delim, prev ) ) != static_cast<size_t>( -1 ) )
+	while ( ( pos = str.Find( delim, prev ) ) != -1 )
 	{
 		// Add the part to the array
 		array->Resize( array->GetSize() + 1 );

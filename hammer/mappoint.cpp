@@ -1,14 +1,14 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
 
 #include "stdafx.h"
-#include "Box3D.h"
-#include "MapDefs.h" // for COORD_NOTINIT
-#include "MapPoint.h"
+#include "box3d.h"
+#include "mapdefs.h" // for COORD_NOTINIT
+#include "mappoint.h"
 #include "hammer_mathlib.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -36,15 +36,15 @@ void CMapPoint::GetOrigin(Vector &Origin) const
 //-----------------------------------------------------------------------------
 // Purpose: Sets this point's X, Y, Z coordinates.
 //-----------------------------------------------------------------------------
-void CMapPoint::SetOrigin(Vector &Origin)
+void CMapPoint::SetOrigin(const Vector &Origin)
 {
 	m_Origin = Origin;
 }
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pTransBox - 
+// Purpose:
+// Input  : pTransBox -
 //-----------------------------------------------------------------------------
 void CMapPoint::DoTransform(const VMatrix &matrix)
 {

@@ -6,21 +6,29 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "IEditorTexture.h"
-#include "MapEntity.h"
-#include "MapFace.h"
-#include "MapSolid.h"
-#include "MapWorld.h"
-#include "MapInfoDlg.h"
+#include "ieditortexture.h"
+#include "mapentity.h"
+#include "mapface.h"
+#include "mapsolid.h"
+#include "mapworld.h"
+#include "mapinfodlg.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
+
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunused-local-typedef"
+#endif
 
 BEGIN_MESSAGE_MAP(CMapInfoDlg, CDialog)
 	//{{AFX_MSG_MAP(CMapInfoDlg)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Callback for enumerating map objects while gathering statistics for

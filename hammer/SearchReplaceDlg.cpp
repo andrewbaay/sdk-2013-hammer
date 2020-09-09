@@ -6,10 +6,10 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "History.h"
-#include "GlobalFunctions.h"
-#include "MapDoc.h"
-#include "MapWorld.h"
+#include "history.h"
+#include "globalfunctions.h"
+#include "mapdoc.h"
+#include "mapworld.h"
 #include "SearchReplaceDlg.h"
 #include "hammer.h"
 #include "Selection.h"
@@ -314,9 +314,9 @@ int FindReplace(CMapEntity *pEntity, FindObject_t &FindObject, const char *pszRe
 BEGIN_MESSAGE_MAP(CSearchReplaceDlg, CDialog)
 	//{{AFX_MSG_MAP(CSearchReplaceDlg)
 	ON_WM_SHOWWINDOW()
-	ON_COMMAND_EX(IDC_FIND_NEXT, OnFindReplace)
-	ON_COMMAND_EX(IDC_REPLACE, OnFindReplace)
-	ON_COMMAND_EX(IDC_REPLACE_ALL, OnFindReplace)
+	ON_COMMAND_EX(IDC_FIND_NEXT, &ThisClass::OnFindReplace)
+	ON_COMMAND_EX(IDC_REPLACE, &ThisClass::OnFindReplace)
+	ON_COMMAND_EX(IDC_REPLACE_ALL, &ThisClass::OnFindReplace)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 

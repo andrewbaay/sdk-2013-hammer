@@ -11,13 +11,13 @@
 /////////////////////////////////////////////////////////////////////////////
 // COptionProperties
 
-#include "OPTGeneral.h"
-#include "OPTView2D.h"
-#include "OPTView3D.h"
-#include "OPTTextures.h"
-#include "OPTConfigs.h"
-#include "OPTBuild.h"
-#include "OPTColor.h"
+#include "optgeneral.h"
+#include "optview2d.h"
+#include "optview3d.h"
+#include "opttextures.h"
+#include "optconfigs.h"
+#include "optbuild.h"
+#include "optcolor.h"
 
 class COptionProperties : public CPropertySheet
 {

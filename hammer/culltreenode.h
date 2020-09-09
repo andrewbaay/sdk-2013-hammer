@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $Workfile:     $
 // $Date:         $
@@ -13,8 +13,8 @@
 
 #pragma once
 
-#include "BoundBox.h"
-#include "MapClass.h"
+#include "boundbox.h"
+#include "mapclass.h"
 
 class CCullTreeNode;
 
@@ -32,7 +32,7 @@ class CCullTreeNode : public BoundBox
 		inline CCullTreeNode *GetCullTreeChild(int nChild) { return(m_Children[nChild]); }
 
 		void AddCullTreeChild(CCullTreeNode *pChild);
-		
+
 		//
 		// Objects.
 		//

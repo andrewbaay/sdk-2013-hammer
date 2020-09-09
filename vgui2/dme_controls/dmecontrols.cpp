@@ -1,12 +1,12 @@
 //===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //===========================================================================//
 
 #include "dme_controls/dmecontrols.h"
-#include "soundemittersystem/isoundemittersystembase.h"
+#include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "matsys_controls/matsyscontrols.h"
 #include "toolframework/ienginetool.h"
 #include "vphysics_interface.h"

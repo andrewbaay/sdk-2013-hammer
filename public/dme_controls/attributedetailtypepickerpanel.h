@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -14,7 +14,7 @@
 #endif
 
 #include "dme_controls/AttributeBasePickerPanel.h"
-#include "matsys_controls/Picker.h"
+#include "matsys_controls/picker.h"
 
 
 //-----------------------------------------------------------------------------

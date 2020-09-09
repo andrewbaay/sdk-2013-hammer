@@ -7,26 +7,26 @@
 #include "datamodel/dmelementfactoryhelper.h"
 #include "materialsystem/imaterialsystem.h"
 #include "materialsystem/imesh.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 
 //-----------------------------------------------------------------------------
-// Expose this class to the scene database 
+// Expose this class to the scene database
 //-----------------------------------------------------------------------------
 IMPLEMENT_ELEMENT_FACTORY( DmeJoint, CDmeJoint );
 
 
 //-----------------------------------------------------------------------------
-// Should I draw joints? 
+// Should I draw joints?
 //-----------------------------------------------------------------------------
 bool CDmeJoint::s_bDrawJoints = false;
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CDmeJoint::OnConstruction()
 {
@@ -49,7 +49,7 @@ void CDmeJoint::OnDestruction()
 
 
 //-----------------------------------------------------------------------------
-// Activate, deactivate joint drawing 
+// Activate, deactivate joint drawing
 //-----------------------------------------------------------------------------
 void CDmeJoint::DrawJointHierarchy( bool bDrawJoints )
 {

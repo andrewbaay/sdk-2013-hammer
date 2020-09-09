@@ -21,6 +21,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+static IThreadPool* s_pThreadPool = nullptr;
+
 //-----------------------------------------------------------------------------
 // Globals
 //-----------------------------------------------------------------------------
@@ -33,6 +35,11 @@ static size_t s_DataTypeByteSize[]=
 };
 
 static fltx4 s_ZeroFields[3];
+
+void CSOAContainer::SetThreadPool( IThreadPool* pPool )
+{
+	s_pThreadPool = pPool;
+}
 
 //-----------------------------------------------------------------------------
 // Constructor, destructor
@@ -189,7 +196,7 @@ void CSOAContainer::PurgeData( void )
 		m_pDataMemory = NULL;
 	}
 
-	for( int i = 0; i < ARRAYSIZE( m_pSeparateDataMemory ); i++ )
+	for( uint i = 0; i < ARRAYSIZE( m_pSeparateDataMemory ); i++ )
 	{
 		if ( m_pSeparateDataMemory[i] )
 		{
@@ -288,7 +295,7 @@ void CSOAContainer::SetThreadMode( SOAThreadMode_t eThreadMode )
 			workList.QueueCall( this, &CSOAContainer::method, nY, nStep, 0, NumSlices(), __VA_ARGS__ ); \
 			nY += nStep;												\
 		}																\
-		workList.ParallelCallQueued();									\
+		workList.ParallelCallQueued( s_pThreadPool );					\
 	}																	\
 }
 

@@ -8,12 +8,12 @@
 
 #include <stdafx.h>
 #include <malloc.h>
-#include "FaceEditSheet.h"
-#include "MainFrm.h"
-#include "GlobalFunctions.h"
-#include "MapDisp.h"
-#include "MapFace.h"
-#include "UtlVector.h"
+#include "faceeditsheet.h"
+#include "mainfrm.h"
+#include "globalfunctions.h"
+#include "mapdisp.h"
+#include "mapface.h"
+#include "utlvector.h"
 #include "disp_tesselate.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

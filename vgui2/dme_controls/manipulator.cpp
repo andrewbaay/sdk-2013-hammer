@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2001, Valve LLC, All rights reserved. ============
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================
@@ -14,9 +14,9 @@
 
 #include "materialsystem/imaterialsystem.h"
 
-#include "vgui/ivgui.h"
-#include "vgui/iinput.h"
-#include "vgui/isystem.h"
+#include "vgui/IVGui.h"
+#include "vgui/IInput.h"
+#include "vgui/ISystem.h"
 #include "vgui/MouseCode.h"
 
 #include "mathlib/vector.h"

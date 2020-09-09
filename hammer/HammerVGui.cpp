@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "hammer.h"
-#include "hammervgui.h"
+#include "HammerVGui.h"
 #include <vgui/IVGui.h>
 #include <vgui/ISurface.h>
 #include <vgui/ISystem.h>

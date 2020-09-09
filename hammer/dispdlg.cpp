@@ -7,15 +7,15 @@
 
 #include <stdafx.h>
 #include "hammer.h"
-#include "MainFrm.h"
-#include "FaceEditSheet.h"
-#include "GlobalFunctions.h"
-#include "DispDlg.h"
-#include "MapFace.h"
-#include "MapDisp.h"
-#include "ToolDisplace.h"
+#include "mainfrm.h"
+#include "faceeditsheet.h"
+#include "globalfunctions.h"
+#include "dispdlg.h"
+#include "mapface.h"
+#include "mapdisp.h"
+#include "tooldisplace.h"
 #include "ToolManager.h"
-#include "SculptOptions.h"
+#include "sculptoptions.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -101,8 +101,8 @@ void CDispCreateDlg::OnVScroll( UINT nSBCode, UINT nPos, CScrollBar *pScrollBar 
 //
 BEGIN_MESSAGE_MAP(CDispNoiseDlg, CDialog)
 	//{{AFX_MSG_MAP(CDispNoiseDlg)
-	ON_NOTIFY( UDN_DELTAPOS, ID_DISP_NOISE_MIN_SPIN, OnSpinUpDown )
-	ON_NOTIFY( UDN_DELTAPOS, ID_DISP_NOISE_MAX_SPIN, OnSpinUpDown )
+	ON_NOTIFY( UDN_DELTAPOS, ID_DISP_NOISE_MIN_SPIN, &ThisClass::OnSpinUpDown )
+	ON_NOTIFY( UDN_DELTAPOS, ID_DISP_NOISE_MAX_SPIN, &ThisClass::OnSpinUpDown )
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -203,22 +203,22 @@ void CDispNoiseDlg::OnSpinUpDown( NMHDR *pNMHDR, LRESULT *pResult )
 //
 BEGIN_MESSAGE_MAP(CDispPaintDistDlg, CDialog)
 	//{{AFX_MSG_MAP(CDispPaintDistDlg)
-	ON_BN_CLICKED( ID_DISP_PAINT_DIST_RAISELOWER, OnEffectRaiseLowerGeo )
-	ON_BN_CLICKED( ID_DISP_PAINT_DIST_RAISETO, OnEffectRaiseToGeo )
-	ON_BN_CLICKED( ID_DISP_PAINT_DIST_SMOOTH, OnEffectSmoothGeo )
+	ON_BN_CLICKED( ID_DISP_PAINT_DIST_RAISELOWER, &ThisClass::OnEffectRaiseLowerGeo )
+	ON_BN_CLICKED( ID_DISP_PAINT_DIST_RAISETO, &ThisClass::OnEffectRaiseToGeo )
+	ON_BN_CLICKED( ID_DISP_PAINT_DIST_SMOOTH, &ThisClass::OnEffectSmoothGeo )
 
-	ON_BN_CLICKED( ID_DISPPAINT_SOFTEDGE, OnBrushTypeSoftEdge )
-	ON_BN_CLICKED( ID_DISPPAINT_HARDEDGE, OnBrushTypeHardEdge )
+	ON_BN_CLICKED( ID_DISPPAINT_SOFTEDGE, &ThisClass::OnBrushTypeSoftEdge )
+	ON_BN_CLICKED( ID_DISPPAINT_HARDEDGE, &ThisClass::OnBrushTypeHardEdge )
 
-	ON_BN_CLICKED( ID_DISP_PAINT_DIST_SPATIAL, OnCheckSpatial )
-	ON_BN_CLICKED( ID_DISP_PAINT_DIST_AUTOSEW, OnCheckAutoSew )
+	ON_BN_CLICKED( ID_DISP_PAINT_DIST_SPATIAL, &ThisClass::OnCheckSpatial )
+	ON_BN_CLICKED( ID_DISP_PAINT_DIST_AUTOSEW, &ThisClass::OnCheckAutoSew )
 
-	ON_CBN_SELCHANGE( ID_DISP_PAINT_DIST_BRUSH, OnComboBoxBrushGeo )
-	ON_CBN_SELCHANGE( ID_DISP_PAINT_DIST_AXIS, OnComboBoxAxis )
+	ON_CBN_SELCHANGE( ID_DISP_PAINT_DIST_BRUSH, &ThisClass::OnComboBoxBrushGeo )
+	ON_CBN_SELCHANGE( ID_DISP_PAINT_DIST_AXIS, &ThisClass::OnComboBoxAxis )
 
 	ON_WM_HSCROLL()
-	ON_EN_CHANGE( ID_DISP_PAINT_DIST_EDIT_DISTANCE, OnEditDistance )
-	ON_EN_CHANGE( ID_DISP_PAINT_DIST_EDIT_RADIUS, OnEditRadius )
+	ON_EN_CHANGE( ID_DISP_PAINT_DIST_EDIT_DISTANCE, &ThisClass::OnEditDistance )
+	ON_EN_CHANGE( ID_DISP_PAINT_DIST_EDIT_RADIUS, &ThisClass::OnEditRadius )
 
 	ON_WM_CLOSE()
 	ON_WM_DESTROY()
@@ -1067,12 +1067,12 @@ void CDispPaintDistDlg::OnDestroy( void )
 //
 BEGIN_MESSAGE_MAP(CPaintSculptDlg, CDialog)
 	//{{AFX_MSG_MAP(CPaintSculptDlg)
-	ON_BN_CLICKED( ID_DISP_PAINT_DIST_AUTOSEW, OnCheckAutoSew )
+	ON_BN_CLICKED( ID_DISP_PAINT_DIST_AUTOSEW, &ThisClass::OnCheckAutoSew )
 	ON_WM_CLOSE()
 	ON_WM_DESTROY()
-	ON_BN_CLICKED(IDC_SCULPT_PUSH, &CPaintSculptDlg::OnBnClickedSculptPush)
-	ON_BN_CLICKED(IDC_SCULPT_CARVE, &CPaintSculptDlg::OnBnClickedSculptCarve)
-	ON_BN_CLICKED(IDC_SCULPT_PROJECT, &CPaintSculptDlg::OnBnClickedSculptProject)
+	ON_BN_CLICKED(IDC_SCULPT_PUSH, &ThisClass::OnBnClickedSculptPush)
+	ON_BN_CLICKED(IDC_SCULPT_CARVE, &ThisClass::OnBnClickedSculptCarve)
+	ON_BN_CLICKED(IDC_SCULPT_PROJECT, &ThisClass::OnBnClickedSculptProject)
 	ON_WM_LBUTTONUP()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_MOUSEMOVE()
@@ -1400,15 +1400,15 @@ void CPaintSculptDlg::SetActiveMode(SculptMode NewMode)
 //
 BEGIN_MESSAGE_MAP(CDispPaintDataDlg, CDialog)
 	//{{AFX_MSG_MAP(CDispPaintDataDlg)
-	ON_BN_CLICKED( ID_DISP_PAINT_DATA_RAISELOWER, OnEffectRaiseLowerData )
-	ON_BN_CLICKED( ID_DISP_PAINT_DATA_RAISETO, OnEffectRaiseToData )
-	ON_BN_CLICKED( ID_DISP_PAINT_DATA_SMOOTH, OnEffectSmoothData )
+	ON_BN_CLICKED( ID_DISP_PAINT_DATA_RAISELOWER, &ThisClass::OnEffectRaiseLowerData )
+	ON_BN_CLICKED( ID_DISP_PAINT_DATA_RAISETO, &ThisClass::OnEffectRaiseToData )
+	ON_BN_CLICKED( ID_DISP_PAINT_DATA_SMOOTH, &ThisClass::OnEffectSmoothData )
 
-	ON_CBN_SELCHANGE( ID_DISP_PAINT_DATA_BRUSH, OnComboBoxBrushData )
-	ON_CBN_SELCHANGE( ID_DISP_PAINT_DATA_TYPE, OnComboBoxType )
+	ON_CBN_SELCHANGE( ID_DISP_PAINT_DATA_BRUSH, &ThisClass::OnComboBoxBrushData )
+	ON_CBN_SELCHANGE( ID_DISP_PAINT_DATA_TYPE, &ThisClass::OnComboBoxType )
 
 	ON_WM_HSCROLL()
-	ON_EN_CHANGE( ID_DISP_PAINT_DATA_EDIT_VALUE, OnEditValue )
+	ON_EN_CHANGE( ID_DISP_PAINT_DATA_EDIT_VALUE, &ThisClass::OnEditValue )
 
 	ON_WM_CLOSE()
 	ON_WM_DESTROY()

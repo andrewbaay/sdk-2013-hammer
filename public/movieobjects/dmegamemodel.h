@@ -12,7 +12,7 @@
 
 #include "movieobjects/dmedag.h"
 #include "movieobjects/dmeoperator.h"
-#include "tier1/UtlDict.h"
+#include "tier1/utldict.h"
 
 struct studiohdr_t;
 
@@ -49,7 +49,7 @@ public:
 	virtual void OnAttributeChanged( CDmAttribute *pAttribute );
 	CDmaVar< float >	m_flexWeight;
 	CDmaElement< CDmeGameModel >	m_gameModel;
-	
+
 	DmAttributeHandle_t m_ToAttributeHandle;
 
 private:

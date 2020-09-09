@@ -42,6 +42,7 @@
 // fletcherd@valvesoftware.com: Added this kludge.  We really need to stop #defining this in our code.
 #undef min
 #undef max
+#undef _tzcnt_u32
 
 #include <stddef.h>
 #ifdef _WIN32

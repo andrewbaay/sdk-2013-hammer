@@ -17,10 +17,10 @@
 #pragma once
 #endif
 
-#include "HelperInfo.h"
-#include "TokenReader.h"
-#include "GDVar.h"
-#include "InputOutput.h"
+#include "helperinfo.h"
+#include "tokenreader.h"
+#include "gdvar.h"
+#include "inputoutput.h"
 #include "mathlib/vector.h"
 
 class CHelperInfo;
@@ -102,7 +102,7 @@ class GDclass
 
 		inline const Vector &GetMins(void) { return(m_bmins); }
 		inline const Vector &GetMaxs(void) { return(m_bmaxs); }
-		
+
 		BOOL GetBoundBox(Vector& pfMins, Vector& pfMaxs);
 		bool HasBoundBox() const { return m_bGotSize; }
 
@@ -227,8 +227,8 @@ const char *GDclass::GetDescription(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pszClass - 
+// Purpose:
+// Input  : pszClass -
 //-----------------------------------------------------------------------------
 bool GDclass::IsClass(const char *pszClass)
 {

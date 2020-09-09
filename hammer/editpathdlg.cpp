@@ -1,14 +1,14 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "EditPathDlg.h"
-#include "GameConfig.h"
-#include "fgdlib/GameData.h"
+#include "editpathdlg.h"
+#include "gameconfig.h"
+#include "fgdlib/gamedata.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -37,13 +37,21 @@ void CEditPathDlg::DoDataExchange(CDataExchange* pDX)
 }
 
 
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunused-local-typedef"
+#endif
+
 BEGIN_MESSAGE_MAP(CEditPathDlg, CDialog)
 	//{{AFX_MSG_MAP(CEditPathDlg)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 
-BOOL CEditPathDlg::OnInitDialog() 
+BOOL CEditPathDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 

@@ -14,8 +14,8 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "Prefabs.h"
-#include "Prefab3D.h"
+#include "prefabs.h"
+#include "prefab3d.h"
 #include "hammer.h"
 #include "filesystem.h"
 
@@ -28,8 +28,8 @@ CPrefabLibraryList CPrefabLibrary::PrefabLibraryList;
 
 //-----------------------------------------------------------------------------
 // Purpose: Creates a prefab library from a given path.
-// Input  : szFile - 
-// Output : 
+// Input  : szFile -
+// Output :
 //-----------------------------------------------------------------------------
 CPrefabLibrary *CreatePrefabLibrary(const char *szFile)
 {
@@ -46,7 +46,7 @@ CPrefabLibrary *CreatePrefabLibrary(const char *szFile)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CPrefab::CPrefab()
 {
@@ -61,7 +61,7 @@ CPrefab::CPrefab()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CPrefab::~CPrefab()
 {
@@ -72,8 +72,8 @@ CPrefab::~CPrefab()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : dwID - 
+// Purpose:
+// Input  : dwID -
 // Output : CPrefab *
 //-----------------------------------------------------------------------------
 CPrefab * CPrefab::FindID(DWORD dwID)
@@ -91,7 +91,7 @@ CPrefab * CPrefab::FindID(DWORD dwID)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CPrefab::FreeAllData()
 {
@@ -106,7 +106,7 @@ void CPrefab::FreeAllData()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CPrefabLibrary::CPrefabLibrary()
 {
@@ -119,7 +119,7 @@ CPrefabLibrary::CPrefabLibrary()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CPrefabLibrary::~CPrefabLibrary()
 {
@@ -128,7 +128,7 @@ CPrefabLibrary::~CPrefabLibrary()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CPrefabLibrary::FreePrefabs()
 {
@@ -143,8 +143,8 @@ void CPrefabLibrary::FreePrefabs()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pszFilename - 
+// Purpose:
+// Input  : pszFilename -
 //-----------------------------------------------------------------------------
 void CPrefabLibrary::SetNameFromFilename(LPCTSTR pszFilename)
 {
@@ -238,8 +238,8 @@ void CPrefabLibrary::LoadAllLibraries()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pPrefab - 
+// Purpose:
+// Input  : *pPrefab -
 //-----------------------------------------------------------------------------
 void CPrefabLibrary::Add(CPrefab *pPrefab)
 {
@@ -250,8 +250,8 @@ void CPrefabLibrary::Add(CPrefab *pPrefab)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pPrefab - 
+// Purpose:
+// Input  : *pPrefab -
 //-----------------------------------------------------------------------------
 void CPrefabLibrary::Remove(CPrefab *pPrefab)
 {
@@ -264,8 +264,8 @@ void CPrefabLibrary::Remove(CPrefab *pPrefab)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &p - 
+// Purpose:
+// Input  : &p -
 // Output : CPrefab *
 //-----------------------------------------------------------------------------
 CPrefab * CPrefabLibrary::EnumPrefabs(POSITION &p)
@@ -279,8 +279,8 @@ CPrefab * CPrefabLibrary::EnumPrefabs(POSITION &p)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : dwID - 
+// Purpose:
+// Input  : dwID -
 // Output : CPrefabLibrary *
 //-----------------------------------------------------------------------------
 CPrefabLibrary * CPrefabLibrary::FindID(DWORD dwID)
@@ -298,9 +298,9 @@ CPrefabLibrary * CPrefabLibrary::FindID(DWORD dwID)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pszFilename - 
-// Output : 
+// Purpose:
+// Input  : pszFilename -
+// Output :
 //-----------------------------------------------------------------------------
 CPrefabLibrary *CPrefabLibrary::FindOpenLibrary(LPCTSTR pszFilename)
 {
@@ -339,7 +339,7 @@ CPrefabLibrary *CPrefabLibrary::EnumLibraries(POSITION &p)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CPrefabLibraryVMF::CPrefabLibraryVMF(): m_szFolderName{'\0'}
 {
@@ -347,7 +347,7 @@ CPrefabLibraryVMF::CPrefabLibraryVMF(): m_szFolderName{'\0'}
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CPrefabLibraryVMF::~CPrefabLibraryVMF()
 {
@@ -365,8 +365,8 @@ bool CPrefabLibraryVMF::IsFile(const char *szFilename)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pszFilename - 
+// Purpose:
+// Input  : pszFilename -
 // Output : int
 //-----------------------------------------------------------------------------
 int CPrefabLibraryVMF::Load(LPCTSTR pszFilename)
@@ -418,7 +418,7 @@ int CPrefabLibraryVMF::Load(LPCTSTR pszFilename)
 
 //-----------------------------------------------------------------------------
 // Purpose: Set's the library's name by renaming the folder.
-// Input  : pszName - 
+// Input  : pszName -
 // Output : Returns zero on error, nonzero on success.
 //-----------------------------------------------------------------------------
 int CPrefabLibraryVMF::SetName(LPCTSTR pszName)

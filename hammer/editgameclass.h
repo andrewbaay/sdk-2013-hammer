@@ -8,10 +8,10 @@
 #define EDITGAMECLASS_H
 #pragma once
 
-#include "BlockArray.h"
+#include "blockarray.h"
 #include "fgdlib/fgdlib.h"
-#include "fgdlib/WCKeyValues.h"
-#include "EntityConnection.h"
+#include "fgdlib/wckeyvalues.h"
+#include "entityconnection.h"
 
 
 #undef GetClassName
@@ -24,7 +24,7 @@ class CMapClass;
 class CSaveInfo;
 
 
-enum ChunkFileResult_t;
+enum ChunkFileResult_t : unsigned char;
 
 
 //-----------------------------------------------------------------------------

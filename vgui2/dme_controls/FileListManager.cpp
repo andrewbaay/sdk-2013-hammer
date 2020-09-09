@@ -1,26 +1,26 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
 //=============================================================================//
 
-#include "dme_controls/filelistmanager.h"
+#include "dme_controls/FileListManager.h"
 #include "vgui_controls/FileOpenDialog.h"
-#include "vgui_controls/menu.h"
-#include "vgui_controls/messagebox.h"
+#include "vgui_controls/Menu.h"
+#include "vgui_controls/MessageBox.h"
 #include "datamodel/idatamodel.h"
 #include "datamodel/dmelement.h"
 #include "vgui/ISurface.h"
 #include <vgui/IInput.h>
-#include "vgui/mousecode.h"
+#include "vgui/MouseCode.h"
 #include "tier1/strtools.h"
 #include "tier1/KeyValues.h"
 #include "tier2/tier2.h"
 #include "p4lib/ip4.h"
 #include "filesystem.h"
-#include "dme_controls/INotifyUI.h"
+#include "dme_controls/inotifyui.h"
 #include <datamodel/dmattribute.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -573,7 +573,7 @@ void CFileListManager::OnCommand( const char *cmd )
 
 //-----------------------------------------------------------------------------
 //
-// CFileManagerFrame methods 
+// CFileManagerFrame methods
 //
 //-----------------------------------------------------------------------------
 CFileManagerFrame::CFileManagerFrame( vgui::Panel *parent ) : BaseClass( parent, "FileManagerFrame" )

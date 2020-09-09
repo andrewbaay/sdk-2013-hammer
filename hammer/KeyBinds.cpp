@@ -4,7 +4,7 @@
 #include "filesystem.h"
 #include "KeyValues.h"
 #include "fmtstr.h"
-#include "MapView3D.h"
+#include "mapview3d.h"
 
 #undef GetCurrentTime
 
@@ -1329,7 +1329,7 @@ void CKeybindEditor::SaveLoadSettings( bool bSave )
 	if ( bSave )
 	{
 		GetWindowRect( rect );
-		str.Format( "%d %d %d %d", rect.left, rect.top, rect.right, rect.bottom );
+		str.Format( "%ld %ld %ld %ld", rect.left, rect.top, rect.right, rect.bottom );
 		pApp->WriteProfileString( pszIniSection, "Position", str );
 	}
 	else
@@ -1337,7 +1337,7 @@ void CKeybindEditor::SaveLoadSettings( bool bSave )
 		str = pApp->GetProfileString( pszIniSection, "Position" );
 		if ( !str.IsEmpty() )
 		{
-			sscanf( str, "%d %d %d %d", &rect.left, &rect.top, &rect.right, &rect.bottom );
+			sscanf( str, "%ld %ld %ld %ld", &rect.left, &rect.top, &rect.right, &rect.bottom );
 			MoveWindow( rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, FALSE );
 			Resize();
 		}

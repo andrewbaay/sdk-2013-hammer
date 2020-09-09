@@ -7,9 +7,9 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "AngleBox.h"
+#include "anglebox.h"
 #include "hammer_mathlib.h"
-#include "CustomMessages.h"
+#include "custommessages.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -475,8 +475,8 @@ void CAngleBox::UpdateAngleEditText(void)
 
 BEGIN_MESSAGE_MAP(CAngleCombo, CWnd)
 	//{{AFX_MSG_MAP(CAngleBox)
-	ON_CONTROL_REFLECT(CBN_EDITCHANGE, OnChangeAngleEdit)
-	ON_CONTROL_REFLECT(CBN_SELENDOK, OnSelChangeAngleEdit)
+	ON_CONTROL_REFLECT(CBN_EDITCHANGE, &ThisClass::OnChangeAngleEdit)
+	ON_CONTROL_REFLECT(CBN_SELENDOK, &ThisClass::OnSelChangeAngleEdit)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 

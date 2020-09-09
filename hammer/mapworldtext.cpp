@@ -2,20 +2,20 @@
 
 #include "stdafx.h"
 #include "hammer_mathlib.h"
-#include "Box3D.h"
-#include "BSPFile.h"
+#include "box3d.h"
+#include "bspfile.h"
 #include "const.h"
-#include "MapDefs.h"		// dvs: For COORD_NOTINIT
-#include "MapDoc.h"
-#include "MapEntity.h"
+#include "mapdefs.h"		// dvs: For COORD_NOTINIT
+#include "mapdoc.h"
+#include "mapentity.h"
 #include "mapworldtext.h"
-#include "Render2D.h"
-#include "Render3D.h"
+#include "render2d.h"
+#include "render3d.h"
 #include "hammer.h"
-#include "TextureSystem.h"
-#include "materialsystem/IMesh.h"
-#include "Material.h"
-#include "Options.h"
+#include "texturesystem.h"
+#include "materialsystem/imesh.h"
+#include "material.h"
+#include "options.h"
 #include "camera.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

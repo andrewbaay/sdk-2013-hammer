@@ -11,7 +11,7 @@
 #pragma once
 
 
-#include "ChunkFile.h"
+#include "chunkfile.h"
 
 
 class CMapClass;
@@ -42,8 +42,8 @@ CSaveInfo::CSaveInfo(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : bVisiblesOnly - 
+// Purpose:
+// Input  : bVisiblesOnly -
 //-----------------------------------------------------------------------------
 void CSaveInfo::SetVisiblesOnly(bool bVisiblesOnly)
 {

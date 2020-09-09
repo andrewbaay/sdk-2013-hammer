@@ -99,10 +99,10 @@ enum JobPriority_t
 	JP_HIGH
 };
 
-#define TP_MAX_POOL_THREADS	64U
+#define TP_MAX_POOL_THREADS	64
 struct ThreadPoolStartParams_t
 {
-	ThreadPoolStartParams_t( bool bIOThreads = false, unsigned nThreads = -1, int* pAffinities = nullptr, ThreeState_t fDistribute = TRS_NONE, unsigned nStackSize = -1, int iThreadPriority = SHRT_MIN )
+	ThreadPoolStartParams_t( bool bIOThreads = false, int nThreads = -1, int* pAffinities = nullptr, ThreeState_t fDistribute = TRS_NONE, unsigned nStackSize = -1, int iThreadPriority = SHRT_MIN )
 		: bIOThreads( bIOThreads ), nThreads( nThreads ), fDistribute( fDistribute ), nStackSize( nStackSize ), iThreadPriority( iThreadPriority ), nThreadsMax( -1 )
 	{
 		bExecOnThreadPoolThreadsOnly = false;
@@ -112,7 +112,7 @@ struct ThreadPoolStartParams_t
 		{
 			// user supplied an optional 1:1 affinity mapping to override normal distribute behavior
 			nThreads = MIN( TP_MAX_POOL_THREADS, nThreads );
-			for ( unsigned int i = 0; i < nThreads; i++ )
+			for ( int i = 0; i < nThreads; i++ )
 			{
 				iAffinityTable[i] = pAffinities[i];
 			}
@@ -453,8 +453,8 @@ public:
 	//-----------------------------------------------------
 	// Thread event support (safe for NULL this to simplify code )
 	//-----------------------------------------------------
-	bool WaitForFinish( uint32 dwTimeout = TT_INFINITE ) { if (!this) return true; return ( !IsFinished() ) ? g_pThreadPool->YieldWait( this, dwTimeout ) : true; }
-	bool WaitForFinishAndRelease( uint32 dwTimeout = TT_INFINITE ) { if (!this) return true; bool bResult = WaitForFinish( dwTimeout); Release(); return bResult; }
+	bool WaitForFinish( uint32 dwTimeout = TT_INFINITE ) { return !IsFinished() ? g_pThreadPool->YieldWait( this, dwTimeout ) : true; }
+	bool WaitForFinishAndRelease( uint32 dwTimeout = TT_INFINITE ) { bool bResult = WaitForFinish( dwTimeout); Release(); return bResult; }
 	CThreadEvent* AccessEvent()						{ return &m_CompleteEvent; }
 
 	//-----------------------------------------------------

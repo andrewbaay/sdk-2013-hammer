@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -14,11 +14,11 @@
 
 //=============================================================================
 
-#include "ToolInterface.h"
-#include "MapDisp.h"
-#include "DispMapImageFilter.h"
-#include "MapFace.h"
-#include "DispPaint.h"
+#include "toolinterface.h"
+#include "mapdisp.h"
+#include "dispmapimagefilter.h"
+#include "mapface.h"
+#include "disppaint.h"
 
 class CMapView3D;
 
@@ -149,7 +149,7 @@ protected:
 	void HandleTagging( CMapView3D *pView, const Vector2D &vPoint );
 	void HandleTaggingRemove( CMapDisp *pDisp, int nTriIndex );
 	void HandleTaggingReset( CMapView3D *pView, const Vector2D &vPoint );
-		
+
 private:
 
 	void AddFiltersToManagers( void );
@@ -168,7 +168,7 @@ private:
 
 	void RenderPaintSphere( CRender3D *pRender );
 	void RenderHitBox( CRender3D *pRender );
-	
+
 protected:
 
     unsigned int				m_uiTool;               // active displacement tool

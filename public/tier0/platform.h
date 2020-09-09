@@ -159,6 +159,10 @@
 typedef unsigned char uint8;
 typedef signed char int8;
 
+#if defined(WIN32) && defined(COMPILER_CLANG)
+#define WIN32_CLANG 1
+#endif
+
 #if defined( _WIN32 )
 
 	typedef __int16					int16;
@@ -999,7 +1003,7 @@ inline T QWordSwapC( T dw )
 		return output;
 	}
 
-#elif defined( _MSC_VER ) && !defined( PLATFORM_WINDOWS_PC64 )
+#elif defined( _MSC_VER ) && !defined( PLATFORM_WINDOWS_PC64 ) && !defined(WIN32_CLANG)
 
 	#define WordSwap  WordSwapAsm
 	#define DWordSwap DWordSwapAsm

@@ -21,9 +21,10 @@
 
 #include "angelscript.h"
 
+#include "robin_hood.h"
+#undef _tzcnt_u32
 #include <string>
 #include <vector>
-#include "robin_hood.h"
 
 BEGIN_AS_NAMESPACE
 

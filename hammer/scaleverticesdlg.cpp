@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -10,9 +10,9 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "ScaleVerticesDlg.h"
-#include "MapDoc.h"
-#include "GlobalFunctions.h"
+#include "scaleverticesdlg.h"
+#include "mapdoc.h"
+#include "globalfunctions.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -41,8 +41,8 @@ void CScaleVerticesDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CScaleVerticesDlg, CDialog)
 	//{{AFX_MSG_MAP(CScaleVerticesDlg)
-	ON_EN_CHANGE(IDC_SCALE, OnChangeScale)
-	ON_NOTIFY(UDN_DELTAPOS, IDC_SCALESPIN, OnDeltaposScalespin)
+	ON_EN_CHANGE(IDC_SCALE, &ThisClass::OnChangeScale)
+	ON_NOTIFY(UDN_DELTAPOS, IDC_SCALESPIN, &ThisClass::OnDeltaposScalespin)
 	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
@@ -50,7 +50,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CScaleVerticesDlg message handlers
 
-void CScaleVerticesDlg::OnChangeScale() 
+void CScaleVerticesDlg::OnChangeScale()
 {
 	CString str;
 	m_cScale.GetWindowText(str);
@@ -65,7 +65,7 @@ void CScaleVerticesDlg::OnChangeScale()
 	CMapDoc::GetActiveMapDoc()->OnCmdMsg(ID_VSCALE_CHANGED, CN_COMMAND, NULL, NULL);
 }
 
-void CScaleVerticesDlg::OnDeltaposScalespin(NMHDR* pNMHDR, LRESULT* pResult) 
+void CScaleVerticesDlg::OnDeltaposScalespin(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
 
@@ -81,7 +81,7 @@ void CScaleVerticesDlg::OnDeltaposScalespin(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
-BOOL CScaleVerticesDlg::OnInitDialog() 
+BOOL CScaleVerticesDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
@@ -91,7 +91,7 @@ BOOL CScaleVerticesDlg::OnInitDialog()
 	return TRUE;
 }
 
-void CScaleVerticesDlg::OnClose() 
+void CScaleVerticesDlg::OnClose()
 {
 	CDialog::OnClose();
 }

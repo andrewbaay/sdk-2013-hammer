@@ -1,13 +1,13 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
 #include "dme_controls/AssetBuilder.h"
-#include "dme_controls/DmePanel.h"
+#include "dme_controls/dmepanel.h"
 #include "dme_controls/dmecontrols_utils.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "vgui_controls/ListPanel.h"
 #include "vgui_controls/MenuButton.h"
 #include "vgui_controls/TextEntry.h"
@@ -18,14 +18,14 @@
 #include "vgui_controls/FileOpenStateMachine.h"
 #include "vgui_controls/PropertySheet.h"
 #include "vgui_controls/PropertyPage.h"
-#include "vgui/ischeme.h"
-#include "vgui/ivgui.h"
-#include "vgui/isurface.h"
+#include "vgui/IScheme.h"
+#include "vgui/IVGui.h"
+#include "vgui/ISurface.h"
 #include "tier1/tier1.h"
 #include "movieobjects/dmemakefile.h"
 #include "matsys_controls/picker.h"
 #include "tier2/fileutils.h"
-#include "vgui/keycode.h"
+#include "vgui/KeyCode.h"
 #include "filesystem.h"
 #include "movieobjects/idmemakefileutils.h"
 #include "tier3/tier3.h"
@@ -73,7 +73,7 @@ private:
 //-----------------------------------------------------------------------------
 CCompileStatusBar::CCompileStatusBar( vgui::Panel *pParent, const char *pPanelName ) :
 	BaseClass( pParent, pPanelName )
-{ 
+{
 	m_pStatus = new vgui::Label( this, "StatusLabel", "" );
 	m_pStatus->SetAutoResize( PIN_TOPLEFT, AUTORESIZE_DOWNANDRIGHT, 0, 0, 0, 0 );
 	m_pStatus->SetContentAlignment( vgui::Label::a_center );
@@ -83,7 +83,7 @@ CCompileStatusBar::CCompileStatusBar( vgui::Panel *pParent, const char *pPanelNa
 	m_CompilingId = vgui::surface()->DrawGetTextureId( "vgui/progressbar" );
 	if ( m_CompilingId == -1 ) // we didn't find it, so create a new one
 	{
-		m_CompilingId = vgui::surface()->CreateNewTextureID();	
+		m_CompilingId = vgui::surface()->CreateNewTextureID();
 	}
 	vgui::surface()->DrawSetTextureFile( m_CompilingId, "vgui/progressbar", true, false );
 }
@@ -124,7 +124,7 @@ void CCompileStatusBar::PaintBackground()
 		break;
 
 	case CURRENTLY_COMPILING:
-		{ 
+		{
 			float du = Plat_FloatTime() / 5.0f;
 		    du -= (int)du;
 			du = 1.0f - du;
@@ -174,7 +174,7 @@ void BuildAssetTypeList( )
 	int hFactory = g_pDataModel->GetFirstFactory();
 	while ( g_pDataModel->IsValidFactory( hFactory ) )
 	{
-		// Add all DmeElements that inherit from DmeMakefile 
+		// Add all DmeElements that inherit from DmeMakefile
 		const char *pFactoryName = g_pDataModel->GetFactoryName( hFactory );
 		CDmElement *pElement = GetElement< CDmElement >( g_pDataModel->CreateElement( pFactoryName, "temp" ) );
 		CDmeMakefile *pMakeFile = CastElement<CDmeMakefile>( pElement );
@@ -206,7 +206,7 @@ static PickerList_t &BuildAssetSubTypeList( const char **ppSubTypes, PickerList_
 	int nCount = s_AssetTypes.Count();
 	for ( int i = 0; i < nCount; ++i )
 	{
-		// Add all DmeElements that inherit from DmeMakefile 
+		// Add all DmeElements that inherit from DmeMakefile
 		CDmElement *pElement = GetElement< CDmElement >( g_pDataModel->CreateElement( s_AssetTypes[i].m_pChoiceValue, "temp" ) );
 		CDmeMakefile *pMakeFile = CastElement< CDmeMakefile >( pElement );
 
@@ -239,14 +239,14 @@ static void OverwriteFileDialog( vgui::Panel *pActionTarget, const char *pFileNa
 	}
 
 	char pBuf[1024];
-	Q_snprintf( pBuf, sizeof(pBuf), "File already exists. Overwrite it?\n\n\"%s\"\n", pFileName ); 
+	Q_snprintf( pBuf, sizeof(pBuf), "File already exists. Overwrite it?\n\n\"%s\"\n", pFileName );
 	vgui::MessageBox *pMessageBox = new vgui::MessageBox( "Overwrite Existing File?", pBuf, pActionTarget );
 	pMessageBox->AddActionSignalTarget( pActionTarget );
 	pMessageBox->SetOKButtonVisible( true );
 	pMessageBox->SetOKButtonText( "Yes" );
 	pMessageBox->SetCancelButtonVisible( true );
 	pMessageBox->SetCancelButtonText( "No" );
-	pMessageBox->SetCloseButtonVisible( false ); 
+	pMessageBox->SetCloseButtonVisible( false );
 	pMessageBox->SetCommand( pOkCommand );
 	pMessageBox->DoModal();
 }
@@ -255,7 +255,7 @@ static void OverwriteFileDialog( vgui::Panel *pActionTarget, const char *pFileNa
 //-----------------------------------------------------------------------------
 // Utility to load a makefile
 //-----------------------------------------------------------------------------
-static CDmeMakefile *ReadMakefile( const char *pFileName, CDmElement **ppRoot = NULL ) 
+static CDmeMakefile *ReadMakefile( const char *pFileName, CDmElement **ppRoot = NULL )
 {
 	if ( ppRoot )
 	{
@@ -263,7 +263,7 @@ static CDmeMakefile *ReadMakefile( const char *pFileName, CDmElement **ppRoot = 
 	}
 
 	CDmElement *pRoot;
-	DmFileId_t fileid = g_pDataModel->RestoreFromFile( pFileName, NULL, NULL, &pRoot, CR_DELETE_OLD ); 
+	DmFileId_t fileid = g_pDataModel->RestoreFromFile( pFileName, NULL, NULL, &pRoot, CR_DELETE_OLD );
 	if ( fileid == DMFILEID_INVALID || !pRoot )
 	{
 		Warning( "Unable to read makefile \"%s\"!\n", pFileName );
@@ -341,7 +341,7 @@ static int __cdecl FileSortFunc( vgui::ListPanel *pPanel, const ListPanelItem &i
 //-----------------------------------------------------------------------------
 // Purpose: Constructor, destructor
 //-----------------------------------------------------------------------------
-CAssetBuilder::CAssetBuilder( vgui::Panel *pParent, const char *pPanelName ) : 
+CAssetBuilder::CAssetBuilder( vgui::Panel *pParent, const char *pPanelName ) :
 	BaseClass( pParent, pPanelName )
 {
 	m_hContextMenu = NULL;
@@ -562,8 +562,8 @@ void CAssetBuilder::SetCurrentMakefile( CDmeMakefile *pMakeFile )
 	// Lets the asset builder update the title bar
 	PostActionSignal( new KeyValues( "UpdateFileName" ) );
 }
- 
-	
+
+
 //-----------------------------------------------------------------------------
 // Hook into the DME panel framework
 //-----------------------------------------------------------------------------
@@ -660,7 +660,7 @@ void CAssetBuilder::SelectSource( CDmeSource *pSource )
 void CAssetBuilder::OnPicked( KeyValues *kv )
 {
 	const char *pValue = kv->GetString( "choice" );
-	
+
 	KeyValues *pContextKeys = kv->FindKey( "OnAddSource" );
 	if ( pContextKeys )
 	{
@@ -1349,7 +1349,7 @@ void CAssetBuilder::OnCompile( )
 	OnAbortCompile();
 
 	m_pCompileOutput->SetText( "" );
-	g_pDmeMakefileUtils->PerformCompile( m_hMakefile, false ); 
+	g_pDmeMakefileUtils->PerformCompile( m_hMakefile, false );
 	m_bIsCompiling = true;
 	m_pAbortCompile->SetEnabled( true );
 	m_pCompileStatusBar->SetStatus( CCompileStatusBar::CURRENTLY_COMPILING, "Compiling..." );
@@ -1369,7 +1369,7 @@ void CAssetBuilder::OnPublish( )
 	OnAbortCompile();
 
 	m_pCompileOutput->SetText( "" );
-	g_pDmeMakefileUtils->PerformCompile( m_hMakefile, false ); 
+	g_pDmeMakefileUtils->PerformCompile( m_hMakefile, false );
 	m_bIsCompiling = true;
 	m_pAbortCompile->SetEnabled( true );
 	m_pCompileStatusBar->SetStatus( CCompileStatusBar::CURRENTLY_COMPILING, "Compiling..." );
@@ -1381,7 +1381,7 @@ void CAssetBuilder::OnPublish( )
 //-----------------------------------------------------------------------------
 // Purpose: Constructor, destructor
 //-----------------------------------------------------------------------------
-CAssetBuilderFrame::CAssetBuilderFrame( vgui::Panel *pParent, const char *pTitle ) : 
+CAssetBuilderFrame::CAssetBuilderFrame( vgui::Panel *pParent, const char *pTitle ) :
 	BaseClass( pParent, "AssetBuilderFrame" )
 {
 	m_TitleString = pTitle;
@@ -1471,7 +1471,7 @@ bool CAssetBuilderFrame::OnWriteFileToDisk( const char *pFileName, const char *p
 	{
 		pRoot = pMakefile;
 	}
-	bOk = g_pDataModel->SaveToFile( pFileName, NULL, g_pDataModel->GetDefaultEncoding( pFileFormat ), pFileFormat, pRoot ); 
+	bOk = g_pDataModel->SaveToFile( pFileName, NULL, g_pDataModel->GetDefaultEncoding( pFileFormat ), pFileFormat, pRoot );
 	m_pAssetBuilder->Refresh();
 	return bOk;
 }

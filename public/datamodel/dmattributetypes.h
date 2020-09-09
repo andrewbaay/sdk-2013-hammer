@@ -259,7 +259,7 @@ public:
 
 	static void SetDefaultValue( T& value )
 	{
-		Assert(0);
+		Assert( 0 );
 	}
 };
 

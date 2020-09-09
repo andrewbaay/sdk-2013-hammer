@@ -1,11 +1,11 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
 #include "stdafx.h"
-#include "ToolInterface.h"
+#include "toolinterface.h"
 #include "mapdoc.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

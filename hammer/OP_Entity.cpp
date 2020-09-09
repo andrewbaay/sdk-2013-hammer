@@ -6,27 +6,27 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "EntityHelpDlg.h"
-#include "EntityReportDlg.h"
-#include "History.h"
-#include "MainFrm.h"
-#include "MapWorld.h"
-#include "OP_Entity.h"
-#include "CustomMessages.h"
-#include "NewKeyValue.h"
-#include "GlobalFunctions.h"
-#include "MapDoc.h"
-#include "MapEntity.h"
-#include "ObjectProperties.h"
-#include "TargetNameCombo.h"
-#include "TextureBrowser.h"
-#include "TextureSystem.h"
+#include "entityhelpdlg.h"
+#include "entityreportdlg.h"
+#include "history.h"
+#include "mainfrm.h"
+#include "mapworld.h"
+#include "op_entity.h"
+#include "custommessages.h"
+#include "newkeyvalue.h"
+#include "globalfunctions.h"
+#include "mapdoc.h"
+#include "mapentity.h"
+#include "objectproperties.h"
+#include "targetnamecombo.h"
+#include "texturebrowser.h"
+#include "texturesystem.h"
 #include "ToolPickAngles.h"
 #include "ToolPickEntity.h"
-#include "ToolPickFace.h"
+#include "toolpickface.h"
 #include "ToolManager.h"
 #include "SoundBrowser.h"
-#include "ifilesystemopendialog.h"
+#include "IFileSystemOpenDialog.h"
 #include "filesystem_tools.h"
 #include "tier0/icommandline.h"
 #include "ModelBrowser.h"
@@ -357,38 +357,38 @@ void CSmartControlTargetNameRouter::OnTextChanged( const char *pText )
 
 BEGIN_MESSAGE_MAP(COP_Entity, CObjectPage)
 	//{{AFX_MSG_MAP(COP_Entity)
-	ON_NOTIFY(LVN_ITEMCHANGED, IDC_KEYVALUES, OnItemChangedKeyValues)
-	ON_NOTIFY(NM_DBLCLK, IDC_KEYVALUES, OnDblClickKeyValues)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_KEYVALUES, &ThisClass::OnItemChangedKeyValues)
+	ON_NOTIFY(NM_DBLCLK, IDC_KEYVALUES, &ThisClass::OnDblClickKeyValues)
 
-	ON_BN_CLICKED(IDC_ADDKEYVALUE, OnAddkeyvalue)
-	ON_BN_CLICKED(IDC_REMOVEKEYVALUE, OnRemovekeyvalue)
-	ON_BN_CLICKED(IDC_SMARTEDIT, OnSmartedit)
-	ON_EN_CHANGE(IDC_VALUE, OnChangeKeyorValue)
-	ON_BN_CLICKED(IDC_COPY, OnCopy)
-	ON_BN_CLICKED(IDC_PASTE, OnPaste)
-	ON_BN_CLICKED(IDC_PICKCOLOR, OnPickColor)
-	ON_EN_SETFOCUS(IDC_KEY, OnSetfocusKey)
-	ON_EN_KILLFOCUS(IDC_KEY, OnKillfocusKey)
-	ON_MESSAGE(ABN_CHANGED, OnChangeAngleBox)
-	ON_CBN_SELCHANGE(IDC_SMARTCONTROL, OnChangeSmartcontrolSel)
-	ON_CBN_EDITUPDATE(IDC_SMARTCONTROL, OnChangeSmartcontrol)
-	ON_EN_CHANGE(IDC_SMARTCONTROL, OnChangeSmartcontrol)
-	ON_BN_CLICKED(IDC_BROWSE, OnBrowse)
-	ON_BN_CLICKED(IDC_BROWSE_INSTANCE, OnBrowseInstance)
-	ON_BN_CLICKED(IDC_PLAY_SOUND, OnPlaySound)
-	ON_BN_CLICKED(IDC_MARK, OnMark)
-	ON_BN_CLICKED(IDC_MARK_AND_ADD, OnMarkAndAdd)
-	ON_BN_CLICKED(IDC_PICK_FACES, OnPickFaces)
-	ON_BN_CLICKED(IDC_ENTITY_HELP, OnEntityHelp)
-	ON_BN_CLICKED(IDC_PICK_ANGLES, OnPickAngles)
-	ON_BN_CLICKED(IDC_PICK_ENTITY, OnPickEntity)
-	ON_BN_CLICKED(IDC_CAMERA_DISTANCE, OnCameraDistance)
-	ON_EN_CHANGE(IDC_SMARTCONTROL_INSTANCE_VARIABLE, OnChangeInstanceVariableControl)
-	ON_EN_CHANGE(IDC_SMARTCONTROL_INSTANCE_VALUE, OnChangeInstanceVariableControl)
-	ON_EN_CHANGE(IDC_SMARTCONTROL_INSTANCE_PARM, OnChangeInstanceParmControl)
-	ON_CBN_SELCHANGE(IDC_SMARTCONTROL_INSTANCE_PARM, OnChangeInstanceParmControl)
-	ON_CBN_EDITUPDATE(IDC_SMARTCONTROL_INSTANCE_PARM, OnChangeInstanceParmControl)
-	ON_EN_CHANGE(IDC_SMARTCONTROL_INSTANCE_DEFAULT, OnChangeInstanceParmControl)
+	ON_BN_CLICKED(IDC_ADDKEYVALUE, &ThisClass::OnAddkeyvalue)
+	ON_BN_CLICKED(IDC_REMOVEKEYVALUE, &ThisClass::OnRemovekeyvalue)
+	ON_BN_CLICKED(IDC_SMARTEDIT, &ThisClass::OnSmartedit)
+	ON_EN_CHANGE(IDC_VALUE, &ThisClass::OnChangeKeyorValue)
+	ON_BN_CLICKED(IDC_COPY, &ThisClass::OnCopy)
+	ON_BN_CLICKED(IDC_PASTE, &ThisClass::OnPaste)
+	ON_BN_CLICKED(IDC_PICKCOLOR, &ThisClass::OnPickColor)
+	ON_EN_SETFOCUS(IDC_KEY, &ThisClass::OnSetfocusKey)
+	ON_EN_KILLFOCUS(IDC_KEY, &ThisClass::OnKillfocusKey)
+	ON_MESSAGE(ABN_CHANGED, &ThisClass::OnChangeAngleBox)
+	ON_CBN_SELCHANGE(IDC_SMARTCONTROL, &ThisClass::OnChangeSmartcontrolSel)
+	ON_CBN_EDITUPDATE(IDC_SMARTCONTROL, &ThisClass::OnChangeSmartcontrol)
+	ON_EN_CHANGE(IDC_SMARTCONTROL, &ThisClass::OnChangeSmartcontrol)
+	ON_BN_CLICKED(IDC_BROWSE, &ThisClass::OnBrowse)
+	ON_BN_CLICKED(IDC_BROWSE_INSTANCE, &ThisClass::OnBrowseInstance)
+	ON_BN_CLICKED(IDC_PLAY_SOUND, &ThisClass::OnPlaySound)
+	ON_BN_CLICKED(IDC_MARK, &ThisClass::OnMark)
+	ON_BN_CLICKED(IDC_MARK_AND_ADD, &ThisClass::OnMarkAndAdd)
+	ON_BN_CLICKED(IDC_PICK_FACES, &ThisClass::OnPickFaces)
+	ON_BN_CLICKED(IDC_ENTITY_HELP, &ThisClass::OnEntityHelp)
+	ON_BN_CLICKED(IDC_PICK_ANGLES, &ThisClass::OnPickAngles)
+	ON_BN_CLICKED(IDC_PICK_ENTITY, &ThisClass::OnPickEntity)
+	ON_BN_CLICKED(IDC_CAMERA_DISTANCE, &ThisClass::OnCameraDistance)
+	ON_EN_CHANGE(IDC_SMARTCONTROL_INSTANCE_VARIABLE, &ThisClass::OnChangeInstanceVariableControl)
+	ON_EN_CHANGE(IDC_SMARTCONTROL_INSTANCE_VALUE, &ThisClass::OnChangeInstanceVariableControl)
+	ON_EN_CHANGE(IDC_SMARTCONTROL_INSTANCE_PARM, &ThisClass::OnChangeInstanceParmControl)
+	ON_CBN_SELCHANGE(IDC_SMARTCONTROL_INSTANCE_PARM, &ThisClass::OnChangeInstanceParmControl)
+	ON_CBN_EDITUPDATE(IDC_SMARTCONTROL_INSTANCE_PARM, &ThisClass::OnChangeInstanceParmControl)
+	ON_EN_CHANGE(IDC_SMARTCONTROL_INSTANCE_DEFAULT, &ThisClass::OnChangeInstanceParmControl)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -1320,7 +1320,7 @@ void COP_Entity::PresentProperties()
 		// Too many entity variables! Increase GD_MAX_VARIABLES if you get this assertion.
 		Assert(m_pDisplayClass->GetVariableCount() <= GD_MAX_VARIABLES);
 
-		for ( int i=0; i < ARRAYSIZE(m_VarMap); i++ )
+		for ( uint i=0; i < ARRAYSIZE(m_VarMap); i++ )
 		{
 			m_VarMap[i] = -1;
 		}
@@ -1451,7 +1451,7 @@ void COP_Entity::ClearVarList()
 	m_VarList.DeleteAllItems();
 	m_InstanceParmData.RemoveAll();
 
-	for ( int i=0; i < ARRAYSIZE( m_VarMap ); i++ )
+	for ( uint i=0; i < ARRAYSIZE( m_VarMap ); i++ )
 		m_VarMap[i] = -1;
 }
 
@@ -3042,7 +3042,7 @@ void COP_Entity::SetSmartedit(bool bSet)
 	//
 	// Hide or show all controls after and including "delete kv" button.
 	//
-	for (int i = 0; i < ARRAYSIZE(g_DumbEditControls); i++)
+	for (uint i = 0; i < ARRAYSIZE(g_DumbEditControls); i++)
 	{
 		CWnd *pWnd = GetDlgItem(g_DumbEditControls[i]);
 		if ( pWnd )
@@ -3071,7 +3071,7 @@ void COP_Entity::SetReadOnly(bool bReadOnly)
 	//
 	// Hide or show all controls after and including "delete kv" button.
 	//
-	for (int i = 0; i < ARRAYSIZE(g_DumbEditControls); i++)
+	for (uint i = 0; i < ARRAYSIZE(g_DumbEditControls); i++)
 	{
 		CWnd *pWnd = GetDlgItem(g_DumbEditControls[i]);
 		if ( pWnd )
@@ -3788,9 +3788,7 @@ void COP_Entity::OnBrowse(void)
 	// If they picked a file and hit OK, put everything after the last backslash
 	// into the SmartEdit control. If there is no backslash, put the whole filename.
 	//
-	int ret = pDlg->DoModal();
-
-	if ( ret == IDOK )
+	if ( pDlg->DoModal() == IDOK )
 	{
 		//
 		// Save the default folder for next time.
@@ -4505,7 +4503,7 @@ void COP_Entity::OnPickColor(void)
 	// find current color
 	COLORREF clr;
 	BYTE r = 255, g = 255, b = 255;
-	DWORD brightness = 0xffffffff;
+	DWORD brightness = 0xfffffffful;
 
 	char szTmp[128], *pTmp;
 	m_pSmartControl->GetWindowText(szTmp, sizeof szTmp);
@@ -4567,8 +4565,8 @@ void COP_Entity::OnPickColor(void)
 			float(g) / 255.f, float(b) / 255.f);
 	}
 
-	if(brightness != 0xffffffff)
-		sprintf(szTmp + strlen(szTmp), " %d", brightness);
+	if(brightness != 0xfffffffful)
+		sprintf(szTmp + strlen(szTmp), " %lu", brightness);
 
 	m_pSmartControl->SetWindowText(szTmp);
 	RefreshKVListValues();

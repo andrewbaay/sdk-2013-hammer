@@ -9,8 +9,8 @@
 #pragma once
 
 
-#include "ToolInterface.h"
-#include "Tool3D.h"
+#include "toolinterface.h"
+#include "tool3d.h"
 
 
 class CRender2D;
@@ -47,7 +47,7 @@ public:
 	virtual bool OnLMouseUp3D(CMapView3D *pView, UINT nFlags, const Vector2D &vPoint);
 	virtual bool OnRMouseDown3D( CMapView3D *pView, UINT nFlags, const Vector2D &vPoint );
 	virtual bool OnRMouseUp3D( CMapView3D *pView, UINT nFlags, const Vector2D &vPoint );
-	
+
 	virtual void RenderTool2D(CRender2D *pRender);
 	virtual void RenderTool3D(CRender3D *pRender);
 

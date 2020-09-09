@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -11,8 +11,8 @@
 
 #include "resource.h"
 #include "cordonlist.h"
-#include "GroupList.h"
-#include "HammerBar.h"
+#include "grouplist.h"
+#include "hammerbar.h"
 
 
 enum FilterDialogMode_t
@@ -62,7 +62,7 @@ protected:
 
 	virtual BOOL OnInitDialog(void);
 
-	void OnSelChangeTab(NMHDR *header, LRESULT *result); 
+	void OnSelChangeTab(NMHDR *header, LRESULT *result);
 	void ChangeMode( FilterDialogMode_t oldMode,  FilterDialogMode_t newMode );
 
 	void OnCordonListDragDrop(CordonListItem_t *drag, CordonListItem_t *drop );

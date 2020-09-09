@@ -5,10 +5,10 @@
 #define RAYTRACE_H
 
 #include <tier0/platform.h>
+#include <tier0/dbg.h>
 #include <mathlib/vector.h>
 #include <mathlib/ssemath.h>
 #include <mathlib/lightdesc.h>
-#include <assert.h>
 #include <tier1/utlvector.h>
 #include <mathlib/mathlib.h>
 #include <bspfile.h>
@@ -161,13 +161,13 @@ struct CacheOptimizedKDNode
 
 	inline int32 TriangleIndexStart(void) const
 	{
-		assert(NodeType()==KDNODE_STATE_LEAF);
+		Assert(NodeType()==KDNODE_STATE_LEAF);
 		return Children>>2;
 	}
 
 	inline int LeftChild(void) const
 	{
-		assert(NodeType()!=KDNODE_STATE_LEAF);
+		Assert(NodeType()!=KDNODE_STATE_LEAF);
 		return Children>>2;
 	}
 
@@ -178,13 +178,17 @@ struct CacheOptimizedKDNode
 
 	inline int NumberOfTrianglesInLeaf(void) const
 	{
-		assert(NodeType()==KDNODE_STATE_LEAF);
-		return *((int32 *) &SplittingPlaneValue);
+		Assert(NodeType()==KDNODE_STATE_LEAF);
+		union { int32 i; float f; } u;
+		u.f=SplittingPlaneValue;
+		return u.i;
 	}
 
 	inline void SetNumberOfTrianglesInLeafNode(int n)
 	{
-		*((int32 *) &SplittingPlaneValue)=n;
+		union { int32 i; float f; } u;
+		u.i=n;
+		SplittingPlaneValue=u.f;
 	}
 
 protected:
@@ -221,7 +225,8 @@ public:
 #define RTE_FLAGS_DONT_STORE_TRIANGLE_COLORS 2				// saves memory if not needed
 #define RTE_FLAGS_DONT_STORE_TRIANGLE_MATERIALS 4
 
-enum RayTraceLightingMode_t {
+enum RayTraceLightingMode_t
+{
 	DIRECT_LIGHTING,										// just dot product lighting
 	DIRECT_LIGHTING_WITH_SHADOWS,						// with shadows
 	GLOBAL_LIGHTING										// global light w/ shadows
@@ -277,9 +282,11 @@ public:
 
 #if !( defined ( _DEBUG ) && defined ( HAMMER_RAYTRACE ) )
 	inline void* operator new( size_t size ) { MEM_ALLOC_CREDIT_( "RayTracingEnvironment" ); return MemAlloc_AllocAligned( size, 16 ); }
-	inline void* operator new( size_t size, int nBlockUse, const char *pFileName, int nLine ) { MEM_ALLOC_CREDIT_( "RayTracingEnvironment" ); return MemAlloc_AllocAligned( size, 16 ); }
+	inline void* operator new( size_t size, int nBlockUse, const char *pFileName, int nLine ) { MEM_ALLOC_CREDIT_( "RayTracingEnvironment" ); return MemAlloc_AllocAligned( size, 16, pFileName, nLine ); }
+	inline void* operator new( size_t size, const char *pFileName, int nLine ) { MEM_ALLOC_CREDIT_( "RayTracingEnvironment" ); return MemAlloc_AllocAligned( size, 16, pFileName, nLine ); }
 	inline void  operator delete( void* p ) { MemAlloc_FreeAligned( p ); }
-	inline void  operator delete( void* p, int nBlockUse, const char *pFileName, int nLine ) { MemAlloc_FreeAligned( p ); }
+	inline void  operator delete( void* p, int nBlockUse, const char *pFileName, int nLine ) { MemAlloc_FreeAligned( p, pFileName, nLine ); }
+	inline void  operator delete( void* p, const char *pFileName, int nLine ) { MemAlloc_FreeAligned( p, pFileName, nLine ); }
 #endif
 
 	// call AddTriangle to set up the world
@@ -307,14 +314,15 @@ public:
 	// lowest level intersection routine - fire 4 rays through the scene. all 4 rays must pass the
 	// Check() function, and t extents must be initialized. skipid can be set to exclude a
 	// particular id (such as the origin surface). This function finds the closest intersection.
+	// wrapper for the low level trace4 rays routine
 	void Trace4Rays(const FourRays &rays, fltx4 TMin, fltx4 TMax,int DirectionSignMask,
 					RayTracingResult *rslt_out,
-					int32 skip_id=-1, ITransparentTriangleCallback *pCallback = NULL);
+					int32 skip_id=-1, ITransparentTriangleCallback *pCallback = NULL );
 
 	// higher level intersection routine that handles computing the mask and handling rays which do not match in direciton sign
 	void Trace4Rays(const FourRays &rays, fltx4 TMin, fltx4 TMax,
 					RayTracingResult *rslt_out,
-					int32 skip_id=-1, ITransparentTriangleCallback *pCallback = NULL);
+					int32 skip_id=-1, ITransparentTriangleCallback *pCallback = NULL );
 
 	// compute virtual light sources to model inter-reflection
 	void ComputeVirtualLightSources(void);
@@ -338,10 +346,9 @@ public:
 	/// results will not be returned until FinishStream is called. This function handles sorting
 	/// the rays by direction, tracing them 4 at a time, and de-interleaving the results.
 
-	void AddToRayStream(RayStream &s,
-						Vector const &start,Vector const &end,RayTracingSingleResult *rslt_out);
+	void AddToRayStream(RayStream &s, Vector const &start,Vector const &end,RayTracingSingleResult *rslt_out);
 
-	inline void FlushStreamEntry(RayStream &s,int msk);
+	inline void FlushStreamEntry(RayStream &s, int msk);
 
 	/// call this when you are done. handles all cleanup. After this is called, all rslt ptrs
 	/// previously passed to AddToRaySteam will have been filled in.
@@ -380,11 +387,11 @@ public:
 		return OptimizedTriangleList[triID];
 	}
 
-	int32 GetTriangleMaterial( int32 triID )
+	int32 GetTriangleMaterial( int32 triID ) const
 	{
 		return TriangleMaterials[triID];
 	}
-	const Vector &GetTriangleColor( int triID )
+	const Vector &GetTriangleColor( int triID ) const
 	{
 		return TriangleColors[triID];
 	}

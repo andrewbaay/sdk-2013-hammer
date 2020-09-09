@@ -10,22 +10,22 @@
 #include <string.h>
 #include <malloc.h>
 #include "mapdoc.h"
-#include "MapWorld.h"
-#include "Material.h"
-#include "Render2D.h"
-#include "Render3D.h"
-#include "StudioModel.h"
-#include "materialsystem/IMesh.h"
-#include "TextureSystem.h"
+#include "mapworld.h"
+#include "material.h"
+#include "render2d.h"
+#include "render3d.h"
+#include "studiomodel.h"
+#include "materialsystem/imesh.h"
+#include "texturesystem.h"
 #include "bone_setup.h"
-#include "IStudioRender.h"
-#include "GlobalFunctions.h"
-#include "UtlMemory.h"
-#include "UtlDict.h"
+#include "istudiorender.h"
+#include "globalfunctions.h"
+#include "utlmemory.h"
+#include "utldict.h"
 #include "bone_accessor.h"
 #include "optimize.h"
-#include "FileSystem.h"
-#include "Hammer.h"
+#include "filesystem.h"
+#include "hammer.h"
 #include "HammerVGui.h"
 #include <VGuiMatSurface/IMatSystemSurface.h>
 #include "mapview2d.h"
@@ -415,8 +415,6 @@ void StudioModel::Shutdown( void )
 //-----------------------------------------------------------------------------
 StudioModel::StudioModel(void) : m_pModelName(0)
 {
-	int i;
-
 	m_origin.Init();
 	m_angles.Init();
 	m_sequence = 0;
@@ -424,12 +422,12 @@ StudioModel::StudioModel(void) : m_pModelName(0)
 	m_bodynum = 0;
 	m_skinnum = 0;
 
-	for (i = 0; i < sizeof(m_controller) / sizeof(m_controller[0]); i++)
+	for (uint i = 0; i < ARRAYSIZE(m_controller); i++)
 	{
 		m_controller[i] = 0;
 	}
 
-	for (i = 0; i < sizeof(m_poseParameter) / sizeof(m_poseParameter[0]); i++)
+	for (uint i = 0; i < ARRAYSIZE(m_poseParameter); i++)
 	{
 		m_poseParameter[i] = 0;
 	}

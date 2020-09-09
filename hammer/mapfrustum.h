@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -12,8 +12,8 @@
 
 
 #include "MapHelper.h"
-#include "MapFace.h"
-#include "fgdlib/WCKeyValues.h"
+#include "mapface.h"
+#include "fgdlib/wckeyvalues.h"
 
 
 class CHelperInfo;
@@ -25,12 +25,12 @@ class CMapFrustum : public CMapHelper
 public:
 
 	DECLARE_MAPCLASS(CMapFrustum,CMapHelper);
-	
+
 	//
 	// Factory for building from a list of string parameters.
 	//
 	static CMapClass *Create(CHelperInfo *pInfo, CMapEntity *pParent);
-	
+
 	//
 	// Construction/destruction:
 	//
@@ -73,7 +73,7 @@ protected:
 	float m_flPitchScale;
 	float m_fBrightness;
 
-	QAngle m_Angles;	
+	QAngle m_Angles;
 	char m_szFOVKeyName[KEYVALUE_MAX_KEY_LENGTH];
 	char m_szColorKeyName[KEYVALUE_MAX_KEY_LENGTH];
 	char m_szNearPlaneKeyName[KEYVALUE_MAX_KEY_LENGTH];

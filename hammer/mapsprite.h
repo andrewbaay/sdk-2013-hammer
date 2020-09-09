@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -11,7 +11,7 @@
 
 
 #include "MapHelper.h"
-#include "Sprite.h"
+#include "sprite.h"
 
 
 class CRender3D;
@@ -59,7 +59,7 @@ class CMapSprite : public CMapHelper
 		bool ShouldRenderLast(void);
 
 		bool IsVisualElement(void) { return(true); }
-		
+
 		const char* GetDescription() { return("Sprite"); }
 
 		void OnParentKeyChanged(const char* szKey, const char* szValue);
@@ -70,7 +70,7 @@ class CMapSprite : public CMapHelper
 		// Implements CMapAtom transformation functions.
 		//
 		void DoTransform(const VMatrix &matrix);
-		
+
 		int  GetNextSpriteFrame( CRender3D* pRender );
 		void SetRenderMode( int mode );
 		void SpriteColor(unsigned char *pColor, int eRenderMode, colorVec RenderColor, int alpha);

@@ -6,13 +6,13 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "GlobalFunctions.h"
-#include "MapDoc.h"
-#include "MapEntity.h"
-#include "MapWorld.h"
-#include "ObjectProperties.h"
-#include "OP_Input.h"
-#include "MainFrm.h"
+#include "globalfunctions.h"
+#include "mapdoc.h"
+#include "mapentity.h"
+#include "mapworld.h"
+#include "objectproperties.h"
+#include "op_input.h"
+#include "mainfrm.h"
 #include "Selection.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -39,7 +39,7 @@ IMPLEMENT_DYNCREATE(COP_Input, CObjectPage)
 
 BEGIN_MESSAGE_MAP(COP_Input, CObjectPage)
 	//{{AFX_MSG_MAP(COP_Input)
-	ON_BN_CLICKED(IDC_MARK, OnMark)
+	ON_BN_CLICKED(IDC_MARK, &ThisClass::OnMark)
 	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()

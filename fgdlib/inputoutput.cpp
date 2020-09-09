@@ -6,7 +6,7 @@
 
 
 #include <tier0/dbg.h>
-#include "fgdlib/InputOutput.h"
+#include "fgdlib/inputoutput.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -75,7 +75,7 @@ CClassInputOutputBase::~CClassInputOutputBase(void)
 //-----------------------------------------------------------------------------
 const char *CClassInputOutputBase::GetTypeText(void)
 {
-	for (int i = 0; i < ARRAYSIZE( TypeMap ); i++)
+	for (uint i = 0; i < ARRAYSIZE( TypeMap ); i++)
 	{
 		if (TypeMap[i].eType == m_eType)
 		{
@@ -94,7 +94,7 @@ const char *CClassInputOutputBase::GetTypeText(void)
 //-----------------------------------------------------------------------------
 InputOutputType_t CClassInputOutputBase::SetType(const char *szType)
 {
-	for (int i = 0; i < ARRAYSIZE( TypeMap ); i++)
+	for (uint i = 0; i < ARRAYSIZE( TypeMap ); i++)
 	{
 		if (!stricmp(TypeMap[i].pszName, szType))
 		{

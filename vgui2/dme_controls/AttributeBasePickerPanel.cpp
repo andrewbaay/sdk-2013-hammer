@@ -1,13 +1,13 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
 //=============================================================================//
 
 #include "dme_controls/AttributeBasePickerPanel.h"
-#include "FileSystem.h"
+#include "filesystem.h"
 #include "vgui_controls/Button.h"
 #include "vgui_controls/FileOpenDialog.h"
 #include "dme_controls/AttributeTextEntry.h"

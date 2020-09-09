@@ -1539,8 +1539,8 @@ bool KeyValues::GetBool( const char *keyName, bool defaultValue, bool* optGotDef
 		return 0 != GetInt( keyName, 0 );
     }
 
-    if ( optGotDefault )
-        (*optGotDefault) = true;
+	if ( optGotDefault )
+		(*optGotDefault) = true;
 
 	return defaultValue;
 }
@@ -3045,14 +3045,14 @@ bool KeyValues::Dump( IKeyValuesDumpContext *pDump, int nIndentLevel /* = 0 */ )
 		return false;
 
 	// Dump values
-	for ( KeyValues *val = this ? GetFirstValue() : NULL; val; val = val->GetNextValue() )
+	for ( KeyValues *val = GetFirstValue(); val; val = val->GetNextValue() )
 	{
 		if ( !pDump->KvWriteValue( val, nIndentLevel + 1 ) )
 			return false;
 	}
 
 	// Dump subkeys
-	for ( KeyValues *sub = this ? GetFirstTrueSubKey() : NULL; sub; sub = sub->GetNextTrueSubKey() )
+	for ( KeyValues *sub = GetFirstTrueSubKey(); sub; sub = sub->GetNextTrueSubKey() )
 	{
 		if ( !sub->Dump( pDump, nIndentLevel + 1 ) )
 			return false;

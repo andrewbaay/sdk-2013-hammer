@@ -19,13 +19,13 @@
 #include <atlenc.h>
 
 #include "hammer.h"
-#include "Box3D.h"				// For units
-#include "History.h"
-#include "MainFrm.h"
-#include "GlobalFunctions.h"
-#include "MapDoc.h"
+#include "box3d.h"				// For units
+#include "history.h"
+#include "mainfrm.h"
+#include "globalfunctions.h"
+#include "mapdoc.h"
 #include "mapgroup.h"
-#include "MapView.h"
+#include "mapview.h"
 
 #include "ToolManager.h"
 
@@ -315,13 +315,22 @@ public:
 		AppRegisterPreShutdownFn( AppShutdown );
 	}
 
-	static void AppInit() { g_HammerIpcServer.EnsureRegisteredAndRunning(); }
-	static void AppShutdown() { g_HammerIpcServer.EnsureStoppedAndUnregistered(); }
+	static void AppInit();
+	static void AppShutdown();
 
 public:
 	virtual BOOL ExecuteCommand( CUtlBuffer &cmd, CUtlBuffer &res );
+} g_HammerIpcServer;
+
+void CHammerIpcServer::AppInit()
+{
+	g_HammerIpcServer.EnsureRegisteredAndRunning();
 }
-g_HammerIpcServer;
+
+void CHammerIpcServer::AppShutdown()
+{
+	g_HammerIpcServer.EnsureStoppedAndUnregistered();
+}
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -646,8 +655,7 @@ BOOL CToolHandler_SyncMesh::NotifyMaya()
 	if ( !ipc.ExecuteCommand( cmd, res ) )
 		goto comm_error;
 
-	int uCode = res.GetInt();
-	switch ( uCode )
+	switch ( res.GetInt() )
 	{
 	case 0: // Error
 		{
@@ -793,12 +801,12 @@ BOOL CToolHandler_SyncMesh::DmxPrepareModelFiles()
 	PROCESS_INFORMATION pi;
 	memset( &pi, 0, sizeof( pi ) );
 
+	[[maybe_unused]]
 	// system( sMdlCmdLine );
 	BOOL bCreatedProcess = CreateProcess(
 		sExeName.GetBuffer(), sMdlCmdLine.GetBuffer(),
 		NULL, NULL, FALSE, 0, NULL, NULL,
 		&si, &pi );
-	bCreatedProcess;
 
 	if ( pi.hThread )
 	{
@@ -891,7 +899,7 @@ BOOL CToolHandler_SyncMesh::DmxCreateStaticProp()
 	{
 		char const * arrFiles[] = { ".mdl", ".vvd", ".dx90.vtx", ".phy", ".ss2" };
 		bool arrRequired[] =      {  true,   true,   true,        false,  false };
-		for ( int j = 0; j < ARRAYSIZE( arrFiles ); ++ j )
+		for ( uint j = 0; j < ARRAYSIZE( arrFiles ); ++ j )
 		{
 			CString sSrc = GetOtherFileName( m_strMdlFileName, arrFiles[ j ], 4 );
 			CString sDest = GetOtherFileName( sMdlCacheFile, arrFiles[j], 4 );
@@ -993,7 +1001,7 @@ void CTextureBrowser_Async::OnResult( INT_PTR nModalResult )
 //
 //////////////////////////////////////////////////////////////////////////
 
-BOOL CHammerIpcServer::ExecuteCommand( CUtlBuffer &cmd, CUtlBuffer &res )
+BOOL CHammerIpcServer::ExecuteCommand( CUtlBuffer& cmd, CUtlBuffer& res )
 {
 	char szCmd[ MAX_PATH ] = {0};
 	cmd.GetString( szCmd );
@@ -1113,7 +1121,7 @@ ChunkFileResult_t CSyncMesh_SaveLoadHandler::OnFileDataWriting( CChunkFile *pFil
 	bool bOptNames[] = { s_opt_vmf_bStoreMa, s_opt_vmf_bStoreDmx, s_opt_vmf_bStoreMdl, s_opt_vmf_bStoreMdl,
 		s_opt_vmf_bStoreMdl, s_opt_vmf_bStoreMdl, s_opt_vmf_bStoreMdl };
 	bool bOptRequired[] = { true, true, true, true, true, false };
-	for ( int j = 0; j < ARRAYSIZE( arrFiles ); ++ j )
+	for ( uint j = 0; j < ARRAYSIZE( arrFiles ); ++ j )
 	{
 		if ( !bOptNames[j] )
 			continue;
@@ -1145,7 +1153,7 @@ ChunkFileResult_t CSyncMesh_SaveLoadHandler::OnFileDataLoaded( CUtlBuffer &bufDa
 	char const *pFileExt = NULL;
 
 	// Determine the file name to save
-	for ( int j = 0; j < ARRAYSIZE( arrFiles ); ++ j )
+	for ( uint j = 0; j < ARRAYSIZE( arrFiles ); ++ j )
 	{
 		if ( !stricmp( m_hLoadHeader.sPrefix, arrNames[j] ) )
 		{

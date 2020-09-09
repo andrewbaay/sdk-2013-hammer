@@ -162,7 +162,7 @@ void CModelBrowser::SaveLoadSettings( bool bSave )
 	if ( bSave )
 	{
 		GetWindowRect(rect);
-		str.Format("%d %d %d %d", rect.left, rect.top, rect.right, rect.bottom);
+		str.Format("%ld %ld %ld %ld", rect.left, rect.top, rect.right, rect.bottom);
 		pApp->WriteProfileString(pszIniSection, "Position", str);
 		pApp->WriteProfileString(pszIniSection, "Filter", m_pPicker->GetFilter() );
 	}
@@ -172,7 +172,7 @@ void CModelBrowser::SaveLoadSettings( bool bSave )
 
 		if (!str.IsEmpty())
 		{
-			sscanf(str, "%d %d %d %d", &rect.left, &rect.top, &rect.right, &rect.bottom);
+			sscanf(str, "%ld %ld %ld %ld", &rect.left, &rect.top, &rect.right, &rect.bottom);
 
 			if (rect.left < 0)
 			{

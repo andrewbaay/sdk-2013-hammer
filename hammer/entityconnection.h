@@ -21,7 +21,7 @@
 #endif
 
 #include "utlvector.h"
-#include "fgdlib/InputOutput.h"
+#include "fgdlib/inputoutput.h"
 #include "tier1/utlobjectreference.h"
 
 

@@ -1,15 +1,15 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "MapEntity.h"
-#include "MapStudioModel.h"
+#include "mapentity.h"
+#include "mapstudiomodel.h"
 #include "OP_Model.h"
-#include "ObjectProperties.h"
+#include "objectproperties.h"
 #include "mapdoc.h"
 #include "options.h"
 
@@ -34,7 +34,7 @@ const int FRAME_SCROLLBAR_RANGE = 1000;
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 COP_Model::COP_Model() : CObjectPage(COP_Model::IDD), m_ComboSequence( this )
 {
@@ -47,7 +47,7 @@ COP_Model::COP_Model() : CObjectPage(COP_Model::IDD), m_ComboSequence( this )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 COP_Model::~COP_Model()
 {
@@ -55,8 +55,8 @@ COP_Model::~COP_Model()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pDX - 
+// Purpose:
+// Input  : pDX -
 //-----------------------------------------------------------------------------
 void COP_Model::DoDataExchange(CDataExchange* pDX)
 {
@@ -69,9 +69,9 @@ void COP_Model::DoDataExchange(CDataExchange* pDX)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : Mode - 
-//			pData - 
+// Purpose:
+// Input  : Mode -
+//			pData -
 //-----------------------------------------------------------------------------
 void COP_Model::UpdateData( int Mode, PVOID pData, bool bCanEdit )
 {
@@ -81,7 +81,7 @@ void COP_Model::UpdateData( int Mode, PVOID pData, bool bCanEdit )
 	{
 		return;
 	}
-	
+
 	if (Mode == LoadFirstData)
 	{
 		m_ComboSequence.Clear();
@@ -99,7 +99,7 @@ void COP_Model::UpdateData( int Mode, PVOID pData, bool bCanEdit )
 
 			// Set the list of suggestions.
 			CUtlVector<CString> suggestions;
-	
+
 			int nCount = pModel->GetSequenceCount();
 			for ( int i = 0; i < nCount; i++ )
 			{
@@ -107,11 +107,11 @@ void COP_Model::UpdateData( int Mode, PVOID pData, bool bCanEdit )
 				pModel->GetSequenceName(i, szName);
 				suggestions.AddToTail( szName );
 			}
-			
+
 			m_ComboSequence.SetSuggestions( suggestions, 0 );
 			m_ComboSequence.SetCurSel( iSequence );
 		}
-			
+
 		// Reset the scroll bar
 		InitScrollRange();
 	}
@@ -143,7 +143,7 @@ BOOL COP_Model::OnSetActive()
 	return CObjectPage::OnSetActive();
 }
 
-BOOL COP_Model::OnKillActive() 
+BOOL COP_Model::OnKillActive()
 {
 	Options.view3d.bAnimateModels = m_bOldAnimatedModels;
 
@@ -158,7 +158,7 @@ BOOL COP_Model::OnKillActive()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool COP_Model::SaveData( SaveData_Reason_t reason )
@@ -176,7 +176,7 @@ bool COP_Model::SaveData( SaveData_Reason_t reason )
 		{
 			pModel->SetSequence( m_nOldSequence );
 			pModel->SetFrame( 0 );
-			
+
 			CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
 			if ( pDoc )
 			{
@@ -184,14 +184,14 @@ bool COP_Model::SaveData( SaveData_Reason_t reason )
 			}
 		}
 	}
-	
+
 	return true;
 }
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pszClass - 
+// Purpose:
+// Input  : pszClass -
 //-----------------------------------------------------------------------------
 void COP_Model::UpdateForClass(LPCTSTR pszClass)
 {
@@ -203,8 +203,8 @@ void COP_Model::UpdateForClass(LPCTSTR pszClass)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : flFrame - 
+// Purpose:
+// Input  : flFrame -
 //-----------------------------------------------------------------------------
 void COP_Model::UpdateFrameText( int nFrame)
 {
@@ -215,20 +215,20 @@ void COP_Model::UpdateFrameText( int nFrame)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 // Output : Returns TRUE on success, FALSE on failure.
 //-----------------------------------------------------------------------------
-BOOL COP_Model::OnInitDialog() 
+BOOL COP_Model::OnInitDialog()
 {
 	CObjectPage::OnInitDialog();
 
 	InitScrollRange();
 
-	return TRUE;	             
+	return TRUE;
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void COP_Model::InitScrollRange( void )
 {
@@ -249,12 +249,12 @@ void COP_Model::InitScrollRange( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : nSBCode - 
-//			nPos - 
-//			pScrollBar - 
+// Purpose:
+// Input  : nSBCode -
+//			nPos -
+//			pScrollBar -
 //-----------------------------------------------------------------------------
-void COP_Model::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar) 
+void COP_Model::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
 {
 	if (pScrollBar == (CScrollBar *)&m_ScrollBarFrame)
 	{
@@ -276,13 +276,13 @@ void COP_Model::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
 			}
 		}
 	}
-	
+
 	CPropertyPage::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void COP_Model::OnTextChanged( const char *pText )
 {
@@ -309,7 +309,7 @@ void COP_Model::OnTextChanged( const char *pText )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CMapStudioModel *COP_Model::GetModelHelper(void)
 {

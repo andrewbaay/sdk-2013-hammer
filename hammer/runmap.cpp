@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "RunMap.h"
+#include "runmap.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -71,7 +71,7 @@ void CRunMap::SaveToIni(void)
 
 BEGIN_MESSAGE_MAP(CRunMap, CDialog)
 	//{{AFX_MSG_MAP(CRunMap)
-	ON_BN_CLICKED(IDC_EXPERT, OnExpert)
+	ON_BN_CLICKED(IDC_EXPERT, &ThisClass::OnExpert)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 

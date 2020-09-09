@@ -24,7 +24,7 @@
 //
 // Return values from BoxIsVisible.
 //
-enum Visibility_t
+enum Visibility_t : unsigned char
 {
 	VIS_NONE = 0,		// The box is completely outside the view frustum.
 	VIS_PARTIAL,		// The box is partially inside the view frustum.

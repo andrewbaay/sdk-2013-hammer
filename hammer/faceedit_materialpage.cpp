@@ -6,24 +6,23 @@
 
 #include <stdafx.h>
 #include "hammer.h"
-#include "IEditorTexture.h"
-#include "FaceEditSheet.h"
-#include "MapFace.h"
-#include "MapWorld.h"
-#include "MainFrm.h"
-#include "History.h"
-#include "GlobalFunctions.h"
+#include "ieditortexture.h"
+#include "faceeditsheet.h"
+#include "mapface.h"
+#include "mapworld.h"
+#include "mainfrm.h"
+#include "history.h"
+#include "globalfunctions.h"
 #include "mathlib/vmatrix.h"
-#include "MapSolid.h"
-#include "TextureBrowser.h"
-#include "TextureSystem.h"
-#include "MapView3D.h"
-#include "ReplaceTexDlg.h"
-#include "WADTypes.h"
-#include "FaceEdit_MaterialPage.h"
-#include "Camera.h"
-#include "MapDoc.h"
-#include "MapDisp.h"
+#include "mapsolid.h"
+#include "texturebrowser.h"
+#include "texturesystem.h"
+#include "mapview3d.h"
+#include "replacetexdlg.h"
+#include "faceedit_materialpage.h"
+#include "camera.h"
+#include "mapdoc.h"
+#include "mapdisp.h"
 #include "ToolManager.h"
 #include "Selection.h"
 
@@ -37,53 +36,33 @@ IMPLEMENT_DYNAMIC( CFaceEditMaterialPage, CPropertyPage )
 
 BEGIN_MESSAGE_MAP( CFaceEditMaterialPage, CPropertyPage )
 	//{{AFX_MSG_MAP( CFaceEditMaterialPage )
-	ON_BN_CLICKED( ID_FACEEDIT_APPLY, OnButtonApply )
-	ON_COMMAND_EX( IDC_ALIGN_WORLD, OnAlign )
-	ON_COMMAND_EX( IDC_ALIGN_FACE, OnAlign )
-	ON_BN_CLICKED( IDC_HIDEMASK, OnHideMask )
-	ON_COMMAND_EX( IDC_JUSTIFY_TOP, OnJustify )
-	ON_COMMAND_EX( IDC_JUSTIFY_BOTTOM, OnJustify )
-	ON_COMMAND_EX( IDC_JUSTIFY_LEFT, OnJustify )
-	ON_COMMAND_EX( IDC_JUSTIFY_CENTER, OnJustify )
-	ON_COMMAND_EX( IDC_JUSTIFY_RIGHT, OnJustify )
-	ON_COMMAND_EX( IDC_JUSTIFY_FITTOFACE, OnJustify )
-	ON_BN_CLICKED( IDC_MODE, OnMode )
+	ON_BN_CLICKED( ID_FACEEDIT_APPLY, &ThisClass::OnButtonApply )
+	ON_COMMAND_EX( IDC_ALIGN_WORLD, &ThisClass::OnAlign )
+	ON_COMMAND_EX( IDC_ALIGN_FACE, &ThisClass::OnAlign )
+	ON_BN_CLICKED( IDC_HIDEMASK, &ThisClass::OnHideMask )
+	ON_COMMAND_EX( IDC_JUSTIFY_TOP, &ThisClass::OnJustify )
+	ON_COMMAND_EX( IDC_JUSTIFY_BOTTOM, &ThisClass::OnJustify )
+	ON_COMMAND_EX( IDC_JUSTIFY_LEFT, &ThisClass::OnJustify )
+	ON_COMMAND_EX( IDC_JUSTIFY_CENTER, &ThisClass::OnJustify )
+	ON_COMMAND_EX( IDC_JUSTIFY_RIGHT, &ThisClass::OnJustify )
+	ON_COMMAND_EX( IDC_JUSTIFY_FITTOFACE, &ThisClass::OnJustify )
+	ON_BN_CLICKED( IDC_MODE, &ThisClass::OnMode )
 	ON_WM_VSCROLL()
-	ON_NOTIFY( UDN_DELTAPOS, IDC_SPINSCALEX, OnDeltaPosFloatSpin )
-	ON_NOTIFY( UDN_DELTAPOS, IDC_SPINSCALEY, OnDeltaPosFloatSpin )
+	ON_NOTIFY( UDN_DELTAPOS, IDC_SPINSCALEX, &ThisClass::OnDeltaPosFloatSpin )
+	ON_NOTIFY( UDN_DELTAPOS, IDC_SPINSCALEY, &ThisClass::OnDeltaPosFloatSpin )
 	ON_WM_SIZE()
-	ON_CBN_SELCHANGE( IDC_TEXTURES, OnSelChangeTexture )
-	ON_COMMAND( IDC_TREAT_AS_ONE, OnTreatAsOne )
-	ON_BN_CLICKED( IDC_REPLACE, OnReplace )
-	ON_COMMAND_EX_RANGE( CFaceEditSheet::id_SwitchModeStart, CFaceEditSheet::id_SwitchModeEnd, OnSwitchMode )
-	ON_CBN_SELCHANGE( IDC_TEXTUREGROUPS, OnChangeTextureGroup )
-	ON_BN_CLICKED( IDC_BROWSE, OnBrowse )
-	ON_BN_CLICKED( ID_BUTTON_SMOOTHING_GROUPS, OnButtonSmoothingGroups )
-    ON_BN_CLICKED(IDC_MARK_FACES, OnBnClickedMarkFaces)
-	ON_BN_CLICKED( ID_BUTTON_SHIFTX_RANDOM, OnButtonShiftXRandom )
-	ON_BN_CLICKED( ID_BUTTON_SHIFTY_RANDOM, OnButtonShiftYRandom )
+	ON_CBN_SELCHANGE( IDC_TEXTURES, &ThisClass::OnSelChangeTexture )
+	ON_COMMAND( IDC_TREAT_AS_ONE, &ThisClass::OnTreatAsOne )
+	ON_BN_CLICKED( IDC_REPLACE, &ThisClass::OnReplace )
+	ON_COMMAND_EX_RANGE( CFaceEditSheet::id_SwitchModeStart, CFaceEditSheet::id_SwitchModeEnd, &ThisClass::OnSwitchMode )
+	ON_CBN_SELCHANGE( IDC_TEXTUREGROUPS, &ThisClass::OnChangeTextureGroup )
+	ON_BN_CLICKED( IDC_BROWSE, &ThisClass::OnBrowse )
+	ON_BN_CLICKED( ID_BUTTON_SMOOTHING_GROUPS, &ThisClass::OnButtonSmoothingGroups )
+    ON_BN_CLICKED(IDC_MARK_FACES, &ThisClass::OnBnClickedMarkFaces)
+	ON_BN_CLICKED( ID_BUTTON_SHIFTX_RANDOM, &ThisClass::OnButtonShiftXRandom )
+	ON_BN_CLICKED( ID_BUTTON_SHIFTY_RANDOM, &ThisClass::OnButtonShiftYRandom )
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
-
-//=============================================================================
-
-#define	CONTENTS_AREAPORTAL		0x8000
-#define	CONTENTS_PLAYERCLIP		0x10000
-#define	CONTENTS_MONSTERCLIP	0x20000
-
-// I don't think we need these currents.  We'll stick to triggers for this
-#define	CONTENTS_CURRENT_0		0x40000
-#define	CONTENTS_CURRENT_90		0x80000
-#define	CONTENTS_CURRENT_180	0x100000
-#define	CONTENTS_CURRENT_270	0x200000
-#define	CONTENTS_CURRENT_UP		0x400000
-#define	CONTENTS_CURRENT_DOWN	0x800000
-#define	CONTENTS_ORIGIN			0x1000000	// removed before bsping an entity
-#define	CONTENTS_MONSTER		0x2000000	// should never be on a brush, only in game
-#define	CONTENTS_DEBRIS			0x4000000
-#define	CONTENTS_DETAIL			0x8000000	// brushes to be added after vis leafs
-#define	CONTENTS_TRANSLUCENT	0x10000000	// auto set if any surface has trans
-#define	CONTENTS_LADDER			0x20000000
 
 //=============================================================================
 
@@ -146,10 +125,10 @@ void CFaceEditMaterialPage::Init( void )
 	// Set spin ranges.
 	//
 	CWnd *pWnd = GetDlgItem(IDC_SPINSHIFTX);
-	::PostMessage(pWnd->m_hWnd, UDM_SETRANGE, 0, MAKELONG(MAX_TEXTUREWIDTH, -MAX_TEXTUREWIDTH));
+	::PostMessage(pWnd->m_hWnd, UDM_SETRANGE, 0, MAKELONG(1024, -1024));
 
 	pWnd = GetDlgItem(IDC_SPINSHIFTY);
-	::PostMessage(pWnd->m_hWnd, UDM_SETRANGE, 0, MAKELONG(MAX_TEXTUREHEIGHT, -MAX_TEXTUREHEIGHT));
+	::PostMessage(pWnd->m_hWnd, UDM_SETRANGE, 0, MAKELONG(1024, -1024));
 
 	pWnd = GetDlgItem(IDC_SPINROTATE);
 	::PostMessage(pWnd->m_hWnd, UDM_SETRANGE, 0, MAKELONG(359, -359));
@@ -681,7 +660,7 @@ void CFaceEditMaterialPage::Apply( CMapFace *pOnlyFace, int flags )
 			{
 				pFace->SetTexture( szNewTexName );
 
-				CMapClass	*pParent = dynamic_cast< CMapClass * >( pFace->GetParent() );
+				CMapClass *pParent = dynamic_cast<CMapClass*>( pFace->GetParent() );
 				if ( pParent )
 				{
 					pMapDoc->RemoveFromAutoVisGroups( pParent );
@@ -1373,6 +1352,15 @@ void CFaceEditMaterialPage::UpdateTexture( void )
 		char szTexName[128];
 		m_pCurTex->GetShortName( szTexName );
 		SetDefaultTextureName( szTexName );
+
+		const int width = m_pCurTex->IsDummy() ? 1024 : m_pCurTex->GetWidth();
+		const int height = m_pCurTex->IsDummy() ? 1024 : m_pCurTex->GetHeight();
+
+		CWnd* pWnd = GetDlgItem( IDC_SPINSHIFTX );
+		::PostMessage( pWnd->m_hWnd, UDM_SETRANGE, 0, MAKELONG( width, -width ) );
+
+		pWnd = GetDlgItem( IDC_SPINSHIFTY );
+		::PostMessage( pWnd->m_hWnd, UDM_SETRANGE, 0, MAKELONG( height, -height ) );
 	}
 }
 

@@ -1,25 +1,25 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
 
 #include "stdafx.h"
-#include "Box3D.h"
-#include "GlobalFunctions.h"
-#include "fgdlib/HelperInfo.h"
-#include "materialsystem/IMaterialSystem.h"
-#include "MainFrm.h"			// For refreshing the object properties dialog
-#include "MapDoc.h"
-#include "MapPointHandle.h"
-#include "MapView2D.h"
-#include "Material.h"
-#include "Options.h"
-#include "ObjectProperties.h"	// For refreshing the object properties dialog
-#include "Render2D.h"
-#include "Render3D.h"
-#include "StatusBarIDs.h"		// For updating status bar text
+#include "box3d.h"
+#include "globalfunctions.h"
+#include "fgdlib/helperinfo.h"
+#include "materialsystem/imaterialsystem.h"
+#include "mainfrm.h"			// For refreshing the object properties dialog
+#include "mapdoc.h"
+#include "mappointhandle.h"
+#include "mapview2d.h"
+#include "material.h"
+#include "options.h"
+#include "objectproperties.h"	// For refreshing the object properties dialog
+#include "render2d.h"
+#include "render3d.h"
+#include "statusbarids.h"		// For updating status bar text
 #include "ToolManager.h"
 #include "ToolPointHandle.h"
 #include "vgui/Cursor.h"
@@ -41,7 +41,7 @@ IMPLEMENT_MAPCLASS(CMapPointHandle);
 //-----------------------------------------------------------------------------
 CMapClass *CMapPointHandle::Create(CHelperInfo *pHelperInfo, CMapEntity *pParent)
 {
-	static char *pszDefaultKeyName = "origin";
+	constexpr const char *pszDefaultKeyName = "origin";
 
 	bool bDrawLineToParent = !stricmp(pHelperInfo->GetName(), "vecline");
 
@@ -58,9 +58,9 @@ CMapClass *CMapPointHandle::Create(CHelperInfo *pHelperInfo, CMapEntity *pParent
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pfMins - 
-//			pfMaxs - 
+// Purpose:
+// Input  : pfMins -
+//			pfMaxs -
 //-----------------------------------------------------------------------------
 CMapPointHandle::CMapPointHandle(void)
 {
@@ -69,9 +69,9 @@ CMapPointHandle::CMapPointHandle(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pszKey - 
-//			bDrawLineToParent - 
+// Purpose:
+// Input  : pszKey -
+//			bDrawLineToParent -
 //-----------------------------------------------------------------------------
 CMapPointHandle::CMapPointHandle(const char *pszKey, bool bDrawLineToParent)
 {
@@ -82,7 +82,7 @@ CMapPointHandle::CMapPointHandle(const char *pszKey, bool bDrawLineToParent)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CMapPointHandle::Initialize(void)
 {
@@ -97,7 +97,7 @@ void CMapPointHandle::Initialize(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CMapPointHandle::~CMapPointHandle(void)
 {
@@ -105,8 +105,8 @@ CMapPointHandle::~CMapPointHandle(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : bFullUpdate - 
+// Purpose:
+// Input  : bFullUpdate -
 //-----------------------------------------------------------------------------
 void CMapPointHandle::CalcBounds(BOOL bFullUpdate)
 {
@@ -122,8 +122,8 @@ void CMapPointHandle::CalcBounds(BOOL bFullUpdate)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Output : 
+// Purpose:
+// Output :
 //-----------------------------------------------------------------------------
 CMapClass *CMapPointHandle::Copy(bool bUpdateDependencies)
 {
@@ -139,9 +139,9 @@ CMapClass *CMapPointHandle::Copy(bool bUpdateDependencies)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pObject - 
-// Output : 
+// Purpose:
+// Input  : pObject -
+// Output :
 //-----------------------------------------------------------------------------
 CMapClass *CMapPointHandle::CopyFrom(CMapClass *pObject, bool bUpdateDependencies)
 {
@@ -157,8 +157,8 @@ CMapClass *CMapPointHandle::CopyFrom(CMapClass *pObject, bool bUpdateDependencie
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : nHitData - 
+// Purpose:
+// Input  : nHitData -
 //-----------------------------------------------------------------------------
 CBaseTool *CMapPointHandle::GetToolObject(int nHitData, bool bAttachObject)
 {
@@ -172,11 +172,11 @@ CBaseTool *CMapPointHandle::GetToolObject(int nHitData, bool bAttachObject)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pView - 
-//			point - 
-//			nData - 
-// Output : 
+// Purpose:
+// Input  : pView -
+//			point -
+//			nData -
+// Output :
 //-----------------------------------------------------------------------------
 bool CMapPointHandle::HitTest2D(CMapView2D *pView, const Vector2D &point, HitInfo_t &HitData)
 {
@@ -198,8 +198,8 @@ bool CMapPointHandle::HitTest2D(CMapView2D *pView, const Vector2D &point, HitInf
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pRender - 
+// Purpose:
+// Input  : pRender -
 //-----------------------------------------------------------------------------
 void CMapPointHandle::Render2D(CRender2D *pRender)
 {
@@ -207,7 +207,7 @@ void CMapPointHandle::Render2D(CRender2D *pRender)
 
 	if (eState == SELECT_NONE )
 		return;
-	
+
 	if (eState == SELECT_MODIFY)
 	{
 		pRender->PushRenderMode( RENDER_MODE_DOTTED );
@@ -221,7 +221,7 @@ void CMapPointHandle::Render2D(CRender2D *pRender)
 
 	pRender->SetHandleStyle( HANDLE_RADIUS, CRender::HANDLE_CIRCLE );
 	pRender->DrawHandle( m_Origin );
-	
+
 	// Draw a line from origin helpers to their parent while they are being dragged.
 	if ((m_pParent != NULL) && (m_bDrawLineToParent || (eState == SELECT_MODIFY)))
 	{
@@ -249,7 +249,7 @@ void CMapPointHandle::Render2D(CRender2D *pRender)
 		ptText.y += HANDLE_RADIUS + 4;
 
 		pRender->SetTextColor(GetRValue(Options.colors.clrToolHandle), GetGValue(Options.colors.clrToolHandle), GetBValue(Options.colors.clrToolHandle) );
-		
+
 		char szText[100];
 		sprintf(szText, "(%0.f, %0.f, %0.f)", m_Origin.x, m_Origin.y, m_Origin.z);
 		pRender->DrawText(szText, ptText.x, ptText.y, CRender2D::TEXT_JUSTIFY_LEFT);
@@ -259,8 +259,8 @@ void CMapPointHandle::Render2D(CRender2D *pRender)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pRender - 
+// Purpose:
+// Input  : pRender -
 //-----------------------------------------------------------------------------
 void CMapPointHandle::Render3D(CRender3D *pRender)
 {
@@ -286,7 +286,7 @@ void CMapPointHandle::Render3D(CRender3D *pRender)
 //-----------------------------------------------------------------------------
 // Purpose: Overridden because origin helpers don't take the color of their
 //			parent entity.
-// Input  : red, green, blue - 
+// Input  : red, green, blue -
 //-----------------------------------------------------------------------------
 void CMapPointHandle::SetRenderColor(unsigned char red, unsigned char green, unsigned char blue)
 {
@@ -296,7 +296,7 @@ void CMapPointHandle::SetRenderColor(unsigned char red, unsigned char green, uns
 //-----------------------------------------------------------------------------
 // Purpose: Overridden because origin helpers don't take the color of their
 //			parent entity.
-// Input  : red, green, blue - 
+// Input  : red, green, blue -
 //-----------------------------------------------------------------------------
 void CMapPointHandle::SetRenderColor(color32 rgbColor)
 {
@@ -304,9 +304,9 @@ void CMapPointHandle::SetRenderColor(color32 rgbColor)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : szKey - 
-//			szValue - 
+// Purpose:
+// Input  : szKey -
+//			szValue -
 //-----------------------------------------------------------------------------
 void CMapPointHandle::OnParentKeyChanged(const char *szKey, const char *szValue)
 {
@@ -319,8 +319,8 @@ void CMapPointHandle::OnParentKeyChanged(const char *szKey, const char *szValue)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : vecOrigin - 
+// Purpose:
+// Input  : vecOrigin -
 //-----------------------------------------------------------------------------
 void CMapPointHandle::UpdateOrigin(const Vector &vecOrigin)
 {
@@ -331,7 +331,7 @@ void CMapPointHandle::UpdateOrigin(const Vector &vecOrigin)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CMapPointHandle::UpdateParentKey(void)
 {
@@ -356,8 +356,8 @@ void CMapPointHandle::UpdateParentKey(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pTransBox - 
+// Purpose:
+// Input  : pTransBox -
 //-----------------------------------------------------------------------------
 void CMapPointHandle::DoTransform(const VMatrix &matrix)
 {
@@ -367,7 +367,7 @@ void CMapPointHandle::DoTransform(const VMatrix &matrix)
 
 //-----------------------------------------------------------------------------
 // Purpose: Sets the keyvalue in our parent when we are	added to the world.
-// Input  : pWorld - 
+// Input  : pWorld -
 //-----------------------------------------------------------------------------
 void CMapPointHandle::OnAddToWorld(CMapWorld *pWorld)
 {
@@ -388,7 +388,7 @@ void CMapPointHandle::OnUndoRedo(void)
 
 //-----------------------------------------------------------------------------
 // Purpose: Sets the keyvalue in our parent after the map is loaded.
-// Input  : pWorld - 
+// Input  : pWorld -
 //-----------------------------------------------------------------------------
 void CMapPointHandle::PostloadWorld(CMapWorld *pWorld)
 {

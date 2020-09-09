@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -20,10 +20,10 @@
 #include "dme_controls/AttributeMDLPickerPanel.h"
 #include "dme_controls/AttributeSequencePickerPanel.h"
 #include "dme_controls/AttributeSoundPickerPanel.h"
-#include "dme_controls/AttributeAssetPickerPanel.h"
-#include "dme_controls/AttributeShaderPickerPanel.h"
-#include "dme_controls/AttributeSurfacePropertyPickerPanel.h"
-#include "dme_controls/AttributeDetailTypePickerPanel.h"
+#include "dme_controls/attributeassetpickerpanel.h"
+#include "dme_controls/attributeshaderpickerpanel.h"
+#include "dme_controls/attributesurfacepropertypickerpanel.h"
+#include "dme_controls/attributedetailtypepickerpanel.h"
 #include "dme_controls/AttributeColorPickerPanel.h"
 #include "dme_controls/AttributeInterpolatorChoicePanel.h"
 
@@ -261,7 +261,7 @@ IAttributeWidgetFactory *CAttributeWidgetFactoryList::FindWidgetFactory( const c
 	return NULL;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 // Returns a factory requested by name
 //-----------------------------------------------------------------------------
@@ -274,7 +274,7 @@ IAttributeWidgetFactory *CAttributeWidgetFactoryList::GetWidgetFactory( const ch
 //-----------------------------------------------------------------------------
 // Returns a factory used to create widget for the attribute passed in
 //-----------------------------------------------------------------------------
-IAttributeWidgetFactory *CAttributeWidgetFactoryList::GetWidgetFactory( CDmElement *object, 
+IAttributeWidgetFactory *CAttributeWidgetFactoryList::GetWidgetFactory( CDmElement *object,
 	CDmAttribute *pAttribute, CDmeEditorTypeDictionary *pTypeDictionary )
 {
 	if ( !object )
@@ -342,7 +342,7 @@ IAttributeWidgetFactory *CAttributeWidgetFactoryList::GetArrayWidgetFactory( CDm
 	return pFactory;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 // Applies changes to a widget
 //-----------------------------------------------------------------------------

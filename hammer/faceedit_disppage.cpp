@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -8,19 +8,19 @@
 #include <stdafx.h>
 #include <afxcmn.h>
 #include "hammer.h"
-#include "MainFrm.h"
-#include "GlobalFunctions.h"
-#include "MapDoc.h"
-#include "FaceEdit_DispPage.h"
-#include "MapSolid.h"
-#include "MapFace.h"
-#include "MapDisp.h"
-#include "FaceEditSheet.h"
-#include "MapView3D.h"
-#include "History.h"
-#include "ToolDisplace.h"
+#include "mainfrm.h"
+#include "globalfunctions.h"
+#include "mapdoc.h"
+#include "faceedit_disppage.h"
+#include "mapsolid.h"
+#include "mapface.h"
+#include "mapdisp.h"
+#include "faceeditsheet.h"
+#include "mapview3d.h"
+#include "history.h"
+#include "tooldisplace.h"
 #include "ToolManager.h"
-#include "DispSew.h"
+#include "dispsew.h"
 #include "builddisp.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -34,32 +34,32 @@ IMPLEMENT_DYNAMIC( CFaceEditDispPage, CPropertyPage )
 
 BEGIN_MESSAGE_MAP( CFaceEditDispPage, CPropertyPage )
 	//{{AFX_MSG_MAP( CFaceEditDispPage )
-	ON_BN_CLICKED( ID_DISP_MASK_SELECT, OnCheckMaskSelect )
-	ON_BN_CLICKED( ID_DISP_MASK_GRID, OnCheckMaskGrid )
+	ON_BN_CLICKED( ID_DISP_MASK_SELECT, &ThisClass::OnCheckMaskSelect )
+	ON_BN_CLICKED( ID_DISP_MASK_GRID, &ThisClass::OnCheckMaskGrid )
 
-	ON_BN_CLICKED( ID_DISP_NOPHYSICS_COLL, OnCheckNoPhysicsCollide )
-	ON_BN_CLICKED( ID_DISP_NOHULL_COLL, OnCheckNoHullCollide )
-	ON_BN_CLICKED( ID_DISP_NORAY_COLL, OnCheckNoRayCollide )
+	ON_BN_CLICKED( ID_DISP_NOPHYSICS_COLL, &ThisClass::OnCheckNoPhysicsCollide )
+	ON_BN_CLICKED( ID_DISP_NOHULL_COLL, &ThisClass::OnCheckNoHullCollide )
+	ON_BN_CLICKED( ID_DISP_NORAY_COLL, &ThisClass::OnCheckNoRayCollide )
 
-	ON_BN_CLICKED( ID_DISP_SELECT2, OnButtonSelect )
-	ON_BN_CLICKED( ID_DISP_CREATE, OnButtonCreate )
-	ON_BN_CLICKED( ID_DISP_DESTROY, OnButtonDestroy )
-	ON_BN_CLICKED( ID_DISP_NOISE, OnButtonNoise )
-	ON_BN_CLICKED( ID_DISP_SUBDIVIDE, OnButtonSubdivide )
-	ON_BN_CLICKED( ID_DISP_SEW, OnButtonSew )
-	ON_BN_CLICKED( ID_DISP_PAINT_GEO, OnButtonPaintGeo )
-	ON_BN_CLICKED( ID_DISP_PAINT_DATA, OnButtonPaintData )
-	ON_BN_CLICKED( ID_DISP_TAG_WALK, OnButtonTagWalkable )
-	ON_BN_CLICKED( ID_DISP_TAG_BUILD, OnButtonTagBuildable )
-	ON_BN_CLICKED( ID_DISP_TAG_REMOVE, OnButtonTagRemove )
-	ON_BN_CLICKED( ID_DISP_INVERT_ALPHA, OnButtonInvertAlpha )
-	ON_BN_CLICKED( IDC_SELECT_ADJACENT, OnSelectAdjacent )
+	ON_BN_CLICKED( ID_DISP_SELECT2, &ThisClass::OnButtonSelect )
+	ON_BN_CLICKED( ID_DISP_CREATE, &ThisClass::OnButtonCreate )
+	ON_BN_CLICKED( ID_DISP_DESTROY, &ThisClass::OnButtonDestroy )
+	ON_BN_CLICKED( ID_DISP_NOISE, &ThisClass::OnButtonNoise )
+	ON_BN_CLICKED( ID_DISP_SUBDIVIDE, &ThisClass::OnButtonSubdivide )
+	ON_BN_CLICKED( ID_DISP_SEW, &ThisClass::OnButtonSew )
+	ON_BN_CLICKED( ID_DISP_PAINT_GEO, &ThisClass::OnButtonPaintGeo )
+	ON_BN_CLICKED( ID_DISP_PAINT_DATA, &ThisClass::OnButtonPaintData )
+	ON_BN_CLICKED( ID_DISP_TAG_WALK, &ThisClass::OnButtonTagWalkable )
+	ON_BN_CLICKED( ID_DISP_TAG_BUILD, &ThisClass::OnButtonTagBuildable )
+	ON_BN_CLICKED( ID_DISP_TAG_REMOVE, &ThisClass::OnButtonTagRemove )
+	ON_BN_CLICKED( ID_DISP_INVERT_ALPHA, &ThisClass::OnButtonInvertAlpha )
+	ON_BN_CLICKED( IDC_SELECT_ADJACENT, &ThisClass::OnSelectAdjacent )
 
-	ON_NOTIFY( UDN_DELTAPOS, ID_SPIN_DISP_POWER, OnSpinUpDown )
-	ON_NOTIFY( UDN_DELTAPOS, ID_SPIN_DISP_ELEVATION, OnSpinUpDown )
-	ON_BN_CLICKED( ID_DISP_APPLY, OnButtonApply )
+	ON_NOTIFY( UDN_DELTAPOS, ID_SPIN_DISP_POWER, &ThisClass::OnSpinUpDown )
+	ON_NOTIFY( UDN_DELTAPOS, ID_SPIN_DISP_ELEVATION, &ThisClass::OnSpinUpDown )
+	ON_BN_CLICKED( ID_DISP_APPLY, &ThisClass::OnButtonApply )
+	ON_BN_CLICKED(ID_DISP_SCULPT_PAINT, &ThisClass::OnBnClickedDispSculptPaint)
 	//}}AFX_MSG_MAP
-	ON_BN_CLICKED(ID_DISP_SCULPT_PAINT, &CFaceEditDispPage::OnBnClickedDispSculptPaint)
 END_MESSAGE_MAP()
 
 //-----------------------------------------------------------------------------
@@ -135,7 +135,7 @@ void CFaceEditDispPage::UpdateEditControls( bool bAllDisps, bool bHasFace )
 	CButton *pButtonBuild = ( CButton* )GetDlgItem( ID_DISP_TAG_BUILD );
 
 	pbuttonSelect->EnableWindow( TRUE );
-	pbuttonCreate->EnableWindow( FALSE );	
+	pbuttonCreate->EnableWindow( FALSE );
 	pbuttonDestroy->EnableWindow( FALSE );
 	pbuttonPaintGeo->EnableWindow( FALSE );
 	pbuttonPaintSculpt->EnableWindow( FALSE );
@@ -183,7 +183,7 @@ void CFaceEditDispPage::UpdateEditControls( bool bAllDisps, bool bHasFace )
 	{
 		if( !bAllDisps )
 		{
-			pbuttonCreate->EnableWindow( TRUE );	
+			pbuttonCreate->EnableWindow( TRUE );
 			pbuttonDestroy->EnableWindow( TRUE );
 			pbuttonSew->EnableWindow( TRUE );
 		}
@@ -198,7 +198,7 @@ void CFaceEditDispPage::UpdateEditControls( bool bAllDisps, bool bHasFace )
 			pbuttonSew->EnableWindow( TRUE );
 			pbuttonNoise->EnableWindow( TRUE );
 		}
-	
+
 		// active attributes if in selection mode
 		if( m_uiTool == FACEEDITTOOL_SELECT )
 		{
@@ -250,7 +250,7 @@ void CFaceEditDispPage::FillEditControls( bool bAllDisps )
 				CMapFace *pFace = pSheet->GetFaceListDataFace( 0 );
 				EditDispHandle_t handle = pFace->GetDisp();
 				CMapDisp *pDisp = EditDispMgr()->GetDisp( handle );
-				
+
 				power = pDisp->GetPower();
 				elevation = pDisp->GetElevation();
 				scale = pDisp->GetScale();
@@ -264,10 +264,10 @@ void CFaceEditDispPage::FillEditControls( bool bAllDisps )
 				CMapFace *pFace = pSheet->GetFaceListDataFace( faceIndex );
 				EditDispHandle_t handle = pFace->GetDisp();
 				CMapDisp *pDisp = EditDispMgr()->GetDisp( handle );
-				
+
 				// test power, elevation, and scale
-				if( power != pDisp->GetPower() ) { bAllPower = false; }				
-				if( elevation != pDisp->GetElevation() ) { bAllElevation = false; }	
+				if( power != pDisp->GetPower() ) { bAllPower = false; }
+				if( elevation != pDisp->GetElevation() ) { bAllElevation = false; }
 				if( scale != pDisp->GetScale() ) { bAllScale = false; }
 
 				if ( !pDisp->CheckFlags( CCoreDispInfo::SURF_NOPHYSICS_COLL ) ) { bAllNoPhysics = false; }
@@ -281,7 +281,7 @@ void CFaceEditDispPage::FillEditControls( bool bAllDisps )
 			{
 				SetDlgItemInt( ID_DISP_POWER, power );
 			}
-			
+
 			// set elevation value
 			SetDlgItemText( ID_DISP_ELEVATION, "" );
 			if( bAllElevation )
@@ -327,7 +327,7 @@ void CFaceEditDispPage::FillEditControls( bool bAllDisps )
 		CSpinButtonCtrl *pSpin = ( CSpinButtonCtrl* )GetDlgItem( ID_SPIN_DISP_POWER );
 		pSpin->SetPos( 0 );
 		SetDlgItemInt( ID_DISP_POWER, 0 );
-		
+
 		// set initial elevation value
 		pSpin = ( CSpinButtonCtrl* )GetDlgItem( ID_SPIN_DISP_ELEVATION );
 		pSpin->SetPos( 0 );
@@ -408,7 +408,7 @@ void CFaceEditDispPage::OnCheckMaskSelect( void )
 	}
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CFaceEditDispPage::OnCheckMaskGrid( void )
@@ -468,7 +468,7 @@ void CFaceEditDispPage::OnCheckNoPhysicsCollide( void )
 				}
 			}
 		}
-	}	
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -518,7 +518,7 @@ void CFaceEditDispPage::OnCheckNoHullCollide( void )
 				}
 			}
 		}
-	}	
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -568,7 +568,7 @@ void CFaceEditDispPage::OnCheckNoRayCollide( void )
 				}
 			}
 		}
-	}	
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -591,7 +591,7 @@ void CFaceEditDispPage::SetTool( unsigned int tool )
 	}
 
 	if ( ( m_uiTool == FACEEDITTOOL_TAG_WALK ) ||
-		 ( m_uiTool == FACEEDITTOOL_TAG_BUILD ) || 
+		 ( m_uiTool == FACEEDITTOOL_TAG_BUILD ) ||
 		 ( m_uiTool == FACEEDITTOOL_TAG_REMOVE ) )
 	{
 		ResetForceShows();
@@ -665,7 +665,7 @@ void CFaceEditDispPage::OnButtonCreate( void )
 		int faceCount = pSheet->GetFaceListCount();
 		if( faceCount == 0 )
 			return;
-	
+
 		//
 		// open the dialog and get the desired creation power
 		//
@@ -678,7 +678,7 @@ void CFaceEditDispPage::OnButtonCreate( void )
 		}
 
 		// clamped the "power" (range [2..4])
-		int power = m_CreateDlg.m_Power;		
+		int power = m_CreateDlg.m_Power;
 
 		//
 		// get the active map doc and displacement manager
@@ -695,7 +695,7 @@ void CFaceEditDispPage::OnButtonCreate( void )
 			CMapFace *pFace = pSheet->GetFaceListDataFace( ndxFace );
 			if( !pFace )
 				continue;
-	
+
 			// make sure the face has the appropriate point count
 			if( pFace->GetPointCount() != 4 )
 				continue;
@@ -782,7 +782,7 @@ void CFaceEditDispPage::OnButtonDestroy( void )
 				continue;
 
 			EditDispHandle_t handle = pFace->GetDisp();
-			
+
 			// setup for undo
 			pDispMgr->Undo( handle, false );
 
@@ -1016,7 +1016,7 @@ void CFaceEditDispPage::OnButtonPaintGeo( void )
 	}
 
 	if( !m_PaintDistDlg.Create( IDD_DISP_PAINT_DIST, this ) )
-		return;	
+		return;
 
 	m_PaintDistDlg.ShowWindow( SW_SHOW );
 }
@@ -1039,7 +1039,7 @@ void CFaceEditDispPage::OnBnClickedDispSculptPaint( )
 	}
 
 	if( !m_PaintSculptDlg.Create( IDD_DISP_PAINT_SCULPT, this ) )
-		return;	
+		return;
 
 	m_PaintSculptDlg.ShowWindow( SW_SHOW );
 }
@@ -1102,7 +1102,7 @@ void CFaceEditDispPage::OnButtonTagWalkable( void )
 		{
 			pDoc->SetDispDrawWalkable( true );
 			m_bForceShowWalkable = true;
-		}		
+		}
 	}
 
 	UpdateDialogData();
@@ -1223,7 +1223,7 @@ void CFaceEditDispPage::OnSelectAdjacent()
 	IWorldEditDispMgr *pDispMgr = GetActiveWorldEditDispManager();
 
 	bool bSelectedAny = false;
-	
+
 	// For all selected displacements...
 	CFaceEditSheet *pSheet = ( CFaceEditSheet* )GetParent();
 	if( !pSheet )
@@ -1250,7 +1250,7 @@ void CFaceEditDispPage::OnSelectAdjacent()
 		//for ( int iEdge=0; iEdge < 4; iEdge++ )
 		//{
 		//	EditDispHandle_t hNeighbor = pDisp->GetEdgeNeighbor( iEdge );
-		
+
 		int totalDispCount = pDispMgr->WorldCount();
 		for ( int iTestDisp=0; iTestDisp < totalDispCount; iTestDisp++ )
 		{
@@ -1278,7 +1278,7 @@ void CFaceEditDispPage::OnSelectAdjacent()
 			bSelectedAny = true;
 		}
 	}
-	
+
 	if ( bSelectedAny )
 	{
 		CMapDoc::GetActiveMapDoc()->UpdateAllViews( MAPVIEW_UPDATE_TOOL );
@@ -1336,11 +1336,11 @@ void CFaceEditDispPage::UpdateElevation( CMapDisp *pDisp )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pNMHDR - 
-//			pResult - 
+// Purpose:
+// Input  : pNMHDR -
+//			pResult -
 //-----------------------------------------------------------------------------
-void CFaceEditDispPage::OnSpinUpDown( NMHDR *pNMHDR, LRESULT *pResult ) 
+void CFaceEditDispPage::OnSpinUpDown( NMHDR *pNMHDR, LRESULT *pResult )
 {
 	//
 	// get scroll up down edit box

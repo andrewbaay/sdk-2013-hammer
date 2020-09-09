@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -59,7 +59,7 @@ bool lessFunc( const int &lhs, const int &rhs )
 //-----------------------------------------------------------------------------
 int StringToButtonCode( const char *name )
 {
-	for ( int i = 0; i < ARRAYSIZE( s_ControllerButtons ); ++i )
+	for ( uint i = 0; i < ARRAYSIZE( s_ControllerButtons ); ++i )
 	{
 		if ( !Q_stricmp( s_ControllerButtons[i].name, name ) )
 			return s_ControllerButtons[i].code;

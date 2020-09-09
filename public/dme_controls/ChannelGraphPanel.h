@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -12,8 +12,8 @@
 
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/Frame.h>
-#include "UtlLinkedList.h"
-#include "UtlVector.h"
+#include "utllinkedlist.h"
+#include "utlvector.h"
 #include "movieobjects/dmechannel.h"
 #include "datamodel/dmehandle.h"
 

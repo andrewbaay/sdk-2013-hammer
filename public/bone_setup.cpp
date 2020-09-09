@@ -5839,7 +5839,7 @@ bool Studio_AnimPosition( mstudioanimdesc_t *panim, float flCycle, Vector &vecPo
 
 	for (int i = 0; i < panim->nummovements; i++)
 	{
-		mstudiomovement_t *pmove = panim->pMovement( i );
+		const mstudiomovement_t *pmove = panim->pMovement( i );
 
 		if (pmove->endframe >= flFrame)
 		{
@@ -5851,7 +5851,7 @@ bool Studio_AnimPosition( mstudioanimdesc_t *panim, float flCycle, Vector &vecPo
 			vecAngle.y = vecAngle.y * (1 - f) + pmove->angle * f;
 			if (iLoops != 0)
 			{
-				mstudiomovement_t *pmove = panim->pMovement( panim->nummovements - 1 );
+				const mstudiomovement_t *pmove = panim->pMovement( panim->nummovements - 1 );
 				vecPos = vecPos + iLoops * pmove->position;
 				vecAngle.y = vecAngle.y + iLoops * pmove->angle;
 			}
@@ -5885,7 +5885,7 @@ bool Studio_AnimVelocity( mstudioanimdesc_t *panim, float flCycle, Vector &vecVe
 
 	for (int i = 0; i < panim->nummovements; i++)
 	{
-		mstudiomovement_t *pmove = panim->pMovement( i );
+		const mstudiomovement_t *pmove = panim->pMovement( i );
 
 		if (pmove->endframe >= flFrame)
 		{
@@ -5947,7 +5947,7 @@ float Studio_FindAnimDistance( mstudioanimdesc_t *panim, float flDist )
 
 	for (int i = 0; i < panim->nummovements; i++)
 	{
-		mstudiomovement_t *pmove = panim->pMovement( i );
+		const mstudiomovement_t *pmove = panim->pMovement( i );
 
 		float flMove = (pmove->v0 + pmove->v1) * 0.5;
 

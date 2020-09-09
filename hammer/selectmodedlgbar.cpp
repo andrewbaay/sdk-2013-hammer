@@ -1,14 +1,14 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
 
 #include "stdafx.h"
 #include "SelectModeDlgBar.h"
-#include "ControlBarIDs.h"
-#include "MapDoc.h"
+#include "controlbarids.h"
+#include "mapdoc.h"
 #include "Selection.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -17,19 +17,19 @@
 
 BEGIN_MESSAGE_MAP(CSelectModeDlgBar, CHammerBar)
 	//{{AFX_MSG_MAP(CSelectModeDlgBar)
-	ON_BN_CLICKED(IDC_GROUPS, OnGroups)
-	ON_BN_CLICKED(IDC_OBJECTS, OnObjects)
-	ON_BN_CLICKED(IDC_SOLIDS, OnSolids)
-	ON_UPDATE_COMMAND_UI(IDC_GROUPS, UpdateControlGroups)
-	ON_UPDATE_COMMAND_UI(IDC_OBJECTS, UpdateControlObjects)
-	ON_UPDATE_COMMAND_UI(IDC_SOLIDS, UpdateControlSolids)
+	ON_BN_CLICKED(IDC_GROUPS, &ThisClass::OnGroups)
+	ON_BN_CLICKED(IDC_OBJECTS, &ThisClass::OnObjects)
+	ON_BN_CLICKED(IDC_SOLIDS, &ThisClass::OnSolids)
+	ON_UPDATE_COMMAND_UI(IDC_GROUPS, &ThisClass::UpdateControlGroups)
+	ON_UPDATE_COMMAND_UI(IDC_OBJECTS, &ThisClass::UpdateControlObjects)
+	ON_UPDATE_COMMAND_UI(IDC_SOLIDS, &ThisClass::UpdateControlSolids)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pParentWnd - 
+// Purpose:
+// Input  : pParentWnd -
 // Output : Returns TRUE on success, FALSE on failure.
 //-----------------------------------------------------------------------------
 BOOL CSelectModeDlgBar::Create(CWnd *pParentWnd)
@@ -45,8 +45,8 @@ BOOL CSelectModeDlgBar::Create(CWnd *pParentWnd)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pCmdUI - 
+// Purpose:
+// Input  : pCmdUI -
 //-----------------------------------------------------------------------------
 void CSelectModeDlgBar::UpdateControlGroups(CCmdUI *pCmdUI)
 {
@@ -64,7 +64,7 @@ void CSelectModeDlgBar::UpdateControlGroups(CCmdUI *pCmdUI)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CSelectModeDlgBar::UpdateControlObjects(CCmdUI *pCmdUI)
 {
@@ -82,7 +82,7 @@ void CSelectModeDlgBar::UpdateControlObjects(CCmdUI *pCmdUI)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CSelectModeDlgBar::UpdateControlSolids(CCmdUI *pCmdUI)
 {
@@ -100,7 +100,7 @@ void CSelectModeDlgBar::UpdateControlSolids(CCmdUI *pCmdUI)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CSelectModeDlgBar::OnGroups(void)
 {
@@ -114,7 +114,7 @@ void CSelectModeDlgBar::OnGroups(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CSelectModeDlgBar::OnObjects(void)
 {
@@ -128,7 +128,7 @@ void CSelectModeDlgBar::OnObjects(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CSelectModeDlgBar::OnSolids(void)
 {

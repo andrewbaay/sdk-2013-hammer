@@ -7,26 +7,26 @@
 
 #include <stdafx.h>
 #include "bitmap/tgaloader.h"
-#include "ChunkFile.h"
-#include "MapDefs.h"
-#include "MapDisp.h"
-#include "MapDoc.h"
-#include "MapFace.h"
-#include "MapSolid.h"
-#include "MapWorld.h"
-#include "MainFrm.h"
-#include "GlobalFunctions.h"
-#include "SaveInfo.h"
-#include "TextureSystem.h"
-#include "materialsystem/IMesh.h"
-#include "Material.h"
-#include "CollisionUtils.h"
-#include "CModel.h"
-#include "History.h"
-#include "ToolDisplace.h"
+#include "chunkfile.h"
+#include "mapdefs.h"
+#include "mapdisp.h"
+#include "mapdoc.h"
+#include "mapface.h"
+#include "mapsolid.h"
+#include "mapworld.h"
+#include "mainfrm.h"
+#include "globalfunctions.h"
+#include "saveinfo.h"
+#include "texturesystem.h"
+#include "materialsystem/imesh.h"
+#include "material.h"
+#include "collisionutils.h"
+#include "cmodel.h"
+#include "history.h"
+#include "tooldisplace.h"
 #include "ToolManager.h"
 #include "mathlib/mathlib.h"
-#include "dispshore.h"
+#include "DispShore.h"
 #include "Color.h"
 #include "render2d.h"
 #include "faceeditsheet.h"
@@ -228,8 +228,8 @@ CMapDisp *CMapDisp::CopyFrom( CMapDisp *pMapDisp, bool bUpdateDependencies )
 	//
 	// check for valid displacement to copy from
 	//
-    if( !pMapDisp )
-        return NULL;
+	if( !pMapDisp )
+		return NULL;
 
 	//
 	// copy the base surface data - positions, normals, texture coords, etc...
@@ -332,7 +332,7 @@ CMapDisp *CMapDisp::CopyFrom( CMapDisp *pMapDisp, bool bUpdateDependencies )
 		CheckAndUpdateOverlays( true );
 	}
 
-    return this;
+	return this;
 }
 
 
@@ -818,7 +818,7 @@ void CMapDisp::DownSample( int oldPower )
 			Vector newSubdivPos;
 			Vector newSubdivNormal;
 			SamplePoints( oldIndex, oldWidth, oldHeight, validPoints, &newValue, &newAlpha,
-				          newDispVector, newSubdivPos, newSubdivNormal );
+						  newDispVector, newSubdivPos, newSubdivNormal );
 
 			//
 			// save sampled values
@@ -917,7 +917,7 @@ void CMapDisp::Elevate( float elevation )
 //-----------------------------------------------------------------------------
 // Purpose: Resample a displacement map to be a clipped version of this surface.
 //			Called when we split a face with a displacement surface.
-//          NOTE: The new surface must be a quad as well, otherwise return false;
+//		  NOTE: The new surface must be a quad as well, otherwise return false;
 //	hBuilderDisp - The displacement surface to receive the new clipped data.
 //-----------------------------------------------------------------------------
 void CMapDisp::Split( EditDispHandle_t hBuilderDisp )
@@ -1179,9 +1179,9 @@ void CMapDisp::CreateBoundingBoxes( BBox_t *pBBox, int count, float bloat )
 //-----------------------------------------------------------------------------
 // Purpose:
 // NOTE: Performance, look into it here.  This is doing way more work than
-//       necessary.  We should probably update a collision representation, a
-//       simple one at least whenever we update a displacement and use it as
-//       a first level cull here.  But for now....it works...ship, ship, ship.
+//	   necessary.  We should probably update a collision representation, a
+//	   simple one at least whenever we update a displacement and use it as
+//	   a first level cull here.  But for now....it works...ship, ship, ship.
 //-----------------------------------------------------------------------------
 bool CMapDisp::TraceLine( Vector &vecHitPos, Vector &vecHitNormal, Vector const &vecRayStart, Vector const &vecRayEnd )
 {
@@ -1209,7 +1209,7 @@ bool CMapDisp::TraceLine( Vector &vecHitPos, Vector &vecHitNormal, Vector const 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 bool CMapDisp::TraceLineSnapTo( Vector &HitPos, Vector &HitNormal,
-							    Vector const &RayStart, Vector const &RayEnd )
+								Vector const &RayStart, Vector const &RayEnd )
 {
 #define LOWER_TOLERANCE		-0.1f
 #define UPPER_TOLERANCE		1.1f
@@ -1632,21 +1632,21 @@ static void RenderDisplacementNormals( CCoreDispInfo& coreDispInfo, int numVerts
 
 	meshBuilder.Begin( pMesh, MATERIAL_LINES, numVerts );
 
-    for( int i = 0; i < numVerts; i++ )
-    {
+	for( int i = 0; i < numVerts; i++ )
+	{
 		coreDispInfo.GetVert( i, points[0] );
 		coreDispInfo.GetNormal( i, normal );
 
-	    meshBuilder.Color3f( 0.0f, 1.0f, 0.0f );
-        meshBuilder.Position3f( points[0][0], points[0][1], points[0][2] );
+		meshBuilder.Color3f( 0.0f, 1.0f, 0.0f );
+		meshBuilder.Position3f( points[0][0], points[0][1], points[0][2] );
 		meshBuilder.AdvanceVertex();
 
 		meshBuilder.Color3f( 0.0f, 1.0f, 0.0f );
-        meshBuilder.Position3f( points[0][0] + ( normal[0] * 10.0f ),
+		meshBuilder.Position3f( points[0][0] + ( normal[0] * 10.0f ),
 								points[0][1] + ( normal[1] * 10.0f ),
 								points[0][2] + ( normal[2] * 10.0f ) );
 		meshBuilder.AdvanceVertex();
-    }
+	}
 	meshBuilder.End();
 	pMesh->Draw();
 }
@@ -1668,14 +1668,14 @@ static void RenderDisplacementTangentsS( CCoreDispInfo &coreDispInfo, int numVer
 		coreDispInfo.GetVert( i, points[0] );
 		coreDispInfo.GetTangentS( i, tangentS );
 
-	    meshBuilder.Color3f( 1.0f, 0.0f, 0.0f );
-        meshBuilder.Position3f( points[0][0], points[0][1], points[0][2] );
+		meshBuilder.Color3f( 1.0f, 0.0f, 0.0f );
+		meshBuilder.Position3f( points[0][0], points[0][1], points[0][2] );
 		meshBuilder.AdvanceVertex();
 
 		meshBuilder.Color3f( 1.0f, 0.0f, 0.0f );
-        meshBuilder.Position3f( points[0][0] + ( tangentS[0] * 10.0f ),
-			                    points[0][1] + ( tangentS[1] * 10.0f ),
-					            points[0][2] + ( tangentS[2] * 10.0f ) );
+		meshBuilder.Position3f( points[0][0] + ( tangentS[0] * 10.0f ),
+								points[0][1] + ( tangentS[1] * 10.0f ),
+								points[0][2] + ( tangentS[2] * 10.0f ) );
 		meshBuilder.AdvanceVertex();
 	}
 
@@ -1701,14 +1701,14 @@ static void RenderDisplacementTangentsT( CCoreDispInfo &coreDispInfo, int numVer
 		coreDispInfo.GetVert( i, points[0] );
 		coreDispInfo.GetTangentT( i, tangentT );
 
-	    meshBuilder.Color3f( 0.0f, 0.0f, 1.0f );
-        meshBuilder.Position3f( points[0][0], points[0][1], points[0][2] );
+		meshBuilder.Color3f( 0.0f, 0.0f, 1.0f );
+		meshBuilder.Position3f( points[0][0], points[0][1], points[0][2] );
 		meshBuilder.AdvanceVertex();
 
 		meshBuilder.Color3f( 0.0f, 0.0f, 1.0f );
-        meshBuilder.Position3f( points[0][0] + ( tangentT[0] * 10.0f ),
-			                    points[0][1] + ( tangentT[1] * 10.0f ),
-					            points[0][2] + ( tangentT[2] * 10.0f ) );
+		meshBuilder.Position3f( points[0][0] + ( tangentT[0] * 10.0f ),
+								points[0][1] + ( tangentT[1] * 10.0f ),
+								points[0][2] + ( tangentT[2] * 10.0f ) );
 		meshBuilder.AdvanceVertex();
 	}
 
@@ -1729,21 +1729,21 @@ static void RenderFaceVertexNormals( CCoreDispInfo& coreDispInfo )
 	meshBuilder.Begin( pMesh, MATERIAL_LINES, 4 );
 
 	CCoreDispSurface *pSurf = coreDispInfo.GetSurface();
-    for( int i = 0; i < 4; i++ )
-    {
+	for( int i = 0; i < 4; i++ )
+	{
 		pSurf->GetPoint( i, points[0] );
 		pSurf->GetPointNormal( i, normal );
 
 		meshBuilder.Color3f( 1.0f, 0.0f, 0.0f );
-        meshBuilder.Position3f( points[0][0], points[0][1], points[0][2] );
+		meshBuilder.Position3f( points[0][0], points[0][1], points[0][2] );
 		meshBuilder.AdvanceVertex();
 
 		meshBuilder.Color3f( 1.0f, 0.0f, 0.0f );
-        meshBuilder.Position3f( points[0][0] + ( normal[0] * 25.0f ),
+		meshBuilder.Position3f( points[0][0] + ( normal[0] * 25.0f ),
 								points[0][1] + ( normal[1] * 25.0f ),
 								points[0][2] + ( normal[2] * 25.0f ) );
 		meshBuilder.AdvanceVertex();
-    }
+	}
 	meshBuilder.End();
 	pMesh->Draw();
 }
@@ -2019,8 +2019,8 @@ void CMapDisp::AddShadowingTriangles( CUtlVector<Vector> &tri_list )
 //-----------------------------------------------------------------------------
 void CMapDisp::Render3D( CRender3D *pRender, bool bIsSelected, SelectionState_t faceSelectionState )
 {
-    // Get the current rendermode.
-    EditorRenderMode_t renderMode = pRender->GetCurrentRenderMode();
+	// Get the current rendermode.
+	EditorRenderMode_t renderMode = pRender->GetCurrentRenderMode();
 
 	if ( renderMode == RENDER_MODE_SELECTION_OVERLAY )
 	{
@@ -2031,8 +2031,8 @@ void CMapDisp::Render3D( CRender3D *pRender, bool bIsSelected, SelectionState_t 
 		RenderSurface( pRender, bIsSelected, faceSelectionState );
 
 		// Note: This will cause the wireframe to render twice in selection due to
-		//       the multiplass operations at the solid and face levels (the render
-		//       portion of the hammer code needs to be reworked there).
+		//	   the multiplass operations at the solid and face levels (the render
+		//	   portion of the hammer code needs to be reworked there).
 		if ( renderMode != RENDER_MODE_WIREFRAME && bIsSelected )
 		{
 			// This renders wireframe twice in selection!
@@ -2041,7 +2041,7 @@ void CMapDisp::Render3D( CRender3D *pRender, bool bIsSelected, SelectionState_t 
 	}
 
 	// Note: the rendermode == textured is so that this only gets rendered
-	//       once per frame.
+	//	   once per frame.
 	bool bDispWalkableMode = CMapDoc::GetActiveMapDoc()->IsDispDrawWalkable();
 	if ( bDispWalkableMode && RenderingModeIsTextured(renderMode))
 	{
@@ -2049,7 +2049,7 @@ void CMapDisp::Render3D( CRender3D *pRender, bool bIsSelected, SelectionState_t 
 	}
 
 	// Note: the rendermode == textured is so that this only gets rendered
-	//       once per frame.
+	//	   once per frame.
 	bool bDispBuildableMode = CMapDoc::GetActiveMapDoc()->IsDispDrawBuildable();
 	if ( bDispBuildableMode && RenderingModeIsTextured( renderMode ))
 	{
@@ -2057,7 +2057,7 @@ void CMapDisp::Render3D( CRender3D *pRender, bool bIsSelected, SelectionState_t 
 	}
 
 	// Note: the rendermode == textured is so that this only gets rendered
-	//       once per frame.
+	//	   once per frame.
 	bool bDispRemoveMode = CMapDoc::GetActiveMapDoc()->IsDispDrawRemove();
 	if ( bDispRemoveMode && RenderingModeIsTextured( renderMode ))
 	{
@@ -2126,21 +2126,21 @@ void CMapDisp::RenderSurface( CRender3D *pRender, bool bIsSelected, SelectionSta
 
 	CMeshBuilder meshBuilder;
 	CMatRenderContextPtr pRenderContext( MaterialSystemInterface() );
-	IMesh *pMesh = pRenderContext->GetDynamicMesh();
-	meshBuilder.Begin( pMesh, MATERIAL_TRIANGLES, numVerts,	numIndices );
+	meshBuilder.Begin( pRenderContext->GetDynamicMesh(), MATERIAL_TRIANGLES, numVerts,	numIndices );
 
 	CoreDispVert_t *pVert = m_CoreDispInfo.GetDispVertList();
 	if ( Options.view3d.bInvertDisplacementAlpha )
 	{
 		for ( int i = 0; i < numVerts; ++i )
 		{
-			meshBuilder.Position3fv( pVert[i].m_Vert.Base() );
-			meshBuilder.Color4ub( color[0], color[1], color[2], 255 - (unsigned char)( pVert[i].m_Alpha ) );
-			meshBuilder.Normal3fv( pVert[i].m_Normal.Base() );
-			meshBuilder.TangentS3fv( pVert[i].m_TangentS.Base() );
-			meshBuilder.TangentT3fv( pVert[i].m_TangentT.Base() );
-			meshBuilder.TexCoord2fv( 0, pVert[i].m_TexCoord.Base() );
-			meshBuilder.TexCoord2fv( 1, pVert[i].m_LuxelCoords[0].Base() );
+			const auto& vert = pVert[i];
+			meshBuilder.Position3fv( vert.m_Vert.Base() );
+			meshBuilder.Color4ub( color[0], color[1], color[2], 255 - (unsigned char)( vert.m_Alpha ) );
+			meshBuilder.Normal3fv( vert.m_Normal.Base() );
+			meshBuilder.TangentS3fv( vert.m_TangentS.Base() );
+			meshBuilder.TangentT3fv( vert.m_TangentT.Base() );
+			meshBuilder.TexCoord2fv( 0, vert.m_TexCoord.Base() );
+			meshBuilder.TexCoord2fv( 1, vert.m_LuxelCoords[0].Base() );
 			meshBuilder.AdvanceVertex();
 		}
 	}
@@ -2148,13 +2148,14 @@ void CMapDisp::RenderSurface( CRender3D *pRender, bool bIsSelected, SelectionSta
 	{
 		for ( int i = 0; i < numVerts; ++i )
 		{
-			meshBuilder.Position3fv( pVert[i].m_Vert.Base() );
-			meshBuilder.Color4ub( color[0], color[1], color[2], (unsigned char)( pVert[i].m_Alpha ) );
-			meshBuilder.Normal3fv( pVert[i].m_Normal.Base() );
-			meshBuilder.TangentS3fv( pVert[i].m_TangentS.Base() );
-			meshBuilder.TangentT3fv( pVert[i].m_TangentT.Base() );
-			meshBuilder.TexCoord2fv( 0, pVert[i].m_TexCoord.Base() );
-			meshBuilder.TexCoord2fv( 1, pVert[i].m_LuxelCoords[0].Base() );
+			const auto& vert = pVert[i];
+			meshBuilder.Position3fv( vert.m_Vert.Base() );
+			meshBuilder.Color4ub( color[0], color[1], color[2], (unsigned char)( vert.m_Alpha ) );
+			meshBuilder.Normal3fv( vert.m_Normal.Base() );
+			meshBuilder.TangentS3fv( vert.m_TangentS.Base() );
+			meshBuilder.TangentT3fv( vert.m_TangentT.Base() );
+			meshBuilder.TexCoord2fv( 0, vert.m_TexCoord.Base() );
+			meshBuilder.TexCoord2fv( 1, vert.m_LuxelCoords[0].Base() );
 			meshBuilder.AdvanceVertex();
 		}
 	}
@@ -2175,8 +2176,7 @@ void CMapDisp::RenderSurface( CRender3D *pRender, bool bIsSelected, SelectionSta
 		}
 	}
 
-	meshBuilder.End();
-	pMesh->Draw();
+	meshBuilder.End( false, true );
 }
 
 //-----------------------------------------------------------------------------
@@ -2288,7 +2288,7 @@ void CMapDisp::RenderWalkableSurface( CRender3D *pRender, bool bIsSelected, Sele
 //-----------------------------------------------------------------------------
 void CMapDisp::RenderBuildableSurface( CRender3D *pRender, bool bIsSelected, SelectionState_t faceSelectionState )
 {
-    // Normal
+	// Normal
 	for ( int iPass = 0; iPass < 2; ++iPass )
 	{
 		Color color;
@@ -2450,7 +2450,7 @@ void CMapDisp::RenderWireframeSurface( CRender3D *pRender, bool bIsSelected, Sel
 	if ( HasGridMask() )
 		return;
 
-    pRender->PushRenderMode( RENDER_MODE_WIREFRAME );
+	pRender->PushRenderMode( RENDER_MODE_WIREFRAME );
 
 	Color color( 255, 255, 255, 255 );
 	CalcColor( pRender, bIsSelected, faceSelectionState, color );
@@ -2466,10 +2466,11 @@ void CMapDisp::RenderWireframeSurface( CRender3D *pRender, bool bIsSelected, Sel
 	CoreDispVert_t *pVert = m_CoreDispInfo.GetDispVertList();
 	for (int i = 0; i < numVerts; ++i )
 	{
-		meshBuilder.Position3fv( pVert[i].m_Vert.Base() );
+		const auto& vert = pVert[i];
+		meshBuilder.Position3fv( vert.m_Vert.Base() );
 		meshBuilder.Color3ub( 255, 255, 255 );
-		meshBuilder.TexCoord2fv( 0, pVert[i].m_TexCoord.Base() );
-		meshBuilder.TexCoord2fv( 1, pVert[i].m_LuxelCoords[0].Base() );
+		meshBuilder.TexCoord2fv( 0, vert.m_TexCoord.Base() );
+		meshBuilder.TexCoord2fv( 1, vert.m_LuxelCoords[0].Base() );
 		meshBuilder.AdvanceVertex();
 	}
 
@@ -3309,9 +3310,9 @@ ChunkFileResult_t CMapDisp::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo)
 		eResult = pFile->WriteKeyValueInt( "subdiv", bSubdivided );
 	}
 
-    //
-    // Save displacement map normals.
-    //
+	//
+	// Save displacement map normals.
+	//
 	if (eResult == ChunkFile_Ok)
 	{
 		Vector vectorFieldVector;
@@ -3357,8 +3358,8 @@ ChunkFileResult_t CMapDisp::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo)
 		}
 	}
 
-    //
-    // Save displacement map distances.
+	//
+	// Save displacement map distances.
 	//
 	if (eResult == ChunkFile_Ok)
 	{
@@ -3405,8 +3406,8 @@ ChunkFileResult_t CMapDisp::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo)
 		}
 	}
 
-    //
-    // Save displacement map offset.
+	//
+	// Save displacement map offset.
 	//
 	if (eResult == ChunkFile_Ok)
 	{
@@ -3453,8 +3454,8 @@ ChunkFileResult_t CMapDisp::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo)
 		}
 	}
 
-    //
-    // Save displacement subdivision normals
+	//
+	// Save displacement subdivision normals
 	//
 	if (eResult == ChunkFile_Ok)
 	{
@@ -3501,8 +3502,8 @@ ChunkFileResult_t CMapDisp::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo)
 		}
 	}
 
-    //
-    // Save displacement alphas
+	//
+	// Save displacement alphas
 	//
 	if (eResult == ChunkFile_Ok)
 	{
@@ -3549,7 +3550,7 @@ ChunkFileResult_t CMapDisp::SaveVMF(CChunkFile *pFile, CSaveInfo *pSaveInfo)
 		}
 	}
 
-    // Save Triangle data.
+	// Save Triangle data.
 	if (eResult == ChunkFile_Ok)
 	{
 		unsigned short nTriTag;
@@ -3736,7 +3737,7 @@ bool SphereTriEdgePlanesIntersection( Vector const &ptCenter, float radius, cpla
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 bool CMapDisp::PointSurfIntersection( Vector const &ptCenter, float radius, float &distMin,
-							          Vector &ptMin )
+									  Vector &ptMin )
 {
 	// initialize the min data
 	distMin = radius;
@@ -3858,7 +3859,7 @@ EditDispHandle_t CMapDisp::GetHitDispMap( void )
 
 //-----------------------------------------------------------------------------
 // Purpose: UNDO is messy to begin with, and now with handles it gets even
-//          more fun!!!  Call through here to setup undo!!
+//		  more fun!!!  Call through here to setup undo!!
 //-----------------------------------------------------------------------------
 void EditDisp_ForUndo( EditDispHandle_t editHandle, char *pszPositionName,
 					   bool bNeighborsUndo )

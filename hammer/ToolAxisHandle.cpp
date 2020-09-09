@@ -1,19 +1,19 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
 
 #include "stdafx.h"
-#include "History.h"
-#include "MainFrm.h"			// For ObjectProperties
-#include "MapDoc.h"
+#include "history.h"
+#include "mainfrm.h"			// For ObjectProperties
+#include "mapdoc.h"
 #include "MapAxisHandle.h"
-#include "MapPointHandle.h"
-#include "MapView2D.h"
-#include "Render2D.h"
-#include "StatusBarIDs.h"		// For SetStatusText
+#include "mappointhandle.h"
+#include "mapview2d.h"
+#include "render2d.h"
+#include "statusbarids.h"		// For SetStatusText
 #include "ToolManager.h"
 #include "ToolAxisHandle.h"
 #include "ToolPointHandle.h"
@@ -116,7 +116,7 @@ bool CToolAxisHandle::OnMouseMove2D(CMapView2D *pView, UINT nFlags, const Vector
 
 	vecPos[m_nPointIndex][pView->axHorz] = vecWorld[pView->axHorz];
 	vecPos[m_nPointIndex][pView->axVert] = vecWorld[pView->axVert];
-	
+
 	m_pAxis->UpdateEndPoint(vecPos[m_nPointIndex], m_nPointIndex);
 
 	int nOtherIndex = (m_nPointIndex == 0);

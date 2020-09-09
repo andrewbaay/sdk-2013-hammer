@@ -17,7 +17,7 @@ typedef unsigned char byte;
 
 #include "hammer_mathlib.h"
 #include "studio.h"
-#include "UtlVector.h"
+#include "utlvector.h"
 #include "datacache/imdlcache.h"
 #include "FileChangeWatcher.h"
 

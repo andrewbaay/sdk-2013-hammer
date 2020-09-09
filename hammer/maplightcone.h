@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -12,8 +12,8 @@
 
 
 #include "MapHelper.h"
-#include "MapFace.h"
-#include "fgdlib/WCKeyValues.h"
+#include "mapface.h"
+#include "fgdlib/wckeyvalues.h"
 
 
 class CHelperInfo;
@@ -25,12 +25,12 @@ class CMapLightCone : public CMapHelper
 public:
 
 	DECLARE_MAPCLASS(CMapLightCone,CMapHelper);
-	
+
 	//
 	// Factory for building from a list of string parameters.
 	//
 	static CMapClass *Create(CHelperInfo *pInfo, CMapEntity *pParent);
-	
+
 	//
 	// Construction/destruction:
 	//
@@ -51,7 +51,7 @@ public:
 	virtual bool CanBeCulledByCordon() const { return false; } // We don't hide unless our parent hides.
 
 	virtual CMapClass *PrepareSelection(SelectMode_t eSelectMode);
-		
+
 	const char* GetDescription() { return("Light cone helper"); }
 
 	void OnParentKeyChanged( const char* key, const char* value );

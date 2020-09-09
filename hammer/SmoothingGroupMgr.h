@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -12,7 +12,7 @@ class CMapFace;
 class CChunkFile;
 class CSaveInfo;
 
-enum ChunkFileResult_t;
+enum ChunkFileResult_t : unsigned char;
 
 #define MAX_SMOOTHING_GROUP_COUNT	32
 #define INVALID_SMOOTHING_GROUP		0xff

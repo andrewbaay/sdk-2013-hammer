@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -11,10 +11,10 @@
 #endif
 
 
-#include "TextureBox.h"
-#include "wndTex.h"
-#include "ControlBarIDs.h"
-#include "HammerBar.h"
+#include "texturebox.h"
+#include "wndtex.h"
+#include "controlbarids.h"
+#include "hammerbar.h"
 
 class IEditorTexture;
 

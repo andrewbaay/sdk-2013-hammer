@@ -1,12 +1,12 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
 
 #include "stdafx.h"
-#include "Axes2.h"
+#include "axes2.h"
 #include "mathlib/vector.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -28,7 +28,7 @@ void Axes2::SetAxes(int h, bool bInvertH, int v, bool bInvertV)
 		axThird = AXIS_Z;
 }
 
-void Axes2::SetAxes(Axes2 &axes)
+void Axes2::SetAxes(const Axes2 &axes)
 {
 	*this = axes;
 }

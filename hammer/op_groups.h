@@ -12,8 +12,8 @@
 
 
 #include "resource.h"
-#include "GroupList.h"
-#include "ObjectPage.h"
+#include "grouplist.h"
+#include "objectpage.h"
 
 
 class COP_Groups : public CObjectPage

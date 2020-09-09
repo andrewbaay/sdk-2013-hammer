@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -13,7 +13,7 @@
 #endif
 
 #include "dme_controls/BaseAttributeChoicePanel.h"
-#include "vgui_controls/phandle.h"
+#include "vgui_controls/PHandle.h"
 
 
 //-----------------------------------------------------------------------------

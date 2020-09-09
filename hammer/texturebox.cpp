@@ -7,10 +7,10 @@
 //=============================================================================
 
 #include "stdafx.h"
-#include "GameConfig.h"
-#include "IEditorTexture.h"
-#include "TextureBox.h"
-#include "TextureSystem.h"
+#include "gameconfig.h"
+#include "ieditortexture.h"
+#include "texturebox.h"
+#include "texturesystem.h"
 #include "hammer.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -20,7 +20,7 @@
 BEGIN_MESSAGE_MAP(CTextureBox, CComboBox)
 	//{{AFX_MSG_MAP(CTextureBox)
 	ON_WM_ERASEBKGND()
-	ON_MESSAGE(CB_SELECTSTRING, OnSelectString)
+	ON_MESSAGE(CB_SELECTSTRING, &ThisClass::OnSelectString)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -80,7 +80,7 @@ void CTextureBox::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 
 	int iFontHeight = dc.GetTextExtent("J", 1).cy;
 
-	if (lpDrawItemStruct->itemID != -1)
+	if (lpDrawItemStruct->itemID != (uint)-1)
 	{
 		IEditorTexture *pTex = (IEditorTexture *)GetItemDataPtr(lpDrawItemStruct->itemID);
 		dc.SetROP2(R2_COPYPEN);

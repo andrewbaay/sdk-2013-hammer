@@ -8,19 +8,19 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "DummyTexture.h"		// Specific IEditorTexture implementation
-#include "GlobalFunctions.h"
-#include "MainFrm.h"
-#include "MapDoc.h"
-#include "Material.h"			// Specific IEditorTexture implementation
-#include "Options.h"
-#include "TextureSystem.h"
+#include "dummytexture.h"		// Specific IEditorTexture implementation
+#include "globalfunctions.h"
+#include "mainfrm.h"
+#include "mapdoc.h"
+#include "material.h"			// Specific IEditorTexture implementation
+#include "options.h"
+#include "texturesystem.h"
 #include "hammer.h"
 #include "filesystem.h"
-#include "materialsystem/ITexture.h"
+#include "materialsystem/itexture.h"
 #include "materialsystem/imaterialvar.h"
 #include "tier1/utldict.h"
-#include "FaceEditSheet.h"
+#include "faceeditsheet.h"
 
 #include "tier1/KeyValues.h"
 #include "tier1/fmtstr.h"

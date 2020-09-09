@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -9,10 +9,9 @@
 #define OVERLAY3D_H
 #pragma once
 
-#include <afxwin.h>
-#include "Box3D.h"
-#include "ToolInterface.h"
-#include "MapOverlay.h"
+#include "box3d.h"
+#include "toolinterface.h"
+#include "mapoverlay.h"
 #include "ToolManager.h"
 
 class CMapDoc;
@@ -34,7 +33,7 @@ public:
 	// CBaseTool virtual implementations
 	//
 	ToolID_t	GetToolID( void ) { return TOOL_OVERLAY; }
-	
+
     void		OnActivate();
     void		OnDeactivate();
 
@@ -72,7 +71,7 @@ private:
 private:
 
 	bool			m_bDragging;		// Are we dragging overlay handles?
-	Shoreline_t		*m_pShoreline;		// 
+	Shoreline_t		*m_pShoreline;		//
 	CMapOverlay		*m_pActiveOverlay;	// The overlay currently being acted upon
 };
 

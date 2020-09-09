@@ -1,15 +1,15 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
 
 #include "stdafx.h"
 #include <commctrl.h>
-#include "TitleWnd.h"
-#include "MainFrm.h"
-#include "Resource.h"
+#include "titlewnd.h"
+#include "mainfrm.h"
+#include "resource.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -24,7 +24,7 @@ BEGIN_MESSAGE_MAP(CTitleWnd, CWnd)
 	ON_WM_RBUTTONDOWN()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_MOUSEMOVE()
-	ON_MESSAGE(WM_MOUSELEAVE, OnMouseLeave)
+	ON_MESSAGE(WM_MOUSELEAVE, &ThisClass::OnMouseLeave)
 END_MESSAGE_MAP()
 
 
@@ -132,7 +132,7 @@ void CTitleWnd::OnMouseMove(UINT nFlags, CPoint point)
 		Track.cbSize = sizeof(Track);
 		Track.dwFlags = TME_HOVER | TME_LEAVE;
 		Track.hwndTrack = m_hWnd;
-		Track.dwHoverTime = 0.1;
+		Track.dwHoverTime = 100;
 
 		_TrackMouseEvent(&Track);
 

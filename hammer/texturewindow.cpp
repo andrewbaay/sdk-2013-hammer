@@ -6,13 +6,13 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "TextureWindow.h"
-#include "TextureBrowser.h"
-#include "CustomMessages.h"
-#include "IEditorTexture.h"
-#include "GameConfig.h"
-#include "TextureSystem.h"
-#include "materialsystem/IMaterial.h"
+#include "texturewindow.h"
+#include "texturebrowser.h"
+#include "custommessages.h"
+#include "ieditortexture.h"
+#include "gameconfig.h"
+#include "texturesystem.h"
+#include "materialsystem/imaterial.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -443,7 +443,7 @@ void CTextureWindow::UpdateScrollSizes(void)
 	SetScrollInfo(SB_VERT, &si, TRUE);
 
 	char szbuf[100];
-	sprintf(szbuf, "Size = %d %d\n", total_y, TE.clientrect.bottom);
+	sprintf(szbuf, "Size = %d %ld\n", total_y, TE.clientrect.bottom);
 	TRACE0(szbuf);
 }
 

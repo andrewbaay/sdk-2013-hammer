@@ -7,7 +7,7 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "DummyTexture.h"
+#include "dummytexture.h"
 #include "pixelwriter.h"
 #include "materialsystem/imaterial.h"
 #include "materialsystem/imaterialsystem.h"

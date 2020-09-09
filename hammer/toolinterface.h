@@ -25,10 +25,10 @@ class CSaveInfo;
 
 #define	HANDLE_RADIUS		4
 
-enum ChunkFileResult_t;
+enum ChunkFileResult_t : unsigned char;
 
 
-enum ToolID_t
+enum ToolID_t : signed char
 {
 	TOOL_NONE = -1,
 	TOOL_POINTER,

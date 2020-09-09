@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -11,7 +11,7 @@
 #pragma once
 #endif
 
-#include "ToolInterface.h"
+#include "toolinterface.h"
 
 
 class CToolDecal : public CBaseTool
@@ -29,9 +29,9 @@ public:
 	virtual bool OnKeyDown3D(CMapView3D *pView, UINT nChar, UINT nRepCnt, UINT nFlags);
 	virtual bool OnLMouseDown3D(CMapView3D *pView, UINT nFlags, const Vector2D &vPoint);
 	virtual bool OnMouseMove3D(CMapView3D *pView, UINT nFlags, const Vector2D &vPoint);
-	
+
 private:
-	
+
 	void SetDecalCursor(void);
 };
 

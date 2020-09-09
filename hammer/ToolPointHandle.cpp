@@ -1,18 +1,18 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
 #include "stdafx.h"
-#include "History.h"
-#include "MainFrm.h"			// FIXME: For ObjectProperties
-#include "MapDoc.h"
-#include "MapView2D.h"
-#include "MapPointHandle.h"
+#include "history.h"
+#include "mainfrm.h"			// FIXME: For ObjectProperties
+#include "mapdoc.h"
+#include "mapview2d.h"
+#include "mappointhandle.h"
 #include "PopupMenus.h"
-#include "Render2D.h"
-#include "StatusBarIDs.h"		// For SetStatusText
+#include "render2d.h"
+#include "statusbarids.h"		// For SetStatusText
 #include "ToolManager.h"
 #include "ToolPointHandle.h"
 #include "Selection.h"
@@ -33,7 +33,7 @@ class CToolPointHandleMsgWnd : public CWnd
 		//{{AFX_MSG_MAP(CToolPointHandleMsgWnd)
 		afx_msg void OnCenter();
 		//}}AFX_MSG
-	
+
 		DECLARE_MESSAGE_MAP()
 
 	private:
@@ -49,7 +49,7 @@ static const char *g_pszClassName = "ValveEditor_PointHandleToolWnd";
 
 BEGIN_MESSAGE_MAP(CToolPointHandleMsgWnd, CWnd)
 	//{{AFX_MSG_MAP(CToolPointHandleMsgWnd)
-	ON_COMMAND(ID_CENTER_ON_ENTITY, OnCenter)
+	ON_COMMAND(ID_CENTER_ON_ENTITY, &ThisClass::OnCenter)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -88,7 +88,7 @@ void CToolPointHandleMsgWnd::PreMenu2D(CToolPointHandle *pToolPointHandle, CMapV
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CToolPointHandleMsgWnd::OnCenter()
 {
@@ -181,7 +181,7 @@ bool CToolPointHandle::OnMouseMove2D(CMapView2D *pView, UINT nFlags, const Vecto
 	//
 	m_pPoint->m_Origin[pView->axHorz] = vecWorld[pView->axHorz];
 	m_pPoint->m_Origin[pView->axVert] = vecWorld[pView->axVert];
-	
+
 	//
 	// Update the status bar and the views.
 	//
@@ -208,9 +208,9 @@ void CToolPointHandle::RenderTool2D(CRender2D *pRender)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pView - 
-//			point - 
+// Purpose:
+// Input  : *pView -
+//			point -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CToolPointHandle::OnContextMenu2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoint)
@@ -246,7 +246,7 @@ bool CToolPointHandle::OnContextMenu2D(CMapView2D *pView, UINT nFlags, const Vec
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CToolPointHandle::CenterOnParent(CMapView *pView)
 {

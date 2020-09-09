@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -14,7 +14,7 @@
 #include "movieobjects/timeutils.h"
 #include "movieobjects/dmetimeselectiontimes.h"
 
-enum RecordingState_t;
+enum RecordingState_t : unsigned char;
 
 class CDmeTimeSelection : public CDmElement
 {
@@ -44,7 +44,7 @@ public:
 	float				AdjustFactorForInterpolatorType( float factor, int side );
 
 	void				CopyFrom( const CDmeTimeSelection &src );
-	
+
 	void				GetCurrent( DmeTime_t pTimes[TS_TIME_COUNT] );
 	void				SetCurrent( DmeTime_t* pTimes );
 
@@ -54,7 +54,7 @@ public:
 	RecordingState_t	GetRecordingState() const;
 
 private:
-	CDmeTimeSelection & operator =( const CDmeTimeSelection& src ) { Assert( 0 ); }
+	CDmeTimeSelection& operator=( const CDmeTimeSelection& src ) = delete;
 
 	void				ConvertToRelative( DmeTime_t time );
 	void				ConvertToAbsolute( DmeTime_t time );

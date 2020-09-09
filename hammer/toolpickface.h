@@ -12,8 +12,8 @@
 #endif
 
 
-#include "MapFace.h"
-#include "ToolInterface.h"
+#include "mapface.h"
+#include "toolinterface.h"
 
 
 class CMapView3D;
@@ -25,7 +25,7 @@ class CToolPickFace;
 //
 enum FaceState_t
 {
-	FaceState_Select = 0,		// 
+	FaceState_Select = 0,		//
 	FaceState_Partial,			// Used for multiselect; the face is in at least one of the face lists being edited.
 	FaceState_None,				// Used for multiselect; to deselect partially selected faces. Otherwise they are removed from the list.
 };

@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -20,14 +20,13 @@
 
 #undef min
 #undef max
+#undef _tzcnt_u32
 #include <fstream>
 #include "valve_minmax_on.h"
 
 #ifdef _WIN32
 #pragma warning(pop)
 #endif
-
-#include <assert.h>
 
 
 typedef enum

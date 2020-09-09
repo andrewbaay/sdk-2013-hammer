@@ -11,7 +11,7 @@
 
 
 #include "Render.h"
-#include "mathlib/Vector4D.h"
+#include "mathlib/vector4d.h"
 #include "utlpriorityqueue.h"
 #include "mapclass.h"
 #include "lpreview_thread.h"
@@ -42,8 +42,8 @@ class IMaterialVar;
 template< class T, class A >
 class CUtlVector;
 
-enum Visibility_t;
-enum SelectionState_t;
+enum Visibility_t : unsigned char;
+enum SelectionState_t : unsigned char;
 
 
 struct TranslucentObjects_t
@@ -155,7 +155,7 @@ public:
 	void StartRenderFrame(void);
 	void EndRenderFrame(void);
 
-	virtual	void						PushInstanceData( CMapInstance *pInstanceClass, Vector &InstanceOrigin, QAngle &InstanceAngles );
+	virtual	void						PushInstanceData( CMapInstance *pInstanceClass, const Vector &InstanceOrigin, const QAngle &InstanceAngles );
 	virtual	void						PopInstanceData( void );
 
 	void ResetFocus();

@@ -3,14 +3,13 @@
 
 #include "raytrace.h"
 #include <filesystem_tools.h>
-#include <cmdlib.h>
-#include <stdio.h>
 
 static bool SameSign(float a, float b)
 {
-	int32 aa=*((int *) &a);
-	int32 bb=*((int *) &b);
-	return ((aa^bb)&0x80000000)==0;
+	union { float af; int32 ai; } au, bu;
+	au.af = a;
+	bu.af = b;
+	return ((au.ai^bu.ai)&0x80000000)==0;
 }
 
 int FourRays::CalculateDirectionSignMask(void) const
@@ -341,7 +340,7 @@ void RayTracingEnvironment::Trace4Rays(const FourRays &rays, fltx4 TMin, fltx4 T
 	}
 }
 
-
+// wrapper for the low level trace4 rays routine
 void RayTracingEnvironment::Trace4Rays(const FourRays &rays, fltx4 TMin, fltx4 TMax,
 									   int DirectionSignMask, RayTracingResult *rslt_out,
 									   int32 skip_id, ITransparentTriangleCallback *pCallback)
@@ -410,7 +409,7 @@ void RayTracingEnvironment::Trace4Rays(const FourRays &rays, fltx4 TMin, fltx4 T
 	NodeToVisit NodeQueue[MAX_NODE_STACK_LEN];
 	CacheOptimizedKDNode const *CurNode=&(OptimizedKDTree[0]);
 	NodeToVisit *stack_ptr=&NodeQueue[MAX_NODE_STACK_LEN];
-	while(1)
+	while(true)
 	{
 		while (CurNode->NodeType() != KDNODE_STATE_LEAF)		// traverse until next leaf
 		{
@@ -616,7 +615,7 @@ void RayTracingEnvironment::CalculateTriangleListBounds(int32 const *tris,int nt
 			for(int c=0; c<3; c++)
 			{
 				minout[c]=min(minout[c],tri.Vertex(v)[c]);
-							  maxout[c]=max(maxout[c],tri.Vertex(v)[c]);
+				maxout[c]=max(maxout[c],tri.Vertex(v)[c]);
 			}
 	}
 }
@@ -650,7 +649,7 @@ void RayTracingEnvironment::CalculateTriangleListBounds(int32 const *tris,int nt
 
 float RayTracingEnvironment::CalculateCostsOfSplit(
 	int split_plane,int32 const *tri_list,int ntris,
-	Vector MinBound,Vector MaxBound, float &split_value,
+	Vector MinBound, Vector MaxBound, float &split_value,
 	int &nleft, int &nright, int &nboth)
 {
 	// determine the costs of splitting on a given axis, and label triangles with respect to
@@ -660,9 +659,6 @@ float RayTracingEnvironment::CalculateCostsOfSplit(
 
 	// now, label each triangle. Since we have not converted the triangles into
 	// intersection fromat yet, we can use the CoordSelect0 field of each as a temp.
-	nleft=0;
-	nright=0;
-	nboth=0;
 	float min_coord=1.0e23,max_coord=-1.0e23;
 
 	for(int t=0;t<ntris;t++)
@@ -855,7 +851,7 @@ void RayTracingEnvironment::RefineNode(int node_number,int32 const *tri_list,int
 		OptimizedKDTree[node_number].vecMins = MinBound;
 		OptimizedKDTree[node_number].vecMaxs = MaxBound;
 #endif
-		CacheOptimizedKDNode newnode;
+		CacheOptimizedKDNode newnode{};
 		OptimizedKDTree.AddToTail(newnode);
 		OptimizedKDTree.AddToTail(newnode);
 		// now, recurse!
@@ -888,11 +884,7 @@ void RayTracingEnvironment::SetupAccelerationStructure(void)
 
 
 
-void RayTracingEnvironment::AddInfinitePointLight(Vector position, Vector intensity)
+void RayTracingEnvironment::AddInfinitePointLight( Vector position, Vector intensity)
 {
-	LightDesc_t mylight(position,intensity);
-	LightList.AddToTail(mylight);
-
+	LightList.AddToTail( LightDesc_t( position, intensity ) );
 }
-
-

@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -12,15 +12,15 @@
 #endif
 
 
-#include "HammerBar.h"
-#include "MapClass.h"
+#include "hammerbar.h"
+#include "mapclass.h"
 
 
 class CMapAnimationDlg : public CHammerBar
 {
 public:
     CMapAnimationDlg();
-    
+
     bool Create( CWnd *pParentWnd );
 
 	void RunFrame( void );

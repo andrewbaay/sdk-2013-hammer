@@ -2,7 +2,7 @@
 //
 
 #include "stdafx.h"
-#include "ParticleBrowser.h"
+#include "particlebrowser.h"
 #include "matsys_controls/particlepicker.h"
 #include "matsys_controls/matsyscontrols.h"
 #include "vgui/ISurface.h"
@@ -176,7 +176,7 @@ void CParticleBrowser::SaveLoadSettings( bool bSave )
 	if ( bSave )
 	{
 		GetWindowRect(rect);
-		str.Format("%d %d %d %d", rect.left, rect.top, rect.right, rect.bottom);
+		str.Format("%ld %ld %ld %ld", rect.left, rect.top, rect.right, rect.bottom);
 		pApp->WriteProfileString(pszIniSection, "Position", str);
 		pApp->WriteProfileString(pszIniSection, "Filter", m_pPicker->GetFilter() );
 	}
@@ -186,7 +186,7 @@ void CParticleBrowser::SaveLoadSettings( bool bSave )
 
 		if (!str.IsEmpty())
 		{
-			sscanf(str, "%d %d %d %d", &rect.left, &rect.top, &rect.right, &rect.bottom);
+			sscanf(str, "%ld %ld %ld %ld", &rect.left, &rect.top, &rect.right, &rect.bottom);
 			MoveWindow(rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, FALSE);
 			Resize();
 		}

@@ -4,11 +4,11 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "ManifestDialog.h"
-#include "MapDoc.h"
-#include "Manifest.h"
+#include "manifestdialog.h"
+#include "mapdoc.h"
+#include "manifest.h"
 #include "MapInstance.h"
-#include "ControlBarIDs.h"
+#include "controlbarids.h"
 
 // CManifestMove dialog
 
@@ -48,7 +48,7 @@ void CManifestMove::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CManifestMove, CDialog)
-	ON_EN_CHANGE(IDC_MANIFEST_FILENAME, &CManifestMove::OnEnChangeManifestFilename)
+	ON_EN_CHANGE(IDC_MANIFEST_FILENAME, &ThisClass::OnEnChangeManifestFilename)
 END_MESSAGE_MAP()
 
 
@@ -581,12 +581,12 @@ BEGIN_MESSAGE_MAP(CManifestListBox, CListBox)
 	ON_WM_RBUTTONUP()
 	//}}AFX_MSG_MAP
 	ON_WM_LBUTTONDBLCLK()
-	ON_COMMAND(ID_MOVESELECTIONTO_SUBMAP, OnMoveSelectionToSubMap)
-	ON_COMMAND(ID_MOVESELECTIONTO_NEWSUBMAP, OnMoveSelectionToNewSubMap)
-	ON_COMMAND(ID_INSERT_EMPTYSUBMAP, OnInsertEmptySubMap)
-	ON_COMMAND(ID_INSERT_EXISTINGSUBMAP, OnInsertExistingSubMap)
-	ON_COMMAND(ID_MANIFEST_PROPERTIES, OnManifestProperties)
-	ON_COMMAND(ID_MANIFEST_REMOVE, OnManifestRemove)
+	ON_COMMAND(ID_MOVESELECTIONTO_SUBMAP, &ThisClass::OnMoveSelectionToSubMap)
+	ON_COMMAND(ID_MOVESELECTIONTO_NEWSUBMAP, &ThisClass::OnMoveSelectionToNewSubMap)
+	ON_COMMAND(ID_INSERT_EMPTYSUBMAP, &ThisClass::OnInsertEmptySubMap)
+	ON_COMMAND(ID_INSERT_EXISTINGSUBMAP, &ThisClass::OnInsertExistingSubMap)
+	ON_COMMAND(ID_MANIFEST_PROPERTIES, &ThisClass::OnManifestProperties)
+	ON_COMMAND(ID_MANIFEST_REMOVE, &ThisClass::OnManifestRemove)
 END_MESSAGE_MAP()
 
 
@@ -810,10 +810,17 @@ void CManifestMapDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_MANIFEST_FULL_FILENAME, m_FullFileNameCtrl);
 }
 
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunused-local-typedef"
+#endif
 
 BEGIN_MESSAGE_MAP(CManifestMapDlg, CDialog)
 END_MESSAGE_MAP()
 
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: routine to handle the initialization of the dialog

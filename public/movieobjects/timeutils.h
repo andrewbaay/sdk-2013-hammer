@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -124,9 +124,25 @@ public:
 
 	// helper functions
 
-	friend float GetFractionOfTimeBetween( DmeTime_t t, DmeTime_t start, DmeTime_t end, bool bClamp = false );
-	friend float GetFractionOfTime( DmeTime_t t, DmeTime_t duration, bool bClamp = false );
-	friend int FrameForTime( DmeTime_t t, DmeFramerate_t framerate );
+	friend float GetFractionOfTime( DmeTime_t t, DmeTime_t duration, bool bClamp = false )
+	{
+		if ( duration == DMETIME_ZERO )
+			return 0.0f;
+
+		if ( bClamp )
+		{
+			t.Clamp( DMETIME_ZERO, duration );
+		}
+		return t.m_tms / float( duration.m_tms );
+	}
+	friend float GetFractionOfTimeBetween( DmeTime_t t, DmeTime_t start, DmeTime_t end, bool bClamp = false )
+	{
+		return GetFractionOfTime( t - start, end - start, bClamp );
+	}
+	friend int FrameForTime( DmeTime_t t, DmeFramerate_t framerate )
+	{
+		return t.CurrentFrame( framerate );
+	}
 
 
 	// standard arithmetic methods

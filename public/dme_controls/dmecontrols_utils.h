@@ -1,6 +1,6 @@
 //===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //===========================================================================//
@@ -12,7 +12,7 @@
 #pragma once
 #endif
 
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "datamodel/dmelement.h"
 #include "movieobjects/timeutils.h"
 
@@ -99,7 +99,7 @@ inline bool ElementTree_GetDroppableItems( CUtlVector< KeyValues * >& msglist, c
 {
 	int c = msglist.Count();
 	for ( int i = 0; i < c; ++i )
-	{	
+	{
 		KeyValues *data = msglist[ i ];
 
 		CDmElement *e = GetElementKeyValue<CDmElement>( data, "dmeelement" );

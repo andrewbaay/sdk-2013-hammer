@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $Workfile:     $
 // $Date:         $
@@ -16,7 +16,7 @@
 #pragma once
 
 
-#include "MapAtom.h"
+#include "mapatom.h"
 
 
 class CMapPoint : public CMapAtom
@@ -28,12 +28,12 @@ class CMapPoint : public CMapAtom
 		CMapPoint(void);
 
 		virtual void GetOrigin(Vector& pfOrigin) const;
-		virtual void SetOrigin(Vector& pfOrigin);
-		
+		virtual void SetOrigin(const Vector& pfOrigin);
+
 	protected:
 
 		void DoTransform(const VMatrix &matrix);
-		
+
 		Vector m_Origin;
 };
 

@@ -442,7 +442,7 @@ namespace
 
 	std::string TextDecorator::decorateAngelScript( std::string text )
 	{
-		text = htmlSafe( text );
+		text = htmlSafe( std::move( text ) );
 		if ( m_syntaxHighlight )
 		{
 			// do identifiers
@@ -464,7 +464,7 @@ namespace
 				return wrapSpan( text, offset, matches[0].first, matches[0].length(), "AS-number" );
 			} );
 		}
-		return std::move( text );
+		return text;
 	}
 
 	std::string TextDecorator::decorateDocumentation( std::string text )
@@ -939,7 +939,11 @@ static constexpr FORCEINLINE int fallback_popcount(uint32 x)
 
 int UTIL_CountNumBitsSet( uint32 x )
 {
+#ifdef WIN32_CLANG
+	return __builtin_popcount( x );
+#else
 	return hasPopCount ? _mm_popcnt_u32( x ) : fallback_popcount( x );
+#endif
 }
 
 void DocumentationGenerator::Impl::GenerateEnums()
@@ -1229,8 +1233,8 @@ void DocumentationGenerator::Impl::GenerateClasses()
 						if ( !documentation || !*documentation )
 							continue;
 
-						std::string fullName = fullName + "::" + func->GetName();
-						GenerateContentBlock( fullName.c_str(), fullName.c_str(), [&]()
+						std::string fullName_ = fullName + "::" + func->GetName();
+						GenerateContentBlock( fullName_.c_str(), fullName_.c_str(), [&]()
 						{
 							output.appendRawF( R"^(<div class="api">%s</div>)^", decorator.decorateAngelScript( func->GetDeclaration( true, false, true ) ).c_str() );
 							output.appendRawF( R"^(<div class="documentation">%s</div>)^", decorator.decorateDocumentation( documentation ).c_str() );

@@ -10,7 +10,7 @@
 #pragma once
 #endif
 
-#include "MapClass.h"	// For CMapObjectList
+#include "mapclass.h"	// For CMapObjectList
 
 class CMapClass;
 class CMapDoc;
@@ -23,7 +23,7 @@ class CTrackEntry
 {
 	public:
 
-		enum TrackType_t
+		enum TrackType_t : int
 		{
 			ttNone = -1,
 			ttCopy,

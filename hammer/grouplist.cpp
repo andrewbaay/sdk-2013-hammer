@@ -7,17 +7,17 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "GroupList.h"
-#include "VisGroup.h"
+#include "grouplist.h"
+#include "visgroup.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : nFlags - 
-//			point - 
+// Purpose:
+// Input  : nFlags -
+//			point -
 //-----------------------------------------------------------------------------
 CGroupList::CGroupList()
 {
@@ -25,9 +25,9 @@ CGroupList::CGroupList()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : nFlags - 
-//			point - 
+// Purpose:
+// Input  : nFlags -
+//			point -
 //-----------------------------------------------------------------------------
 CGroupList::~CGroupList()
 {
@@ -35,12 +35,12 @@ CGroupList::~CGroupList()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : eDropType - 
-//			nFlags - 
-//			point - 
+// Purpose:
+// Input  : eDropType -
+//			nFlags -
+//			point -
 //-----------------------------------------------------------------------------
-void CGroupList::OnRenameItem(void *pItem, const char *pszText) 
+void CGroupList::OnRenameItem(void *pItem, const char *pszText)
 {
 	Assert(pItem);
 	Assert(pszText);

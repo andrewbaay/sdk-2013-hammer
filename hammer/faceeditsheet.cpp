@@ -6,12 +6,12 @@
 
 #include <stdafx.h>
 #include "hammer.h"
-#include "MainFrm.h"
-#include "GlobalFunctions.h"
-#include "FaceEditSheet.h"
-#include "MapSolid.h"
-#include "MapFace.h"
-#include "MapDisp.h"
+#include "mainfrm.h"
+#include "globalfunctions.h"
+#include "faceeditsheet.h"
+#include "mapsolid.h"
+#include "mapface.h"
+#include "mapdisp.h"
 #include "ToolManager.h"
 #include "mapdoc.h"
 
@@ -29,7 +29,7 @@ END_MESSAGE_MAP()
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-CFaceEditSheet::CFaceEditSheet( LPCTSTR pszCaption, CWnd *pParentWnd, UINT iSelectPage ) : 
+CFaceEditSheet::CFaceEditSheet( LPCTSTR pszCaption, CWnd *pParentWnd, UINT iSelectPage ) :
                 CPropertySheet( pszCaption, pParentWnd, iSelectPage )
 {
 	m_ClickMode = -1;
@@ -158,8 +158,8 @@ void CFaceEditSheet::ClearFaceListByMapDoc( CMapDoc *pDoc )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Search for the given face in the face selection list.  If found, 
-//          return the index of the face in the list.  Otherwise, return -1.  
+// Purpose: Search for the given face in the face selection list.  If found,
+//          return the index of the face in the list.  Otherwise, return -1.
 //-----------------------------------------------------------------------------
 int CFaceEditSheet::FindFaceInList( CMapFace *pFace )
 {
@@ -220,7 +220,7 @@ void CFaceEditSheet::ClickFace( CMapSolid *pSolid, int faceIndex, int cmd, int c
 		// toggle selection if necessary
 		if( cmd == cfToggle )
 		{
-			cmd = bFoundInList ? cfUnselect : cfSelect;			
+			cmd = bFoundInList ? cfUnselect : cfSelect;
 		}
 
 		CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();

@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -10,10 +10,9 @@
 #pragma once
 #endif
 
-#include "MapClass.h"
-#include "MapPointHandle.h"
-#include "ToolInterface.h"
-#include "MapPointHandle.h"
+#include "mapclass.h"
+#include "mappointhandle.h"
+#include "toolinterface.h"
 #include "mapview.h"
 
 
@@ -61,7 +60,7 @@ public:
 	virtual void Render2D(CRender2D *pRender);
 
 	// Overridden to chain down to our endpoints, which are not children.
-	void SetOrigin(Vector &vecOrigin);
+	void SetOrigin(const Vector &vecOrigin);
 
 	// Overridden to chain down to our endpoints, which are not children.
 	virtual SelectionState_t SetSelectionState(SelectionState_t eSelectionState);
@@ -76,7 +75,7 @@ public:
 	virtual bool IsVisualElement(void) { return(false); } // Only visible if our parent is selected.
 	virtual bool IsClutter(void) { return true; }
 	virtual bool IsCulledByCordon(const Vector &vecMins, const Vector &vecMaxs) { return false; } // We don't hide unless our parent hides.
-	
+
 	virtual const char* GetDescription() { return("Axis helper"); }
 
 	virtual void OnAddToWorld(CMapWorld *pWorld);
@@ -94,7 +93,7 @@ protected:
 
 	// Overriden to transform our endpoints, which are not children.
 	virtual void DoTransform(const VMatrix &matrix);
-	
+
 	void Initialize(void);
 
 	CMapPointHandle m_Point[2];				// The two endpoints of the axis.

@@ -7,25 +7,25 @@
 #include "stdafx.h"
 #include "collisionutils.h"
 #include "fgdlib/gdclass.h"
-#include "IEditorTexture.h"
-#include "GlobalFunctions.h"
+#include "ieditortexture.h"
+#include "globalfunctions.h"
 #include "hammer_mathlib.h"
-#include "HelperFactory.h"
-#include "MapAlignedBox.h"
-#include "MapSweptPlayerHull.h"
-#include "MapDefs.h"
-#include "MapDoc.h"
-#include "MapEntity.h"
-#include "MapAnimator.h"
-#include "MapSolid.h"
-#include "MapView2D.h" // dvs FIXME: For HitTest2D implementation
-#include "MapViewLogical.h"
-#include "MapWorld.h"
-#include "Options.h"
-#include "Render2D.h"
-#include "SaveInfo.h"
-#include "VisGroup.h"
-#include "MapSprite.h"
+#include "helperfactory.h"
+#include "mapalignedbox.h"
+#include "mapsweptplayerhull.h"
+#include "mapdefs.h"
+#include "mapdoc.h"
+#include "mapentity.h"
+#include "mapanimator.h"
+#include "mapsolid.h"
+#include "mapview2d.h" // dvs FIXME: For HitTest2D implementation
+#include "mapviewlogical.h"
+#include "mapworld.h"
+#include "options.h"
+#include "render2d.h"
+#include "saveinfo.h"
+#include "visgroup.h"
+#include "mapsprite.h"
 #include "camera.h"
 #include "hammer.h"
 #include "vmfentitysupport.h"
@@ -795,7 +795,7 @@ ChunkFileResult_t CMapEntity::LoadSolidCallback(CChunkFile *pFile, CMapEntity *p
 // Purpose: Sets this entity's origin and updates the bounding box.
 // Input  : o - Origin to set.
 //-----------------------------------------------------------------------------
-void CMapEntity::SetOrigin(Vector& o)
+void CMapEntity::SetOrigin(const Vector& o)
 {
 	Vector vecOrigin;
 	GetOrigin(vecOrigin);
@@ -1020,7 +1020,7 @@ void CMapEntity::CalculateTypeFlags( void )
 	m_EntityTypeFlags = 0;
 	const char *pszClassName = GetClassName();
 	if (pszClassName != NULL)
-		for(int i=0; i<NELEMS( s_ClassFlagsTable ); i++)
+		for(uint i=0; i<NELEMS( s_ClassFlagsTable ); i++)
 			if ( ! stricmp( pszClassName, s_ClassFlagsTable[i].m_pClassname ) )
 				m_EntityTypeFlags |= s_ClassFlagsTable[i].m_nFlagsToOR;
 }
@@ -2378,7 +2378,7 @@ bool CMapEntity::HitTestLogical( CMapViewLogical *pView, const Vector2D &vecPoin
 bool CMapEntity::IsLogical(void)
 {
 	GDclass *pClass = GetClass();
-	return pClass && (( pClass->GetInputCount() > 0 ) || ( pClass->GetOutputCount() > 0 )) || (m_Connections.Count() || m_Upstream.Count());
+	return ( pClass && ( pClass->GetInputCount() > 0 || pClass->GetOutputCount() > 0 ) ) || m_Connections.Count() || m_Upstream.Count();
 }
 
 

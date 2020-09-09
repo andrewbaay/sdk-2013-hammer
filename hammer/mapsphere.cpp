@@ -6,17 +6,17 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "Box3D.h"
-#include "fgdlib/HelperInfo.h"
+#include "box3d.h"
+#include "fgdlib/helperinfo.h"
 #include "materialsystem/imaterialsystem.h"
-#include "materialsystem/IMesh.h"
-#include "MapDoc.h"
-#include "MapSphere.h"
-#include "MapView2D.h"
-#include "Material.h"
-#include "mathlib/MathLib.h"
-#include "Render2D.h"
-#include "Render3D.h"
+#include "materialsystem/imesh.h"
+#include "mapdoc.h"
+#include "mapsphere.h"
+#include "mapview2d.h"
+#include "material.h"
+#include "mathlib/mathlib.h"
+#include "render2d.h"
+#include "render3d.h"
 #include "ToolManager.h"
 #include "ToolSphere.h"
 
@@ -109,8 +109,8 @@ CMapSphere::~CMapSphere(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : bFullUpdate - 
+// Purpose:
+// Input  : bFullUpdate -
 //-----------------------------------------------------------------------------
 void CMapSphere::CalcBounds(BOOL bFullUpdate)
 {
@@ -136,7 +136,7 @@ void CMapSphere::CalcBounds(BOOL bFullUpdate)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 // Output : CMapClass
 //-----------------------------------------------------------------------------
 CMapClass *CMapSphere::Copy(bool bUpdateDependencies)
@@ -204,10 +204,10 @@ CBaseTool *CMapSphere::GetToolObject(int nHitData, bool bAttachObject)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pView - 
+// Purpose:
+// Input  : pView -
 //			point - point in client coordinates
-// Output : 
+// Output :
 //-----------------------------------------------------------------------------
 bool CMapSphere::HitTest2D(CMapView2D *pView, const Vector2D &point, HitInfo_t &HitData)
 {
@@ -299,8 +299,8 @@ void CMapSphere::OnParentKeyChanged(const char *szKey, const char *szValue)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pRender - 
+// Purpose:
+// Input  : pRender -
 //-----------------------------------------------------------------------------
 void CMapSphere::Render2D(CRender2D *pRender)
 {
@@ -312,11 +312,11 @@ void CMapSphere::Render2D(CRender2D *pRender)
 		pRender->TransformNormal(ptClientRadius, Vector(m_flRadius,m_flRadius,m_flRadius) );
 
 		int radius = ptClientRadius.x;
-        
+
 		pRender->DrawCircle( m_Origin, m_flRadius );
 
 		bool bPopMode = pRender->BeginClientSpace();
-		
+
 		//
 		// Draw the four resize handles.
 		//

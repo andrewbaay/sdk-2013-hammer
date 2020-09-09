@@ -73,7 +73,7 @@ void BlockArray<T,nBlockSize,nMaxBlocks>::
 	if(nNewBlocks != nBlocks)
 	{
 		// Make sure we don't get an overrun.
-		if ( nNewBlocks > ARRAYSIZE( Blocks ) )
+		if ( nNewBlocks > (int)ARRAYSIZE( Blocks ) )
 		{
 			Error( "BlockArray< ?, %d, %d > - too many blocks needed.", nBlockSize, nMaxBlocks );
 		}

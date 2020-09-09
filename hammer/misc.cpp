@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include <direct.h>
 #include <time.h>
-#include "MapSolid.h"
+#include "mapsolid.h"
 #include "mapworld.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -42,7 +42,7 @@ void NotifyDuplicates(CMapSolid *pSolid)
 
 	if(DoesContainDuplicates(pSolid))
 	{
-		if(IDNO == AfxMessageBox("Duplicate Plane! Do you want more messages?", 
+		if(IDNO == AfxMessageBox("Duplicate Plane! Do you want more messages?",
 			MB_YESNO))
 		{
 			bCheckDupes = FALSE;
@@ -84,11 +84,11 @@ int mychdir(LPCTSTR pszDir)
 }
 
 
-void WriteDebug(char *pszStr)
+void WriteDebug(const char *pszStr)
 {
 #if 0
 	static BOOL bFirst = TRUE;
-	
+
 	if(bFirst)
 		remove("wcdebug.txt");
 

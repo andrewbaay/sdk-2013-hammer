@@ -7,28 +7,28 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "ObjectProperties.h"
-#include "ObjectPage.h"
-#include "OP_Flags.h"
-#include "OP_Groups.h"
-#include "OP_Entity.h"
-#include "OP_Output.h"
+#include "objectproperties.h"
+#include "objectpage.h"
+#include "op_flags.h"
+#include "op_groups.h"
+#include "op_entity.h"
+#include "op_output.h"
 #include "OP_Model.h"
-#include "OP_Input.h"
-#include "MapDoc.h"
-#include "MapView.h"
-#include "MapEntity.h"
-#include "MapGroup.h"
+#include "op_input.h"
+#include "mapdoc.h"
+#include "mapview.h"
+#include "mapentity.h"
+#include "mapgroup.h"
 #include "MapInstance.h"
-#include "MapSolid.h"
-#include "MapStudioModel.h"
-#include "MapWorld.h"
-#include "History.h"
-#include "GlobalFunctions.h"
+#include "mapsolid.h"
+#include "mapstudiomodel.h"
+#include "mapworld.h"
+#include "history.h"
+#include "globalfunctions.h"
 #include "Selection.h"
-#include "CustomMessages.h"
-#include "Camera.h"
-#include "Manifest.h"
+#include "custommessages.h"
+#include "camera.h"
+#include "manifest.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -64,12 +64,12 @@ BEGIN_MESSAGE_MAP(CObjectProperties, CPropertySheet)
 	ON_WM_PAINT()
 	ON_WM_SHOWWINDOW()
 	ON_WM_CREATE()
-	ON_COMMAND(IDOK, OnApply )
-	ON_COMMAND(ID_APPLY_NOW, OnApply )
-	ON_COMMAND(IDCANCEL, OnCancel)
-	ON_COMMAND(IDI_INPUT, OnInputs)
-	ON_COMMAND(IDI_OUTPUT, OnOutputs)
-	ON_COMMAND(IDD_EDIT_INSTANCE, OnEditInstance)
+	ON_COMMAND(IDOK, &ThisClass::OnApply )
+	ON_COMMAND(ID_APPLY_NOW, &ThisClass::OnApply )
+	ON_COMMAND(IDCANCEL, &ThisClass::OnCancel)
+	ON_COMMAND(IDI_INPUT, &ThisClass::OnInputs)
+	ON_COMMAND(IDI_OUTPUT, &ThisClass::OnOutputs)
+	ON_COMMAND(IDD_EDIT_INSTANCE, &ThisClass::OnEditInstance)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -809,7 +809,7 @@ BOOL CObjectProperties::SetupPages(void)
 
 	// First, remove pages that we don't want visible.
 	// Also store if they're visible.
-	for ( int i=0; i < ARRAYSIZE( pages ); i++ )
+	for ( uint i=0; i < ARRAYSIZE( pages ); i++ )
 	{
 		auto& page = pages[i];
 		page.m_bIsVisible = page.m_pPage && GetPageIndex( page.m_pPage ) != -1;
@@ -823,12 +823,12 @@ BOOL CObjectProperties::SetupPages(void)
 
 	// We're about to add pages, but it'll only add them to the right of what's already there,
 	// so we must get rid of anything to the right of our leftmost addition.
-	for ( int i=0; i < ARRAYSIZE( pages ); i++ )
+	for ( uint i=0; i < ARRAYSIZE( pages ); i++ )
 	{
 		if ( !pages[i].m_bIsVisible && pages[i].m_bWantVisible )
 		{
 			// Ok, page i needs to be on, so nuke everything to the right of it.
-			for ( int j=i+1; j < ARRAYSIZE( pages ); j++ )
+			for ( uint j=i+1; j < ARRAYSIZE( pages ); j++ )
 			{
 				auto& page = pages[j];
 				if ( page.m_bIsVisible )
@@ -841,7 +841,7 @@ BOOL CObjectProperties::SetupPages(void)
 		}
 	}
 
-	for ( int i=0; i < ARRAYSIZE( pages ); i++ )
+	for ( uint i=0; i < ARRAYSIZE( pages ); i++ )
 	{
 		if ( !pages[i].m_bIsVisible && pages[i].m_bWantVisible )
 			AddPage( pages[i].m_pPage );

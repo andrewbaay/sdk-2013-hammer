@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $Workfile:     $
 // $Date:         $
@@ -13,8 +13,6 @@
 
 #pragma once
 
-#include <WorldSize.h>
+#include "worldsize.h"
 
 #define COORD_NOTINIT	((float)(99999.0))
-
-

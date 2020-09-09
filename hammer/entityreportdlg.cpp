@@ -5,16 +5,16 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "EntityReportDlg.h"
-#include "fgdlib/GameData.h"
-#include "GlobalFunctions.h"
-#include "History.h"
-#include "MainFrm.h"
-#include "MapEntity.h"
+#include "entityreportdlg.h"
+#include "fgdlib/gamedata.h"
+#include "globalfunctions.h"
+#include "history.h"
+#include "mainfrm.h"
+#include "mapentity.h"
 #include "MapInstance.h"
-#include "MapView2D.h"
-#include "MapWorld.h"
-#include "ObjectProperties.h"
+#include "mapview2d.h"
+#include "mapworld.h"
+#include "objectproperties.h"
 #include "hammer.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -43,20 +43,20 @@ void CEntityReportDlg::ShowEntityReport( CMapDoc *pDoc, CWnd *pwndParent, Entity
 		s_pDlg->m_bFilterByHidden = pParms->m_bFilterByHidden;
 		s_pDlg->m_bExact = pParms->m_bExact;
 		s_pDlg->m_iFilterByType = pParms->m_nFilterByType;
-		
+
 		s_pDlg->m_szFilterKey.SetString( pParms->m_filterKey.Get() );
 		s_pDlg->m_szFilterValue.SetString( pParms->m_filterValue.Get() );
 		s_pDlg->m_szFilterClass.SetString( pParms->m_filterClass.Get() );
-		
+
 		s_pDlg->m_bGotoFirstMatch = true;
-		
+
 		s_pDlg->UpdateData( FALSE );
 	}
 	else
 	{
 		s_pDlg->m_bGotoFirstMatch = false;
 	}
-	
+
 	s_pDlg->ShowWindow( SW_SHOW );
 	s_pDlg->GenerateReport();
 }
@@ -132,23 +132,23 @@ void CEntityReportDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CEntityReportDlg, CDialog)
 	//{{AFX_MSG_MAP(CEntityReportDlg)
-	ON_BN_CLICKED(IDC_DELETE, OnDelete)
-	ON_BN_CLICKED(IDC_FILTERBYHIDDEN, OnFilterbyhidden)
-	ON_BN_CLICKED(IDC_FILTERBYKEYVALUE, OnFilterbykeyvalue)
-	ON_BN_CLICKED(IDC_FILTERBYTYPE, OnFilterbytype)
-	ON_EN_CHANGE(IDC_FILTERKEY, OnChangeFilterkey)
-	ON_EN_CHANGE(IDC_FILTERVALUE, OnChangeFiltervalue)
-	ON_BN_CLICKED(IDC_GOTO, OnGoto)
-	ON_BN_CLICKED(IDC_PROPERTIES, OnProperties)
+	ON_BN_CLICKED(IDC_DELETE, &ThisClass::OnDelete)
+	ON_BN_CLICKED(IDC_FILTERBYHIDDEN, &ThisClass::OnFilterbyhidden)
+	ON_BN_CLICKED(IDC_FILTERBYKEYVALUE, &ThisClass::OnFilterbykeyvalue)
+	ON_BN_CLICKED(IDC_FILTERBYTYPE, &ThisClass::OnFilterbytype)
+	ON_EN_CHANGE(IDC_FILTERKEY, &ThisClass::OnChangeFilterkey)
+	ON_EN_CHANGE(IDC_FILTERVALUE, &ThisClass::OnChangeFiltervalue)
+	ON_BN_CLICKED(IDC_GOTO, &ThisClass::OnGoto)
+	ON_BN_CLICKED(IDC_PROPERTIES, &ThisClass::OnProperties)
 	ON_WM_TIMER()
-	ON_CBN_EDITCHANGE(IDC_FILTERCLASS, OnEditchangeFilterclass)
-	ON_BN_CLICKED(IDC_FILTERBYCLASS, OnFilterbyclass)
-	ON_CBN_SELCHANGE(IDC_FILTERCLASS, OnSelchangeFilterclass)
-	ON_BN_CLICKED(IDC_RADIO2, OnFilterbytype)
-	ON_BN_CLICKED(IDC_RADIO3, OnFilterbytype)
-	ON_BN_CLICKED(IDC_EXACTVALUE, OnExactvalue)
-	ON_LBN_SELCHANGE(IDC_ENTITIES, OnSelChangeEntityList)
-	ON_LBN_DBLCLK(IDC_ENTITIES, OnDblClkEntityList)
+	ON_CBN_EDITCHANGE(IDC_FILTERCLASS, &ThisClass::OnEditchangeFilterclass)
+	ON_BN_CLICKED(IDC_FILTERBYCLASS, &ThisClass::OnFilterbyclass)
+	ON_CBN_SELCHANGE(IDC_FILTERCLASS, &ThisClass::OnSelchangeFilterclass)
+	ON_BN_CLICKED(IDC_RADIO2, &ThisClass::OnFilterbytype)
+	ON_BN_CLICKED(IDC_RADIO3, &ThisClass::OnFilterbytype)
+	ON_BN_CLICKED(IDC_EXACTVALUE, &ThisClass::OnExactvalue)
+	ON_LBN_SELCHANGE(IDC_ENTITIES, &ThisClass::OnSelChangeEntityList)
+	ON_LBN_DBLCLK(IDC_ENTITIES, &ThisClass::OnDblClkEntityList)
 	ON_WM_DESTROY()
 	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP

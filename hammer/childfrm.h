@@ -10,7 +10,7 @@
 #pragma once
 #endif
 
-enum DrawType_t;
+enum DrawType_t : signed char;
 
 class CMySplitterWnd : public CSplitterWnd
 {

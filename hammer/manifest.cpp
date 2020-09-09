@@ -5,22 +5,20 @@
 //=====================================================================================//
 
 #include "stdafx.h"
-#include "Manifest.h"
-#include "CustomMessages.h"
-#include "GlobalFunctions.h"
-#include "MainFrm.h"
-#include "MapDoc.h"
-#include "MapSolid.h"
-#include "MapWorld.h"
+#include "manifest.h"
+#include "custommessages.h"
+#include "globalfunctions.h"
+#include "mainfrm.h"
+#include "mapdoc.h"
+#include "mapsolid.h"
+#include "mapworld.h"
 #include "MapInstance.h"
 #include "ToolManager.h"
-#include "ChunkFile.h"
-#include "ManifestDialog.h"
-#include "History.h"
-#include "HelperFactory.h"
-#include "SaveInfo.h"
-#include "tier2/tier2.h"
-#include "p4lib/ip4.h"
+#include "chunkfile.h"
+#include "manifestdialog.h"
+#include "history.h"
+#include "helperfactory.h"
+#include "saveinfo.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -30,7 +28,7 @@ IMPLEMENT_DYNCREATE(CManifest, CMapDoc)
 
 BEGIN_MESSAGE_MAP(CManifest, CMapDoc)
 	//{{AFX_MSG_MAP(CManifest)
-	ON_COMMAND(ID_FILE_SAVE_AS, OnFileSaveAs)
+	ON_COMMAND(ID_FILE_SAVE_AS, &ThisClass::OnFileSaveAs)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -1337,13 +1335,11 @@ bool CManifest::RemoveSubMap( CManifestMap *pManifestMap )
 //-----------------------------------------------------------------------------
 void CManifest::CheckFileStatus( void )
 {
-	P4File_t	FileInfo;
-
 	m_bReadOnly = !g_pFullFileSystem->IsFileWritable( GetPathName() );
 
 	for( int i = 0; i < GetNumMaps(); i++ )
 	{
-		CManifestMap	*pManifestMap = GetMap( i );
+		CManifestMap *pManifestMap = GetMap( i );
 		pManifestMap->m_bReadOnly = !g_pFullFileSystem->IsFileWritable( pManifestMap->m_AbsoluteMapFileName );
 	}
 }

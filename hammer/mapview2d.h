@@ -1,6 +1,6 @@
 //===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //===========================================================================//
@@ -13,7 +13,7 @@
 #endif
 
 
-#include "MapView2DBase.h"
+#include "mapview2dbase.h"
 #include "tier1/utlvector.h"
 
 class CMapInstance;
@@ -25,11 +25,11 @@ protected:
 	CMapView2D();           // protected constructor used by dynamic creation
 	virtual ~CMapView2D();
 	DECLARE_DYNCREATE(CMapView2D)
-	
+
 	virtual bool IsLogical() { return false; }
 	virtual void OnRenderListDirty();
 
-	void RenderInstance( CMapInstance *pInstanceClass, CMapClass *pMapClass, Vector &InstanceOrigin, QAngle &InstanceAngles );
+	void RenderInstance( CMapInstance *pInstanceClass, CMapClass *pMapClass, const Vector &InstanceOrigin, const QAngle &InstanceAngles );
 
 private:
 	void DrawPointFile( CRender2D *pRender );
@@ -42,7 +42,7 @@ private:
 
 	void RenderInstanceMapClass_r( CMapClass *pObject );
 
-	// general variables:	
+	// general variables:
 	bool m_bLastActiveView;					// is this the last active view?
 	CUtlVector<CMapClass *> m_RenderList;	// list of current rendered objects
 	bool m_bUpdateRenderObjects;			// if true, update render list on next draw
@@ -64,9 +64,9 @@ private:
 	DECLARE_MESSAGE_MAP()
 };
 
-inline bool CMapView2D::UpdateRenderObjects() 
-{ 
-	return m_bUpdateRenderObjects;	
+inline bool CMapView2D::UpdateRenderObjects()
+{
+	return m_bUpdateRenderObjects;
 }
 
 

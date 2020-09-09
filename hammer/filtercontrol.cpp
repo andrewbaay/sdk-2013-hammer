@@ -1,21 +1,21 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "FilterControl.h"
-#include "ControlBarIDs.h"
-#include "MapWorld.h"
-#include "GlobalFunctions.h"
-#include "EditGroups.h"
-#include "CustomMessages.h"
-#include "VisGroup.h"
+#include "filtercontrol.h"
+#include "controlbarids.h"
+#include "mapworld.h"
+#include "globalfunctions.h"
+#include "editgroups.h"
+#include "custommessages.h"
+#include "visgroup.h"
 #include "Selection.h"
 #include "strdlg.h"
-#include "toolmanager.h"
+#include "ToolManager.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -38,38 +38,38 @@ static const unsigned int g_uKeyDownMsg = ::RegisterWindowMessage(TREELIST_MSG_K
 
 BEGIN_MESSAGE_MAP(CFilterControl, CHammerBar)
 	//{{AFX_MSG_MAP(CFilterControl)
-	ON_BN_CLICKED(IDC_EDITGROUPS, OnEditGroups)
-	ON_BN_CLICKED(IDC_NEW, OnNew)
-	ON_BN_CLICKED(IDC_DELETE, OnDelete)
-	ON_BN_CLICKED(IDC_MARKMEMBERS, OnMarkMembers)
-	ON_BN_CLICKED(IDC_SHOW_ALL, OnShowAllGroups)
-	ON_COMMAND_EX(IDC_VISGROUP_MOVEUP, OnMoveUpDown)
-	ON_COMMAND_EX(IDC_VISGROUP_MOVEDOWN, OnMoveUpDown)
-	ON_UPDATE_COMMAND_UI(IDC_GROUPS, UpdateControlGroups)
-	ON_UPDATE_COMMAND_UI(IDC_CORDONS, UpdateControl)
-	ON_UPDATE_COMMAND_UI(IDC_NEW, UpdateControl)
-	ON_UPDATE_COMMAND_UI(IDC_EDITGROUPS, UpdateControl)
-	ON_UPDATE_COMMAND_UI(IDC_MARKMEMBERS, UpdateControl)
-	ON_UPDATE_COMMAND_UI(IDC_SHOW_ALL, UpdateControl)
-	ON_UPDATE_COMMAND_UI(IDC_VISGROUP_MOVEUP, UpdateControl)
-	ON_UPDATE_COMMAND_UI(IDC_VISGROUP_MOVEDOWN, UpdateControl)		
-	ON_NOTIFY(TCN_SELCHANGE, IDC_TAB1, OnSelChangeTab)
+	ON_BN_CLICKED(IDC_EDITGROUPS, &ThisClass::OnEditGroups)
+	ON_BN_CLICKED(IDC_NEW, &ThisClass::OnNew)
+	ON_BN_CLICKED(IDC_DELETE, &ThisClass::OnDelete)
+	ON_BN_CLICKED(IDC_MARKMEMBERS, &ThisClass::OnMarkMembers)
+	ON_BN_CLICKED(IDC_SHOW_ALL, &ThisClass::OnShowAllGroups)
+	ON_COMMAND_EX(IDC_VISGROUP_MOVEUP, &ThisClass::OnMoveUpDown)
+	ON_COMMAND_EX(IDC_VISGROUP_MOVEDOWN, &ThisClass::OnMoveUpDown)
+	ON_UPDATE_COMMAND_UI(IDC_GROUPS, &ThisClass::UpdateControlGroups)
+	ON_UPDATE_COMMAND_UI(IDC_CORDONS, &ThisClass::UpdateControl)
+	ON_UPDATE_COMMAND_UI(IDC_NEW, &ThisClass::UpdateControl)
+	ON_UPDATE_COMMAND_UI(IDC_EDITGROUPS, &ThisClass::UpdateControl)
+	ON_UPDATE_COMMAND_UI(IDC_MARKMEMBERS, &ThisClass::UpdateControl)
+	ON_UPDATE_COMMAND_UI(IDC_SHOW_ALL, &ThisClass::UpdateControl)
+	ON_UPDATE_COMMAND_UI(IDC_VISGROUP_MOVEUP, &ThisClass::UpdateControl)
+	ON_UPDATE_COMMAND_UI(IDC_VISGROUP_MOVEDOWN, &ThisClass::UpdateControl)
+	ON_NOTIFY(TCN_SELCHANGE, IDC_TAB1, &ThisClass::OnSelChangeTab)
 	ON_WM_ACTIVATE()
 	ON_WM_SHOWWINDOW()
 	ON_WM_SIZE()
 	ON_WM_WINDOWPOSCHANGED()
-	ON_REGISTERED_MESSAGE(g_uToggleStateMsg, OnListToggleState)
-	ON_REGISTERED_MESSAGE(g_uLeftDragDropMsg, OnListLeftDragDrop)
-	ON_REGISTERED_MESSAGE(g_uRightDragDropMsg, OnListRightDragDrop)	
-	ON_REGISTERED_MESSAGE(g_uSelChangeMsg, OnListSelChange)	
-	ON_REGISTERED_MESSAGE(g_uKeyDownMsg, OnListKeyDown)
+	ON_REGISTERED_MESSAGE(g_uToggleStateMsg, &ThisClass::OnListToggleState)
+	ON_REGISTERED_MESSAGE(g_uLeftDragDropMsg, &ThisClass::OnListLeftDragDrop)
+	ON_REGISTERED_MESSAGE(g_uRightDragDropMsg, &ThisClass::OnListRightDragDrop)
+	ON_REGISTERED_MESSAGE(g_uSelChangeMsg, &ThisClass::OnListSelChange)
+	ON_REGISTERED_MESSAGE(g_uKeyDownMsg, &ThisClass::OnListKeyDown)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pParentWnd - 
+// Purpose:
+// Input  : pParentWnd -
 // Output : Returns TRUE on success, FALSE on failure.
 //-----------------------------------------------------------------------------
 BOOL CFilterControl::Create(CWnd *pParentWnd)
@@ -77,7 +77,7 @@ BOOL CFilterControl::Create(CWnd *pParentWnd)
 	if (!CHammerBar::Create(pParentWnd, IDD_FILTERCONTROL, CBRS_RIGHT | CBRS_SIZE_DYNAMIC, IDCB_FILTERCONTROL, "Filter Control"))
 		return FALSE;
 
-	m_cGroupBox.SubclassDlgItem(IDC_GROUPS, this);	
+	m_cGroupBox.SubclassDlgItem(IDC_GROUPS, this);
 	m_cGroupBox.EnableChecks();
 
 	m_cCordonBox.SubclassDlgItem(IDC_CORDONS, this);
@@ -121,9 +121,9 @@ BOOL CFilterControl::Create(CWnd *pParentWnd)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : nLength - 
-//			dwMode - 
+// Purpose:
+// Input  : nLength -
+//			dwMode -
 // Output : CSize
 //-----------------------------------------------------------------------------
 CSize CFilterControl::CalcDynamicLayout(int nLength, DWORD dwMode)
@@ -139,10 +139,10 @@ CSize CFilterControl::CalcDynamicLayout(int nLength, DWORD dwMode)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : nType - 
-//			cx - 
-//			cy - 
+// Purpose:
+// Input  : nType -
+//			cx -
+//			cy -
 //-----------------------------------------------------------------------------
 void CFilterControl::OnSize(UINT nType, int cx, int cy)
 {
@@ -161,7 +161,7 @@ void CFilterControl::OnSize(UINT nType, int cx, int cy)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CFilterControl::UpdateGroupList()
 {
@@ -191,7 +191,7 @@ void CFilterControl::UpdateGroupList()
 		}
 	}
 
-	UpdateGroupListChecks();		
+	UpdateGroupListChecks();
 
 	if (pVisGroup)
 	{
@@ -230,7 +230,7 @@ void CFilterControl::UpdateCordonList( Cordon_t *pSelectCordon, BoundBox *pSelec
 	{
 		nSelectedItem = m_cCordonBox.GetSelectedIndex();
 	}
-	
+
 	// Free up the current list contents.
 	for ( int i = 0; i < m_cCordonBox.GetItemCount(); i++ )
 	{
@@ -262,7 +262,7 @@ void CFilterControl::UpdateCordonList( Cordon_t *pSelectCordon, BoundBox *pSelec
 			CordonListItem_t *pBoxItem = new CordonListItem_t;
 			pBoxItem->m_pCordon = pCordon;
 			pBoxItem->m_pBox = &pCordon->m_Boxes.Element( j );
-			m_cCordonBox.AddCordon( pBoxItem, pItem ); 
+			m_cCordonBox.AddCordon( pBoxItem, pItem );
 
 			if ( pSelectCordon && ( pSelectCordon == pCordon ) && pSelectBox && ( pSelectBox == pBoxItem->m_pBox ) )
 			{
@@ -288,7 +288,7 @@ void CFilterControl::UpdateCordonList( Cordon_t *pSelectCordon, BoundBox *pSelec
 
 	//m_cCordonBox.RestoreTreeListExpandStates();
 	m_cCordonBox.ExpandAll();
-	
+
 	m_cCordonBox.SetRedraw( true );
 	m_cCordonBox.Invalidate();
 }
@@ -345,9 +345,9 @@ void CFilterControl::UpdateControlGroups(CCmdUI *pCmdUI)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pTarget - 
-//			bDisableIfNoHndler - 
+// Purpose:
+// Input  : pTarget -
+//			bDisableIfNoHndler -
 //-----------------------------------------------------------------------------
 void CFilterControl::OnUpdateCmdUI(CFrameWnd* pTarget, BOOL bDisableIfNoHndler)
 {
@@ -356,7 +356,7 @@ void CFilterControl::OnUpdateCmdUI(CFrameWnd* pTarget, BOOL bDisableIfNoHndler)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CFilterControl::OnShowAllGroups(void)
 {
@@ -375,7 +375,7 @@ void CFilterControl::OnShowAllGroups(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 BOOL CFilterControl::OnMoveUpDown(UINT uCmd)
 {
@@ -408,13 +408,13 @@ BOOL CFilterControl::OnMoveUpDown(UINT uCmd)
 		m_cCordonBox.SelectItem( cordon );
 	}
 	else
-	{	
+	{
 		CVisGroup *pVisGroup = m_cGroupBox.GetSelectedVisGroup();
 		if (pVisGroup == NULL)
 		{
 			return TRUE;
 		}
-	
+
 		if (uCmd == IDC_VISGROUP_MOVEUP)
 		{
 			pDoc->VisGroups_MoveUp(pVisGroup);
@@ -423,9 +423,9 @@ BOOL CFilterControl::OnMoveUpDown(UINT uCmd)
 		{
 			pDoc->VisGroups_MoveDown(pVisGroup);
 		}
-	
+
 		UpdateGroupList();
-	
+
 		m_cGroupBox.EnsureVisible(pVisGroup);
 		m_cGroupBox.SelectItem(pVisGroup);
 	}
@@ -437,7 +437,7 @@ BOOL CFilterControl::OnMoveUpDown(UINT uCmd)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CFilterControl::OnEditGroups(void)
 {
@@ -468,7 +468,7 @@ void CFilterControl::OnNew()
 	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
 	if (!pDoc)
 		return;
-		
+
 	pDoc->OnNewCordon();
 }
 
@@ -496,9 +496,9 @@ void CFilterControl::OnDelete()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pObject - 
-//			pInfo - 
+// Purpose:
+// Input  : pObject -
+//			pInfo -
 // Output : Returns TRUE to continue enumerating, FALSE to stop.
 //-----------------------------------------------------------------------------
 static BOOL MarkMembersOfGroup(CMapClass *pObject, MARKMEMBERSINFO *pInfo)
@@ -531,7 +531,7 @@ void CFilterControl::OnMarkMembers(void)
 		return;
 
 	CMapWorld *pWorld = pDoc->GetMapWorld();
-	
+
 	if ( m_mode == FILTER_DIALOG_CORDONS )
 	{
 		CordonListItem_t *cordon = m_cCordonBox.GetSelectedCordon();
@@ -561,7 +561,7 @@ void CFilterControl::OnMarkMembers(void)
 						}
 					}
 				}
-				
+
 				pChild = pWorld->GetNextDescendent( pos );
 			}
 		}
@@ -591,7 +591,7 @@ void CFilterControl::OnMarkMembers(void)
 						pDoc->SelectObject(pSelectObject, scSelect);
 					}
 				}
-				
+
 				pChild = pWorld->GetNextDescendent(pos);
 			}
 		}
@@ -600,8 +600,8 @@ void CFilterControl::OnMarkMembers(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pPos - 
+// Purpose:
+// Input  : pPos -
 //-----------------------------------------------------------------------------
 void CFilterControl::OnWindowPosChanged(WINDOWPOS *pPos)
 {
@@ -615,9 +615,9 @@ void CFilterControl::OnWindowPosChanged(WINDOWPOS *pPos)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : bShow - 
-//			nStatus - 
+// Purpose:
+// Input  : bShow -
+//			nStatus -
 //-----------------------------------------------------------------------------
 void CFilterControl::OnShowWindow(BOOL bShow, UINT nStatus)
 {
@@ -631,10 +631,10 @@ void CFilterControl::OnShowWindow(BOOL bShow, UINT nStatus)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : nState - 
-//			pWnd - 
-//			bMinimized - 
+// Purpose:
+// Input  : nState -
+//			pWnd -
+//			bMinimized -
 //-----------------------------------------------------------------------------
 void CFilterControl::OnActivate(UINT nState, CWnd* pWnd, BOOL bMinimized)
 {
@@ -658,7 +658,7 @@ LRESULT CFilterControl::OnListToggleState(WPARAM wParam, LPARAM lParam)
 	CMapDoc *pDoc = CMapDoc::GetActiveMapDoc();
 	if (pDoc == NULL)
 		return 0;
-		
+
 	if ( m_mode == FILTER_DIALOG_CORDONS )
 	{
 		CordonListItem_t *pItem = (CordonListItem_t *)wParam;
@@ -672,8 +672,8 @@ LRESULT CFilterControl::OnListToggleState(WPARAM wParam, LPARAM lParam)
 			pDoc->UpdateVisibilityAll();
 			UpdateCordonListChecks();
 		}
-	} 
-	else	
+	}
+	else
 	{
 		//
 		// Update the visibility of the group.
@@ -718,7 +718,7 @@ void CFilterControl::DeleteCordonListItem(CordonListItem_t *pDelete, bool bConfi
 		if ( AfxMessageBox( str, MB_YESNO | MB_ICONQUESTION ) == IDNO )
 			return;
 	}
-	
+
 	if ( bRemoveCordon )
 	{
 		pDoc->Cordon_RemoveCordon( pDelete->m_pCordon );
@@ -754,7 +754,7 @@ void CFilterControl::OnCordonListDragDrop(CordonListItem_t *pDrag, CordonListIte
 		{
 			str.Format("Merge cordon '%s' into cordon '%s'?", pDrag->m_pCordon->m_szName.Get(), pDrop->m_pCordon->m_szName.Get() );
 		}
-		
+
 		if ( AfxMessageBox(str, MB_YESNO | MB_ICONQUESTION ) == IDNO )
 		{
 			//UpdateCordonList();
@@ -841,9 +841,9 @@ LRESULT CFilterControl::OnListLeftDragDrop(WPARAM wParam, LPARAM lParam)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : wParam - 
-//			lParam - 
+// Purpose:
+// Input  : wParam -
+//			lParam -
 // Output : LRESULT
 //-----------------------------------------------------------------------------
 LRESULT CFilterControl::OnListRightDragDrop(WPARAM wParam, LPARAM lParam)
@@ -851,7 +851,7 @@ LRESULT CFilterControl::OnListRightDragDrop(WPARAM wParam, LPARAM lParam)
 	// Nothing meaningful to do here for cordons.
 	if ( m_mode == FILTER_DIALOG_CORDONS )
 		return 0;
-	
+
 	if ( m_mode == FILTER_DIALOG_AUTO_VISGROUPS )
 	{
 		UpdateGroupList();
@@ -881,7 +881,7 @@ LRESULT CFilterControl::OnListRightDragDrop(WPARAM wParam, LPARAM lParam)
 
 
 //--------------------------------------------------------------------------------------------------
-// 
+//
 //--------------------------------------------------------------------------------------------------
 LRESULT CFilterControl::OnListSelChange( WPARAM wParam, LPARAM lParam )
 {
@@ -893,7 +893,7 @@ LRESULT CFilterControl::OnListSelChange( WPARAM wParam, LPARAM lParam )
 	{
 		if ( m_mode == FILTER_DIALOG_CORDONS )
 			return 0;
- 
+
 		// VISGROUPS TODO: this is broken by a couple of things:
 		//   1) VisGroups_CanMoveUp returns true because the root Auto visgroup occupies index 0
 		//	 2) UpdateControl goes ahead and enables the button right after we disable it
@@ -921,13 +921,13 @@ LRESULT CFilterControl::OnListSelChange( WPARAM wParam, LPARAM lParam )
 		{
 			box = &item->m_pCordon->m_Boxes.Element( 0 );
 		}
-		
+
 		if ( box )
 		{
 			pDoc->Cordon_SelectCordonForEditing( item->m_pCordon, box, SELECT_CORDON_FROM_DIALOG );
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -960,7 +960,7 @@ LRESULT CFilterControl::OnListKeyDown(WPARAM wParam, LPARAM lParam)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 BOOL CFilterControl::OnInitDialog(void)
 {
@@ -969,7 +969,7 @@ BOOL CFilterControl::OnInitDialog(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CFilterControl::UpdateGroupListChecks(void)
 {
@@ -1011,21 +1011,21 @@ void CFilterControl::UpdateCordonListChecks()
 
 //--------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------
-void CFilterControl::OnSelChangeTab(NMHDR *header, LRESULT *result) 
+void CFilterControl::OnSelChangeTab(NMHDR *header, LRESULT *result)
 {
 	FilterDialogMode_t oldMode = m_mode;
 	FilterDialogMode_t newMode;
 
-	int sel = m_cTabControl.GetCurSel(); 
-	if ( sel == 0 ) 
+	int sel = m_cTabControl.GetCurSel();
+	if ( sel == 0 )
 	{
 		newMode = FILTER_DIALOG_USER_VISGROUPS;
-	} 
+	}
 	else if ( sel == 1 )
 	{
 		newMode = FILTER_DIALOG_AUTO_VISGROUPS;
-	} 
-	else 
+	}
+	else
 	{
 		newMode = FILTER_DIALOG_CORDONS;
 	}
@@ -1051,7 +1051,7 @@ void CFilterControl::ChangeMode( FilterDialogMode_t oldMode,  FilterDialogMode_t
 		m_cGroupBox.ShowWindow( SW_HIDE );
 		GetDlgItem( IDC_EDITGROUPS )->ShowWindow( SW_HIDE );
 		GetDlgItem( IDC_SHOW_ALL )->ShowWindow( SW_HIDE );
-		
+
 		UpdateCordonList();
 	}
 	else
@@ -1066,6 +1066,6 @@ void CFilterControl::ChangeMode( FilterDialogMode_t oldMode,  FilterDialogMode_t
 		GetDlgItem( IDC_EDITGROUPS )->ShowWindow( SW_SHOW );
 		GetDlgItem( IDC_SHOW_ALL )->ShowWindow( SW_SHOW );
 
-		UpdateGroupList();	
+		UpdateGroupList();
 	}
 }

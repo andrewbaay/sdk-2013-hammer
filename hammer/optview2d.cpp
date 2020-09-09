@@ -10,8 +10,8 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "OPTView2D.h"
-#include "Options.h"
+#include "optview2d.h"
+#include "options.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -75,10 +75,19 @@ void COPTView2D::DoDataExchange(CDataExchange* pDX)
 }
 
 
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunused-local-typedef"
+#endif
+
 BEGIN_MESSAGE_MAP(COPTView2D, CPropertyPage)
 	//{{AFX_MSG_MAP(COPTView2D)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
+
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // COPTView2D message handlers

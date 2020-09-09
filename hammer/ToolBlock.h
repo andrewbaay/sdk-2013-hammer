@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -12,8 +12,8 @@
 #endif
 
 
-#include "Box3D.h"
-#include "ToolInterface.h"
+#include "box3d.h"
+#include "toolinterface.h"
 
 
 class CToolBlockMessageWnd;

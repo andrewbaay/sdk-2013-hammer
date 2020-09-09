@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -22,8 +22,8 @@
 class CDmeClip;
 class CDmeFilmClip;
 class CDmeTrack;
-enum DmeClipType_t;
-enum DmeClipSkipFlag_t;
+enum DmeClipType_t : signed char;
+enum DmeClipSkipFlag_t : unsigned char;
 
 
 //-----------------------------------------------------------------------------
@@ -148,7 +148,7 @@ inline const CUtlVector< DmElementHandle_t > &CDmeTrackGroup::GetTracks( ) const
 	return m_Tracks.Get();
 }
 
-	
+
 //-----------------------------------------------------------------------------
 // Is this track group visible?
 //-----------------------------------------------------------------------------
@@ -189,7 +189,7 @@ inline int CDmeTrackGroup::GetDisplaySize() const
 {
 	return m_nDisplaySize;
 }
-	
+
 
 //-----------------------------------------------------------------------------
 // Iterator macro

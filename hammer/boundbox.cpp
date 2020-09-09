@@ -1,21 +1,21 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
 
 #include "stdafx.h"
-#include "BoundBox.h"
+#include "boundbox.h"
 #include "hammer_mathlib.h"
-#include "MapDefs.h"
+#include "mapdefs.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 BoundBox::BoundBox(void)
 {
@@ -40,8 +40,8 @@ void BoundBox::ResetBounds(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pt - 
+// Purpose:
+// Input  : pt -
 //-----------------------------------------------------------------------------
 void BoundBox::UpdateBounds(const Vector& pt)
 {
@@ -62,9 +62,9 @@ void BoundBox::UpdateBounds(const Vector& pt)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : bmins - 
-//			bmaxs - 
+// Purpose:
+// Input  : bmins -
+//			bmaxs -
 //-----------------------------------------------------------------------------
 void BoundBox::UpdateBounds(const Vector& mins, const Vector& maxs)
 {
@@ -85,8 +85,8 @@ void BoundBox::UpdateBounds(const Vector& mins, const Vector& maxs)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pBox - 
+// Purpose:
+// Input  : pBox -
 //-----------------------------------------------------------------------------
 void BoundBox::UpdateBounds(const BoundBox *pBox)
 {
@@ -95,8 +95,8 @@ void BoundBox::UpdateBounds(const BoundBox *pBox)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : ptdest - 
+// Purpose:
+// Input  : ptdest -
 //-----------------------------------------------------------------------------
 void BoundBox::GetBoundsCenter(Vector& ptdest)
 {
@@ -105,8 +105,8 @@ void BoundBox::GetBoundsCenter(Vector& ptdest)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pt - 
+// Purpose:
+// Input  : pt -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool BoundBox::ContainsPoint(const Vector& pt) const
@@ -123,9 +123,9 @@ bool BoundBox::ContainsPoint(const Vector& pt) const
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pfMins - 
-//			pfMaxs - 
+// Purpose:
+// Input  : pfMins -
+//			pfMaxs -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool BoundBox::IsIntersectingBox(const Vector& pfMins, const Vector& pfMaxs) const
@@ -150,9 +150,9 @@ bool BoundBox::IsIntersectingBox(const Vector& pfMins, const Vector& pfMaxs) con
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pfMins - 
-//			pfMaxs - 
+// Purpose:
+// Input  : pfMins -
+//			pfMaxs -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool BoundBox::IsInsideBox(const Vector& pfMins, const Vector& pfMaxs) const
@@ -194,8 +194,8 @@ bool BoundBox::IsValidBox(void) const
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : size - 
+// Purpose:
+// Input  : size -
 //-----------------------------------------------------------------------------
 void BoundBox::GetBoundsSize(Vector& size)
 {
@@ -206,10 +206,10 @@ void BoundBox::GetBoundsSize(Vector& size)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : iValue - 
-//			iGridSize - 
-// Output : 
+// Purpose:
+// Input  : iValue -
+//			iGridSize -
+// Output :
 //-----------------------------------------------------------------------------
 static int Snap(/*int*/ float iValue, int iGridSize)
 {
@@ -218,8 +218,8 @@ static int Snap(/*int*/ float iValue, int iGridSize)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : iGridSize - 
+// Purpose:
+// Input  : iGridSize -
 //-----------------------------------------------------------------------------
 void BoundBox::SnapToGrid(int iGridSize)
 {
@@ -237,8 +237,8 @@ void BoundBox::SnapToGrid(int iGridSize)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : axis - 
+// Purpose:
+// Input  : axis -
 //-----------------------------------------------------------------------------
 void BoundBox::Rotate90(int axis)
 {

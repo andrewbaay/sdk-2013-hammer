@@ -7,21 +7,21 @@
 #include "stdafx.h"
 #include "collisionutils.h"
 #include "mainfrm.h"
-#include "MapDefs.h"
-#include "MapFace.h"
-#include "MapDisp.h"
-#include "MapWorld.h"
-#include "MapSolid.h"
-#include "fgdlib/WCKeyValues.h"
-#include "GlobalFunctions.h"
-#include "Render3D.h"
-#include "Render2D.h"
-#include "SaveInfo.h"
-#include "TextureSystem.h"
-#include "MapDoc.h"
-#include "materialsystem/IMesh.h"
-#include "Material.h"
-#include "UtlRBTree.h"
+#include "mapdefs.h"
+#include "mapface.h"
+#include "mapdisp.h"
+#include "mapworld.h"
+#include "mapsolid.h"
+#include "fgdlib/wckeyvalues.h"
+#include "globalfunctions.h"
+#include "render3d.h"
+#include "render2d.h"
+#include "saveinfo.h"
+#include "texturesystem.h"
+#include "mapdoc.h"
+#include "materialsystem/imesh.h"
+#include "material.h"
+#include "utlrbtree.h"
 #include "mathlib/vector.h"
 #include "camera.h"
 #include "options.h"
@@ -182,8 +182,8 @@ void CMapFace::GetTextureName(char *pszName) const
 	}
 }
 
-static char *InvisToolTextures[]={
-	"playerclip",
+static constexpr const char *InvisToolTextures[]={
+	"clip",
 	"occluder",
 	"areaportal",
 	"invisible",
@@ -210,7 +210,7 @@ void CMapFace::UpdateFaceFlags( void )
 		{
 			m_nFaceFlags |= FACE_FLAGS_NOSHADOW;
 		}
-		for(int i=0;i<NELEMS(InvisToolTextures); i++)
+		for(uint i=0;i<NELEMS(InvisToolTextures); i++)
 			if (strstr( tname, InvisToolTextures[i] ) )
 			{
 				m_nFaceFlags |= FACE_FLAGS_NODRAW_IN_LPREVIEW | FACE_FLAGS_NOSHADOW;

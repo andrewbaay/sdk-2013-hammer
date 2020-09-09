@@ -8,23 +8,22 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include <afxtempl.h>
 #include "hammer.h"
-#include "MapDoc.h"
-#include "Material.h"
-#include "GlobalFunctions.h"
-#include "BSPFile.h"
-#include "materialsystem/IMaterialSystem.h"
-#include "materialsystem/MaterialSystem_Config.h"
+#include "mapdoc.h"
+#include "material.h"
+#include "globalfunctions.h"
+#include "bspfile.h"
+#include "materialsystem/imaterialsystem.h"
+#include "materialsystem/materialsystem_config.h"
 #include "materialsystem/MaterialSystemUtil.h"
-#include "materialsystem/IMaterial.h"
+#include "materialsystem/imaterial.h"
 #include "materialsystem/imaterialvar.h"
 #include "materialsystem/ishaderapi.h"
-#include "FileSystem.h"
+#include "filesystem.h"
 #include "tier1/strtools.h"
 #include "tier1/fmtstr.h"
 #include "tier0/dbg.h"
-#include "TextureSystem.h"
+#include "texturesystem.h"
 #include "materialproxyfactory_wc.h"
 #include "options.h"
 #include "pixelwriter.h"
@@ -623,7 +622,7 @@ void CMaterial::DrawBitmap( CDC* pDC, const RECT& srcRect, const RECT& dstRect )
 	// ** bits **
 	pDC->SetStretchBltMode( COLORONCOLOR );
 	if ( StretchDIBits( pDC->m_hDC, dstRect.left, dstRect.top, dest_width, dest_height,
-						srcRect.left, -srcRect.top, srcWidth, srcHeight, m_pData, &bmi, DIB_RGB_COLORS, SRCCOPY ) == GDI_ERROR )
+						srcRect.left, -srcRect.top, srcWidth, srcHeight, m_pData, &bmi, DIB_RGB_COLORS, SRCCOPY ) == (int)GDI_ERROR )
 		Msg( mwError, "CMaterial::Draw(): StretchDIBits failed." );
 }
 
@@ -1086,7 +1085,7 @@ bool CMaterial::Initialize( HWND hwnd )
 //-----------------------------------------------------------------------------
 void CMaterial::ShutDown()
 {
-	for ( int i = 0; i < NELEMS( sg_ExtraFP16Targets ); ++i )
+	for ( uint i = 0; i < NELEMS( sg_ExtraFP16Targets ); ++i )
 		sg_ExtraFP16Targets[i].Shutdown();
 
 	if ( materials != NULL )

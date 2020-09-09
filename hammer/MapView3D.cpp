@@ -13,28 +13,27 @@
 #if _MSC_VER < 1300
 #include <afxpriv.h>
 #endif
-#include <mmsystem.h>
-#include "Camera.h"
-#include "GlobalFunctions.h"
-#include "History.h"
-#include "Keyboard.h"
-#include "MainFrm.h"
-#include "MapDoc.h"
-#include "MapDecal.h"
-#include "MapEntity.h"
-#include "MapSolid.h"
-#include "MapStudioModel.h"
-#include "MapWorld.h"
-#include "MapView3D.h"
-#include "MapView2D.h"
-#include "ObjectBar.h"
-#include "Options.h"
-#include "StatusBarIDs.h"
-#include "TitleWnd.h"
+#include "camera.h"
+#include "globalfunctions.h"
+#include "history.h"
+#include "keyboard.h"
+#include "mainfrm.h"
+#include "mapdoc.h"
+#include "mapdecal.h"
+#include "mapentity.h"
+#include "mapsolid.h"
+#include "mapstudiomodel.h"
+#include "mapworld.h"
+#include "mapview3d.h"
+#include "mapview2d.h"
+#include "objectbar.h"
+#include "options.h"
+#include "statusbarids.h"
+#include "titlewnd.h"
 #include "ToolManager.h"
 #include "hammer.h"
 #include "mathlib/vector.h"
-#include "MapOverlay.h"
+#include "mapoverlay.h"
 #include "vgui/Cursor.h"
 #include "ToolCamera.h"
 #include "KeyBinds.h"
@@ -86,15 +85,15 @@ BEGIN_MESSAGE_MAP(CMapView3D, CView)
 	ON_WM_CHAR()
 	ON_WM_SETFOCUS()
 	ON_WM_NCPAINT()
-	ON_COMMAND(ID_FILE_PRINT, CView::OnFilePrint)
-	ON_COMMAND(ID_FILE_PRINT_DIRECT, CView::OnFilePrint)
-	ON_COMMAND(ID_FILE_PRINT_PREVIEW, CView::OnFilePrintPreview)
-	ON_COMMAND(ID_VIEW_3DWIREFRAME, OnView3dWireframe)
-	ON_COMMAND(ID_VIEW_3DPOLYGON, OnView3dPolygon)
-	ON_COMMAND(ID_VIEW_3DTEXTURED, OnView3dTextured)
-	ON_COMMAND(ID_VIEW_3DLIGHTMAP_GRID, OnView3dLightmapGrid)
-	ON_COMMAND(ID_VIEW_LIGHTINGPREVIEW, OnView3dLightingPreview)
-	ON_COMMAND(ID_VIEW_LIGHTINGPREVIEW_RAYTRACED, OnView3dLightingPreviewRayTraced)
+	ON_COMMAND(ID_FILE_PRINT, &ThisClass::OnFilePrint)
+	ON_COMMAND(ID_FILE_PRINT_DIRECT, &ThisClass::OnFilePrint)
+	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &ThisClass::OnFilePrintPreview)
+	ON_COMMAND(ID_VIEW_3DWIREFRAME, &ThisClass::OnView3dWireframe)
+	ON_COMMAND(ID_VIEW_3DPOLYGON, &ThisClass::OnView3dPolygon)
+	ON_COMMAND(ID_VIEW_3DTEXTURED, &ThisClass::OnView3dTextured)
+	ON_COMMAND(ID_VIEW_3DLIGHTMAP_GRID, &ThisClass::OnView3dLightmapGrid)
+	ON_COMMAND(ID_VIEW_LIGHTINGPREVIEW, &ThisClass::OnView3dLightingPreview)
+	ON_COMMAND(ID_VIEW_LIGHTINGPREVIEW_RAYTRACED, &ThisClass::OnView3dLightingPreviewRayTraced)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -1541,7 +1540,7 @@ bool CMapView3D::ControlCamera(const CPoint &point)
 
 	// camera look is on, but no mouse changes
 	if ( MouseLookDelta.cx == 0 && MouseLookDelta.cy == 0 )
-		true;
+		return true;
 
 	//
 	// If strafing, left-right movement moves the camera from side to side.

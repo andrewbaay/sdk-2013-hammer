@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -10,10 +10,10 @@
 #pragma once
 #endif
 
-#include "MapClass.h"
-#include "MapPointHandle.h"
-#include "ToolInterface.h"
-#include "MapEntity.h"
+#include "mapclass.h"
+#include "mappointhandle.h"
+#include "toolinterface.h"
+#include "mapentity.h"
 
 
 class CHelperInfo;
@@ -56,7 +56,7 @@ public:
 	virtual void Render2D(CRender2D *pRender);
 
 	// Overridden to chain down to our endpoints, which are not children.
-	void SetOrigin(Vector &vecOrigin);
+	void SetOrigin(const Vector &vecOrigin);
 
 	// Overridden to chain down to our endpoints, which are not children.
 	virtual SelectionState_t SetSelectionState(SelectionState_t eSelectionState);
@@ -70,7 +70,7 @@ public:
 
 	virtual bool IsVisualElement(void) { return true; }
 	virtual bool IsClutter(void) const { return false; }
-	
+
 	virtual const char* GetDescription() { return("Swept player hull helper"); }
 
 	virtual void OnAddToWorld(CMapWorld *pWorld);
@@ -88,7 +88,7 @@ protected:
 
 	// Overriden to transform our endpoints, which are not children.
 	virtual void DoTransform(const VMatrix &matrix);
-	
+
 	void Initialize(void);
 
 	CMapPlayerHullHandle *m_Point[2];				// The two endpoints of the axis.

@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2002, Valve LLC, All rights reserved. ============
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================
@@ -13,8 +13,8 @@
 #endif
 
 #include "datamodel/idatamodel.h"
-#include "vgui_controls/listpanel.h"
-#include "vgui_controls/frame.h"
+#include "vgui_controls/ListPanel.h"
+#include "vgui_controls/Frame.h"
 #include "vgui/KeyCode.h"
 
 
@@ -27,7 +27,7 @@ namespace vgui
 }
 
 //-----------------------------------------------------------------------------
-// CFileListManager 
+// CFileListManager
 //-----------------------------------------------------------------------------
 class CFileListManager : public vgui::ListPanel
 {
@@ -64,7 +64,7 @@ protected:
 
 
 //-----------------------------------------------------------------------------
-// CFileListManagerFrame 
+// CFileListManagerFrame
 //-----------------------------------------------------------------------------
 class CFileManagerFrame : public vgui::Frame
 {

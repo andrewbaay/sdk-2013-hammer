@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -11,7 +11,7 @@
 #endif
 
 #include "vgui_controls/Panel.h"
-#include "mathlib/Vector.h"
+#include "mathlib/vector.h"
 
 class CDmAttribute;
 class CDmeTransform;
@@ -83,7 +83,7 @@ public:
 	virtual void OnMouseReleased( vgui::MouseCode code, int x, int y );
 	virtual void OnMouseWheeled( int delta );
 
-	
+
 protected:
 	CDmAttribute *m_pAttr;
 

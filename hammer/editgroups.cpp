@@ -6,12 +6,12 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "EditGroups.h"
-#include "MainFrm.h"
-#include "MapWorld.h"
-#include "CustomMessages.h"
-#include "GlobalFunctions.h"
-#include "VisGroup.h"
+#include "editgroups.h"
+#include "mainfrm.h"
+#include "mapworld.h"
+#include "custommessages.h"
+#include "globalfunctions.h"
+#include "visgroup.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -21,12 +21,12 @@ static const unsigned int g_uSelChangeMsg = ::RegisterWindowMessage(TREELIST_MSG
 
 BEGIN_MESSAGE_MAP(CEditGroups, CDialog)
 	//{{AFX_MSG_MAP(CEditGroups)
-	ON_BN_CLICKED(IDC_COLOR, OnColor)
-	ON_EN_CHANGE(IDC_NAME, OnChangeName)
-	ON_BN_CLICKED(IDC_NEW, OnNew)
-	ON_BN_CLICKED(IDC_REMOVE, OnRemove)
+	ON_BN_CLICKED(IDC_COLOR, &ThisClass::OnColor)
+	ON_EN_CHANGE(IDC_NAME, &ThisClass::OnChangeName)
+	ON_BN_CLICKED(IDC_NEW, &ThisClass::OnNew)
+	ON_BN_CLICKED(IDC_REMOVE, &ThisClass::OnRemove)
 	ON_WM_CLOSE()
-	ON_REGISTERED_MESSAGE(g_uSelChangeMsg, OnSelChangeGroupList)
+	ON_REGISTERED_MESSAGE(g_uSelChangeMsg, &ThisClass::OnSelChangeGroupList)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 

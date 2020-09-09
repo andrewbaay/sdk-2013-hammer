@@ -14,7 +14,7 @@
 
 class CChunkFile;
 class CChunkHandlerMap;
-enum ChunkFileResult_t;
+enum ChunkFileResult_t : unsigned char;
 
 using IMapEntity_Type_t = void;
 using IMapEntity_SaveInfo_t = void;

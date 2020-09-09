@@ -5,15 +5,15 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "ChunkFile.h"
-#include "SaveInfo.h"
-#include "MapClass.h"
-#include "MapEntity.h"			// dvs: evil - base knows about the derived class
-#include "MapGroup.h"			// dvs: evil - base knows about the derived class
-#include "MapWorld.h"			// dvs: evil - base knows about the derived class
-#include "GlobalFunctions.h"
-#include "MapDoc.h"
-#include "VisGroup.h"
+#include "chunkfile.h"
+#include "saveinfo.h"
+#include "mapclass.h"
+#include "mapentity.h"			// dvs: evil - base knows about the derived class
+#include "mapgroup.h"			// dvs: evil - base knows about the derived class
+#include "mapworld.h"			// dvs: evil - base knows about the derived class
+#include "globalfunctions.h"
+#include "mapdoc.h"
+#include "visgroup.h"
 #include "mapdefs.h"
 #include "MapInstance.h"
 #include "tier0/minidump.h"
@@ -1720,7 +1720,7 @@ void CMapClass::SetEditorKeyValue(const char *szKey, const char *szValue)
 //			FIXME: Should our children necessarily have the same origin as us?
 //				   Seems like we should translate our children by our origin delta
 //-----------------------------------------------------------------------------
-void CMapClass::SetOrigin( Vector &origin )
+void CMapClass::SetOrigin( const Vector &origin )
 {
 	CMapPoint::SetOrigin( origin );
 
@@ -1742,8 +1742,8 @@ void CMapClass::SetVisible(bool bVisible)
 {
 	FOR_EACH_OBJ( m_Children, pos )
 	{
-		CMapClass *pChild = m_Children.Element(pos);
-		pChild ? pChild->SetVisible(bVisible) : NULL;;
+		if ( CMapClass *pChild = m_Children.Element(pos) )
+			pChild->SetVisible( bVisible );
 	}
 
 	m_bVisible = bVisible;

@@ -19,12 +19,19 @@ CRichEditCtrlEx::~CRichEditCtrlEx()
 {
 }
 
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunused-local-typedef"
+#endif
 
 BEGIN_MESSAGE_MAP(CRichEditCtrlEx, CRichEditCtrl)
 	//{{AFX_MSG_MAP(CRichEditCtrlEx)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 
 void CRichEditCtrlEx::PreSubclassWindow()
 {

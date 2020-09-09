@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 #include "movieobjects/dmematerial.h"
@@ -8,8 +8,8 @@
 #include "datamodel/dmelementfactoryhelper.h"
 #include "movieobjects_interfaces.h"
 
-#include "materialsystem/IMaterial.h"
-#include "materialsystem/IMaterialSystem.h"
+#include "materialsystem/imaterial.h"
+#include "materialsystem/imaterialsystem.h"
 #include "tier2/tier2.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -17,7 +17,7 @@
 
 
 //-----------------------------------------------------------------------------
-// Expose this class to the scene database 
+// Expose this class to the scene database
 //-----------------------------------------------------------------------------
 IMPLEMENT_ELEMENT_FACTORY( DmeMaterial, CDmeMaterial );
 

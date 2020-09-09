@@ -7,25 +7,25 @@
 //=============================================================================
 
 #include "stdafx.h"
-#include "HelperFactory.h"
-#include "fgdlib/HelperInfo.h"
-#include "MapAlignedBox.h"
-#include "MapAnimator.h"
+#include "helperfactory.h"
+#include "fgdlib/helperinfo.h"
+#include "mapalignedbox.h"
+#include "mapanimator.h"
 #include "MapAxisHandle.h"
-#include "MapDecal.h"
-#include "MapFrustum.h"
-#include "MapKeyFrame.h"
-#include "MapLightCone.h"
-#include "MapLine.h"
-#include "MapSprite.h"
-#include "MapSphere.h"
-#include "MapStudioModel.h"
-#include "MapOverlay.h"
-#include "MapPointHandle.h"
-#include "MapQuadBounds.h"
-#include "MapLight.h"
-#include "MapSideList.h"
-#include "MapCylinder.h"
+#include "mapdecal.h"
+#include "mapfrustum.h"
+#include "mapkeyframe.h"
+#include "maplightcone.h"
+#include "mapline.h"
+#include "mapsprite.h"
+#include "mapsphere.h"
+#include "mapstudiomodel.h"
+#include "mapoverlay.h"
+#include "mappointhandle.h"
+#include "mapquadbounds.h"
+#include "maplight.h"
+#include "mapsidelist.h"
+#include "mapcylinder.h"
 #include "MapInstance.h"
 #include "mapsweptplayerhull.h"
 #include "mapworldtext.h"
@@ -35,12 +35,12 @@
 #include <tier0/memdbgon.h>
 
 
-using HELPERFACTORY = CMapClass*( CHelperInfo *, CMapEntity *);
+using HELPERFACTORY = CMapClass*(*)( CHelperInfo *, CMapEntity *);
 
 typedef struct
 {
 	const char*	pszName;
-	HELPERFACTORY* pfnFactory;
+	HELPERFACTORY pfnFactory;
 } HelperFactoryMap_t;
 
 

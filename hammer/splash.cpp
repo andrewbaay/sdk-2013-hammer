@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 #include "resource.h"
-#include "Splash.h"
+#include "splash.h"
 #include "tier0/icommandline.h"
 #include "soundsystem.h"
 
@@ -19,7 +19,7 @@
 // Sorry Tom...   :(
 #define HAMMER_TIME 1
 #ifdef HAMMER_TIME
-#include "StatusBarIDs.h"
+#include "statusbarids.h"
 
 static constexpr const unsigned char g_CantTouchThis[] =
 {

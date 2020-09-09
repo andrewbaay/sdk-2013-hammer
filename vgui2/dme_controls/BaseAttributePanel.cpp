@@ -9,7 +9,7 @@
 //=============================================================================//
 
 #include "dme_controls/BaseAttributePanel.h"
-#include "dme_controls/attributewidgetfactory.h"
+#include "dme_controls/AttributeWidgetFactory.h"
 #include "tier1/KeyValues.h"
 #include "vgui_controls/Label.h"
 #include "movieobjects/dmeeditortypedictionary.h"
@@ -26,7 +26,7 @@ bool CBaseAttributePanel::ColInfoLessFunc( const CBaseAttributePanel::colinfo_t&
 	return lhs.panel < rhs.panel;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 // CBaseAttributePanel constructor
 //-----------------------------------------------------------------------------
@@ -73,7 +73,7 @@ void CBaseAttributePanel::PostConstructor()
 {
 }
 
-	
+
 //-----------------------------------------------------------------------------
 // Initializes flags from the attribute editor info
 //-----------------------------------------------------------------------------
@@ -263,7 +263,7 @@ int CBaseAttributePanel::GetSizeForColumn( Panel *panel )
 void CBaseAttributePanel::PerformLayout()
 {
 	BaseClass::PerformLayout();
-	
+
 	CUtlVector< Panel * >	vispanels;
 
 	if ( HasFlag( HIDETYPE ) )
@@ -287,7 +287,7 @@ void CBaseAttributePanel::PerformLayout()
 			vispanels.AddToTail( dataPanel );
 		}
 	}
-	
+
 	int c = vispanels.Count();
 
 	Assert( c >= 0 );

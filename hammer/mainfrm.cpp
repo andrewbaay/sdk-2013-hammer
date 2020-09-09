@@ -7,32 +7,32 @@
 #include "stdafx.h"
 #include <afxadv.h>
 #include "hammer.h"
-#include "Box3D.h"				// For units
-#include "EntityReportDlg.h"
-#include "FaceEditSheet.h"
-#include "MainFrm.h"
-#include "MessageWnd.h"
-#include "ControlBarIDs.h"
-#include "CustomMessages.h"
-#include "GlobalFunctions.h"
-#include "Prefabs.h"
-#include "MapDoc.h"
-#include "StatusBarIDs.h"
-#include "Options.h"
-#include "OptionProperties.h"
-#include "ObjectProperties.h"
-#include "MapView2D.h"
-#include "MapViewLogical.h"
-#include "MapView3D.h"
-#include "ChildFrm.h"
+#include "box3d.h"				// For units
+#include "entityreportdlg.h"
+#include "faceeditsheet.h"
+#include "mainfrm.h"
+#include "messagewnd.h"
+#include "controlbarids.h"
+#include "custommessages.h"
+#include "globalfunctions.h"
+#include "prefabs.h"
+#include "mapdoc.h"
+#include "statusbarids.h"
+#include "options.h"
+#include "optionproperties.h"
+#include "objectproperties.h"
+#include "mapview2d.h"
+#include "mapviewlogical.h"
+#include "mapview3d.h"
+#include "childfrm.h"
 #include "SearchReplaceDlg.h"
-#include "TextureBrowser.h"
-#include "TextureSystem.h"
+#include "texturebrowser.h"
+#include "texturesystem.h"
 #include "ToolManager.h"
-#include "Material.h"
-#include "materialsystem/IMaterialSystem.h"
-#include "materialsystem/MaterialSystem_Config.h"
-#include "soundbrowser.h"
+#include "material.h"
+#include "materialsystem/imaterialsystem.h"
+#include "materialsystem/materialsystem_config.h"
+#include "SoundBrowser.h"
 #include "KeyValues.h"
 #include "lprvwindow.h"
 #include "ModelBrowser.h"
@@ -50,98 +50,98 @@ IMPLEMENT_DYNAMIC(CMainFrame, CMDIFrameWnd)
 BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	//{{AFX_MSG_MAP(CMainFrame)
 	ON_WM_CREATE()
-	ON_COMMAND(ID_EDIT_PROPERTIES, OnEditProperties)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_PROPERTIES, OnUpdateEditFunction)
-	ON_COMMAND(ID_VIEW_MESSAGES, OnViewMessages)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_MESSAGES, OnUpdateViewMessages)
+	ON_COMMAND(ID_EDIT_PROPERTIES, &ThisClass::OnEditProperties)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_PROPERTIES, &ThisClass::OnUpdateEditFunction)
+	ON_COMMAND(ID_VIEW_MESSAGES, &ThisClass::OnViewMessages)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_MESSAGES, &ThisClass::OnUpdateViewMessages)
 	ON_WM_ACTIVATEAPP()
 	ON_WM_SIZE()
 	ON_WM_CLOSE()
 	ON_WM_DESTROY()
 	ON_WM_PAINT()
 	ON_WM_TIMER()
-	ON_COMMAND(ID_TOOLS_OPTIONS, OnToolsOptions)
-	ON_COMMAND_EX(ID_HELP_TOPICS, OnHelpOpenURL)
-	ON_COMMAND_EX(ID_HELP_EDITINGSITE, OnHelpOpenURL)
-	ON_COMMAND_EX(ID_HELP_WORLDCRAFT_SUPPORT_MAIL, OnHelpOpenURL)
-	ON_COMMAND(ID_EDIT_UNDOREDOACTIVE, OnEditUndoredoactive)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDOREDOACTIVE, OnUpdateEditUndoredoactive)
-	ON_COMMAND_EX(ID_FILE_NEW, OnFileNew)
-	ON_COMMAND(ID_SAVEWINDOWSTATE, OnSavewindowstate)
-	ON_COMMAND(ID_LOADWINDOWSTATE, OnLoadwindowstate)
-	ON_COMMAND_EX(ID_MAP_UNITS_NONE, OnUnits)
-	ON_UPDATE_COMMAND_UI(ID_MAP_UNITS_NONE, OnUpdateUnits)
-	ON_COMMAND_EX(ID_MAP_UNITS_INCHES, OnUnits)
-	ON_UPDATE_COMMAND_UI(ID_MAP_UNITS_INCHES, OnUpdateUnits)
-	ON_COMMAND_EX(ID_MAP_UNITS_FEET_INCHES, OnUnits)
-	ON_UPDATE_COMMAND_UI(ID_MAP_UNITS_FEET_INCHES, OnUpdateUnits)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_OPAQUE_MATERIALS, OnUpdateOpaqueMaterials)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_2DXZ, OnUpdateView2d)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_2DYZ, OnUpdateView2d)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_2DXY, OnUpdateView2d)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_3DWIREFRAME, OnUpdateView3d)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_3DPOLYGON, OnUpdateView3d)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_3DTEXTURED, OnUpdateView3d)
+	ON_COMMAND(ID_TOOLS_OPTIONS, &ThisClass::OnToolsOptions)
+	ON_COMMAND_EX(ID_HELP_TOPICS, &ThisClass::OnHelpOpenURL)
+	ON_COMMAND_EX(ID_HELP_EDITINGSITE, &ThisClass::OnHelpOpenURL)
+	ON_COMMAND_EX(ID_HELP_WORLDCRAFT_SUPPORT_MAIL, &ThisClass::OnHelpOpenURL)
+	ON_COMMAND(ID_EDIT_UNDOREDOACTIVE, &ThisClass::OnEditUndoredoactive)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDOREDOACTIVE, &ThisClass::OnUpdateEditUndoredoactive)
+	ON_COMMAND_EX(ID_FILE_NEW, &ThisClass::OnFileNew)
+	ON_COMMAND(ID_SAVEWINDOWSTATE, &ThisClass::OnSavewindowstate)
+	ON_COMMAND(ID_LOADWINDOWSTATE, &ThisClass::OnLoadwindowstate)
+	ON_COMMAND_EX(ID_MAP_UNITS_NONE, &ThisClass::OnUnits)
+	ON_UPDATE_COMMAND_UI(ID_MAP_UNITS_NONE, &ThisClass::OnUpdateUnits)
+	ON_COMMAND_EX(ID_MAP_UNITS_INCHES, &ThisClass::OnUnits)
+	ON_UPDATE_COMMAND_UI(ID_MAP_UNITS_INCHES, &ThisClass::OnUpdateUnits)
+	ON_COMMAND_EX(ID_MAP_UNITS_FEET_INCHES, &ThisClass::OnUnits)
+	ON_UPDATE_COMMAND_UI(ID_MAP_UNITS_FEET_INCHES, &ThisClass::OnUpdateUnits)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_OPAQUE_MATERIALS, &ThisClass::OnUpdateOpaqueMaterials)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_2DXZ, &ThisClass::OnUpdateView2d)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_2DYZ, &ThisClass::OnUpdateView2d)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_2DXY, &ThisClass::OnUpdateView2d)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_3DWIREFRAME, &ThisClass::OnUpdateView3d)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_3DPOLYGON, &ThisClass::OnUpdateView3d)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_3DTEXTURED, &ThisClass::OnUpdateView3d)
 	//ON_UPDATE_COMMAND_UI(ID_VIEW_3DENGINE, OnUpdateView3d)
-	ON_COMMAND(ID_VIEW_OPAQUE_MATERIALS, OnOpaqueMaterials)
-	ON_COMMAND_EX(ID_VIEW3D_BRIGHTER, OnView3dChangeBrightness)
-	ON_COMMAND_EX(ID_VIEW3D_DARKER, OnView3dChangeBrightness)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_OBJECTBAR, CFrameWnd::OnUpdateControlBarMenu)
-	ON_COMMAND_EX(ID_VIEW_OBJECTBAR, CFrameWnd::OnBarCheck)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_SELECTION_MODE_BAR, CFrameWnd::OnUpdateControlBarMenu)
-	ON_COMMAND_EX(ID_VIEW_SELECTION_MODE_BAR, CFrameWnd::OnBarCheck)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_FILTERCONTROL, CFrameWnd::OnUpdateControlBarMenu)
-	ON_COMMAND_EX(ID_VIEW_FILTERCONTROL, CFrameWnd::OnBarCheck)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_MAPVIEWBAR, CFrameWnd::OnUpdateControlBarMenu)
-	ON_COMMAND_EX(ID_VIEW_MAPVIEWBAR, CFrameWnd::OnBarCheck)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_MAPTOOLSBAR, CFrameWnd::OnUpdateControlBarMenu)
-	ON_COMMAND_EX(ID_VIEW_MAPTOOLSBAR, CFrameWnd::OnBarCheck)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_TEXTUREBAR, CFrameWnd::OnUpdateControlBarMenu)
-	ON_COMMAND_EX(ID_VIEW_TEXTUREBAR, CFrameWnd::OnBarCheck)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_MANIFEST_BAR, CFrameWnd::OnUpdateControlBarMenu)
-	ON_COMMAND_EX(ID_VIEW_MANIFEST_BAR, CFrameWnd::OnBarCheck)
+	ON_COMMAND(ID_VIEW_OPAQUE_MATERIALS, &ThisClass::OnOpaqueMaterials)
+	ON_COMMAND_EX(ID_VIEW3D_BRIGHTER, &ThisClass::OnView3dChangeBrightness)
+	ON_COMMAND_EX(ID_VIEW3D_DARKER, &ThisClass::OnView3dChangeBrightness)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_OBJECTBAR, &ThisClass::OnUpdateControlBarMenu)
+	ON_COMMAND_EX(ID_VIEW_OBJECTBAR, &ThisClass::OnBarCheck)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SELECTION_MODE_BAR, &ThisClass::OnUpdateControlBarMenu)
+	ON_COMMAND_EX(ID_VIEW_SELECTION_MODE_BAR, &ThisClass::OnBarCheck)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_FILTERCONTROL, &ThisClass::OnUpdateControlBarMenu)
+	ON_COMMAND_EX(ID_VIEW_FILTERCONTROL, &ThisClass::OnBarCheck)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_MAPVIEWBAR, &ThisClass::OnUpdateControlBarMenu)
+	ON_COMMAND_EX(ID_VIEW_MAPVIEWBAR, &ThisClass::OnBarCheck)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_MAPTOOLSBAR, &ThisClass::OnUpdateControlBarMenu)
+	ON_COMMAND_EX(ID_VIEW_MAPTOOLSBAR, &ThisClass::OnBarCheck)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_TEXTUREBAR, &ThisClass::OnUpdateControlBarMenu)
+	ON_COMMAND_EX(ID_VIEW_TEXTUREBAR, &ThisClass::OnBarCheck)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_MANIFEST_BAR, &ThisClass::OnUpdateControlBarMenu)
+	ON_COMMAND_EX(ID_VIEW_MANIFEST_BAR, &ThisClass::OnBarCheck)
 	//ON_UPDATE_COMMAND_UI(ID_VIEW_ANIMATIONBAR, CFrameWnd::OnUpdateControlBarMenu)
 	//ON_COMMAND_EX(ID_VIEW_ANIMATIONBAR, CFrameWnd::OnBarCheck)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_MAPOPSBAR, CFrameWnd::OnUpdateControlBarMenu)
-	ON_COMMAND_EX(ID_VIEW_MAPOPSBAR, CFrameWnd::OnBarCheck)
-	ON_COMMAND_EX(ID_TOOLS_POINTER, OnChangeTool)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_POINTER, OnUpdateToolUI)
-	ON_COMMAND_EX(ID_TOOLS_CAMERA, OnChangeTool)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_CAMERA, OnUpdateToolUI)
-	ON_COMMAND_EX(ID_TOOLS_MAGNIFY, OnChangeTool)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_MAGNIFY, OnUpdateToolUI)
-	ON_COMMAND_EX(ID_TOOLS_BLOCK, OnChangeTool)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_BLOCK, OnUpdateToolUI)
-	ON_COMMAND_EX(ID_TOOLS_ENTITY, OnChangeTool)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_ENTITY, OnUpdateToolUI)
-	ON_COMMAND_EX(ID_TOOLS_APPLYDECALS, OnChangeTool)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_APPLYDECALS, OnUpdateToolUI)
-	ON_COMMAND_EX(ID_TOOLS_MORPH, OnChangeTool)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_MORPH, OnUpdateToolUI)
-	ON_COMMAND_EX(ID_TOOLS_SYNC_MESH, OnChangeTool)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_SYNC_MESH, OnUpdateToolUI)
-	ON_COMMAND_EX(ID_TOOLS_CLIPPER, OnChangeTool)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_CLIPPER, OnUpdateToolUI)
-	ON_COMMAND_EX(ID_TOOLS_EDITCORDON, OnChangeTool)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_EDITCORDON, OnUpdateToolUI)
-	ON_COMMAND_EX(ID_TOOLS_PATH, OnChangeTool)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_PATH, OnUpdateToolUI)
-	ON_COMMAND_EX(ID_TOOLS_OVERLAY, OnChangeTool)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_OVERLAY, OnUpdateToolUI)
-	ON_COMMAND_EX(ID_MODE_APPLICATOR, OnApplicator)
-	ON_COMMAND_EX(ID_TOOLS_SOUND_BROWSER, OnSoundBrowser)
-	ON_COMMAND(ID_TOOLS_MODEL_BROWSER, OnModelBrowser)
-	ON_COMMAND(ID_TOOLS_KEYBINDINGS, OnKeyBindingEditor)
-	ON_COMMAND_EX(ID_FILE_RELOAD_SOUNDS, OnReloadSounds)
-    ON_UPDATE_COMMAND_UI(ID_MODE_APPLICATOR, OnUpdateApplicatorUI)
-	ON_COMMAND(ID_HELP_FINDER, CMDIFrameWnd::OnHelpFinder)
-	ON_COMMAND(ID_HELP, CMDIFrameWnd::OnHelp)
-	ON_COMMAND(ID_CONTEXT_HELP, CMDIFrameWnd::OnContextHelp)
-	ON_COMMAND(ID_DEFAULT_HELP, CMDIFrameWnd::OnHelpFinder)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_MAPOPSBAR, &ThisClass::OnUpdateControlBarMenu)
+	ON_COMMAND_EX(ID_VIEW_MAPOPSBAR, &ThisClass::OnBarCheck)
+	ON_COMMAND_EX(ID_TOOLS_POINTER, &ThisClass::OnChangeTool)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_POINTER, &ThisClass::OnUpdateToolUI)
+	ON_COMMAND_EX(ID_TOOLS_CAMERA, &ThisClass::OnChangeTool)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_CAMERA, &ThisClass::OnUpdateToolUI)
+	ON_COMMAND_EX(ID_TOOLS_MAGNIFY, &ThisClass::OnChangeTool)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_MAGNIFY, &ThisClass::OnUpdateToolUI)
+	ON_COMMAND_EX(ID_TOOLS_BLOCK, &ThisClass::OnChangeTool)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_BLOCK, &ThisClass::OnUpdateToolUI)
+	ON_COMMAND_EX(ID_TOOLS_ENTITY, &ThisClass::OnChangeTool)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_ENTITY, &ThisClass::OnUpdateToolUI)
+	ON_COMMAND_EX(ID_TOOLS_APPLYDECALS, &ThisClass::OnChangeTool)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_APPLYDECALS, &ThisClass::OnUpdateToolUI)
+	ON_COMMAND_EX(ID_TOOLS_MORPH, &ThisClass::OnChangeTool)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_MORPH, &ThisClass::OnUpdateToolUI)
+	ON_COMMAND_EX(ID_TOOLS_SYNC_MESH, &ThisClass::OnChangeTool)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_SYNC_MESH, &ThisClass::OnUpdateToolUI)
+	ON_COMMAND_EX(ID_TOOLS_CLIPPER, &ThisClass::OnChangeTool)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_CLIPPER, &ThisClass::OnUpdateToolUI)
+	ON_COMMAND_EX(ID_TOOLS_EDITCORDON, &ThisClass::OnChangeTool)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_EDITCORDON, &ThisClass::OnUpdateToolUI)
+	ON_COMMAND_EX(ID_TOOLS_PATH, &ThisClass::OnChangeTool)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_PATH, &ThisClass::OnUpdateToolUI)
+	ON_COMMAND_EX(ID_TOOLS_OVERLAY, &ThisClass::OnChangeTool)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_OVERLAY, &ThisClass::OnUpdateToolUI)
+	ON_COMMAND_EX(ID_MODE_APPLICATOR, &ThisClass::OnApplicator)
+	ON_COMMAND_EX(ID_TOOLS_SOUND_BROWSER, &ThisClass::OnSoundBrowser)
+	ON_COMMAND(ID_TOOLS_MODEL_BROWSER, &ThisClass::OnModelBrowser)
+	ON_COMMAND(ID_TOOLS_KEYBINDINGS, &ThisClass::OnKeyBindingEditor)
+	ON_COMMAND_EX(ID_FILE_RELOAD_SOUNDS, &ThisClass::OnReloadSounds)
+    ON_UPDATE_COMMAND_UI(ID_MODE_APPLICATOR, &ThisClass::OnUpdateApplicatorUI)
+	ON_COMMAND(ID_HELP_FINDER, &ThisClass::OnHelpFinder)
+	ON_COMMAND(ID_HELP, &ThisClass::OnHelp)
+	ON_COMMAND(ID_CONTEXT_HELP, &ThisClass::OnContextHelp)
+	ON_COMMAND(ID_DEFAULT_HELP, &ThisClass::OnHelpFinder)
 	ON_WM_HELPINFO()
 	ON_WM_SYSCOMMAND()
 	ON_WM_ENTERMENULOOP()
-    ON_COMMAND(ID_HELP_REPORTANISSUE, OnHelpReportanissue)
+    ON_COMMAND(ID_HELP_REPORTANISSUE, &ThisClass::OnHelpReportanissue)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -563,7 +563,7 @@ static ToolID_t _ToolMsgToEnum(UINT uMsg)
 		{ ID_MODE_APPLICATOR,	TOOL_FACEEDIT_MATERIAL },
 	};
 
-	for (int i = 0; i < sizeof(nIDMap) / sizeof(nIDMap[0]); i++)
+	for (uint i = 0; i < ARRAYSIZE(nIDMap); i++)
 	{
 		if (uMsg == nIDMap[i].uMsg)
 		{
@@ -592,7 +592,7 @@ BOOL CToolHandler_Disabled::UpdateCmdUI( CCmdUI *pCmdUI )
 
 BOOL CToolHandler_Disabled::Execute( UINT uMsg )
 {
-	uMsg;
+	(void)uMsg;
 	return TRUE;
 }
 

@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -73,7 +73,7 @@ IDataModel *g_pDataModel = &g_DataModel;
 
 
 //-----------------------------------------------------------------------------
-// Constructor, destructor 
+// Constructor, destructor
 //-----------------------------------------------------------------------------
 CDataModel::CDataModel() :
 	m_elementIds( 4096 ),
@@ -127,10 +127,10 @@ void *CDataModel::QueryInterface( const char *pInterfaceName )
 	return NULL;
 }
 
-	
+
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *databasePath - 
+// Purpose:
+// Input  : *databasePath -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 InitReturnVal_t CDataModel::Init( )
@@ -153,11 +153,11 @@ InitReturnVal_t CDataModel::Init( )
 //#define _ELEMENT_HISTOGRAM_
 #ifdef _ELEMENT_HISTOGRAM_
 CUtlMap< UtlSymId_t, int > g_typeHistogram( 0, 100, DefLessFunc( UtlSymId_t ) );
-#endif _ELEMENT_HISTOGRAM_
+#endif //_ELEMENT_HISTOGRAM_
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CDataModel::Shutdown()
 {
@@ -168,7 +168,7 @@ void CDataModel::Shutdown()
 		Msg( "%d\t%s\n", g_typeHistogram.Element( i ), GetString( g_typeHistogram.Key( i ) ) );
 	}
 	Msg( "\n" );
-#endif _ELEMENT_HISTOGRAM_
+#endif //_ELEMENT_HISTOGRAM_
 
 	int c = GetAllocatedElementCount();
 	if ( c > 0 )
@@ -351,7 +351,7 @@ void CDataModel::DisplayMemoryStats( )
 		++nCount;
 	}
 	qsort( pSortInfo, nCount, sizeof(DmMemorySortInfo_t), DmMemorySortFunc );
-	     
+
 	int pTotals[ MEMORY_CATEGORY_COUNT ];
 	int nTotalSize = 0;
 	int nTotalCount = 0;
@@ -363,8 +363,8 @@ void CDataModel::DisplayMemoryStats( )
 		const DmMemoryInfo_t& info = typeHistogram.Element( pSortInfo[i].m_nIndex );
 		float flPercentOverhead = 1.0f - ( ( info.m_nSize != 0 ) ? ( (float)info.m_pCategories[MEMORY_CATEGORY_ATTRIBUTE_DATA] / (float)info.m_nSize ) : 0.0f );
 		flPercentOverhead *= 100.0f;
-		 
-		ConMsg( "%-40s\t%6d\t%9d\t\t%5.2f", GetString( typeHistogram.Key( pSortInfo[i].m_nIndex ) ), 
+
+		ConMsg( "%-40s\t%6d\t%9d\t\t%5.2f", GetString( typeHistogram.Key( pSortInfo[i].m_nIndex ) ),
 			info.m_nCount, info.m_nSize, flPercentOverhead );
 		int nTotal = 0;
 		for ( int j = 0; j < MEMORY_CATEGORY_COUNT; ++j )
@@ -382,7 +382,7 @@ void CDataModel::DisplayMemoryStats( )
 		nTotalCount += info.m_nCount;
 		nTotalData += info.m_pCategories[MEMORY_CATEGORY_ATTRIBUTE_DATA];
 	}
-	  
+
 	ConMsg( "\n" );
 	ConMsg( "%-40s\t%6d\t%9d\t\t%5.2f", "Totals", nTotalCount, nTotalSize, 100.0f * ( 1.0f - (float)nTotalData / (float)nTotalSize ) );
 	for ( int j = 0; j < MEMORY_CATEGORY_COUNT; ++j )
@@ -522,7 +522,7 @@ bool CDataModel::IsEncodingBinary( const char *pEncodingName ) const
 		Warning("Serialize: File encoding %s is undefined!\n", pEncodingName );
 		return false;
 	}
-	return pSerializer->IsBinaryFormat(); 
+	return pSerializer->IsBinaryFormat();
 }
 
 bool CDataModel::DoesEncodingStoreVersionInFile( const char *pEncodingName ) const
@@ -533,7 +533,7 @@ bool CDataModel::DoesEncodingStoreVersionInFile( const char *pEncodingName ) con
 		Warning("Serialize: File encoding %s is undefined!\n", pEncodingName );
 		return false;
 	}
-	return pSerializer->StoresVersionInFile(); 
+	return pSerializer->StoresVersionInFile();
 }
 
 
@@ -597,7 +597,7 @@ void CDataModel::SetKeyValuesElementCallback( IElementForKeyValueCallback *pCall
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 const char *CDataModel::GetKeyValuesElementName( const char *pszKeyName, int iNestingLevel )
 {
@@ -758,7 +758,7 @@ bool CDataModel::Serialize( CUtlBuffer &outBuf, const char *pEncodingName, const
 
 	if ( pSerializer->StoresVersionInFile() )
 	{
-		// Write the format name into the file using XML format so that 
+		// Write the format name into the file using XML format so that
 		// 3rd-party XML readers can read the file without fail
 
 		pActualOutBuf->Printf( "%s encoding %s %d format %s %d %s\n",
@@ -884,7 +884,7 @@ int CDataModel::GetCurrentFormatVersion( const char *pFormatName )
 }
 
 //-----------------------------------------------------------------------------
-// Unserializes, returns the root of the unserialized tree in ppRoot 
+// Unserializes, returns the root of the unserialized tree in ppRoot
 //-----------------------------------------------------------------------------
 bool CDataModel::Unserialize( CUtlBuffer &inBuf, const char *pEncodingName, const char *pSourceFormatName, const char *pFormatHint,
 							  const char *pFileName, DmConflictResolution_t idConflictResolution, DmElementHandle_t &hRoot )
@@ -1678,8 +1678,8 @@ CDmAttribute *CDataModel::GetAttribute( DmAttributeReferenceIterator_t hAttrIter
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : buf - 
+// Purpose:
+// Input  : buf -
 // Output : IDmElementInternal
 //-----------------------------------------------------------------------------
 CDmElement *CDataModel::Unserialize( CUtlBuffer& buf )
@@ -1688,9 +1688,9 @@ CDmElement *CDataModel::Unserialize( CUtlBuffer& buf )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *element - 
-//			buf - 
+// Purpose:
+// Input  : *element -
+//			buf -
 //-----------------------------------------------------------------------------
 void CDataModel::Serialize( CDmElement *element, CUtlBuffer& buf )
 {
@@ -1711,11 +1711,11 @@ void CDataModel::SetDefaultElementFactory( IDmElementFactory *pFactory )
 	m_pDefaultFactory = pFactory ? pFactory : &s_DefaultElementFactory;
 }
 
-	
+
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *elementName - 
-//			factory - 
+// Purpose:
+// Input  : *elementName -
+//			factory -
 //-----------------------------------------------------------------------------
 void CDataModel::AddElementFactory( const char *pClassName, IDmElementFactory *pFactory )
 {
@@ -1760,7 +1760,7 @@ char const *CDataModel::GetFactoryName( int index ) const
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Creates a scene object 
+// Purpose: Creates a scene object
 //-----------------------------------------------------------------------------
 DmElementHandle_t CDataModel::CreateElement( UtlSymId_t typeSymbol, const char *pElementName, DmFileId_t fileid, const DmObjectId_t *pObjectID )
 {
@@ -1798,7 +1798,7 @@ class CUndoCreateElement : public CUndoElement
 {
 	typedef CUndoElement BaseClass;
 public:
-	CUndoCreateElement() : 
+	CUndoCreateElement() :
 		BaseClass( "CUndoCreateElement" ),
 		m_bKill( false ),
 		m_hElement()
@@ -1931,7 +1931,7 @@ CDmElement* CDataModel::CreateElement( const DmElementReference_t &ref, const ch
 		{
 			g_typeHistogram.Insert( typeSym, 1 );
 		}
-#endif _ELEMENT_HISTOGRAM_
+#endif //_ELEMENT_HISTOGRAM_
 	}
 
 	return pElement;
@@ -1942,7 +1942,7 @@ class CUndoDestroyElement : public CUndoElement
 {
 	typedef CUndoElement BaseClass;
 public:
-	CUndoDestroyElement( DmElementHandle_t hElement ) : 
+	CUndoDestroyElement( DmElementHandle_t hElement ) :
 		BaseClass( "CUndoDestroyElement" ),
 		m_bKill( true ),
 		m_hElement( hElement )
@@ -1978,7 +1978,7 @@ private:
 };
 
 //-----------------------------------------------------------------------------
-// Purpose: Destroys a scene object 
+// Purpose: Destroys a scene object
 //-----------------------------------------------------------------------------
 void CDataModel::DestroyElement( DmElementHandle_t hElement )
 {
@@ -2170,7 +2170,7 @@ const DmObjectId_t& CDataModel::GetElementId( DmElementHandle_t hElement ) const
 
 
 //-----------------------------------------------------------------------------
-// Attribute types 
+// Attribute types
 //-----------------------------------------------------------------------------
 const char *CDataModel::GetAttributeNameForType( DmAttributeType_t attType ) const
 {

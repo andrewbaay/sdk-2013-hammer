@@ -524,7 +524,7 @@ void FileOpenDialog::Init( const char *title, KeyValues *pContextKeyValues )
 
 	// list panel
 	m_pFileList = new ListPanel(this, "FileList");
-	for ( int i = 0; i < ARRAYSIZE( g_ColInfo ); ++i )
+	for ( uint i = 0; i < ARRAYSIZE( g_ColInfo ); ++i )
 	{
 		const ColumnInfo_t& info = g_ColInfo[ i ];
 

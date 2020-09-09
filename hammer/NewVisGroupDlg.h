@@ -11,7 +11,7 @@
 #endif
 
 #include "resource.h"
-#include "GroupList.h"
+#include "grouplist.h"
 
 
 class CNewVisGroupDlg : public CDialog
@@ -58,7 +58,7 @@ protected:
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 inline bool CNewVisGroupDlg::GetRemoveFromOtherGroups(void)
 {

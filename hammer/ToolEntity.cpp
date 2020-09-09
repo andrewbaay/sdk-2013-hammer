@@ -5,19 +5,19 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "History.h"
-#include "MainFrm.h"
-#include "MapDefs.h"
-#include "MapSolid.h"
-#include "MapDoc.h"
-#include "MapView2D.h"
-#include "MapView3D.h"
-#include "Material.h"
-#include "materialsystem/IMesh.h"
-#include "Render2D.h"
-#include "Render3D.h"
-#include "StatusBarIDs.h"
-#include "TextureSystem.h"
+#include "history.h"
+#include "mainfrm.h"
+#include "mapdefs.h"
+#include "mapsolid.h"
+#include "mapdoc.h"
+#include "mapview2d.h"
+#include "mapview3d.h"
+#include "material.h"
+#include "materialsystem/imesh.h"
+#include "render2d.h"
+#include "render3d.h"
+#include "statusbarids.h"
+#include "texturesystem.h"
 #include "ToolEntity.h"
 #include "ToolManager.h"
 #include "hammer.h"
@@ -64,7 +64,7 @@ static const char *g_pszClassName = "ValveEditor_EntityToolWnd";
 
 BEGIN_MESSAGE_MAP(CToolEntityMessageWnd, CWnd)
 	//{{AFX_MSG_MAP(CToolMessageWnd)
-	ON_COMMAND(ID_CREATEOBJECT, OnCreateObject)
+	ON_COMMAND(ID_CREATEOBJECT, &ThisClass::OnCreateObject)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 

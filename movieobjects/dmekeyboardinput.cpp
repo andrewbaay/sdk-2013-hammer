@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -8,8 +8,8 @@
 #include "movieobjects_interfaces.h"
 #include "datamodel/dmelementfactoryhelper.h"
 
-#include "vgui/iinput.h"
-#include "vgui/keycode.h"
+#include "vgui/IInput.h"
+#include "vgui/KeyCode.h"
 #include "tier3/tier3.h"
 
 #include "tier0/dbg.h"
@@ -82,13 +82,13 @@ const KeyInfo g_keyInfo[ g_nKeys ] =
 
 
 //-----------------------------------------------------------------------------
-// Expose this class to the scene database 
+// Expose this class to the scene database
 //-----------------------------------------------------------------------------
 IMPLEMENT_ELEMENT_FACTORY( DmeKeyboardInput, CDmeKeyboardInput );
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CDmeKeyboardInput::OnConstruction()
 {

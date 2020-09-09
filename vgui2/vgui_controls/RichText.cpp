@@ -2399,7 +2399,6 @@ void RichText::GetText(int offset, wchar_t *buf, int bufLenInBytes)
 	if (!buf)
 		return;
 
-	Assert( bufLenInBytes >= sizeof(buf[0]) );
 	int bufLen = bufLenInBytes / sizeof(wchar_t);
 	int i;
 	for (i = offset; i < (offset + bufLen - 1); i++)
@@ -2479,7 +2478,7 @@ void RichText::OnClickPanel(int index)
 	_currentTextClickable = true;
 	TRenderState renderState;
 	GenerateRenderStateForTextStreamIndex(index, renderState);
-	for (int i = index; i < (sizeof(wBuf) - 1) && i < m_TextStream.Count(); i++)
+	for (int i = index; i < int(sizeof(wBuf) - 1) && i < m_TextStream.Count(); i++)
 	{
 		// stop getting characters when text is no longer clickable
 		UpdateRenderState(i, renderState);

@@ -5,20 +5,20 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "GameConfig.h"
-#include "GlobalFunctions.h"
-#include "History.h"
-#include "MainFrm.h"
-#include "MapCheckDlg.h"
-#include "MapDoc.h"
-#include "MapEntity.h"
-#include "MapSolid.h"
-#include "MapWorld.h"
-#include "Options.h"
+#include "gameconfig.h"
+#include "globalfunctions.h"
+#include "history.h"
+#include "mainfrm.h"
+#include "mapcheckdlg.h"
+#include "mapdoc.h"
+#include "mapentity.h"
+#include "mapsolid.h"
+#include "mapworld.h"
+#include "options.h"
 #include "ToolManager.h"
-#include "VisGroup.h"
+#include "visgroup.h"
 #include "hammer.h"
-#include "MapOverlay.h"
+#include "mapoverlay.h"
 #include "Selection.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -128,15 +128,15 @@ CMapCheckDlg *s_pDlg = NULL;
 
 BEGIN_MESSAGE_MAP(CMapCheckDlg, CDialog)
 	//{{AFX_MSG_MAP(CMapCheckDlg)
-	ON_BN_CLICKED(IDC_GO, OnGo)
-	ON_LBN_SELCHANGE(IDC_ERRORS, OnSelchangeErrors)
-	ON_LBN_DBLCLK(IDC_ERRORS, OnDblClkErrors)
+	ON_BN_CLICKED(IDC_GO, &ThisClass::OnGo)
+	ON_LBN_SELCHANGE(IDC_ERRORS, &ThisClass::OnSelchangeErrors)
+	ON_LBN_DBLCLK(IDC_ERRORS, &ThisClass::OnDblClkErrors)
 	ON_WM_PAINT()
-	ON_BN_CLICKED(IDC_FIX, OnFix)
-	ON_BN_CLICKED(IDC_FIXALL, OnFixall)
+	ON_BN_CLICKED(IDC_FIX, &ThisClass::OnFix)
+	ON_BN_CLICKED(IDC_FIXALL, &ThisClass::OnFixall)
 	ON_WM_DESTROY()
 	ON_WM_CLOSE()
-	ON_BN_CLICKED(IDC_CHECK_VISIBLE_ONLY, OnCheckVisibleOnly)
+	ON_BN_CLICKED(IDC_CHECK_VISIBLE_ONLY, &ThisClass::OnCheckVisibleOnly)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -1010,7 +1010,7 @@ static BOOL _CheckMissingTargets(CMapEntity *pEntity, CListBox *pList)
 	if (!pClass)
 	{
 		// Unknown class -- just check for target references.
-		static char *pszTarget = "target";
+		constexpr const char *pszTarget = "target";
 		const char *pszValue = pEntity->GetKeyValue(pszTarget);
 		CheckValidTarget(pEntity, pszTarget, pszValue, pList, false);
 	}

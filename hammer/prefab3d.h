@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "Prefabs.h"
+#include "prefabs.h"
 
 
 class CChunkFile;
@@ -18,7 +18,7 @@ class CMapWorld;
 class Vector;
 
 
-enum ChunkFileResult_t;
+enum ChunkFileResult_t : unsigned char;
 
 
 class CPrefab3D : public CPrefab
@@ -46,7 +46,7 @@ class CPrefab3D : public CPrefab
 
 		// prefab data:
 		CMapWorld *m_pWorld;
-}; 
+};
 
 
 //-----------------------------------------------------------------------------
@@ -59,13 +59,13 @@ CMapWorld *CPrefab3D::GetWorld(void)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CPrefab3D::SetWorld(CMapWorld *pWorld)
 {
 	FreeData();
 	m_pWorld = pWorld;
-} 
+}
 
 
 class CPrefabVMF : public CPrefab3D
@@ -89,6 +89,6 @@ class CPrefabVMF : public CPrefab3D
 
 		char m_szFilename[MAX_PATH];	// Full path of the prefab VMF.
 		int m_nFileTime;				// File modification time of the last loaded version of the prefab.
-}; 
+};
 
 #endif // PREFAB3D_H

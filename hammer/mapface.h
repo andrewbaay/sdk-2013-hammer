@@ -11,10 +11,10 @@
 #pragma once
 #endif
 
-#include "MapAtom.h"
-#include "DispManager.h"
-#include "mathlib/Vector4d.h"
-#include "UtlVector.h"
+#include "mapatom.h"
+#include "dispmanager.h"
+#include "mathlib/vector4d.h"
+#include "utlvector.h"
 #include "detailobjects.h"
 
 class CCheckFaceInfo;
@@ -31,8 +31,8 @@ class IMesh;
 
 struct LoadFace_t;
 
-enum EditorRenderMode_t;
-enum ChunkFileResult_t;
+enum EditorRenderMode_t : unsigned char;
+enum ChunkFileResult_t : unsigned char;
 
 #define DEFAULT_TEXTURE_SCALE			0.25
 #define DEFAULT_LIGHTMAP_SCALE			16
@@ -96,7 +96,7 @@ enum FaceOrientation_t
 // Both an enumeration and bitflags. Used as bitflags when querying a face for its texture
 // alignment because it could be world aligned and face aligned at the same time.
 //
-enum TextureAlignment_t
+enum TextureAlignment_t : unsigned char
 {
 	TEXTURE_ALIGN_NONE	= 0x0000,
 	TEXTURE_ALIGN_WORLD = 0x0001,
@@ -157,7 +157,7 @@ struct TEXTURE
 
 
 
-class CMapFace : public CMapAtom
+class CMapFace final : public CMapAtom
 {
 public:
 
@@ -515,7 +515,7 @@ public:
 
 	inline CMapFaceList(void) {}
 	inline CMapFaceList(CMapFaceList const &other);
-	inline CMapFaceList &CMapFaceList::operator =(CMapFaceList const &other);
+	inline CMapFaceList &operator =(CMapFaceList const &other);
 
 	inline int FindFaceID(int nFaceID);
 	void Intersect(CMapFaceList &IntersectWith, CMapFaceList &In, CMapFaceList &Out);
@@ -570,7 +570,7 @@ public:
 
 	inline CMapFaceIDList(void) {}
 	inline CMapFaceIDList(CMapFaceIDList const &other);
-	inline CMapFaceIDList &CMapFaceIDList::operator =(CMapFaceIDList const &other);
+	inline CMapFaceIDList &operator =(CMapFaceIDList const &other);
 
 	void Intersect(CMapFaceIDList &IntersectWith, CMapFaceIDList &In, CMapFaceIDList &Out);
 };

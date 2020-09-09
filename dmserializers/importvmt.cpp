@@ -9,7 +9,7 @@
 #include "datamodel/idatamodel.h"
 #include "datamodel/dmelement.h"
 #include "tier1/KeyValues.h"
-#include "tier1/UtlBuffer.h"
+#include "tier1/utlbuffer.h"
 #include "datamodel/dmattribute.h"
 #include "datamodel/dmattributevar.h"
 #include "filesystem.h"

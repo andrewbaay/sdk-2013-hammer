@@ -34,7 +34,7 @@ float GetUpdateTime(int ev)
 void SignalGlobalUpdate(void)
 {
 	float stamp=Plat_FloatTime();
-	for(int i=0;i<NELEMS(g_EventTimes);i++)
+	for(uint i=0;i<NELEMS(g_EventTimes);i++)
 	{
 		g_EventTimes[i] = stamp;
 		g_EventTimeCounters[i]++;

@@ -1,21 +1,21 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
 
 #include "stdafx.h"
-#include "History.h"
-#include "MainFrm.h"			// For ObjectProperties
-#include "MapDoc.h"
-#include "MapSweptPlayerHull.h"
-#include "MapPointHandle.h"
-#include "MapView2D.h"
-#include "Render2D.h"
-#include "StatusBarIDs.h"		// For SetStatusText
+#include "history.h"
+#include "mainfrm.h"			// For ObjectProperties
+#include "mapdoc.h"
+#include "mapsweptplayerhull.h"
+#include "mappointhandle.h"
+#include "mapview2d.h"
+#include "render2d.h"
+#include "statusbarids.h"		// For SetStatusText
 #include "ToolManager.h"
-#include "ToolSweptHull.h"
+#include "toolswepthull.h"
 #include "ToolPointHandle.h"
 #include "Selection.h"
 
@@ -81,7 +81,7 @@ bool CToolSweptPlayerHull::OnLMouseUp2D(CMapView2D *pView, UINT nFlags, const Ve
 
 	CMapDoc *pDoc = pView->GetMapDoc();
 	pDoc->UpdateAllViews( MAPVIEW_UPDATE_TOOL );
-		
+
 	return true;
 }
 
@@ -116,7 +116,7 @@ bool CToolSweptPlayerHull::OnMouseMove2D(CMapView2D *pView, UINT nFlags, const V
 
 	vecPos[m_nPointIndex][pView->axHorz] = vecWorld[pView->axHorz];
 	vecPos[m_nPointIndex][pView->axVert] = vecWorld[pView->axVert];
-	
+
 	m_pSweptHull->UpdateEndPoint(vecPos[m_nPointIndex], m_nPointIndex);
 
 	int nOtherIndex = (m_nPointIndex == 0);

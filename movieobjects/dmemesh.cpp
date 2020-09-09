@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -20,7 +20,7 @@
 #include "movieobjects/dmedrawsettings.h"
 #include "movieobjects/dmmeshcomp.h"
 #include "tier3/tier3.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "tier0/dbg.h"
 #include "datamodel/dmelementfactoryhelper.h"
 #include "materialsystem/imaterialsystem.h"
@@ -44,7 +44,7 @@ CMaterialReference CDmeMesh::s_NormalErrorMaterial;
 
 
 //-----------------------------------------------------------------------------
-// Computes a skin matrix 
+// Computes a skin matrix
 //-----------------------------------------------------------------------------
 static const matrix3x4_t *ComputeSkinMatrix( int nBoneCount, const float *pJointWeight, const int *pJointIndices, const matrix3x4_t *pPoseToWorld, matrix3x4_t &result )
 {
@@ -136,7 +136,7 @@ static const matrix3x4_t *ComputeSkinMatrix( int nBoneCount, const float *pJoint
 
 
 //-----------------------------------------------------------------------------
-// Helper class to deal with software skinning 
+// Helper class to deal with software skinning
 //-----------------------------------------------------------------------------
 class CRenderInfo
 {
@@ -184,7 +184,7 @@ CRenderInfo::CRenderInfo( const CDmeVertexData *pBaseState ) :
 	m_nJointCount = pBaseState->JointCount();
 	m_bHasSkinningData = pBaseState->HasSkinningData() && m_nJointCount > 0;
 }
-	
+
 
 //-----------------------------------------------------------------------------
 // Computes where a vertex is
@@ -298,13 +298,13 @@ void CRenderInfo::ComputeVertex( int vi, const matrix3x4_t *pPoseToWorld, CDmeMe
 
 
 //-----------------------------------------------------------------------------
-// Expose this class to the scene database 
+// Expose this class to the scene database
 //-----------------------------------------------------------------------------
 IMPLEMENT_ELEMENT_FACTORY( DmeMesh, CDmeMesh );
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CDmeMesh::OnConstruction()
 {
@@ -445,7 +445,7 @@ template< class T > bool CDmeMesh::AddVertexDelta(
 	}
 	return true;
 }
-	
+
 
 //-----------------------------------------------------------------------------
 //
@@ -529,7 +529,7 @@ template< class T > bool CDmeMesh::AddStereoVertexDelta(
 			Assert( list.Count() > 0 );
 			// FIXME: Average everything in the list.. shouldn't be necessary though
 			float flRightAmount = balanceDelta[ balanceIndices[ list[0] ] ];
-			float flWeight = Lerp( flRightAmount, flLeftWeight, flRightWeight );	
+			float flWeight = Lerp( flRightAmount, flLeftWeight, flRightWeight );
 
 			T* pDeltaData = (T*)( (char*)pVertexData + nStride * nDataIndex );
 			*pDeltaData += delta.Get( j ) * flWeight;
@@ -544,14 +544,14 @@ template< class T > bool CDmeMesh::AddStereoVertexDelta(
 	const CDmrArray<int> pSpeedIndices = pBaseState->GetIndexData( nSpeedFieldIndex );
 	const CDmrArray<float> pSpeedDelta = pBaseState->GetVertexData( nSpeedFieldIndex );
 	for ( int j = 0; j < nDeltaCount; ++j )
-	{   
+	{
 		int nDataIndex = indices.Get( j );
 		const CUtlVector<int> &list = pBaseState->FindVertexIndicesFromDataIndex( nBaseFieldIndex, nDataIndex );
 		Assert( list.Count() > 0 );
 		// FIXME: Average everything in the list.. shouldn't be necessary though
 		float flRightAmount = balanceDelta[ balanceIndices[ list[0] ] ];
-		float flWeight = Lerp( flRightAmount, flLeftWeight, flRightWeight );	
-		float flLaggedWeight = Lerp( flRightAmount, flLeftWeightLagged, flRightWeightLagged );	
+		float flWeight = Lerp( flRightAmount, flLeftWeight, flRightWeight );
+		float flLaggedWeight = Lerp( flRightAmount, flLeftWeightLagged, flRightWeightLagged );
 		float flSpeed = pSpeedDelta.Get( pSpeedIndices.Get( list[0] ) );
 		float flActualWeight = Lerp( flSpeed, flLaggedWeight, flWeight );
 
@@ -661,7 +661,7 @@ void CDmeMesh::DrawDynamicMesh( CDmeFaceSet *pFaceSet, matrix3x4_t *pPoseToWorld
 
 	// NOTE: This is inherently inefficient; we re-skin the *entire* mesh,
 	// even if it's not being used by the entire model. This is because we can't
-	// guarantee the various materials from the various face sets use the 
+	// guarantee the various materials from the various face sets use the
 	// same vertex format (even though they should), and we don't want to
 	// spend the work to detemine the sub-part of the mesh used by this face set.
 
@@ -792,7 +792,7 @@ void CDmeMesh::DrawDynamicMesh( CDmeFaceSet *pFaceSet, matrix3x4_t *pPoseToWorld
 
 
 //-----------------------------------------------------------------------------
-// Renders normals 
+// Renders normals
 //-----------------------------------------------------------------------------
 #define NORMAL_LINE_SIZE 0.25f
 
@@ -895,7 +895,7 @@ void CDmeMesh::RenderNormals( matrix3x4_t *pPoseToWorld, RenderVertexDelta_t *pD
 // Draws the passed DmeFaceSet in wireframe mode
 //-----------------------------------------------------------------------------
 void CDmeMesh::DrawWireframeFaceSet( CDmeFaceSet *pFaceSet, matrix3x4_t *pPoseToWorld, bool bHasActiveDeltaStates, CDmeDrawSettings *pDrawSettings )
-{ 
+{
 	CDmeVertexData *pBind = GetBindBaseState();
 	if ( !pBind )
 		return;
@@ -1267,7 +1267,7 @@ int CDmeMesh::DeltaStateCount() const
 
 
 //-----------------------------------------------------------------------------
-// Returns the delta 
+// Returns the delta
 //-----------------------------------------------------------------------------
 CDmeVertexDeltaData *CDmeMesh::GetDeltaState( int nDeltaIndex ) const
 {
@@ -1620,7 +1620,7 @@ void CDmeMesh::ComputeTriangulatedIndices( const CDmeVertexData *pBaseState, CDm
 			flMinDistance = flDistance;
 		}
 	}
-	 
+
 	// Compute the triangulation indices
 	Assert( nOutCount == ( nVertexCount - 2 ) * 3 );
 	int nOutIndex = 0;
@@ -1689,7 +1689,7 @@ void CDmeMesh::ComputeTriangleTangets( const CDmeVertexData *pVertexData, CUtlVe
 		const Vector2D &t1 = pVertexData->GetTexCoord( triangle.m_nIndex[1] );
 		const Vector2D &t2 = pVertexData->GetTexCoord( triangle.m_nIndex[2] );
 		CalcTriangleTangentSpace( p0, p1, p2, t0, t1, t2, triangle.m_vecTangentS, triangle.m_vecTangentT );
-	}	
+	}
 }
 
 
@@ -1815,7 +1815,7 @@ void CDmeMesh::ComputeDefaultTangentData( CDmeVertexData *pVertexData, bool bSmo
 	if ( posField < 0 || uvField < 0 || normalField < 0 )
 		return;
 
-	// FIXME: Need to do a pass to make sure no vertex is referenced by 
+	// FIXME: Need to do a pass to make sure no vertex is referenced by
 	// multiple facesets that have different materials in them.
 	// In that case, we need to add extra copies of that vertex and modify
 	// the face set data to refer to the new vertices
@@ -1834,7 +1834,7 @@ void CDmeMesh::ComputeDefaultTangentData( CDmeVertexData *pVertexData, bool bSmo
 
 	ComputeTriangleTangets( pVertexData, triangles );
 
-	// FIXME: We could do a pass to determine the unique combinations of 
+	// FIXME: We could do a pass to determine the unique combinations of
 	// position + tangent indices in the vertex data. We only need to have
 	// a unique tangent for each of these unique vertices. For simplicity
 	// (and speed), I'll assume all tangents are unique per vertex.
@@ -2020,7 +2020,7 @@ void CDmeMesh::ComputeCorrectedNormalsFromActualNormals( const CUtlVector<int> &
 void CDmeMesh::SetDeltaNormalData( int nDeltaIndex, int nNormalCount, Vector *pNormals )
 {
 	// pNormals represents the correct normal delta state for this combination
-	// Copy it into the delta state for this combination. 
+	// Copy it into the delta state for this combination.
 	// Use tolerance to deal with precision errors introduced by the various computations
 	CDmeVertexDeltaData *pDeltaState = GetDeltaState( nDeltaIndex );
 	FieldIndex_t nNormalField = pDeltaState->FindFieldIndex( CDmeVertexDeltaData::FIELD_NORMAL );
@@ -2046,7 +2046,7 @@ void CDmeMesh::SetDeltaNormalData( int nDeltaIndex, int nNormalCount, Vector *pN
 
 
 //-----------------------------------------------------------------------------
-// Discovers the atomic controls used by the various delta states 
+// Discovers the atomic controls used by the various delta states
 //-----------------------------------------------------------------------------
 static int DeltaStateUsageLessFunc( const int * lhs, const int * rhs )
 {
@@ -2064,7 +2064,7 @@ void CDmeMesh::BuildAtomicControlLists( int nCount, DeltaComputation_t *pInfo, C
 
 	// Build a list of atomic controls
 	int nCurrentDelta;
-	for ( nCurrentDelta = 0; nCurrentDelta < nCount; ++nCurrentDelta ) 
+	for ( nCurrentDelta = 0; nCurrentDelta < nCount; ++nCurrentDelta )
 	{
 		if ( pInfo[nCurrentDelta].m_nDimensionality != 1 )
 			break;
@@ -2108,7 +2108,7 @@ void CDmeMesh::BuildAtomicControlLists( int nCount, DeltaComputation_t *pInfo, C
 
 
 //-----------------------------------------------------------------------------
-// Construct list of all n-1 -> 1 dimensional delta states 
+// Construct list of all n-1 -> 1 dimensional delta states
 // that will be active when this delta state is active
 //-----------------------------------------------------------------------------
 void CDmeMesh::ComputeDependentDeltaStateList( CUtlVector< DeltaComputation_t > &compList )
@@ -2314,7 +2314,7 @@ void CDmeMesh::SetDeltaNormalDataFromActualNormals( int nDeltaIndex, const CUtlV
 
 //-----------------------------------------------------------------------------
 // A recursive algorithm to compute nCk, i.e. the number of order independent
-// Combinations without any repeats of k items taking n at a time 
+// Combinations without any repeats of k items taking n at a time
 // The size of the returned array is:
 //
 //       n!
@@ -2429,7 +2429,7 @@ bool CDmeMesh::GetControlDeltaIndices(
 //               { 0, 2 },
 //               { 0, 1, 2 }
 //             }
-// 
+//
 // Returns true if all of the control states exist, false otherwise
 //-----------------------------------------------------------------------------
 bool CDmeMesh::BuildCompleteDeltaStateControlList(
@@ -2788,13 +2788,14 @@ void CDmeMesh::ComputeAllCorrectedPositionsFromActualPositions()
 //-----------------------------------------------------------------------------
 template < class T_t >
 void CDmeMesh::AddCorrectedDelta(
-	CDmrArray< T_t > &baseDataArray,
+	CDmAttribute* baseDataIn,
 	const CUtlVector< int > &baseIndices,
 	const DeltaComputation_t &deltaComputation,
 	const char *pFieldName,
 	float weight,
 	const CDmeSingleIndexedComponent *pMask )
 {
+	CDmrArray< T_t > baseDataArray( baseDataIn );
 	const CUtlVector< T_t > &baseData( baseDataArray.Get() );
 	const int nData( baseData.Count() );
 	T_t *pData( reinterpret_cast< T_t * >( alloca( nData * sizeof( T_t ) ) ) );
@@ -2869,11 +2870,12 @@ void CDmeMesh::AddCorrectedDelta(
 template < class T_t >
 void CDmeMesh::AddRawDelta(
 	CDmeVertexDeltaData *pDelta,
-	CDmrArray< T_t > &baseDataArray,
+	CDmAttribute* baseDataIn,
 	FieldIndex_t nDeltaFieldIndex,
 	float weight,
 	const CDmeSingleIndexedComponent *pMask )
 {
+	CDmrArray< T_t > baseDataArray( baseDataIn );
 	if ( !pDelta || nDeltaFieldIndex < 0 )
 		return;
 
@@ -2967,16 +2969,16 @@ bool CDmeMesh::SetBaseStateToDelta( const CDmeVertexDeltaData *pDelta, CDmeVerte
 				switch ( pBaseData->GetType() )
 				{
 				case AT_FLOAT_ARRAY:
-					AddCorrectedDelta( CDmrArray< float >( pBaseData ), baseIndices, compList[ i ], baseFieldName );
+					AddCorrectedDelta<float>( pBaseData, baseIndices, compList[ i ], baseFieldName );
 					break;
 				case AT_COLOR_ARRAY:
-					AddCorrectedDelta( CDmrArray< Vector >( pBaseData ), baseIndices, compList[ i ], baseFieldName );
+					AddCorrectedDelta<Vector>( pBaseData, baseIndices, compList[ i ], baseFieldName );
 					break;
 				case AT_VECTOR2_ARRAY:
-					AddCorrectedDelta( CDmrArray< Vector2D >( pBaseData ), baseIndices, compList[ i ], baseFieldName );
+					AddCorrectedDelta<Vector2D>( pBaseData, baseIndices, compList[ i ], baseFieldName );
 					break;
 				case AT_VECTOR3_ARRAY:
-					AddCorrectedDelta( CDmrArray< Vector >( pBaseData ), baseIndices, compList[ i ], baseFieldName );
+					AddCorrectedDelta<Vector>( pBaseData, baseIndices, compList[ i ], baseFieldName );
 					break;
 				default:
 					break;
@@ -3264,7 +3266,7 @@ bool CDmeMesh::CreateDeltaFieldFromBaseField(
 //-----------------------------------------------------------------------------
 CDmeVertexDeltaData *CDmeMesh::ModifyOrCreateDeltaStateFromBaseState( const char *pDeltaName, CDmeVertexData *pPassedBase /* = NULL */, bool absolute /* = false */ )
 {
-	// Find All States Which Have This Guy 
+	// Find All States Which Have This Guy
 	CDmeVertexData *pBase = pPassedBase ? pPassedBase : GetCurrentBaseState();
 	if ( !pBase )
 		return NULL;
@@ -3285,7 +3287,7 @@ CDmeVertexDeltaData *CDmeMesh::ModifyOrCreateDeltaStateFromBaseState( const char
 		char idBuf[ MAX_PATH ];
 
 		CDmeVertexData *pTmpBaseState = NULL;
-		do 
+		do
 		{
 			CreateUniqueId( &id );
 			UniqueIdToString( id, idBuf, sizeof( idBuf ) );
@@ -3326,7 +3328,7 @@ CDmeVertexDeltaData *CDmeMesh::ModifyOrCreateDeltaStateFromBaseState( const char
 		CDmeVertexData::FIELD_WRINKLE
 	};
 
-	for ( int i = 0; i < sizeof( deltaFields ) / sizeof( deltaFields[ 0 ] ); ++i )
+	for ( uint i = 0; i < ARRAYSIZE( deltaFields ); ++i )
 	{
 		CDmeVertexData::StandardFields_t standardFieldIndex( deltaFields[ i ] );
 		const FieldIndex_t baseFieldIndex( pBase->FindFieldIndex( standardFieldIndex ) );
@@ -3733,7 +3735,7 @@ CDmeSingleIndexedComponent *CDmeMesh::FeatherSelection(
 	int insideCount = 0;
 
 	CFalloff< T > falloff;
-	
+
 	do
 	{
 		insideCount = 0;
@@ -3829,17 +3831,17 @@ bool CDmeMesh::AddMaskedDelta(
 			switch ( pBaseData->GetType() )
 			{
 			case AT_FLOAT_ARRAY:
-				AddRawDelta( pDelta, CDmrArray< float >( pBaseData ), baseFieldIndex, weight, pMask );
+				AddRawDelta<float>( pDelta, pBaseData, baseFieldIndex, weight, pMask );
 				break;
 			case AT_COLOR_ARRAY:
 				// TODO: Color is missing some algebraic operators
 //				AddRawDelta( pDelta, CDmrArray< Color >( pBaseData ), baseFieldIndex, weight, pMask );
 				break;
 			case AT_VECTOR2_ARRAY:
-				AddRawDelta( pDelta, CDmrArray< Vector2D >( pBaseData ), baseFieldIndex, weight, pMask );
+				AddRawDelta<Vector2D>( pDelta, pBaseData, baseFieldIndex, weight, pMask );
 				break;
 			case AT_VECTOR3_ARRAY:
-				AddRawDelta( pDelta, CDmrArray< Vector >( pBaseData ), baseFieldIndex, weight, pMask );
+				AddRawDelta<Vector>( pDelta, pBaseData, baseFieldIndex, weight, pMask );
 				break;
 			default:
 				break;
@@ -3861,11 +3863,12 @@ bool CDmeMesh::AddMaskedDelta(
 //-----------------------------------------------------------------------------
 template< class T_t >
 bool CDmeMesh::InterpMaskedData(
-	CDmrArray< T_t > &aData,
+	CDmAttribute* data,
 	const CUtlVector< T_t > &bData,
 	float weight,
 	const CDmeSingleIndexedComponent *pMask ) const
 {
+	CDmrArray< T_t > aData( data );
 	const int nDst = aData.Count();
 
 	if ( bData.Count() != nDst )
@@ -3959,16 +3962,16 @@ bool CDmeMesh::InterpMaskedData(
 			switch ( paAttr->GetType() )
 			{
 			case AT_FLOAT_ARRAY:
-				InterpMaskedData( CDmrArray< float >( paAttr ), CDmrArrayConst< float >( pbAttr ).Get(), weight, pMask );
+				InterpMaskedData( paAttr, CDmrArrayConst< float >( pbAttr ).Get(), weight, pMask );
 				break;
 			case AT_COLOR_ARRAY:
-				InterpMaskedData( CDmrArray< Vector4D >( paAttr ), CDmrArrayConst< Vector4D >( pbAttr ).Get(), weight, pMask );
+				InterpMaskedData( paAttr, CDmrArrayConst< Vector4D >( pbAttr ).Get(), weight, pMask );
 				break;
 			case AT_VECTOR2_ARRAY:
-				InterpMaskedData( CDmrArray< Vector2D >( paAttr ), CDmrArrayConst< Vector2D >( pbAttr ).Get(), weight, pMask );
+				InterpMaskedData( paAttr, CDmrArrayConst< Vector2D >( pbAttr ).Get(), weight, pMask );
 				break;
 			case AT_VECTOR3_ARRAY:
-				InterpMaskedData( CDmrArray< Vector >( paAttr ), CDmrArrayConst< Vector >( pbAttr ).Get(), weight, pMask );
+				InterpMaskedData( paAttr, CDmrArrayConst< Vector >( pbAttr ).Get(), weight, pMask );
 				break;
 			default:
 				break;
@@ -4064,22 +4067,22 @@ bool CDmeMesh::InterpMaskedDelta(
 					case AT_FLOAT_ARRAY:
 						floatData = CDmrArrayConst< float >( pBindData ).Get();
 						AddCorrectedDelta( floatData, bindIndices, compList[ i ], baseFieldName );
-						InterpMaskedData( CDmrArray< float >( pDstBaseData ), floatData, weight, pMask );
+						InterpMaskedData( pDstBaseData, floatData, weight, pMask );
 						break;
 					case AT_COLOR_ARRAY:
 						vector4DData = CDmrArrayConst< Vector4D >( pBindData ).Get();
 						AddCorrectedDelta( vector4DData, bindIndices, compList[ i ], baseFieldName );
-						InterpMaskedData( CDmrArray< Vector4D >( pDstBaseData ), vector4DData, weight, pMask );
+						InterpMaskedData( pDstBaseData, vector4DData, weight, pMask );
 						break;
 					case AT_VECTOR2_ARRAY:
 						vector2DData = CDmrArrayConst< Vector2D >( pBindData ).Get();
 						AddCorrectedDelta( vector2DData, bindIndices, compList[ i ], baseFieldName );
-						InterpMaskedData( CDmrArray< Vector2D >( pDstBaseData ), vector2DData, weight, pMask );
+						InterpMaskedData( pDstBaseData, vector2DData, weight, pMask );
 						break;
 					case AT_VECTOR3_ARRAY:
 						vectorData = CDmrArrayConst< Vector >( pBindData ).Get();
 						AddCorrectedDelta( vectorData, bindIndices, compList[ i ], baseFieldName );
-						InterpMaskedData( CDmrArray< Vector >( pDstBaseData ), vectorData, weight, pMask );
+						InterpMaskedData( pDstBaseData, vectorData, weight, pMask );
 						break;
 					default:
 						break;
@@ -4171,7 +4174,7 @@ int ControlIndexLessFunc( const void *lhs, const void *rhs )
 // separated by underscores.  The states will be returned in order from
 // most superior to least superior.  Since the deltas need to be broken down
 // by the control deltas, if any control delta doesn't exist it will return false.
-// 
+//
 // A superior delta state is defined as a delta which has this delta as
 // a dependent (or inferior) delta.
 //
@@ -4307,7 +4310,7 @@ CDmeVertexData *CDmeMesh::FindOrAddBaseState( CDmeVertexData *pBase )
 void CDmeMesh::GetBoundingSphere(
 	Vector &c, float &r,
 	CDmeVertexData *pPassedBase /* = NULL */, CDmeSingleIndexedComponent *pPassedSelection /* = NULL */ ) const
-{ 
+{
 	c.Zero();
 	r = 0.0f;
 
@@ -4489,8 +4492,9 @@ void CDmeMesh::GetBoundingBox( Vector &min, Vector &max, CDmeVertexData *pPassed
 template < class T_t >
 bool CDmeMesh::SetBaseDataToDeltas(
 	CDmeVertexData *pBase,
-	CDmeVertexData::StandardFields_t nStandardField, CDmrArrayConst< T_t > &srcData, CDmrArray< T_t > &dstData, bool bDoStereo, bool bDoLag )
+	CDmeVertexData::StandardFields_t nStandardField, const CDmrArrayConst< T_t > &srcData, CDmAttribute* dst, bool bDoStereo, bool bDoLag )
 {
+	CDmrArray< T_t > dstData( dst );
 	const int nDataCount = dstData.Count();
 	if ( srcData.Count() != nDataCount )
 		return false;
@@ -4559,7 +4563,7 @@ bool CDmeMesh::SetBaseStateToDeltas( CDmeVertexData *pPassedBase /*= NULL */ )
 
 	const bool bDoStereo = ( pBind->FindFieldIndex( CDmeVertexDeltaData::FIELD_BALANCE ) >= 0 );
 
-	for ( int i = 0; i < sizeof( deltaFields ) / sizeof( deltaFields[ 0 ] ); ++i )
+	for ( uint i = 0; i < ARRAYSIZE( deltaFields ); ++i )
 	{
 		const CDmeVertexDeltaData::StandardFields_t nStandardField = deltaFields[ i ];
 		const int nSrcField = pBind->FindFieldIndex( nStandardField );
@@ -4575,10 +4579,10 @@ bool CDmeMesh::SetBaseStateToDeltas( CDmeVertexData *pPassedBase /*= NULL */ )
 		switch ( pDstAttr->GetType() )
 		{
 		case AT_FLOAT_ARRAY:
-			SetBaseDataToDeltas( pBind, nStandardField, CDmrArrayConst< float >( pSrcAttr ), CDmrArray< float >( pDstAttr ), bDoStereo, false );
+			SetBaseDataToDeltas( pBind, nStandardField, CDmrArrayConst< float >( pSrcAttr ), pDstAttr, bDoStereo, false );
 			break;
 		case AT_VECTOR3_ARRAY:
-			SetBaseDataToDeltas( pBind, nStandardField, CDmrArrayConst< Vector >( pSrcAttr ), CDmrArray< Vector >( pDstAttr ), bDoStereo, false );
+			SetBaseDataToDeltas( pBind, nStandardField, CDmrArrayConst< Vector >( pSrcAttr ), pDstAttr, bDoStereo, false );
 			break;
 		default:
 			Assert( 0 );

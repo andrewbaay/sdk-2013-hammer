@@ -6,18 +6,18 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "TextureBar.h"
-#include "ControlBarIDs.h"
-#include "StockSolids.h"
-#include "MainFrm.h"
-#include "MapDoc.h"
-#include "GlobalFunctions.h"
-#include "History.h"
-#include "IEditorTexture.h"
-#include "Options.h"
-#include "ReplaceTexDlg.h"
-#include "TextureBrowser.h"
-#include "TextureSystem.h"
+#include "texturebar.h"
+#include "controlbarids.h"
+#include "stocksolids.h"
+#include "mainfrm.h"
+#include "mapdoc.h"
+#include "globalfunctions.h"
+#include "history.h"
+#include "ieditortexture.h"
+#include "options.h"
+#include "replacetexdlg.h"
+#include "texturebrowser.h"
+#include "texturesystem.h"
 #include "Selection.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -25,14 +25,14 @@
 
 
 BEGIN_MESSAGE_MAP(CTextureBar, CHammerBar)
-	ON_CBN_SELCHANGE(IDC_TEXTURES, OnSelChangeTexture)
-	ON_UPDATE_COMMAND_UI(IDC_TEXTURES, UpdateControl)
-	ON_CBN_SELCHANGE(IDC_TEXTUREGROUPS, OnChangeTextureGroup)
-	ON_UPDATE_COMMAND_UI(IDC_TEXTUREGROUPS, UpdateControl)
-	ON_BN_CLICKED(IDC_BROWSE, OnBrowse)
-	ON_UPDATE_COMMAND_UI(IDC_BROWSE, UpdateControl)
-	ON_BN_CLICKED(IDC_REPLACE, OnReplace)
-	ON_UPDATE_COMMAND_UI(IDC_REPLACE, UpdateControl)
+	ON_CBN_SELCHANGE(IDC_TEXTURES, &ThisClass::OnSelChangeTexture)
+	ON_UPDATE_COMMAND_UI(IDC_TEXTURES, &ThisClass::UpdateControl)
+	ON_CBN_SELCHANGE(IDC_TEXTUREGROUPS, &ThisClass::OnChangeTextureGroup)
+	ON_UPDATE_COMMAND_UI(IDC_TEXTUREGROUPS, &ThisClass::UpdateControl)
+	ON_BN_CLICKED(IDC_BROWSE, &ThisClass::OnBrowse)
+	ON_UPDATE_COMMAND_UI(IDC_BROWSE, &ThisClass::UpdateControl)
+	ON_BN_CLICKED(IDC_REPLACE, &ThisClass::OnReplace)
+	ON_UPDATE_COMMAND_UI(IDC_REPLACE, &ThisClass::UpdateControl)
 	ON_WM_WINDOWPOSCHANGED()
 END_MESSAGE_MAP()
 

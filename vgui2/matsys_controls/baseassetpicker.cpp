@@ -1092,8 +1092,8 @@ void CBaseAssetPicker::GetUserConfigSettings( KeyValues *pUserConfig )
 	BaseClass::GetUserConfigSettings( pUserConfig );
 	pUserConfig->SetString( "filter", m_Filter );
 	pUserConfig->SetString( "folderfilter", m_FolderFilter );
-	pUserConfig->SetString( "mod", ( m_nCurrentModFilter >= 0 ) ?
-		s_AssetCache.ModInfo( m_nCurrentModFilter ).m_ModName : "" );
+	pUserConfig->SetString( "mod", m_nCurrentModFilter >= 0 ?
+		s_AssetCache.ModInfo( m_nCurrentModFilter ).m_ModName.Get() : "" );
 }
 
 

@@ -4895,7 +4895,7 @@ Panel::PinCorner_e GetPinCornerFromString( const char* pszCornerName )
 		return (Panel::PinCorner_e)atoi( pszCornerName );
 	}
 
-	for( int i=0; i<ARRAYSIZE( g_PinCornerStrings ); ++i )
+	for( uint i=0; i<ARRAYSIZE( g_PinCornerStrings ); ++i )
 	{
 		if ( !Q_stricmp( g_PinCornerStrings[i], pszCornerName ) )
 		{

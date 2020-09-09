@@ -1,10 +1,10 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
-#include "BoundBox.h"
+#include "boundbox.h"
 
 class CPasteSpecialDlg : public CDialog
 {

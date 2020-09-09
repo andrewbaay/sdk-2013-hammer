@@ -112,8 +112,6 @@ public:
 	virtual void DrawElements( IMaterialVar **params, int nModulationFlags, IShaderShadow* pShaderShadow, IShaderDynamicAPI* pShaderAPI,
 								VertexCompressionType_t vertexCompression, CBasePerMaterialContextData **pContext );
 
-	virtual	const SoftwareVertexShader_t GetSoftwareVertexShader() const { return m_SoftwareVertexShader; }
-
 	virtual int ComputeModulationFlags( IMaterialVar** params, IShaderDynamicAPI* pShaderAPI );
 	virtual bool NeedsPowerOfTwoFrameBufferTexture( IMaterialVar **params, bool bCheckSpecificToThisFrame = true ) const;
 	virtual bool NeedsFullFrameBufferTexture( IMaterialVar **params, bool bCheckSpecificToThisFrame = true ) const;
@@ -220,8 +218,6 @@ public:
 	static IMaterialVar **s_ppParams;
 
 protected:
-	SoftwareVertexShader_t m_SoftwareVertexShader;
-
 	static const char *s_pTextureGroupName; // Current material's texture group name.
 	static IShaderShadow *s_pShaderShadow;
 	static IShaderDynamicAPI *s_pShaderAPI;

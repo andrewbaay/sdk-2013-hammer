@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $Workfile: SelectEntityDlg.cpp $
 // $Date: 8/03/99 6:57p $
@@ -9,11 +9,11 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "SelectEntityDlg.h"
-#include "GlobalFunctions.h"
-#include "MapDoc.h"
-#include "MapEntity.h"
-#include "MapSolid.h"
+#include "selectentitydlg.h"
+#include "globalfunctions.h"
+#include "mapdoc.h"
+#include "mapentity.h"
+#include "mapsolid.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -41,15 +41,15 @@ void CSelectEntityDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CSelectEntityDlg, CDialog)
 	//{{AFX_MSG_MAP(CSelectEntityDlg)
-	ON_LBN_SELCHANGE(IDC_ENTITIES, OnSelchangeEntities)
+	ON_LBN_SELCHANGE(IDC_ENTITIES, &ThisClass::OnSelchangeEntities)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
-void CSelectEntityDlg::OnSelchangeEntities() 
+void CSelectEntityDlg::OnSelchangeEntities()
 {
 	int iSel = m_cEntities.GetCurSel();
 
@@ -60,7 +60,7 @@ void CSelectEntityDlg::OnSelchangeEntities()
 }
 
 
-BOOL CSelectEntityDlg::OnInitDialog() 
+BOOL CSelectEntityDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
@@ -83,10 +83,10 @@ BOOL CSelectEntityDlg::OnInitDialog()
 	return TRUE;
 }
 
-void CSelectEntityDlg::OnOK() 
+void CSelectEntityDlg::OnOK()
 {
 	int iSel = m_cEntities.GetCurSel();
 	m_pFinalEntity = (CMapEntity*) m_cEntities.GetItemData(iSel);
-	
+
 	CDialog::OnOK();
 }

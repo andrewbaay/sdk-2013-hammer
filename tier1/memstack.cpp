@@ -172,7 +172,7 @@ void CMemoryStack::Term()
 
 //-------------------------------------
 
-int CMemoryStack::GetSize()
+int CMemoryStack::GetSize() RESTRICT
 { 
 #ifdef _WIN32
 	return m_pCommitLimit - m_pBase; 

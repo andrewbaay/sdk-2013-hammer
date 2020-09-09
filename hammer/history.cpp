@@ -6,12 +6,12 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "History.h"
+#include "history.h"
 #include "hammer.h"
-#include "Options.h"
-#include "MainFrm.h"
-#include "MapDoc.h"
-#include "GlobalFunctions.h"
+#include "options.h"
+#include "mainfrm.h"
+#include "mapdoc.h"
+#include "globalfunctions.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -409,6 +409,11 @@ CTrackEntry& CTrackEntry::operator=( CTrackEntry&& other )
 }
 
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wvarargs"
+#endif
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructs a track entry from a list of parameters.
 // Input  : t -
@@ -477,6 +482,9 @@ CTrackEntry::CTrackEntry(TrackType_t eType, ...)
 	va_end(vl);
 }
 
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Destructor. Called when history events are removed from the Undo

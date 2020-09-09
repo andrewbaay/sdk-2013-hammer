@@ -16,6 +16,7 @@
 #include "datamodel/dmattributevar.h"
 
 #include "mathlib/vector.h"
+#undef _tzcnt_u32
 #include <string>
 
 

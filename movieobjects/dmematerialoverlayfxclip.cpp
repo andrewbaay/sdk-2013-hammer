@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -8,7 +8,7 @@
 #include "datamodel/dmelementfactoryhelper.h"
 #include "materialsystem/imesh.h"
 #include "materialsystem/imaterial.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "tier1/convar.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -105,7 +105,7 @@ void CDmeMaterialOverlayFXClip::ApplyEffect( DmeTime_t time, Rect_t &currentRect
 {
 	if ( !m_OverlayMaterial || m_Color.a() == 0 )
 		return;
-	
+
 	time = ToChildMediaTime( time, false );
 
 	// Clip the overlay rectangle to the currently drawn one
@@ -113,9 +113,9 @@ void CDmeMaterialOverlayFXClip::ApplyEffect( DmeTime_t time, Rect_t &currentRect
 	int tx, ty, tw, th;
 	if ( m_bFullScreen )
 	{
-		x = currentRect.x; 
-		y = currentRect.y; 
-		w = currentRect.width; 
+		x = currentRect.x;
+		y = currentRect.y;
+		w = currentRect.width;
 		h = currentRect.height;
 		tx = ty = 0;
 		tw = totalRect.width;
@@ -180,7 +180,7 @@ void CDmeMaterialOverlayFXClip::ApplyEffect( DmeTime_t time, Rect_t &currentRect
 
 	// Now determine the subrange we should use given we're rendering a portion of the image
 	float u0, v0, u1, v1, f;
-	
+
 	f = ( x - tx ) / tw;
 	u0 = Lerp( f, uMin, uMax );
 
@@ -201,7 +201,7 @@ void CDmeMaterialOverlayFXClip::ApplyEffect( DmeTime_t time, Rect_t &currentRect
 		CMatRenderContextPtr pRenderContext( materials );
 		ITexture *pTexture = materials->FindTexture( "_rt_PowerOfTwoFB", TEXTURE_GROUP_RENDER_TARGET );
 
-		// forced or only once per frame 
+		// forced or only once per frame
 		Rect_t rect;
 		rect.x = 0;
 		rect.y = 0;

@@ -1,15 +1,15 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
 #include "dme_controls/DmeSourceSkinPanel.h"
-#include "dme_controls/DmePanel.h"
+#include "dme_controls/dmepanel.h"
 #include "movieobjects/dmemdlmakefile.h"
 #include "vgui_controls/TextEntry.h"
 #include "vgui_controls/CheckButton.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -30,9 +30,9 @@ IMPLEMENT_DMEPANEL_FACTORY( CDmeSourceSkinPanel, DmeSourceSkin, "DmeSourceSkinDe
 //-----------------------------------------------------------------------------
 // Purpose: Constructor, destructor
 //-----------------------------------------------------------------------------
-CDmeSourceSkinPanel::CDmeSourceSkinPanel( vgui::Panel *pParent, const char *pPanelName ) : 
+CDmeSourceSkinPanel::CDmeSourceSkinPanel( vgui::Panel *pParent, const char *pPanelName ) :
 	BaseClass( pParent, pPanelName )
-{	
+{
 	m_pSkinName = new vgui::TextEntry( this, "SkinName" );
 	m_pSkinName->AddActionSignalTarget( this );
 

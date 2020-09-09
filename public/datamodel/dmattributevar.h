@@ -467,14 +467,14 @@ class CDmaArray : public CDmaDecorator<T, CDmaArrayBase<T, CDmaDataInternal<CUtl
 public:
 	const CDmaArray<T>& operator=( const CDmaArray<T>& val )
 	{
-		CopyArray( val.Base(), val.Count() );
+		this->CopyArray( val.Base(), val.Count() );
 		return *this;
 	}
 
 	template <class C>
 	const CDmaArray<T>& operator=( const C& val )
 	{
-		CopyArray( val.Base(), val.Count() );
+		this->CopyArray( val.Base(), val.Count() );
 		return *this;
 	}
 

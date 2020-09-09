@@ -80,19 +80,20 @@ void CLightingPreviewResultsWindow::OnPaint()
 	if ( g_pLPreviewOutputBitmap )
 	{
 		// blit it
-		BITMAPINFOHEADER mybmh;
-		memset( &mybmh, 0, sizeof( BITMAPINFOHEADER ) );
-		mybmh.biSize = sizeof( BITMAPINFOHEADER );
-		mybmh.biWidth = g_pLPreviewOutputBitmap->Width();
-		mybmh.biHeight = -g_pLPreviewOutputBitmap->Height();
-		mybmh.biPlanes = 1;
-		mybmh.biBitCount = 32;
-		mybmh.biCompression = BI_RGB;
-		mybmh.biSizeImage = g_pLPreviewOutputBitmap->Width() * g_pLPreviewOutputBitmap->Height();
+		BITMAPINFO bmi;
+		memset( &bmi, 0, sizeof( bmi ) );
+		BITMAPINFOHEADER& bmih = bmi.bmiHeader;
+		bmih.biSize = sizeof( BITMAPINFOHEADER );
+		bmih.biWidth = g_pLPreviewOutputBitmap->Width();
+		bmih.biHeight = -g_pLPreviewOutputBitmap->Height();
+		bmih.biPlanes = 1;
+		bmih.biBitCount = 32;
+		bmih.biCompression = BI_RGB;
+		bmih.biSizeImage = g_pLPreviewOutputBitmap->Width() * g_pLPreviewOutputBitmap->Height() * 4;
 
 		StretchDIBits(
 			dc.GetSafeHdc(), clientrect.left, clientrect.top, 1 + ( clientrect.right - clientrect.left ),
 			1 + ( clientrect.bottom - clientrect.top ), 0, 0, g_pLPreviewOutputBitmap->Width(), g_pLPreviewOutputBitmap->Height(),
-			g_pLPreviewOutputBitmap->GetBits(), (BITMAPINFO*)&mybmh, DIB_RGB_COLORS, SRCCOPY );
+			g_pLPreviewOutputBitmap->GetBits(), &bmi, DIB_RGB_COLORS, SRCCOPY );
 	}
 }

@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -10,8 +10,8 @@
 #pragma once
 
 #include <afxtempl.h>
-#include "FaceEdit_MaterialPage.h"
-#include "FaceEdit_DispPage.h"
+#include "faceedit_materialpage.h"
+#include "faceedit_disppage.h"
 
 class CMapFace;
 class CMapSolid;
@@ -54,7 +54,7 @@ public:
 	void			CloseAllPageDialogs( void );
 
 	void			UpdateControls( void );
-	
+
 	// Called when the CMapDoc goes away. Don't hang onto old face pointers that come from this doc.
 	void			ClearFaceListByMapDoc( CMapDoc *pDoc );
 
@@ -92,14 +92,14 @@ public:
 
 	void EnableUpdate( bool bEnable );
 	inline bool HasUpdateEnabled( void );
-	
+
 	inline int GetFaceListCount( void );
 	inline CMapFace *GetFaceListDataFace( int index );
 	inline CMapSolid *GetFaceListDataSolid( int index );
 
 	// Called when a new material is detected.
 	void NotifyNewMaterial( IEditorTexture *pTex );
-	
+
 	//=========================================================================
 	//
 	// Virtual Overrides
@@ -167,8 +167,8 @@ inline void CFaceEditSheet::SetClickMode( int mode )
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline int CFaceEditSheet::GetClickMode( void )
-{ 
-	return m_ClickMode; 
+{
+	return m_ClickMode;
 }
 
 //-----------------------------------------------------------------------------

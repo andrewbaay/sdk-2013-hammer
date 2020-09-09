@@ -10,11 +10,11 @@
 #pragma once
 #endif
 
-#include "MapEntity.h"
-#include "EditGameClass.h"
-#include "MapClass.h"
-#include "MapDoc.h"
-#include "MapPath.h"
+#include "mapentity.h"
+#include "editgameclass.h"
+#include "mapclass.h"
+#include "mapdoc.h"
+#include "mappath.h"
 
 // Flags for SaveVMF.
 #define SAVEFLAGS_AUTOSAVE		(1<<0)

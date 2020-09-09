@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -12,7 +12,7 @@
 
 
 #include "MapHelper.h"
-#include "ToolInterface.h"
+#include "toolinterface.h"
 
 
 class CHelperInfo;
@@ -66,7 +66,7 @@ public:
 	virtual bool IsVisualElement(void) { return false; } // Only visible if our parent is selected.
 	virtual bool IsClutter(void) const { return true; }
 	virtual bool CanBeCulledByCordon() const { return false; } // We don't hide unless our parent hides.
-	
+
 	virtual const char* GetDescription() { return("Player hull handle"); }
 
 	virtual void OnAddToWorld(CMapWorld *pWorld);
@@ -82,21 +82,21 @@ protected:
 
 	// Overridden to update our parent's keyvalue when we move.
 	virtual void DoTransform(const VMatrix &matrix);
-	
+
 private:
 
 	void Initialize(void);
 	void UpdateParentKey(void);
 
 	CMapSweptPlayerHull *m_pOwner;		// The swept player hull that we belong to.
-	
+
 	char m_szKeyName[MAX_KEYNAME_SIZE];
 	bool m_bDrawLineToParent;
 };
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 int CMapPlayerHullHandle::GetRadius(void)
 {

@@ -10,7 +10,7 @@
 
 #include "stdafx.h"
 #include "resource.h"
-#include "ProgDlg.h"
+#include "progdlg.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -85,10 +85,19 @@ void CProgressDlg::DoDataExchange(CDataExchange* pDX)
     //}}AFX_DATA_MAP
 }
 
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunused-local-typedef"
+#endif
+
 BEGIN_MESSAGE_MAP(CProgressDlg, CDialog)
     //{{AFX_MSG_MAP(CProgressDlg)
     //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
+
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 
 BEGIN_MESSAGE_MAP(CProgressDlg::CStatic2, CStatic)
 	ON_WM_CTLCOLOR_REFLECT()

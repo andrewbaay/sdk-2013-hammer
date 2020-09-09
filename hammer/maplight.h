@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -13,8 +13,8 @@
 
 
 #include "MapHelper.h"
-#include "fgdlib/HelperInfo.h"
-#include "MapEntity.h"
+#include "fgdlib/helperinfo.h"
+#include "mapentity.h"
 
 
 class CMapLight : public CMapHelper

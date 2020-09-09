@@ -25,7 +25,7 @@ DmeFramerate_t::DmeFramerate_t( int fps /*= 0*/ ) :
 {
 }
 
-DmeFramerate_t::DmeFramerate_t( int nNumerator, int nDenominator ) : 
+DmeFramerate_t::DmeFramerate_t( int nNumerator, int nDenominator ) :
 	m_num( nNumerator ), m_den( nDenominator * 10000 )
 {
 }
@@ -56,7 +56,7 @@ void DmeFramerate_t::SetFramerate( int fps )
 // other (uncommon) options besides 30(29.97 - ntsc video) are 24 (23.976 - ntsc film) and 60 (59.94 - ntsc progressive)
 void DmeFramerate_t::SetFramerateNTSC( int multiplier /*= 30*/ )
 {
-	// ntsc = 30 fps * 1000 / 1001 
+	// ntsc = 30 fps * 1000 / 1001
 	//      = ( 30 / 10000 fptms ) * 1000 / 1001
 	//      = 30 / 10010
 	m_num = multiplier;
@@ -115,31 +115,6 @@ void DmeTime_t::Clamp( DmeTime_t lo, DmeTime_t hi )
 bool DmeTime_t::IsInRange( DmeTime_t lo, DmeTime_t hi ) const
 {
 	return m_tms >= lo.m_tms && m_tms < hi.m_tms;
-}
-
-
-// helper functions
-
-float GetFractionOfTimeBetween( DmeTime_t t, DmeTime_t start, DmeTime_t end, bool bClamp /*= false*/ )
-{
-	return GetFractionOfTime( t - start, end - start, bClamp );
-}
-
-float GetFractionOfTime( DmeTime_t t, DmeTime_t duration, bool bClamp /*= false*/  )
-{
-	if ( duration == DMETIME_ZERO )
-		return 0.0f;
-
-	if ( bClamp )
-	{
-		t.Clamp( DMETIME_ZERO, duration );
-	}
-	return t.m_tms / float( duration.m_tms );
-}
-
-int FrameForTime( DmeTime_t t, DmeFramerate_t framerate )
-{
-	return t.CurrentFrame( framerate );
 }
 
 

@@ -1,17 +1,17 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
-#include "dme_controls/DmePicker.h"
-#include "tier1/keyvalues.h"
+#include "dme_controls/dmepicker.h"
+#include "tier1/KeyValues.h"
 #include "vgui_controls/TextEntry.h"
 #include "vgui_controls/ListPanel.h"
 #include "vgui_controls/Button.h"
 #include "datamodel/dmelement.h"
-#include "vgui/isurface.h"
-#include "vgui/iinput.h"
+#include "vgui/ISurface.h"
+#include "vgui/IInput.h"
 #include "dme_controls/dmecontrols_utils.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -76,7 +76,7 @@ CDmePicker::~CDmePicker()
 //-----------------------------------------------------------------------------
 void CDmePicker::Activate( const CUtlVector< DmePickerInfo_t >&vec )
 {
-	m_pDmeBrowser->RemoveAll();	
+	m_pDmeBrowser->RemoveAll();
 
 	int nCount = vec.Count();
 	for ( int i = 0; i < nCount; ++i )
@@ -86,7 +86,7 @@ void CDmePicker::Activate( const CUtlVector< DmePickerInfo_t >&vec )
 		const char *pItemName = vec[i].m_pChoiceString ? vec[i].m_pChoiceString : pElementName;
 
 		KeyValues *kv = new KeyValues( "node", "dme", pItemName );
-		kv->SetInt( "dmeHandle", vec[i].m_hElement ); 
+		kv->SetInt( "dmeHandle", vec[i].m_hElement );
 		int nItemID = m_pDmeBrowser->AddItem( kv, 0, false, false );
 
 		KeyValues *pDrag = new KeyValues( "drag", "text", pElementName );
@@ -100,7 +100,7 @@ void CDmePicker::Activate( const CUtlVector< DmePickerInfo_t >&vec )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CDmePicker::OnKeyCodeTyped( KeyCode code )
 {
@@ -186,7 +186,7 @@ CDmElement *CDmePicker::GetSelectedDme( )
 // Purpose: Modal picker frame
 //
 //-----------------------------------------------------------------------------
-CDmePickerFrame::CDmePickerFrame( vgui::Panel *pParent, const char *pTitle ) : 
+CDmePickerFrame::CDmePickerFrame( vgui::Panel *pParent, const char *pTitle ) :
 BaseClass( pParent, "DmePickerFrame" )
 {
 	m_pContextKeyValues = NULL;

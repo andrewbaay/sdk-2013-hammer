@@ -172,7 +172,7 @@ private:
 		}
 	}
 
-	template<typename T> friend class CUtlReferenceVector;
+	template<typename T_> friend class CUtlReferenceVector;
 };
 
 template<class T>
@@ -181,7 +181,7 @@ class CUtlReferenceList : public CUtlIntrusiveDList<CUtlReference<T>>
 public:
 	CUtlReferenceList()
 	{
-		RemoveAll();
+		this->RemoveAll();
 	}
 
 	~CUtlReferenceList( void )
@@ -222,7 +222,7 @@ public:
 
 	void RemoveAll()
 	{
-		for ( int i = 0; i < Count(); i++ )
+		for ( int i = 0; i < Base::Count(); i++ )
 		{
 			Base::Element( i ).KillRef();
 		}
@@ -232,21 +232,21 @@ public:
 
 	int Find( T* src ) const
 	{
-		return FindMatch( [src]( const CUtlReference<T> & ref ) -> bool { return ref.GetObject() == src; } );
+		return Base::FindMatch( [src]( const CUtlReference<T> & ref ) -> bool { return ref.GetObject() == src; } );
 	}
 
 	void FastRemove( int elem )
 	{
-		Assert( IsValidIndex( elem ) );
+		Assert( Base::IsValidIndex( elem ) );
 
-		if ( m_Size > 0 )
+		if ( this->m_Size > 0 )
 		{
-			if ( elem != m_Size -1 )
+			if ( elem != this->m_Size -1 )
 			{
-				Base::Element( elem ) = Base::Element( m_Size - 1 );
+				Base::Element( elem ) = Base::Element( this->m_Size - 1 );
 			}
-			Destruct( &Base::Element( m_Size - 1 ) );
-			--m_Size;
+			Destruct( &Base::Element( this->m_Size - 1 ) );
+			--this->m_Size;
 		}
 	}
 
@@ -263,17 +263,17 @@ public:
 
 	void Remove( int elem )
 	{
-		Assert( IsValidIndex( elem ) );
+		Assert( Base::IsValidIndex( elem ) );
 
-		if ( m_Size > 0 )
+		if ( this->m_Size > 0 )
 		{
-			for ( int i = elem; i < ( m_Size - 1 ); i++ )
+			for ( int i = elem; i < ( this->m_Size - 1 ); i++ )
 			{
 				Base::Element( i ) = Base::Element( i + 1 );
 			}
 
-			Destruct( &Base::Element( m_Size - 1 ) );
-			--m_Size;
+			Destruct( &Base::Element( this->m_Size - 1 ) );
+			--this->m_Size;
 		}
 	}
 

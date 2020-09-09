@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2003, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -12,10 +12,11 @@
 #endif
 
 
-#include "vgui_controls/frame.h"
+#include "vgui_controls/Frame.h"
 #include "matsys_controls/curveeditorpanel.h"
 #include "datamodel/dmehandle.h"
 #include "movieobjects/timeutils.h"
+#include "movieobjects/dmelog.h"
 
 
 //-----------------------------------------------------------------------------
@@ -102,7 +103,7 @@ private:
 //-----------------------------------------------------------------------------
 // Finds or adds a key
 //-----------------------------------------------------------------------------
-template< class T > 
+template< class T >
 int CDmeLogEditPanel::FindOrAddKey( DmeTime_t time, DmeTime_t tolerance, int nComps, float flValue )
 {
 	T vec = CastElement< CDmeTypedLog<T> >( m_hLog )->GetValue( time );
@@ -120,7 +121,7 @@ int CDmeLogEditPanel::FindOrAddKey( DmeTime_t time, DmeTime_t tolerance, int nCo
 //-----------------------------------------------------------------------------
 // Modifies an existing key
 //-----------------------------------------------------------------------------
-template< class T > 
+template< class T >
 int CDmeLogEditPanel::ModifyKey( int nPoint, DmeTime_t initialTime, DmeTime_t time, int nComps, float flValue )
 {
 	T vec = CastElement< CDmeTypedLog<T> >( m_hLog )->GetValue( initialTime );

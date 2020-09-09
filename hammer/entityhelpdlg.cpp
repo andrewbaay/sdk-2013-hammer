@@ -5,8 +5,8 @@
 //=============================================================================
 
 #include "stdafx.h"
-#include "EntityHelpDlg.h"
-#include "fgdlib/GameData.h"
+#include "entityhelpdlg.h"
+#include "fgdlib/gamedata.h"
 #include "RichEditCtrlEx.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

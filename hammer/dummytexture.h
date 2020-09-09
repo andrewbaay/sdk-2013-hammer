@@ -13,7 +13,7 @@
 #endif
 
 
-#include "IEditorTexture.h"
+#include "ieditortexture.h"
 
 class CDummyTexture final : public IEditorTexture
 {

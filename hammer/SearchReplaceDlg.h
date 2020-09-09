@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -12,8 +12,8 @@
 #endif
 
 #include "resource.h"
-#include "UtlVector.h"
-#include "MapClass.h"
+#include "utlvector.h"
+#include "mapclass.h"
 
 
 class CMapEntity;

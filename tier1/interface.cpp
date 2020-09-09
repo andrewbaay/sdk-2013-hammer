@@ -136,8 +136,10 @@ void *GetModuleHandle(const char *name)
 static void *Sys_GetProcAddress( const char *pModuleName, const char *pName )
 {
 	HMODULE hModule = (HMODULE)GetModuleHandle( pModuleName );
-#ifdef WIN32
-	return (void *)GetProcAddress( hModule, pName );
+#if defined(WIN32) && !defined(WIN32_CLANG)
+	return static_cast<void *>(GetProcAddress( hModule, pName ));
+#elif defined(WIN32_CLANG)
+	return (void*)GetProcAddress( hModule, pName );
 #else
 	return (void *)dlsym( (void *)hModule, pName );
 #endif
@@ -456,9 +458,9 @@ CreateInterfaceFn Sys_GetFactoryThis( void )
 //-----------------------------------------------------------------------------
 CreateInterfaceFn Sys_GetFactory( const char *pModuleName )
 {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(WIN32_CLANG)
 	return static_cast<CreateInterfaceFn>( Sys_GetProcAddress( pModuleName, CREATEINTERFACE_PROCNAME ) );
-#elif defined(POSIX)
+#elif defined(POSIX) || defined(WIN32_CLANG)
 	// see Sys_GetFactory( CSysModule *pModule ) for an explanation
 	return (CreateInterfaceFn)( Sys_GetProcAddress( pModuleName, CREATEINTERFACE_PROCNAME ) );
 #endif

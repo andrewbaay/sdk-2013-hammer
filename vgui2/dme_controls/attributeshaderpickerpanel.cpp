@@ -1,18 +1,18 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
 //=============================================================================//
 
-#include "dme_controls/AttributeShaderPickerPanel.h"
+#include "dme_controls/attributeshaderpickerpanel.h"
 #include "dme_controls/AttributeTextEntry.h"
-#include "matsys_controls/Picker.h"
-#include "tier1/keyvalues.h"
+#include "matsys_controls/picker.h"
+#include "tier1/KeyValues.h"
 #include "matsys_controls/matsyscontrols.h"
 #include "materialsystem/imaterialsystem.h"
-#include "materialsystem/ishader.h"
+#include "materialsystem/IShader.h"
 
 
 using namespace vgui;

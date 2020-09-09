@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "hammer.h"
 #include "hammer_mathlib.h"
-#include "ArchDlg.h"
+#include "archdlg.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -87,12 +87,12 @@ void CArchDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CArchDlg, CDialog)
 	//{{AFX_MSG_MAP(CArchDlg)
-	ON_EN_CHANGE(IDC_ARC, OnChangeArc)
-	ON_BN_CLICKED(IDC_CIRCLE, OnCircle)
-	ON_EN_UPDATE(IDC_SIDES, OnUpdateSides)
-	ON_EN_UPDATE(IDC_WALLWIDTH, OnUpdateWallwidth)
+	ON_EN_CHANGE(IDC_ARC, &ThisClass::OnChangeArc)
+	ON_BN_CLICKED(IDC_CIRCLE, &ThisClass::OnCircle)
+	ON_EN_UPDATE(IDC_SIDES, &ThisClass::OnUpdateSides)
+	ON_EN_UPDATE(IDC_WALLWIDTH, &ThisClass::OnUpdateWallwidth)
 	ON_WM_PAINT()
-	ON_BN_CLICKED(IDC_ARCH_PREVIEW, OnArchPreview)
+	ON_BN_CLICKED(IDC_ARCH_PREVIEW, &ThisClass::OnArchPreview)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 

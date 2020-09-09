@@ -10,22 +10,22 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "ChunkFile.h"
+#include "chunkfile.h"
 #include "ToolCordon.h"
-#include "History.h"
-#include "GlobalFunctions.h"
-#include "MainFrm.h"
-#include "MapDoc.h"
-#include "MapDefs.h"
-#include "MapSolid.h"
-#include "MapView2D.h"
-#include "MapView3D.h"
-#include "MapWorld.h"
+#include "history.h"
+#include "globalfunctions.h"
+#include "mainfrm.h"
+#include "mapdoc.h"
+#include "mapdefs.h"
+#include "mapsolid.h"
+#include "mapview2d.h"
+#include "mapview3d.h"
+#include "mapworld.h"
 #include "render2d.h"
-#include "StatusBarIDs.h"
+#include "statusbarids.h"
 #include "ToolManager.h"
-#include "Options.h"
-#include "WorldSize.h"
+#include "options.h"
+#include "worldsize.h"
 #include "vgui/Cursor.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -65,7 +65,7 @@ void Cordon3D::RefreshToolState()
 {
 	Vector mins( COORD_NOTINIT, COORD_NOTINIT, COORD_NOTINIT );
 	Vector maxs( COORD_NOTINIT, COORD_NOTINIT, COORD_NOTINIT );
-	
+
 	if ( m_pDocument->Cordon_GetCount() > 0 )
 	{
 		m_pDocument->Cordon_GetEditCordon( mins, maxs );
@@ -109,7 +109,7 @@ bool Cordon3D::OnLMouseDown2D(CMapView2D *pView, UINT nFlags, const Vector2D &vP
 	}
 	else
 	{
-		//	
+		//
 		// Test against all active cordons
 		//
 		CMapDoc *pDoc = pView->GetMapDoc();
@@ -126,19 +126,19 @@ bool Cordon3D::OnLMouseDown2D(CMapView2D *pView, UINT nFlags, const Vector2D &vP
 			Cordon_t *cordon = pDoc->Cordon_GetCordon( i );
 			if ( !cordon->m_bActive )
 				continue;
-			
+
 			for ( int j = 0; j < cordon->m_Boxes.Count(); j++ )
 			{
 				BoundBox *box = &cordon->m_Boxes[j];
-				
+
 				Vector2D vecClientMins;
 				Vector2D vecClientMaxs;
 				pView->WorldToClient( vecClientMins, box->bmins );
 				pView->WorldToClient( vecClientMaxs, box->bmaxs );
-				
+
 				// 2D projection can flip Y
 				NormalizeBox( vecClientMins, vecClientMaxs );
-				
+
 				if ( BoxesIntersect2D( vecClientMins, vecClientMaxs, selMins, selMaxs ) )
 				{
 					pDoc->Cordon_SelectCordonForEditing( cordon, box, SELECT_CORDON_FROM_TOOL );
@@ -147,7 +147,7 @@ bool Cordon3D::OnLMouseDown2D(CMapView2D *pView, UINT nFlags, const Vector2D &vP
 				}
 			}
 		}
-		
+
 		// getvisiblepoint fills in any coord that's still set to COORD_NOTINIT:
 		vecWorld[pView->axThird] = m_vecLastMins[pView->axThird];
 		m_pDocument->GetBestVisiblePoint(vecWorld);
@@ -155,8 +155,8 @@ bool Cordon3D::OnLMouseDown2D(CMapView2D *pView, UINT nFlags, const Vector2D &vP
 		// snap starting position to grid
 		if ( uConstraints & constrainSnap )
 			m_pDocument->Snap(vecWorld,uConstraints);
-		
-		// Create a new box 
+
+		// Create a new box
 		// Add it to the current edit cordon
 		// Set the edit cordon to current edit cordon and the new box
 		Cordon_t *cordon = m_pDocument->Cordon_GetSelectedCordonForEditing();
@@ -171,9 +171,9 @@ bool Cordon3D::OnLMouseDown2D(CMapView2D *pView, UINT nFlags, const Vector2D &vP
 			// Just add a box to the current cordon.
 			box = m_pDocument->Cordon_AddBox( cordon );
 		}
-		
+
 		box->bmins = box->bmaxs = vecWorld;
-		
+
 		Vector vecSize( 0, 0, 0 );
 		if ( ( m_vecLastMins[pView->axThird] == COORD_NOTINIT ) || ( m_vecLastMaxs[pView->axThird] == COORD_NOTINIT ) )
 		{
@@ -186,7 +186,7 @@ bool Cordon3D::OnLMouseDown2D(CMapView2D *pView, UINT nFlags, const Vector2D &vP
 		StartNew( pView, vPoint, vecWorld, vecSize );
 
 		m_pDocument->Cordon_SelectCordonForEditing( cordon, box, SELECT_CORDON_FROM_TOOL );
-		
+
 		if ( pDoc->Cordon_IsCordoning() )
 		{
 			pDoc->UpdateVisibilityAll();
@@ -204,7 +204,7 @@ bool Cordon3D::OnLMouseDown2D(CMapView2D *pView, UINT nFlags, const Vector2D &vP
 // Input  : Per CWnd::OnLButtonUp.
 // Output : Returns true if the message was handled, false if not.
 //-----------------------------------------------------------------------------
-bool Cordon3D::OnLMouseUp2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoint) 
+bool Cordon3D::OnLMouseUp2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoint)
 {
 	bool bShift = ( nFlags & MK_SHIFT ) != 0;
 
@@ -213,7 +213,7 @@ bool Cordon3D::OnLMouseUp2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoi
 	if ( IsTranslating() )
 	{
 		FinishTranslation( true );
-		
+
 		if ( bShift )
 		{
 			// Clone the selected cordon
@@ -229,7 +229,7 @@ bool Cordon3D::OnLMouseUp2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoi
 		else
 		{
 			m_pDocument->Cordon_SetEditCordon( bmins, bmaxs );
-			
+
 			// Remember these bounds for the next time we start dragging out a new cordon.
 			m_vecLastMins = bmins;
 			m_vecLastMaxs = bmaxs;
@@ -237,7 +237,7 @@ bool Cordon3D::OnLMouseUp2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoi
 	}
 
 	m_pDocument->UpdateStatusbar();
-	
+
 	return true;
 }
 
@@ -247,18 +247,18 @@ bool Cordon3D::OnLMouseUp2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoi
 // Input  : Per CWnd::OnMouseMove.
 // Output : Returns true if the message was handled, false if not.
 //-----------------------------------------------------------------------------
-bool Cordon3D::OnMouseMove2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoint) 
+bool Cordon3D::OnMouseMove2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoint)
 {
 	vgui::HCursor hCursor = vgui::dc_arrow;
 
 	Tool3D::OnMouseMove2D(pView, nFlags, vPoint) ;
 
 	unsigned int uConstraints = GetConstraints( nFlags );
-					    
+
 	// Convert to world coords.
 	Vector vecWorld;
 	pView->ClientToWorld(vecWorld, vPoint);
-	
+
 	// Update status bar position display.
 	//
 	char szBuf[128];
@@ -267,19 +267,19 @@ bool Cordon3D::OnMouseMove2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPo
 
 	sprintf(szBuf, " @%.0f, %.0f ", vecWorld[pView->axHorz], vecWorld[pView->axVert]);
 	SetStatusText(SBI_COORDS, szBuf);
-	
+
 	if ( IsTranslating() )
 	{
 		// cursor is cross here
 		Tool3D::UpdateTranslation( pView, vPoint, uConstraints );
-		
+
 		hCursor = vgui::dc_none;
 	}
 	else if ( HitTest(pView, vPoint, true) )
 	{
 		hCursor = UpdateCursor( pView, m_LastHitTestHandle, m_TranslateMode );
 	}
-	
+
 	if ( hCursor != vgui::dc_none  )
 		pView->SetCursor( hCursor );
 
@@ -312,7 +312,7 @@ void Cordon3D::OnDelete()
 	Cordon_t *pCordon = m_pDocument->Cordon_GetSelectedCordonForEditing( &pBox );
 	if ( !pCordon || !pBox )
 		return;
-	
+
 	if ( !pBox || ( pCordon->m_Boxes.Count() <= 1 ) )
 	{
 		m_pDocument->Cordon_RemoveCordon( pCordon );
@@ -321,7 +321,7 @@ void Cordon3D::OnDelete()
 	{
 		m_pDocument->Cordon_RemoveBox( pCordon, pBox );
 	}
-	
+
 	m_pDocument->UpdateVisibilityAll();
 	m_pDocument->SetModifiedFlag( true );
 }
@@ -329,7 +329,7 @@ void Cordon3D::OnDelete()
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-bool Cordon3D::OnKeyDown2D(CMapView2D *pView, UINT nChar, UINT nRepCnt, UINT nFlags) 
+bool Cordon3D::OnKeyDown2D(CMapView2D *pView, UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	if (nChar == VK_ESCAPE)
 	{
@@ -347,10 +347,10 @@ bool Cordon3D::OnKeyDown2D(CMapView2D *pView, UINT nChar, UINT nRepCnt, UINT nFl
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 // Output :
 //-----------------------------------------------------------------------------
-bool Cordon3D::OnKeyDown3D(CMapView3D *pView, UINT nChar, UINT nRepCnt, UINT nFlags) 
+bool Cordon3D::OnKeyDown3D(CMapView3D *pView, UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	if (nChar == VK_ESCAPE)
 	{
@@ -377,7 +377,7 @@ void Cordon3D::RenderTool2D( CRender2D *pRender )
 	// If cordoning is active, the document's rendering code handles drawing the cordons.
 	if ( !m_pDocument->Cordon_IsCordoning() )
 	{
-		int nCount = m_pDocument->Cordon_GetCount();	
+		int nCount = m_pDocument->Cordon_GetCount();
 		for ( int i = 0; i < nCount; i++ )
 		{
 			Cordon_t *pCordon = m_pDocument->Cordon_GetCordon( i );
@@ -391,7 +391,7 @@ void Cordon3D::RenderTool2D( CRender2D *pRender )
 			}
 		}
 	}
-	
+
 	pRender->PopRenderMode();
 
 	BaseClass::RenderTool2D( pRender );

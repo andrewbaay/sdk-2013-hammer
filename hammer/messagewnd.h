@@ -25,7 +25,7 @@ class CMessageWnd : private CMDIChildWnd
 public:
 
 	static CMessageWnd *CreateMessageWndObject();
-	void CreateMessageWindow( CMDIFrameWnd *pwndParent, CRect &rect );
+	void CreateMessageWindow( CMDIFrameWnd *pwndParent, const CRect &rect );
 
 	void ShowMessageWindow();
 	void ToggleMessageWindow();
@@ -34,7 +34,7 @@ public:
 
 	void Activate();
 
-	void Resize( CRect &rect );
+	void Resize( const CRect &rect );
 
 	DECLARE_DYNCREATE(CMessageWnd)
 

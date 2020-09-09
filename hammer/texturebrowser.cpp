@@ -5,17 +5,17 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "CustomMessages.h"
-#include "GlobalFunctions.h"
-#include "History.h"
-#include "FaceEditSheet.h"
-#include "IEditorTexture.h"
-#include "MainFrm.h"
-#include "MapDoc.h"
-#include "MapWorld.h"
-#include "ReplaceTexDlg.h"
-#include "TextureBrowser.h"
-#include "TextureSystem.h"
+#include "custommessages.h"
+#include "globalfunctions.h"
+#include "history.h"
+#include "faceeditsheet.h"
+#include "ieditortexture.h"
+#include "mainfrm.h"
+#include "mapdoc.h"
+#include "mapworld.h"
+#include "replacetexdlg.h"
+#include "texturebrowser.h"
+#include "texturesystem.h"
 #include "hammer.h"
 #include "Selection.h"
 
@@ -35,26 +35,26 @@ char CTextureBrowser::m_szLastKeywords[MAX_PATH];
 BEGIN_MESSAGE_MAP(CTextureBrowser, CDialog)
 	//{{AFX_MSG_MAP(CTextureBrowser)
 	ON_WM_SIZE()
-	ON_CBN_SELENDOK(IDC_TEXTURESIZE, OnSelendokTexturesize)
+	ON_CBN_SELENDOK(IDC_TEXTURESIZE, &ThisClass::OnSelendokTexturesize)
 	ON_WM_CLOSE()
 	ON_WM_TIMER()
-	ON_CBN_EDITCHANGE(IDC_FILTER, OnChangeFilterOrKeywords)
-	ON_CBN_SELENDOK(IDC_FILTER, OnUpdateFiltersNOW)
-	ON_CBN_EDITCHANGE(IDC_KEYWORDS, OnChangeFilterOrKeywords)
-	ON_CBN_SELENDOK(IDC_KEYWORDS, OnUpdateKeywordsNOW)
-	ON_BN_CLICKED(IDC_FILTER_OPAQUE, OnFilterOpaque)
-	ON_BN_CLICKED(IDC_FILTER_TRANSLUCENT, OnFilterTranslucent)
-	ON_BN_CLICKED(IDC_FILTER_SELFILLUM, OnFilterSelfIllum)
-	ON_BN_CLICKED(IDC_FILTER_ENVMASK, OnFilterEnvmask)
-	ON_BN_CLICKED(IDC_SHOW_ERROR, OnShowErrors)
-	ON_BN_CLICKED(IDC_USED, OnUsed)
-	ON_BN_CLICKED(IDC_MARK, OnMark)
-	ON_BN_CLICKED(IDC_REPLACE, OnReplace)
-	ON_BN_CLICKED(IDC_TEXTURES_OPEN_SOURCE, OnOpenSource)
-	ON_BN_CLICKED(IDC_TEXTURES_EXPLORE_SOURCE, OnExploreToSource)
-	ON_BN_CLICKED(IDC_TEXTURES_RELOAD, OnReload)
-	ON_MESSAGE(TWN_SELCHANGED, OnTexturewindowSelchange)
-	ON_MESSAGE(TWN_LBUTTONDBLCLK, OnTextureWindowDblClk)
+	ON_CBN_EDITCHANGE(IDC_FILTER, &ThisClass::OnChangeFilterOrKeywords)
+	ON_CBN_SELENDOK(IDC_FILTER, &ThisClass::OnUpdateFiltersNOW)
+	ON_CBN_EDITCHANGE(IDC_KEYWORDS, &ThisClass::OnChangeFilterOrKeywords)
+	ON_CBN_SELENDOK(IDC_KEYWORDS, &ThisClass::OnUpdateKeywordsNOW)
+	ON_BN_CLICKED(IDC_FILTER_OPAQUE, &ThisClass::OnFilterOpaque)
+	ON_BN_CLICKED(IDC_FILTER_TRANSLUCENT, &ThisClass::OnFilterTranslucent)
+	ON_BN_CLICKED(IDC_FILTER_SELFILLUM, &ThisClass::OnFilterSelfIllum)
+	ON_BN_CLICKED(IDC_FILTER_ENVMASK, &ThisClass::OnFilterEnvmask)
+	ON_BN_CLICKED(IDC_SHOW_ERROR, &ThisClass::OnShowErrors)
+	ON_BN_CLICKED(IDC_USED, &ThisClass::OnUsed)
+	ON_BN_CLICKED(IDC_MARK, &ThisClass::OnMark)
+	ON_BN_CLICKED(IDC_REPLACE, &ThisClass::OnReplace)
+	ON_BN_CLICKED(IDC_TEXTURES_OPEN_SOURCE, &ThisClass::OnOpenSource)
+	ON_BN_CLICKED(IDC_TEXTURES_EXPLORE_SOURCE, &ThisClass::OnExploreToSource)
+	ON_BN_CLICKED(IDC_TEXTURES_RELOAD, &ThisClass::OnReload)
+	ON_MESSAGE(TWN_SELCHANGED, &ThisClass::OnTexturewindowSelchange)
+	ON_MESSAGE(TWN_LBUTTONDBLCLK, &ThisClass::OnTextureWindowDblClk)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -324,7 +324,7 @@ BOOL CTextureBrowser::OnInitDialog()
 	if (!str.IsEmpty())
 	{
 		CRect r;
-		sscanf(str, "%d %d %d %d", &r.left, &r.top, &r.right, &r.bottom);
+		sscanf(str, "%ld %ld %ld %ld", &r.left, &r.top, &r.right, &r.bottom);
 
 		if (r.left < 0)
 		{
@@ -486,7 +486,7 @@ void CTextureBrowser::WriteSettings()
 	CString str;
 	CRect r;
 	GetWindowRect(r);
-	str.Format("%d %d %d %d", r.left, r.top, r.right, r.bottom);
+	str.Format("%ld %ld %ld %ld", r.left, r.top, r.right, r.bottom);
 	pApp->WriteProfileString(pszIniSection, "Position", str);
 	pApp->WriteProfileInt(pszIniSection, "ShowSize", m_cSizeList.GetCurSel());
 }

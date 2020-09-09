@@ -1,6 +1,6 @@
 //===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
-// Purpose: 
+// Purpose:
 //
 //===========================================================================//
 
@@ -10,15 +10,15 @@
 #pragma once
 #endif
 
-#include "MapDefs.h"
-#include "MapClass.h"
+#include "mapdefs.h"
+#include "mapclass.h"
 
 
 class CMapGroup : public CMapClass
 {
 	public:
 		DECLARE_MAPCLASS(CMapGroup,CMapClass)
-		
+
 		CMapGroup() : m_vecLogicalPosition(COORD_NOTINIT, COORD_NOTINIT) {}
 
 		const char* GetDescription(void);

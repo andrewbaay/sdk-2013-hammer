@@ -18,7 +18,7 @@
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-template <typename T, bool bCaseInsensitive = true, bool bDupeStrings = true> 
+template <typename T, bool bCaseInsensitive = true, bool bDupeStrings = true>
 class CUtlHashDict
 {
 public:
@@ -37,25 +37,25 @@ public:
 
 	// Number of elements
 	int Count() const;
-	
+
 	// Checks if a node is valid and in the tree
 	bool  IsValidIndex( unsigned i ) const;
-	
+
 	// Invalid index
 	static unsigned InvalidHandle();
-	
+
 	// Insert method (inserts in order)
 	unsigned  Insert( const char *pName, const T &element );
 	unsigned  Insert( const char *pName );
-	
+
 	// Find method
 	unsigned  Find( const char *pName ) const;
-	
+
 	// Remove methods
 	void	RemoveAt( unsigned i );
 	void	Remove( const char *pName );
 	void	RemoveAll( );
-	
+
 	// Purge memory
 	void	Purge();
 	void	PurgeAndDeleteElements();	// Call delete on each element.
@@ -71,7 +71,7 @@ protected:
 		T value;
 	};
 
-	template <bool bCaseInsensitive>
+	template <bool bCaseInsensitive_>
 	class CCompare
 	{
 	public:
@@ -79,11 +79,11 @@ protected:
 
 		bool operator()( const Entry_t &entry1, const Entry_t &entry2 ) const
 		{
-			return !( ( bCaseInsensitive ) ? stricmp( entry1.pszSymbol, entry2.pszSymbol ) : strcmp( entry1.pszSymbol, entry2.pszSymbol ) );
+			return !( ( bCaseInsensitive_ ) ? stricmp( entry1.pszSymbol, entry2.pszSymbol ) : strcmp( entry1.pszSymbol, entry2.pszSymbol ) );
 		}
 	};
 
-	template <bool bCaseInsensitive>
+	template <bool bCaseInsensitive_>
 	class CHash
 	{
 	public:
@@ -91,7 +91,7 @@ protected:
 
 		unsigned operator()( const Entry_t &entry ) const
 		{
-			return !( ( bCaseInsensitive ) ? HashStringCaseless( entry.pszSymbol ) : HashString( entry.pszSymbol ) );
+			return !( ( bCaseInsensitive_ ) ? HashStringCaseless( entry.pszSymbol ) : HashString( entry.pszSymbol ) );
 		}
 	};
 
@@ -104,13 +104,13 @@ protected:
 // constructor, destructor
 //-----------------------------------------------------------------------------
 template <typename T, bool bCaseInsensitive, bool bDupeStrings>
-CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::CUtlHashDict( int bucketCount, int growCount, int initCount ) : 
+CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::CUtlHashDict( int bucketCount, int growCount, int initCount ) :
 	m_Elements( SmallestPowerOfTwoGreaterOrEqual(bucketCount), growCount, initCount )
 {
 	Assert( SmallestPowerOfTwoGreaterOrEqual(bucketCount) <= 0xffff );
 }
 
-template <typename T, bool bCaseInsensitive, bool bDupeStrings> 
+template <typename T, bool bCaseInsensitive, bool bDupeStrings>
 CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::~CUtlHashDict()
 {
 	Purge();
@@ -120,15 +120,15 @@ CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::~CUtlHashDict()
 // gets particular elements
 //-----------------------------------------------------------------------------
 template <typename T, bool bCaseInsensitive, bool bDupeStrings>
-inline T& CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::Element( unsigned i )        
-{ 
-	return m_Elements[i].value; 
+inline T& CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::Element( unsigned i )
+{
+	return m_Elements[i].value;
 }
 
 template <typename T, bool bCaseInsensitive, bool bDupeStrings>
-inline const T& CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::Element( unsigned i ) const  
-{ 
-	return m_Elements[i].value; 
+inline const T& CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::Element( unsigned i ) const
+{
+	return m_Elements[i].value;
 }
 
 //-----------------------------------------------------------------------------
@@ -141,53 +141,53 @@ inline char const *CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::GetElementNa
 }
 
 template <typename T, bool bCaseInsensitive, bool bDupeStrings>
-inline T& CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::operator[]( unsigned i )        
-{ 
-	return m_Elements[i].value; 
+inline T& CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::operator[]( unsigned i )
+{
+	return m_Elements[i].value;
 }
 
 template <typename T, bool bCaseInsensitive, bool bDupeStrings>
-inline const T & CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::operator[]( unsigned i ) const  
-{ 
-	return m_Elements[i].value; 
+inline const T & CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::operator[]( unsigned i ) const
+{
+	return m_Elements[i].value;
 }
 
 //-----------------------------------------------------------------------------
 // Num elements
 //-----------------------------------------------------------------------------
 template <typename T, bool bCaseInsensitive, bool bDupeStrings>
-inline int CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::Count() const          
-{ 
+inline int CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::Count() const
+{
 	Assert( m_nCount == m_Elements.Count() );
-	return m_nCount; 
+	return m_nCount;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 // Checks if a node is valid and in the tree
 //-----------------------------------------------------------------------------
 template <typename T, bool bCaseInsensitive, bool bDupeStrings>
-inline	bool CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::IsValidIndex( unsigned i ) const 
+inline	bool CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::IsValidIndex( unsigned i ) const
 {
 	return m_Elements.IsValidHandle(i);
 }
-	
-	
+
+
 //-----------------------------------------------------------------------------
 // Invalid index
 //-----------------------------------------------------------------------------
 template <typename T, bool bCaseInsensitive, bool bDupeStrings>
-inline unsigned CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::InvalidHandle()         
-{ 
-	return CHashTable::InvalidHandle(); 
+inline unsigned CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::InvalidHandle()
+{
+	return CHashTable::InvalidHandle();
 }
 
-	
+
 //-----------------------------------------------------------------------------
 // Delete a node from the tree
 //-----------------------------------------------------------------------------
 template <typename T, bool bCaseInsensitive, bool bDupeStrings>
-void CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::RemoveAt(unsigned elem) 
+void CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::RemoveAt(unsigned elem)
 {
 	if ( bDupeStrings )
 	{
@@ -219,7 +219,7 @@ void CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::RemoveAll()
 {
 	if ( bDupeStrings )
 	{
-		typename UtlHashHandle_t index = m_Elements.GetFirstHandle();
+		auto index = m_Elements.GetFirstHandle();
 		while ( index != m_Elements.InvalidHandle() )
 		{
 			free( (void *)m_Elements[index].pszSymbol );
@@ -236,7 +236,7 @@ void CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::Purge()
 {
 	if ( bDupeStrings )
 	{
-		typename UtlHashHandle_t index = m_Elements.GetFirstHandle();
+		auto index = m_Elements.GetFirstHandle();
 		while ( index != m_Elements.InvalidHandle() )
 		{
 			free( (void *)m_Elements[index].pszSymbol );
@@ -272,12 +272,12 @@ void CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::PurgeAndDeleteElements()
 //-----------------------------------------------------------------------------
 // inserts a node into the tree
 //-----------------------------------------------------------------------------
-template <typename T, bool bCaseInsensitive, bool bDupeStrings> 
+template <typename T, bool bCaseInsensitive, bool bDupeStrings>
 unsigned CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::Insert( const char *pName, const T &element )
 {
 	MEM_ALLOC_CREDIT_CLASS();
 	m_nCount++;
-	Entry_t entry = 
+	Entry_t entry =
 	{
 		(bDupeStrings) ? strdup( pName ) : pName,
 		element
@@ -291,12 +291,12 @@ unsigned CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::Insert( const char *pN
 	return result;
 }
 
-template <typename T, bool bCaseInsensitive, bool bDupeStrings> 
+template <typename T, bool bCaseInsensitive, bool bDupeStrings>
 unsigned CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::Insert( const char *pName )
 {
 	MEM_ALLOC_CREDIT_CLASS();
 	m_nCount++;
-	Entry_t entry = 
+	Entry_t entry =
 	{
 		(bDupeStrings) ? strdup( pName ) : pName
 	};
@@ -313,7 +313,7 @@ unsigned CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::Insert( const char *pN
 //-----------------------------------------------------------------------------
 // finds a node in the tree
 //-----------------------------------------------------------------------------
-template <typename T, bool bCaseInsensitive, bool bDupeStrings> 
+template <typename T, bool bCaseInsensitive, bool bDupeStrings>
 unsigned CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::Find( const char *pName ) const
 {
 	MEM_ALLOC_CREDIT_CLASS();
@@ -327,13 +327,13 @@ unsigned CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::Find( const char *pNam
 //-----------------------------------------------------------------------------
 // Iteration methods
 //-----------------------------------------------------------------------------
-template <typename T, bool bCaseInsensitive, bool bDupeStrings> 
+template <typename T, bool bCaseInsensitive, bool bDupeStrings>
 unsigned CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::First() const
 {
 	return m_Elements.GetFirstHandle();
 }
 
-template <typename T, bool bCaseInsensitive, bool bDupeStrings> 
+template <typename T, bool bCaseInsensitive, bool bDupeStrings>
 unsigned CUtlHashDict<T, bCaseInsensitive, bDupeStrings>::Next( unsigned i ) const
 {
 	return m_Elements.GetNextHandle(i);

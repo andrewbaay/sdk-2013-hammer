@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -10,8 +10,8 @@
 #pragma once
 #endif
 
-#include "ToolInterface.h"
-#include "UtlVector.h"
+#include "toolinterface.h"
+#include "utlvector.h"
 
 
 class CToolAxisHandle;
@@ -39,7 +39,7 @@ public:
 	void Shutdown();
 
 	CBaseTool *GetActiveTool();
-	ToolID_t GetActiveToolID();				
+	ToolID_t GetActiveToolID();
 
 	CBaseTool *GetToolForID(ToolID_t eToolID);
 
@@ -64,10 +64,10 @@ private:
 	void DeactivateTool( CBaseTool *pTool );
 
 	CUtlVector<CBaseTool *> m_Tools;			// List of ALL the tools.
-	
+
 	CMapDoc		*m_pDocument;					// document the manager is responisble for
     CBaseTool	*m_pActiveTool;					// Pointer to the active new tool, NULL if none.
-	
+
 	CUtlVector<ToolID_t> m_ToolIDStack;			// Stack of active tool IDs, for PushTool/PopTool.
 };
 

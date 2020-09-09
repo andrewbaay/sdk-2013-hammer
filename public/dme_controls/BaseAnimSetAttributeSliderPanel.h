@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -13,7 +13,7 @@
 #include "datamodel/dmehandle.h"
 #include "vgui_controls/EditablePanel.h"
 #include "dme_controls/AnimSetAttributeValue.h"
-#include "dme_controls/logpreview.h"
+#include "dme_controls/LogPreview.h"
 #include "movieobjects/dmechannel.h"
 #include "dme_controls/BaseAnimSetPresetFaderPanel.h"
 
@@ -93,7 +93,7 @@ public:
 
 	struct VisItem_t
 	{
-		VisItem_t() : 
+		VisItem_t() :
 			element( NULL ), selected( false ), index( 0 )
 		{
 		}

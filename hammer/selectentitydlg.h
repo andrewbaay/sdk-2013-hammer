@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $Workfile:     $
 // $Date:         $
@@ -14,7 +14,7 @@
 #pragma once
 
 
-#include "MapClass.h"	// dvs: For CMapObjectList
+#include "mapclass.h"	// dvs: For CMapObjectList
 
 
 class CSelectEntityDlg : public CDialog

@@ -10,8 +10,8 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "RunMapExpertDlg.h"
-#include "RunMapCfgDlg.h"
+#include "runmapexpertdlg.h"
+#include "runmapcfgdlg.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -83,22 +83,22 @@ enum
 
 BEGIN_MESSAGE_MAP(CRunMapExpertDlg, CDialog)
 	//{{AFX_MSG_MAP(CRunMapExpertDlg)
-	ON_BN_CLICKED(IDC_BROWSECOMMAND, OnBrowsecommand)
-	ON_LBN_SELCHANGE(IDC_COMMANDLIST, OnSelchangeCommandlist)
-	ON_BN_CLICKED(IDC_INSERTPARM, OnInsertparm)
-	ON_BN_CLICKED(IDC_MOVEDOWN, OnMovedown)
-	ON_BN_CLICKED(IDC_MOVEUP, OnMoveup)
-	ON_BN_CLICKED(IDC_NEW, OnNew)
-	ON_BN_CLICKED(IDC_NORMAL, OnNormal)
-	ON_BN_CLICKED(IDC_REMOVE, OnRemove)
-	ON_EN_UPDATE(IDC_COMMAND, OnUpdateCommand)
-	ON_EN_UPDATE(IDC_PARAMETERS, OnUpdateParameters)
-	ON_BN_CLICKED(IDC_ENSURECHECK, OnEnsurecheck)
-	ON_EN_UPDATE(IDC_ENSUREFN, OnUpdateEnsurefn)
-	ON_CBN_SELCHANGE(IDC_CONFIGURATIONS, OnSelchangeConfigurations)
-	ON_BN_CLICKED(IDC_EDITCONFIGS, OnEditconfigs)
-	ON_COMMAND_EX_RANGE(id_InsertParmMapFileNoExt, id_InsertParmEnd, HandleInsertParm)
-	ON_COMMAND_EX_RANGE(id_BrExecutable, id_BrEnd, HandleInsertCommand)
+	ON_BN_CLICKED(IDC_BROWSECOMMAND, &ThisClass::OnBrowsecommand)
+	ON_LBN_SELCHANGE(IDC_COMMANDLIST, &ThisClass::OnSelchangeCommandlist)
+	ON_BN_CLICKED(IDC_INSERTPARM, &ThisClass::OnInsertparm)
+	ON_BN_CLICKED(IDC_MOVEDOWN, &ThisClass::OnMovedown)
+	ON_BN_CLICKED(IDC_MOVEUP, &ThisClass::OnMoveup)
+	ON_BN_CLICKED(IDC_NEW, &ThisClass::OnNew)
+	ON_BN_CLICKED(IDC_NORMAL, &ThisClass::OnNormal)
+	ON_BN_CLICKED(IDC_REMOVE, &ThisClass::OnRemove)
+	ON_EN_UPDATE(IDC_COMMAND, &ThisClass::OnUpdateCommand)
+	ON_EN_UPDATE(IDC_PARAMETERS, &ThisClass::OnUpdateParameters)
+	ON_BN_CLICKED(IDC_ENSURECHECK, &ThisClass::OnEnsurecheck)
+	ON_EN_UPDATE(IDC_ENSUREFN, &ThisClass::OnUpdateEnsurefn)
+	ON_CBN_SELCHANGE(IDC_CONFIGURATIONS, &ThisClass::OnSelchangeConfigurations)
+	ON_BN_CLICKED(IDC_EDITCONFIGS, &ThisClass::OnEditconfigs)
+	ON_COMMAND_EX_RANGE(id_InsertParmMapFileNoExt, id_InsertParmEnd, &ThisClass::HandleInsertParm)
+	ON_COMMAND_EX_RANGE(id_BrExecutable, id_BrEnd, &ThisClass::HandleInsertCommand)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 

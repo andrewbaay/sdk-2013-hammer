@@ -379,7 +379,7 @@ void* __cdecl operator new(size_t nSize)
 	return pResult;
 }
 
-void __cdecl operator delete(void* p)
+void __cdecl operator delete(void* p) noexcept
 {
 #if !defined(_AFX_NO_DEBUG_CRT) && defined(_DEBUG)
 		_free_dbg(p, _NORMAL_BLOCK);
@@ -394,7 +394,7 @@ void* __cdecl operator new[](size_t nSize)
 	return ::operator new(nSize);
 }
 
-void __cdecl operator delete[](void* p)
+void __cdecl operator delete[](void* p) noexcept
 {
 	::operator delete(p);
 }
@@ -438,7 +438,7 @@ void* __cdecl operator new(size_t nSize, int nType, LPCSTR lpszFileName, int nLi
 }
 
 #if _MSC_VER >= 1700
-void __cdecl operator delete(void* p, int nType, LPCSTR /* lpszFileName */, int /* nLine */)
+void __cdecl operator delete(void* p, int nType, LPCSTR /* lpszFileName */, int /* nLine */) noexcept
 {
 #if !defined(_AFX_NO_DEBUG_CRT) && defined(_DEBUG)
 		_free_dbg(p, nType);
@@ -453,7 +453,7 @@ void* __cdecl operator new[](size_t nSize, int nType, LPCSTR lpszFileName, int n
 {
 	return ::operator new(nSize, nType, lpszFileName, nLine);
 }
-void __cdecl operator delete[](void* p, int nType, LPCSTR lpszFileName, int nLine)
+void __cdecl operator delete[](void* p, int nType, LPCSTR lpszFileName, int nLine) noexcept
 {
 	::operator delete(p, nType, lpszFileName, nLine);
 }

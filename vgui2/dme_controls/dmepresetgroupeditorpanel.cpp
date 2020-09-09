@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2001, Valve LLC, All rights reserved. ============
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================
@@ -21,7 +21,7 @@
 #include "vgui/MouseCode.h"
 #include "vgui/IInput.h"
 #include "vgui/ISurface.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "tier1/utldict.h"
 #include "dme_controls/presetpicker.h"
 #include "vgui_controls/FileOpenDialog.h"
@@ -44,7 +44,7 @@ DEFINE_SOURCE_NOTIFY_SCOPE_GUARD( PresetGroup, NOTIFY_SOURCE_PRESET_GROUP_EDITOR
 #define PRESET_FILE_FORMAT "preset"
 
 //-----------------------------------------------------------------------------
-// 
+//
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
@@ -111,7 +111,7 @@ static int __cdecl SrcPresetNameSortFunc( vgui::ListPanel *pPanel, const vgui::L
 	return Q_stricmp( string1, string2 );
 }
 
-CDmePresetRemapPanel::CDmePresetRemapPanel( vgui::Panel *pParent, const char *pTitle ) : 
+CDmePresetRemapPanel::CDmePresetRemapPanel( vgui::Panel *pParent, const char *pTitle ) :
 	BaseClass( pParent, "DmePresetRemapPanel" )
 {
 	m_pSourcePresetGroup = new vgui::ComboBox( this, "SourcePresetGroup", 8, true );
@@ -160,7 +160,7 @@ void CDmePresetRemapPanel::CleanupContextMenu()
 void CDmePresetRemapPanel::RefreshPresetList( )
 {
 	m_pPresetRemapList->RemoveAll();
-							   
+
 	CDmaElementArray< CDmePreset > *pPresetList = m_hDestGroup.Get() ? &m_hDestGroup->GetPresets() : NULL;
 	if ( !pPresetList )
 		return;
@@ -189,12 +189,12 @@ void CDmePresetRemapPanel::RefreshPresetList( )
 		{
 			const char *pSource = pRemap->FindSourcePreset( pName );
 			CDmePreset *pSrcPreset = pSource ? m_hSourceGroup->FindPreset( pSource ) : NULL;
-			kv->SetString( "src", pSrcPreset ? pSrcPreset->GetName() : "" ); 
+			kv->SetString( "src", pSrcPreset ? pSrcPreset->GetName() : "" );
 			SetElementKeyValue( kv, "srcPreset", pSrcPreset );
 		}
 		else
 		{
-			kv->SetString( "src", "" ); 
+			kv->SetString( "src", "" );
 			SetElementKeyValue( kv, "srcPreset", NULL );
 		}
 
@@ -216,7 +216,7 @@ void CDmePresetRemapPanel::OnPresetPicked( KeyValues *pParams )
 	CDmePreset *pPreset = GetElementKeyValue< CDmePreset >( pParams, "preset" );
 	int nItemID = m_pPresetRemapList->GetSelectedItem( 0 );
 	KeyValues *kv = m_pPresetRemapList->GetItem( nItemID );
-	kv->SetString( "src", pPreset ? pPreset->GetName() : "" ); 
+	kv->SetString( "src", pPreset ? pPreset->GetName() : "" );
 	SetElementKeyValue( kv, "srcPreset", pPreset );
 	m_pPresetRemapList->ApplyItemChanges( nItemID );
 }
@@ -265,7 +265,7 @@ void CDmePresetRemapPanel::OnRemovePreset()
 
 	int nItemID = m_pPresetRemapList->GetSelectedItem( 0 );
 	KeyValues *kv = m_pPresetRemapList->GetItem( nItemID );
-	kv->SetString( "src", "" ); 
+	kv->SetString( "src", "" );
 	SetElementKeyValue( kv, "srcPreset", NULL );
 	m_pPresetRemapList->ApplyItemChanges( nItemID );
 }
@@ -319,7 +319,7 @@ void CDmePresetRemapPanel::DoModal( CDmeAnimationSet *pAnimationSet, CDmePresetG
 		CDmePresetGroup *pPresetGroup = presetGroupList[i];
 		if ( pPresetGroup == m_hDestGroup.Get() )
 			continue;
-		 
+
 		KeyValues *kv = new KeyValues( "entry" );
 		SetElementKeyValue( kv, "presetGroup", pPresetGroup );
 		int nItemID = m_pSourcePresetGroup->AddItem( pPresetGroup->GetName(), kv );
@@ -349,8 +349,8 @@ void CDmePresetRemapPanel::ApplyChangesToPresetRemap()
 	CDmePresetRemap *pPresetRemap = m_hDestGroup->GetOrAddPresetRemap();
 	pPresetRemap->m_SourcePresetGroup = pSourceName;
 	pPresetRemap->RemoveAll();
-	for ( int nItemID = m_pPresetRemapList->FirstItem(); 
-		nItemID != m_pPresetRemapList->InvalidItemID(); 
+	for ( int nItemID = m_pPresetRemapList->FirstItem();
+		nItemID != m_pPresetRemapList->InvalidItemID();
 		nItemID = m_pPresetRemapList->NextItem( nItemID ) )
 	{
 		KeyValues* pKeyValues = m_pPresetRemapList->GetItem( nItemID );
@@ -543,14 +543,14 @@ void CDmePresetGroupEditorPanel::RefreshAnimationSet()
 {
 	CDmePresetGroup *pSelectedPresetGroup = GetSelectedPresetGroup();
 
-	m_pPresetGroupList->RemoveAll();	
+	m_pPresetGroupList->RemoveAll();
 	if ( !m_hAnimationSet.Get() )
 		return;
-	
+
 	const CDmaElementArray< CDmePresetGroup > &presetGroupList = m_hAnimationSet->GetPresetGroups();
 	int nCount = presetGroupList.Count();
 	for ( int i = 0; i < nCount; ++i )
-	{ 
+	{
 		CDmePresetGroup *pPresetGroup = presetGroupList[i];
 		Assert( pPresetGroup );
 		if ( !pPresetGroup )
@@ -558,11 +558,11 @@ void CDmePresetGroupEditorPanel::RefreshAnimationSet()
 
 		bool bIsVisible = pPresetGroup->m_bIsVisible;
 		KeyValues *kv = new KeyValues( "node", "name", pPresetGroup->GetName() );
-		kv->SetString( "visible", bIsVisible ? "Yes" : "No" ); 
-		kv->SetString( "shared", pPresetGroup->IsShared() ? "Yes" : "No" ); 
-		kv->SetString( "readonly", pPresetGroup->m_bIsReadOnly ? "Yes" : "No" ); 
+		kv->SetString( "visible", bIsVisible ? "Yes" : "No" );
+		kv->SetString( "shared", pPresetGroup->IsShared() ? "Yes" : "No" );
+		kv->SetString( "readonly", pPresetGroup->m_bIsReadOnly ? "Yes" : "No" );
 		SetElementKeyValue( kv, "presetGroup", pPresetGroup );
-		kv->SetColor( "cellcolor", pPresetGroup->m_bIsReadOnly ? Color( 255, 0, 0, 255 ) : Color( 255, 255, 255, 255 ) ); 
+		kv->SetColor( "cellcolor", pPresetGroup->m_bIsReadOnly ? Color( 255, 0, 0, 255 ) : Color( 255, 255, 255, 255 ) );
 		kv->SetInt( "index", i );
 		int nItemID = m_pPresetGroupList->AddItem( kv, 0, false, false );
 
@@ -594,7 +594,7 @@ void CDmePresetGroupEditorPanel::RefreshPresetNames()
 {
 	CDmePreset *pSelectedPreset = GetSelectedPreset();
 
-	m_pPresetList->RemoveAll();	
+	m_pPresetList->RemoveAll();
 	if ( !m_hAnimationSet.Get() )
 		return;
 
@@ -642,13 +642,13 @@ CDmePreset* CDmePresetGroupEditorPanel::GetSelectedPreset()
 
 
 //-----------------------------------------------------------------------------
-// Selects a particular preset 
+// Selects a particular preset
 //-----------------------------------------------------------------------------
 void CDmePresetGroupEditorPanel::SetSelectedPreset( CDmePreset* pPreset )
 {
 	m_pPresetList->ClearSelectedItems();
-	for ( int nItemID = m_pPresetList->FirstItem(); 
-		nItemID != m_pPresetList->InvalidItemID(); 
+	for ( int nItemID = m_pPresetList->FirstItem();
+		nItemID != m_pPresetList->InvalidItemID();
 		nItemID = m_pPresetList->NextItem( nItemID ) )
 	{
 		KeyValues* pKeyValues = m_pPresetList->GetItem( nItemID );
@@ -686,8 +686,8 @@ CDmePresetGroup* CDmePresetGroupEditorPanel::GetSelectedPresetGroup()
 void CDmePresetGroupEditorPanel::SetSelectedPresetGroup( CDmePresetGroup* pPresetGroup )
 {
 	m_pPresetGroupList->ClearSelectedItems();
-	for ( int nItemID = m_pPresetGroupList->FirstItem(); 
-		nItemID != m_pPresetGroupList->InvalidItemID(); 
+	for ( int nItemID = m_pPresetGroupList->FirstItem();
+		nItemID != m_pPresetGroupList->InvalidItemID();
 		nItemID = m_pPresetGroupList->NextItem( nItemID ) )
 	{
 		KeyValues* pKeyValues = m_pPresetGroupList->GetItem( nItemID );
@@ -730,7 +730,7 @@ void CDmePresetGroupEditorPanel::PerformAddPreset( const char *pNewPresetName )
 	if ( !pPresetGroup )
 		return;
 
-	if ( HasDuplicatePresetName( pNewPresetName ) ) 
+	if ( HasDuplicatePresetName( pNewPresetName ) )
 		return;
 
 	CPresetGroupUndoScopeGuard sg( NOTIFY_SETDIRTYFLAG, "Add Preset" );
@@ -756,7 +756,7 @@ void CDmePresetGroupEditorPanel::PerformRenamePreset( const char *pNewPresetName
 	if ( !pPreset )
 		return;
 
-	if ( HasDuplicatePresetName( pNewPresetName, pPreset ) ) 
+	if ( HasDuplicatePresetName( pNewPresetName, pPreset ) )
 		return;
 
 	CPresetGroupUndoScopeGuard sg( NOTIFY_SETDIRTYFLAG, "Rename Preset" );
@@ -769,7 +769,7 @@ void CDmePresetGroupEditorPanel::PerformRenamePreset( const char *pNewPresetName
 
 
 //-----------------------------------------------------------------------------
-// Add a preset 
+// Add a preset
 //-----------------------------------------------------------------------------
 void CDmePresetGroupEditorPanel::OnAddPreset()
 {
@@ -780,7 +780,7 @@ void CDmePresetGroupEditorPanel::OnAddPreset()
 
 
 //-----------------------------------------------------------------------------
-// Rename a preset 
+// Rename a preset
 //-----------------------------------------------------------------------------
 void CDmePresetGroupEditorPanel::OnRenamePreset()
 {
@@ -1049,8 +1049,8 @@ bool CDmePresetGroupEditorPanel::OnReadFileFromDisk( const char *pFileName, cons
 			if ( m_hAnimationSet->FindPresetGroup( pPresetRemap->m_SourcePresetGroup ) == NULL )
 			{
 				char pBuf[512];
-				Q_snprintf( pBuf, sizeof(pBuf), 
-					"Import contains a remap which refers to an unknown preset group \"%s\"!\n", 
+				Q_snprintf( pBuf, sizeof(pBuf),
+					"Import contains a remap which refers to an unknown preset group \"%s\"!\n",
 					pPresetRemap->m_SourcePresetGroup.Get() );
 				vgui::MessageBox *pError = new vgui::MessageBox( "Bad source remap name!", pBuf, this );
 				pError->DoModal();
@@ -1117,7 +1117,7 @@ bool CDmePresetGroupEditorPanel::OnWriteFileToDisk( const char *pFileName, const
 	CDmePresetGroup *pRoot = CreateElement< CDmePresetGroup >( pPresetGroupName, DMFILEID_INVALID );
 	CDmaElementArray< CDmePreset >& presets = pRoot->GetPresets( );
 
-	// Build list of selected presets 
+	// Build list of selected presets
 	for ( int i = 0; i < nCount; ++i )
 	{
 		char pBuf[32];
@@ -1193,7 +1193,7 @@ void CDmePresetGroupEditorPanel::OnPresetPicked( KeyValues *pParams )
 	if ( nCount == 0 )
 		return;
 
-	// Build list of selected presets 
+	// Build list of selected presets
 	for ( int i = 0; i < nCount; ++i )
 	{
 		char pBuf[32];
@@ -1328,7 +1328,7 @@ void CDmePresetGroupEditorPanel::OnRemoveDefaultControls()
 	for ( int i = 0; i < nPresetCount; ++i )
 	{
 		CDmePreset *pPreset = presets[i];
-		CDmrElementArray< CDmElement > controls = pPreset->GetControlValues();	
+		CDmrElementArray< CDmElement > controls = pPreset->GetControlValues();
 		int nControlCount = controls.Count();
 		for ( int j = nControlCount; --j >= 0; )
 		{
@@ -1404,7 +1404,7 @@ void CDmePresetGroupEditorPanel::OnRemapPresets()
 	if ( !pSourcePresetGroup )
 	{
 		char pBuf[512];
-		Q_snprintf( pBuf, sizeof(pBuf), "Unable to find preset group name %s in animation set %s!\n", 
+		Q_snprintf( pBuf, sizeof(pBuf), "Unable to find preset group name %s in animation set %s!\n",
 			pPresetRemap->m_SourcePresetGroup.Get(), m_hAnimationSet->GetName() );
 		vgui::MessageBox *pError = new vgui::MessageBox( "Bad source remap name!", pBuf, this );
 		pError->DoModal();
@@ -1493,7 +1493,7 @@ void CDmePresetGroupEditorPanel::OnOpenContextMenu( KeyValues *kv )
 
 	if ( pPanel != m_pPresetGroupList )
 		return;
-    
+
 	m_hContextMenu = new vgui::Menu( this, "ActionMenu" );
 	m_hContextMenu->AddMenuItem( "#DmePresetGroupEditor_AddGroup", new KeyValues( "AddGroup" ), this );
 	m_hContextMenu->AddMenuItem( "#DmePresetGroupEditor_AddPhonemeGroup", new KeyValues( "AddPhonemeGroup" ), this );
@@ -1595,7 +1595,7 @@ void CDmePresetGroupEditorPanel::PerformAddGroup( const char *pNewGroupName )
 	if ( !m_hAnimationSet )
 		return;
 
-	if ( HasDuplicateGroupName( pNewGroupName ) ) 
+	if ( HasDuplicateGroupName( pNewGroupName ) )
 		return;
 
 	CPresetGroupUndoScopeGuard sg( NOTIFY_SETDIRTYFLAG, "Add Preset Group" );
@@ -1616,7 +1616,7 @@ void CDmePresetGroupEditorPanel::PerformAddPhonemeGroup( const char *pNewGroupNa
 	if ( !m_hAnimationSet )
 		return;
 
-	if ( HasDuplicateGroupName( pNewGroupName ) ) 
+	if ( HasDuplicateGroupName( pNewGroupName ) )
 		return;
 
 	CPresetGroupUndoScopeGuard sg( NOTIFY_SETDIRTYFLAG, "Add Phoneme Preset Group" );
@@ -1656,7 +1656,7 @@ void CDmePresetGroupEditorPanel::PerformRenameGroup( const char *pNewGroupName )
 	if ( !pPresetGroup )
 		return;
 
-	if ( HasDuplicateGroupName( pNewGroupName, pPresetGroup ) ) 
+	if ( HasDuplicateGroupName( pNewGroupName, pPresetGroup ) )
 		return;
 
 	CPresetGroupUndoScopeGuard sg( NOTIFY_SETDIRTYFLAG, "Rename Preset Group" );
@@ -1674,7 +1674,7 @@ void CDmePresetGroupEditorPanel::PerformRenameGroup( const char *pNewGroupName )
 void CDmePresetGroupEditorPanel::OnInputCompleted( KeyValues *pKeyValues )
 {
 	const char *pName = pKeyValues->GetString( "text", NULL );
-	if ( !pName || !pName[0] )						  
+	if ( !pName || !pName[0] )
 		return;
 
 	if ( pKeyValues->FindKey( "OnAddGroup" ) )
@@ -1919,7 +1919,7 @@ void CDmePresetGroupEditorPanel::MovePresetIntoGroup( CDmePreset *pPreset, CDmeP
 //-----------------------------------------------------------------------------
 // Constructor, destructor
 //-----------------------------------------------------------------------------
-CDmePresetGroupListPanel::CDmePresetGroupListPanel( vgui::Panel *pParent, const char *pName, CDmePresetGroupEditorPanel *pComboPanel ) : 
+CDmePresetGroupListPanel::CDmePresetGroupListPanel( vgui::Panel *pParent, const char *pName, CDmePresetGroupEditorPanel *pComboPanel ) :
 	BaseClass( pParent, pName ), m_pPresetGroupPanel( pComboPanel )
 {
 }
@@ -1964,7 +1964,7 @@ void CDmePresetGroupListPanel::OnKeyCodeTyped( vgui::KeyCode code )
 			m_pPresetGroupPanel->OnMoveGroupUp();
 			return;
 		}
-		
+
 		if ( code == KEY_DOWN )
 		{
 			m_pPresetGroupPanel->OnMoveGroupDown();
@@ -2067,7 +2067,7 @@ void CDmePresetGroupListPanel::OnPanelDropped( CUtlVector< KeyValues * >& msgLis
 // Mouse is now over a droppable panel
 //-----------------------------------------------------------------------------
 void CDmePresetGroupListPanel::OnDroppablePanelPaint( CUtlVector< KeyValues * >& msglist, CUtlVector< Panel * >& dragPanels )
-{ 
+{
 	// Discover the cell the panel is over
 	int x, y, w, h, row, column;
 	vgui::input()->GetCursorPos( x, y );
@@ -2134,7 +2134,7 @@ void CDmePresetListPanel::OnKeyCodeTyped( vgui::KeyCode code )
 				return;
 			}
 		}
-	}	
+	}
 
 	vgui::ListPanel::OnKeyCodeTyped( code );
 }
@@ -2234,7 +2234,7 @@ void CDmePresetListPanel::OnDroppablePanelPaint( CUtlVector< KeyValues * >& msgl
 // Purpose: Combination system editor frame
 //
 //-----------------------------------------------------------------------------
-CDmePresetGroupEditorFrame::CDmePresetGroupEditorFrame( vgui::Panel *pParent, const char *pTitle ) : 
+CDmePresetGroupEditorFrame::CDmePresetGroupEditorFrame( vgui::Panel *pParent, const char *pTitle ) :
 	BaseClass( pParent, "DmePresetGroupEditorFrame" )
 {
 	SetDeleteSelfOnClose( true );

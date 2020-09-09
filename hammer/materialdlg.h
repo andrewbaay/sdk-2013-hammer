@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -9,7 +9,7 @@
 #pragma once
 
 #include "resource.h"
-#include "smoothinggroupmgr.h"
+#include "SmoothingGroupMgr.h"
 
 //=============================================================================
 //

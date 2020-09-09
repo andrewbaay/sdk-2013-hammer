@@ -12,7 +12,7 @@
 #endif
 
 #include "movieobjects/dmeshape.h"
-#include "materialsystem/materialsystemutil.h"
+#include "materialsystem/MaterialSystemUtil.h"
 
 //-----------------------------------------------------------------------------
 // Forward Declarations

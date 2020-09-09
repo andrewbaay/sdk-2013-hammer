@@ -81,7 +81,7 @@ int GetSIMDRandContext( void )
 {
 	for(;;)
 	{
-		for(int i=0; i < NELEMS( s_SIMDRandContexts ); i++)
+		for(uint i=0; i < NELEMS( s_SIMDRandContexts ); i++)
 		{
 			if ( ! s_nRandContextsInUse[i] )				// available?
 			{

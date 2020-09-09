@@ -387,7 +387,7 @@ inline void	bf_write::WriteOneBitAt( int iBit, int nValue )
 #endif
 }
 
-BITBUF_INLINE void bf_write::WriteUBitLong( unsigned int curData, int numbits, bool bCheckRange ) RESTRICT
+BITBUF_INLINE void bf_write::WriteUBitLong( unsigned int curData, int numbits, bool bCheckRange )
 {
 #ifdef _DEBUG
 	// Make sure it doesn't overflow.
@@ -565,8 +565,8 @@ public:
 	
 	float			ReadBitAngle( int numbits );
 
-	unsigned int	ReadUBitLong( int numbits ) RESTRICT;
-	unsigned int	ReadUBitLongNoInline( int numbits ) RESTRICT;
+	unsigned int	ReadUBitLong( int numbits );
+	unsigned int	ReadUBitLongNoInline( int numbits );
 	unsigned int	PeekUBitLong( int numbits );
 	int				ReadSBitLong( int numbits );
 
@@ -628,7 +628,7 @@ public:
 	char*			ReadAndAllocateString( bool *pOverflow = 0 );
 
 	// Returns nonzero if any bits differ
-	int				CompareBits( bf_read * RESTRICT other, int bits ) RESTRICT;
+	int				CompareBits( bf_read * RESTRICT other, int bits );
 	int				CompareBitsAt( int offset, bf_read * RESTRICT other, int otherOffset, int bits ) RESTRICT;
 
 // Status.
@@ -766,7 +766,7 @@ BITBUF_INLINE unsigned int bf_read::ReadUBitVar()
 	return sixbits >> 2;
 }
 
-BITBUF_INLINE unsigned int bf_read::ReadUBitLong( int numbits ) RESTRICT
+BITBUF_INLINE unsigned int bf_read::ReadUBitLong( int numbits )
 {
 	Assert( numbits > 0 && numbits <= 32 );
 
@@ -797,7 +797,7 @@ BITBUF_INLINE unsigned int bf_read::ReadUBitLong( int numbits ) RESTRICT
 	return (dw1 | dw2) & bitmask;
 }
 
-BITBUF_INLINE int bf_read::CompareBits( bf_read * RESTRICT other, int numbits ) RESTRICT
+BITBUF_INLINE int bf_read::CompareBits( bf_read * RESTRICT other, int numbits )
 {
 	return (ReadUBitLong(numbits) != other->ReadUBitLong(numbits));
 }

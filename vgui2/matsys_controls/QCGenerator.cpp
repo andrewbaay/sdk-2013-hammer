@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -107,10 +107,10 @@ void VGUIMessageBox( vgui::Panel *pParent, const char *pTitle, const char *pMsg,
 void QCInfo::SyncFromControls()
 {
 	char tempText[MAX_PATH];
-	
+
 	vgui::Panel *pTargetField = pQCGenerator->FindChildByName( "staticPropCheck" );
 	bStaticProp = ((CheckButton *)pTargetField)->IsSelected();
-	 
+
 	pTargetField = pQCGenerator->FindChildByName( "mostlyOpaqueCheck" );
 	bMostlyOpaque = ((CheckButton *)pTargetField)->IsSelected();
 
@@ -135,7 +135,7 @@ void QCInfo::SyncFromControls()
 	fScale = atof(tempText);
 
     pTargetField = pQCGenerator->FindChildByName( "collisionSMDField" );
-	((TextEntry *)pTargetField)->GetText( tempText, MAX_PATH );	
+	((TextEntry *)pTargetField)->GetText( tempText, MAX_PATH );
 	V_strcpy_safe( pszCollisionPath, tempText );
 
 	pTargetField = pQCGenerator->FindChildByName( "surfacePropertyDropDown" );
@@ -155,7 +155,7 @@ void QCInfo::SyncFromControls()
 		LODInfo newLOD;
 
 		V_strcpy_safe( newLOD.pszFilename, key->GetString( "SMD" ) );
-		newLOD.iLOD = key->GetInt( "LOD" );		
+		newLOD.iLOD = key->GetInt( "LOD" );
         LODs.AddToTail( newLOD );
 	}
 }
@@ -166,10 +166,10 @@ void QCInfo::SyncFromControls()
 void QCInfo::SyncToControls()
 {
 	char tempText[MAX_PATH];
-	
+
 	vgui::Panel *pTargetField = pQCGenerator->FindChildByName( "staticPropCheck" );
 	((CheckButton *)pTargetField)->SetSelected( bStaticProp );
-	 
+
 	pTargetField = pQCGenerator->FindChildByName( "mostlyOpaqueCheck" );
 	((CheckButton *)pTargetField)->SetSelected( bMostlyOpaque );
 
@@ -210,11 +210,11 @@ void QCInfo::SyncToControls()
 			((ComboBox *)pTargetField)->SetText( tempText );
 			break;
 		}
-	}   
+	}
 }
 
 CBrowseButton::CBrowseButton( vgui::Panel *pParent ) : BaseClass( pParent, "Browse Button", "...", pParent, "browse" )
-{	
+{
 	SetParent( pParent );
 	pszStartingDirectory = NULL;
 	pszFileFilter = NULL;
@@ -254,7 +254,7 @@ void CBrowseButton::InitBrowseInfo( int x, int y, const char *pszName, const cha
 	SetCharVar( GetStartingDirectory(), pszDir );
 	SetCharVar( GetFileFilter(), pszFilter );
 	SetCharVar( GetTargetField(), pszField );
-	SetActionMessage();	
+	SetActionMessage();
 }
 
 void CBrowseButton::SetActionMessage()
@@ -295,26 +295,26 @@ const char *ParseKeyvalue( const char *pBuffer, char *key, char *value )
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
 CQCGenerator::CQCGenerator( vgui::Panel *pParent, const char *pszPath, const char *pszScene ) : BaseClass( pParent, "QCGenerator" )
-{	
+{
 	m_QCInfo_t.Init( this );
 
 	SetMinimumSize(846, 770);
 
 	m_pLODPanel = new ListPanel(this, "LODList");
 	m_pLODPanel->SetSelectIndividualCells( true );
-	m_pLODPanel->AddColumnHeader(0, "SMD", "LOD SMD", 450, 0);	
-	m_pLODPanel->AddColumnHeader(1, "LOD", "LOD Distance", 50, 0);		
+	m_pLODPanel->AddColumnHeader(0, "SMD", "LOD SMD", 450, 0);
+	m_pLODPanel->AddColumnHeader(1, "LOD", "LOD Distance", 50, 0);
 	m_pLODPanel->AddActionSignalTarget( this );
 	m_pLODPanel->SetMouseInputEnabled( true );
 
-	LoadControlSettings( "QCGenerator.res" );	
+	LoadControlSettings( "QCGenerator.res" );
 
 	m_pCollisionBrowseButton = new CBrowseButton( this );
 	m_pCollisionBrowseButton->InitBrowseInfo( 808, 158, "collisionBrowseButton", pszPath, "*.smd", "collisionSMDField" );
 
 	char szTerminatedPath[1024] = "\0";
 	sprintf( szTerminatedPath, "%s\\", pszPath );
-	
+
 	InitializeSMDPaths( szTerminatedPath, pszScene );
 
 	char *pszMaterialsStart = strrchrcount( szTerminatedPath, '\\', 3 ) + 1;
@@ -327,23 +327,23 @@ CQCGenerator::CQCGenerator( vgui::Panel *pParent, const char *pszPath, const cha
 	char szSearchPath[1024] = "\0";
 
 	// Get the currently set game configuration
-	GetVConfigRegistrySetting( GAMEDIR_TOKEN, szGamePath, sizeof( szGamePath ) );	
+	GetVConfigRegistrySetting( GAMEDIR_TOKEN, szGamePath, sizeof( szGamePath ) );
 	static const char *pSurfacePropFilename = "\\scripts\\surfaceproperties.txt";
 
 	sprintf( szSearchPath, "%s%s", szGamePath, pSurfacePropFilename );
 
-	FileHandle_t fp = g_pFullFileSystem->Open( szSearchPath, "rb" );	 
+	FileHandle_t fp = g_pFullFileSystem->Open( szSearchPath, "rb" );
 
 	if ( !fp )
 	{
 		//the set game configuration didn't have a surfaceproperties file; we are grabbing it from hl2
-		//TODO:  This only works if they are in a subdirectory that is a peer to an hl2 directory 
+		//TODO:  This only works if they are in a subdirectory that is a peer to an hl2 directory
 		//		that contains the file.  It potentially needs to search the entire drive or prompt for the location
 		char *pszEndGamePath = Q_strrchr( szGamePath, '\\' );
 		pszEndGamePath[0] = 0;
 		V_strcat_safe( szGamePath, "\\hl2" );
 		sprintf( szSearchPath, "%s%s", szGamePath, pSurfacePropFilename );
-		fp = g_pFullFileSystem->Open( szSearchPath, "rb" );	
+		fp = g_pFullFileSystem->Open( szSearchPath, "rb" );
 	}
 
 	int len = g_pFullFileSystem->Size( fp );
@@ -353,13 +353,13 @@ CQCGenerator::CQCGenerator( vgui::Panel *pParent, const char *pszPath, const cha
 
 	char key[MAX_KEYVALUE], value[MAX_KEYVALUE];
 
-	vgui::Panel *pSurfacePropDropDown = FindChildByName( "surfacePropertyDropDown" );		
+	vgui::Panel *pSurfacePropDropDown = FindChildByName( "surfacePropertyDropDown" );
 
 	//filling up the surface property dropdown
 	while ( szSurfacePropContents )
 	{
 		szSurfacePropContents = ParseKeyvalue( szSurfacePropContents, key, value );
-		((ComboBox *)pSurfacePropDropDown)->AddItem( key, NULL );							
+		((ComboBox *)pSurfacePropDropDown)->AddItem( key, NULL );
 		while ( szSurfacePropContents )
 		{
 			szSurfacePropContents = ParseKeyvalue( szSurfacePropContents, key, value );
@@ -368,7 +368,7 @@ CQCGenerator::CQCGenerator( vgui::Panel *pParent, const char *pszPath, const cha
 				break;
 			}
 		}
-	}	
+	}
     m_QCInfo_t.SyncToControls();
 
 	m_pLODEdit = 0;
@@ -382,7 +382,7 @@ CQCGenerator::~CQCGenerator()
 }
 
 void CQCGenerator::OnCommand( const char *command )
-{	
+{
 	if ( Q_stricmp( command, "createQC" ) == 0 )
 	{
 		m_QCInfo_t.SyncFromControls();
@@ -398,7 +398,7 @@ void CQCGenerator::OnCommand( const char *command )
 		//edit
 		EditLOD();
 	}
-	
+
 	BaseClass::OnCommand( command );
 }
 
@@ -411,20 +411,20 @@ void CQCGenerator::OnKeyCodeTyped( KeyCode code )
 			EditLOD();
 	}
 }
-	
+
 
 void CQCGenerator::OnBrowse( KeyValues *data )
 {
     V_strcpy_safe( m_szTargetField, data->GetString( "targetField" ) );
 	const char *filter = data->GetString( "filter" );
-	
+
 	if ( Q_strlen( filter ) == 0 )
 	{
 //		BrowseDirectory( data );
 	}
 	else
 	{
-		BrowseFile( data );	
+		BrowseFile( data );
 	}
 }
 
@@ -435,24 +435,24 @@ void CQCGenerator::BrowseDirectory( KeyValues *data )
 	DirectorySelectDialog *pDialog = new DirectorySelectDialog( this, "Select Directory" );
 	pDialog->AddActionSignalTarget( this );
 	pDialog->DoModal();
-	pDialog->SetStartDirectory( data->GetString( "directory" ) );	
+	pDialog->SetStartDirectory( data->GetString( "directory" ) );
 }
 */
 
 void CQCGenerator::BrowseFile( KeyValues *data )
-{	    
+{
 	const char *filter = data->GetString( "filter" );
 
 	FileOpenDialog *pDialog = new FileOpenDialog( this, "Select File", true );
 	pDialog->AddFilter( filter, filter, true );
 	pDialog->AddActionSignalTarget(this);
-	pDialog->SetStartDirectory( data->GetString( "directory" ) );	
+	pDialog->SetStartDirectory( data->GetString( "directory" ) );
 	pDialog->DoModal( true );
 }
 
-void CQCGenerator::OnFileSelected( KeyValues *data ) 
+void CQCGenerator::OnFileSelected( KeyValues *data )
 {
-	if ( m_szTargetField )
+	if ( *m_szTargetField )
 	{
 		vgui::Panel *pTargetField = FindChildByName( m_szTargetField );
 		((TextEntry *)pTargetField)->SetText( data->GetString( "fullpath" ) );
@@ -460,9 +460,9 @@ void CQCGenerator::OnFileSelected( KeyValues *data )
 	}
 }
 
-void CQCGenerator::OnDirectorySelected( KeyValues *data ) 
+void CQCGenerator::OnDirectorySelected( KeyValues *data )
 {
-	if ( m_szTargetField )
+	if ( *m_szTargetField )
 	{
 		vgui::Panel *pTargetField = FindChildByName( m_szTargetField );
 		((TextEntry *)pTargetField)->SetText( data->GetString( "dir" ) );
@@ -485,11 +485,11 @@ bool CQCGenerator::GenerateQCFile()
 	if (!pSaveFile)
 	{
 		char szSaveError[1024] = "";
-		Q_snprintf( szSaveError, 1024, "Save failed: invalid file name '%s'\n\nDirectory '%s' must exist.", szName, szPath );	
+		Q_snprintf( szSaveError, 1024, "Save failed: invalid file name '%s'\n\nDirectory '%s' must exist.", szName, szPath );
 		VGUIMessageBox( this, "QC Generator error", szSaveError );
 		return 0;
-	}	
-		
+	}
+
 	//write qc header
 	g_pFullFileSystem->FPrintf( pSaveFile, "//\n// .qc file version 1.0\n\n");
 	//write out modelname info
@@ -530,7 +530,7 @@ bool CQCGenerator::GenerateQCFile()
 	for( int i = 0; i < m_QCInfo_t.LODs.Count(); i++ )
 	{
 		LODInfo thisLOD = m_QCInfo_t.LODs.Element( i );
-		g_pFullFileSystem->FPrintf( pSaveFile, "$lod %d\n{\n\treplacemodel \"%s\" \"%s\"\n}\n\n", thisLOD.iLOD, strrchr(m_QCInfo_t.pszSMDPath, '\\')+1, thisLOD.pszFilename );		
+		g_pFullFileSystem->FPrintf( pSaveFile, "$lod %d\n{\n\treplacemodel \"%s\" \"%s\"\n}\n\n", thisLOD.iLOD, strrchr(m_QCInfo_t.pszSMDPath, '\\')+1, thisLOD.pszFilename );
 	}
 
 	if ( m_QCInfo_t.bDisableCollision != true )
@@ -542,7 +542,7 @@ bool CQCGenerator::GenerateQCFile()
 		{
 			g_pFullFileSystem->FPrintf( pSaveFile, "$collisionmodel \"%s\"", strrchr( m_QCInfo_t.pszSMDPath, '\\' ) + 1 );
 		}
-		else 
+		else
 		{
 			if( Q_strcmp( m_QCInfo_t.pszCollisionPath, "" ) )
 			{
@@ -560,33 +560,33 @@ bool CQCGenerator::GenerateQCFile()
 		{
 			g_pFullFileSystem->FPrintf( pSaveFile, "\t$mass %f\n", m_QCInfo_t.fMass );
 		}
-		
+
 		if ( m_QCInfo_t.bConcave == true )
 		{
 			g_pFullFileSystem->FPrintf( pSaveFile, "\t$concave\n" );
 		}
 		g_pFullFileSystem->FPrintf( pSaveFile, "}\n\n");
 	}
-	    	
+
 	g_pFullFileSystem->Close( pSaveFile );
 
 	char szCommand[MAX_PATH];
 	char szGamePath[MAX_PATH];
-	
+
 	char studiomdlPath[512];
 	g_pFullFileSystem->RelativePathToFullPath( "studiomdl.bat", NULL, studiomdlPath, sizeof( studiomdlPath ));
 
-	GetVConfigRegistrySetting( GAMEDIR_TOKEN, szGamePath, sizeof( szGamePath ) );	
+	GetVConfigRegistrySetting( GAMEDIR_TOKEN, szGamePath, sizeof( szGamePath ) );
 
 #ifdef WIN32
-	STARTUPINFO startup; 
-	PROCESS_INFORMATION process; 
+	STARTUPINFO startup;
+	PROCESS_INFORMATION process;
 
 
-	memset(&startup, 0, sizeof(startup)); 
-	startup.cb = sizeof(startup); 
+	memset(&startup, 0, sizeof(startup));
+	startup.cb = sizeof(startup);
 
-	
+
 	sprintf( szCommand, "%s -game %s %s", studiomdlPath, szGamePath, szName);
 	bool bReturn = CreateProcess( NULL, szCommand, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startup, &process);
 #else
@@ -603,8 +603,8 @@ void CQCGenerator::InitializeSMDPaths( const char *pszPath, const char *pszScene
 	FileFindHandle_t *pFileHandle = new FileFindHandle_t();
 
 	g_pFullFileSystem->AddSearchPath( pszPath, "SMD_DIR" );
-	
-	const char *filename = g_pFullFileSystem->FindFirst( "*.smd", pFileHandle );	
+
+	const char *filename = g_pFullFileSystem->FindFirst( "*.smd", pFileHandle );
 
 	bool bFoundReference = false;
 	bool bFoundCollision = false;
@@ -616,9 +616,9 @@ void CQCGenerator::InitializeSMDPaths( const char *pszPath, const char *pszScene
 	int nSearchLength = Q_strlen( pszScene );
 
 	int currentLOD = 1;
-	
+
 	while( filename )
-	{        
+	{
 		if ( !strncmp( startName, filename, nSearchLength ) )
 		{
 			const char *filenameEnd = filename + nSearchLength;
@@ -656,9 +656,9 @@ void CQCGenerator::InitializeSMDPaths( const char *pszPath, const char *pszScene
 	if (!bFoundReference )
 	{
 		V_strcat_safe( m_QCInfo_t.pszSMDPath, pszPath );
-		V_strcat_safe( m_QCInfo_t.pszSMDPath, pszScene );		
+		V_strcat_safe( m_QCInfo_t.pszSMDPath, pszScene );
 		V_strcat_safe( m_QCInfo_t.pszSMDPath, ".smd" );
-		Q_snprintf( pszRefMessage, 1024, "Reference SMD not found.\n\nValid default reference SMDs are %s%s_ref*.smd and %s%s.smd\nUsing default of %s. Model will not compile.\n\n", pszPath, pszScene, pszPath, pszScene, m_QCInfo_t.pszSMDPath );		
+		Q_snprintf( pszRefMessage, 1024, "Reference SMD not found.\n\nValid default reference SMDs are %s%s_ref*.smd and %s%s.smd\nUsing default of %s. Model will not compile.\n\n", pszPath, pszScene, pszPath, pszScene, m_QCInfo_t.pszSMDPath );
 	}
 	if ( !bFoundCollision )
 	{
@@ -705,7 +705,7 @@ void CQCGenerator::EditLOD()
 }
 
 void CQCGenerator::OnNewLODText()
-{		
+{
 	KeyValues *pEditItem = m_pLODPanel->GetItem( m_nSelectedSequence );
 	KeyValues *pListItem = pEditItem;
 	wchar_t szEditText[MAX_PATH];

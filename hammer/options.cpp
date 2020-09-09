@@ -5,15 +5,15 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "Options.h"
+#include "options.h"
 #include "hammer.h"
-#include "MainFrm.h"
+#include "mainfrm.h"
 #include "mapdoc.h"
 #include "KeyValues.h"
 #include "ConfigManager.h"
-#include "GlobalFunctions.h"
-#include "CustomMessages.h"
-#include "OptionProperties.h"
+#include "globalfunctions.h"
+#include "custommessages.h"
+#include "optionproperties.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>

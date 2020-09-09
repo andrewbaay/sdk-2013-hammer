@@ -38,7 +38,7 @@ enum ChunkFileOpenMode_t
 //
 // Return codes.
 //
-enum ChunkFileResult_t
+enum ChunkFileResult_t : unsigned char
 {
 	ChunkFile_Ok = 0,
 	ChunkFile_Fail,

@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -13,8 +13,8 @@
 
 
 #include "resource.h"
-#include "IEditorTexture.h"
-#include "wndTex.h"
+#include "ieditortexture.h"
+#include "wndtex.h"
 
 
 class CReplaceTexDlg : public CDialog

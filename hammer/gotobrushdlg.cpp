@@ -8,20 +8,28 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "GotoBrushDlg.h"
+#include "gotobrushdlg.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
 
+
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunused-local-typedef"
+#endif
 
 BEGIN_MESSAGE_MAP(CGotoBrushDlg, CDialog)
 	//{{AFX_MSG_MAP(CGotoBrushDlg)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CGotoBrushDlg::CGotoBrushDlg(CWnd *pParent)
 	: CDialog(CGotoBrushDlg::IDD, pParent)
@@ -33,8 +41,8 @@ CGotoBrushDlg::CGotoBrushDlg(CWnd *pParent)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pDX - 
+// Purpose:
+// Input  : pDX -
 //-----------------------------------------------------------------------------
 void CGotoBrushDlg::DoDataExchange(CDataExchange* pDX)
 {
@@ -46,9 +54,9 @@ void CGotoBrushDlg::DoDataExchange(CDataExchange* pDX)
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
-void CGotoBrushDlg::OnOK() 
+void CGotoBrushDlg::OnOK()
 {
 	CDialog::OnOK();
 }

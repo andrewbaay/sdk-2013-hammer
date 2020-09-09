@@ -13,7 +13,7 @@
 
 #include "movieobjects/dmeshape.h"
 #include "movieobjects/dmevertexdata.h"
-#include "materialsystem/materialsystemutil.h"
+#include "materialsystem/MaterialSystemUtil.h"
 #include "mathlib/vector.h"
 #include "tier1/utllinkedlist.h"
 #include "Color.h"
@@ -179,7 +179,7 @@ public:
 	// Computes new normal deltas for all states based on position deltas
 	void ComputeDeltaStateNormals();
 
-	struct DeltaComputation_t 
+	struct DeltaComputation_t
 	{
 		int m_nDeltaIndex;
 		int m_nDimensionality;
@@ -206,7 +206,7 @@ public:
 	bool SetBaseStateToDeltas( CDmeVertexData *pPassedBase = NULL );
 
 	template < class T_t >
-	bool SetBaseDataToDeltas( CDmeVertexData *pBase, CDmeVertexData::StandardFields_t nStandardField, CDmrArrayConst< T_t > &srcData, CDmrArray< T_t > &dstData, bool bDoStereo, bool bDoLag );
+	bool SetBaseDataToDeltas( CDmeVertexData *pBase, CDmeVertexData::StandardFields_t nStandardField, const CDmrArrayConst< T_t > &srcData, CDmAttribute* dst, bool bDoStereo, bool bDoLag );
 
 private:
 	friend class CDmMeshComp;
@@ -268,7 +268,7 @@ private:
 	// Compute the dimensionality of the delta state (how many inputs affect it)
 	int ComputeDeltaStateDimensionality( int nDeltaIndex );
 
-	// Discovers the atomic controls used by the various delta states 
+	// Discovers the atomic controls used by the various delta states
 	void BuildAtomicControlLists( int nCount, DeltaComputation_t *pInfo, CUtlVector< CUtlVector< int > > &deltaStateUsage );
 
 	// Computes the aggregate position for all vertices after applying a set of delta states
@@ -279,7 +279,7 @@ private:
 
 	// Copies the corrected normal data into a delta state
 	void SetDeltaNormalData( int nDeltaIndex, int nNormalCount, Vector *pNormals );
-	// Renders normals 
+	// Renders normals
 	void RenderNormals( matrix3x4_t *pPoseToWorld, RenderVertexDelta_t *pDelta );
 
 	// Writes triangulated indices for a face set into a meshbuilder
@@ -288,7 +288,7 @@ private:
 	// Initializes the normal material
 	static void InitializeNormalMaterial();
 
-	// Sort function 
+	// Sort function
 	static int DeltaStateLessFunc( const void * lhs, const void * rhs );
 
 	// Computes a list of the delta states ordered by dimensionality
@@ -317,7 +317,7 @@ private:
 	static void ComputeCorrectedPositionsFromActualPositions( const CUtlVector< int > &deltaStateList, int nPositionCount, Vector *pPositions );
 
 	template < class T_t > void AddCorrectedDelta(
-		CDmrArray< T_t > &baseDataArray,
+		CDmAttribute* baseData,
 		const CUtlVector< int > &baseIndices,
 		const DeltaComputation_t &deltaComputation,
 		const char *pFieldName,
@@ -334,7 +334,7 @@ private:
 
 	template < class T_t > void AddRawDelta(
 		CDmeVertexDeltaData *pDelta,
-		CDmrArray< T_t > &baseDataArray,
+		CDmAttribute* baseData,
 		FieldIndex_t nDeltaFieldIndex,
 		float weight = 1.0f,
 		const CDmeSingleIndexedComponent *pMask = NULL );
@@ -347,7 +347,7 @@ private:
 		const CDmeSingleIndexedComponent *pMask = NULL );
 
 	friend class CDmxEdit;
-	bool RemoveBaseState( CDmeVertexData *pBase ); 
+	bool RemoveBaseState( CDmeVertexData *pBase );
 	CDmeVertexData *FindOrAddBaseState( CDmeVertexData *pBase );
 
 	// CFalloff functors map [0, 1] values to [0, 1] values
@@ -401,7 +401,7 @@ private:
 	bool CreateDeltaFieldFromBaseField( CDmeVertexData::StandardFields_t nStandardFieldIndex, const CDmrArrayConst< Vector > &baseArray, const CDmrArrayConst< Vector > &bindArray, CDmeVertexDeltaData *pDelta );
 
 	template< class T_t > bool InterpMaskedData(
-		CDmrArray< T_t > &aData,
+		CDmAttribute* data,
 		const CUtlVector< T_t > &bData,
 		float weight,
 		const CDmeSingleIndexedComponent *pMask ) const;
@@ -434,7 +434,7 @@ private:
 
 	// Cached-off map of fields->
 	CUtlVector< FaceSet_t > m_hwFaceSets;
-	
+
 	// Normal rendering materials
 	static bool s_bNormalMaterialInitialized;
 	static CMaterialReference s_NormalMaterial;

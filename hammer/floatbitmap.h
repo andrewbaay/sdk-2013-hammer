@@ -173,6 +173,7 @@ enum SOAThreadMode_t
 	SOATHREADMODE_AUTO = -1,								// compute based upon dimensions
 };
 
+class IThreadPool;
 
 class CSOAContainer
 {
@@ -399,6 +400,9 @@ public:
 								Rect3D_t *pRect = NULL );
 
 	void SetThreadMode( SOAThreadMode_t eThreadMode );
+
+	// Sets a thread pool for all float bitmap work to be done on
+	static void SetThreadPool( IThreadPool* pPool );
 
 protected:
 	int m_nColumns;										// # of rows and columns created with
@@ -928,8 +932,6 @@ FORCEINLINE FourVectors Compress4SIMD( FourVectors const &a, FourVectors const &
 	ret.z = Compress4SIMD( a.z, b.z, c.z, d.z );
 	return ret;
 }
-
-class IThreadPool;
 
 
 struct PixRGBAF

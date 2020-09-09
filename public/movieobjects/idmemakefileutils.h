@@ -30,7 +30,7 @@ class CDmElement;
 //-----------------------------------------------------------------------------
 // Interface for makefiles to build differently depending on where they are run from
 //-----------------------------------------------------------------------------
-enum CompilationState_t
+enum CompilationState_t : int
 {
 	COMPILATION_SUCCESSFUL = 0,
 	COMPILATION_NOT_COMPLETE,

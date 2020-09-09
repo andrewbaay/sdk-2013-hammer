@@ -11,7 +11,7 @@
 #pragma once
 #endif
 
-#include "MapClass.h"
+#include "mapclass.h"
 #include "afxcmn.h"
 enum SaveData_Reason_t : char;
 

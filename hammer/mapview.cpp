@@ -12,14 +12,11 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "MapDoc.h"
-#include "MapView.h"
-#include "History.h"
+#include "mapdoc.h"
+#include "mapview.h"
+#include "history.h"
 #include "mapsolid.h"
 #include "camera.h"
-
-#define MMNOMIXER
-#include <mmsystem.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>

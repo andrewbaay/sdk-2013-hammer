@@ -7,20 +7,20 @@
 #include "datamodel/dmelementfactoryhelper.h"
 #include "materialsystem/imaterialsystem.h"
 #include "materialsystem/imesh.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 
 //-----------------------------------------------------------------------------
-// Expose this class to the scene database 
+// Expose this class to the scene database
 //-----------------------------------------------------------------------------
 IMPLEMENT_ELEMENT_FACTORY( DmeAttachment, CDmeAttachment );
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CDmeAttachment::OnConstruction()
 {

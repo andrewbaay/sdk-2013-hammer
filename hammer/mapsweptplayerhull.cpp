@@ -6,24 +6,24 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "Box3D.h"
-#include "GlobalFunctions.h"
-#include "fgdlib/HelperInfo.h"
-#include "materialsystem/IMaterialSystem.h"
-#include "materialsystem/IMesh.h"
-#include "MainFrm.h"			// For refreshing the object properties dialog
-#include "MapDoc.h"
-#include "MapSweptPlayerHull.h"
-#include "MapPlayerHullHandle.h"
-#include "MapPointHandle.h"
-#include "MapView2D.h"
-#include "Material.h"
-#include "Options.h"
-#include "ObjectProperties.h"	// For refreshing the object properties dialog
-#include "Render2D.h"
-#include "Render3D.h"
+#include "box3d.h"
+#include "globalfunctions.h"
+#include "fgdlib/helperinfo.h"
+#include "materialsystem/imaterialsystem.h"
+#include "materialsystem/imesh.h"
+#include "mainfrm.h"			// For refreshing the object properties dialog
+#include "mapdoc.h"
+#include "mapsweptplayerhull.h"
+#include "mapplayerhullhandle.h"
+#include "mappointhandle.h"
+#include "mapview2d.h"
+#include "material.h"
+#include "options.h"
+#include "objectproperties.h"	// For refreshing the object properties dialog
+#include "render2d.h"
+#include "render3d.h"
 #include "ToolManager.h"
-#include "ToolSweptHull.h"
+#include "toolswepthull.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -369,7 +369,7 @@ void CMapSweptPlayerHull::Render3D(CRender3D *pRender)
 //-----------------------------------------------------------------------------
 // Purpose: Overridden to chain down to our endpoints, which are not children.
 //-----------------------------------------------------------------------------
-void CMapSweptPlayerHull::SetOrigin(Vector &vecOrigin)
+void CMapSweptPlayerHull::SetOrigin(const Vector &vecOrigin)
 {
 	BaseClass::SetOrigin(vecOrigin);
 

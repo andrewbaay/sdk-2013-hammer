@@ -5,24 +5,24 @@
 //=============================================================================//
 
 #include <stdafx.h>
-#include "MapOverlay.h"
-#include "MapFace.h"
-#include "MapSolid.h"
-#include "MapWorld.h"
-#include "MainFrm.h"
-#include "GlobalFunctions.h"
-#include "MapDoc.h"
-#include "TextureSystem.h"
-#include "Material.h"
-#include "materialsystem/IMesh.h"
-#include "Box3D.h"
-#include "MapDefs.h"
-#include "CollisionUtils.h"
-#include "MapSideList.h"
-#include "MapDisp.h"
+#include "mapoverlay.h"
+#include "mapface.h"
+#include "mapsolid.h"
+#include "mapworld.h"
+#include "mainfrm.h"
+#include "globalfunctions.h"
+#include "mapdoc.h"
+#include "texturesystem.h"
+#include "material.h"
+#include "materialsystem/imesh.h"
+#include "box3d.h"
+#include "mapdefs.h"
+#include "collisionutils.h"
+#include "mapsidelist.h"
+#include "mapdisp.h"
 #include "ToolManager.h"
 #include "objectproperties.h"
-#include "ChunkFile.h"
+#include "chunkfile.h"
 #include "mapview.h"
 #include "options.h"
 
@@ -1734,7 +1734,7 @@ void CMapOverlay::OnClone( CMapClass *pClone, CMapWorld *pWorld,
 	CMapOverlay *pOverlay = dynamic_cast<CMapOverlay*>( pClone );
 	if ( pOverlay )
 	{
-		if ( ( GetOverlayType() && OVERLAY_TYPE_SHORE ) == 0 )
+		if ( ( GetOverlayType() & OVERLAY_TYPE_SHORE ) == 0 )
 		{
 			// Update the clone's solid dependencies (this doesn't happen on clone generally).
 			int nFaceCount = pOverlay->GetFaceCount();
@@ -2417,7 +2417,7 @@ void CMapOverlay::SideList_Init( CMapFace *pFace )
 	m_Faces.Purge();
 	m_Faces.AddToTail( pFace );
 
-	if ( ( GetOverlayType() && OVERLAY_TYPE_SHORE ) == 0 )
+	if ( ( GetOverlayType() & OVERLAY_TYPE_SHORE ) == 0 )
 	{
 		// Update dependencies.
 		UpdateDependency( NULL, ( CMapSolid* )pFace->GetParent() );
@@ -2441,7 +2441,7 @@ void CMapOverlay::SideList_AddFace( CMapFace *pFace )
 	// Purge side list as this should be the initial face!
 	m_Faces.AddToTail( pFace );
 
-	if ( ( GetOverlayType() && OVERLAY_TYPE_SHORE ) == 0 )
+	if ( ( GetOverlayType() & OVERLAY_TYPE_SHORE ) == 0 )
 	{
 		// Update dependencies.
 		UpdateDependency( NULL, ( CMapSolid* )pFace->GetParent() );

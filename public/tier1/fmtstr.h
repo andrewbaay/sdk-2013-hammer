@@ -9,15 +9,16 @@
 #ifndef FMTSTR_H
 #define FMTSTR_H
 
+#if defined( _WIN32 )
+#pragma once
+#endif
+
 #include <stdarg.h>
 #include <stdio.h>
 #include "tier0/platform.h"
 #include "tier0/dbg.h"
 #include "tier1/strtools.h"
 
-#if defined( _WIN32 )
-#pragma once
-#endif
 #if defined(POSIX)
 #pragma GCC visibility push(hidden)
 #endif

@@ -10,7 +10,7 @@
 #pragma once
 
 #include "resource.h"
-#include "IconComboBox.h"
+#include "iconcombobox.h"
 
 //=============================================================================
 //
@@ -72,7 +72,7 @@ public:
 protected:
 
 	//{{AFX_MSG( CDispNoiseDlg )
-	afx_msg void CDispNoiseDlg::OnSpinUpDown( NMHDR *pNMHDR, LRESULT *pResult );
+	afx_msg void OnSpinUpDown( NMHDR *pNMHDR, LRESULT *pResult );
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()

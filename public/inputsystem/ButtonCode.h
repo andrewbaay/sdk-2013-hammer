@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //===========================================================================//
@@ -159,7 +159,7 @@ enum ButtonCode_t
 	MOUSE_MIDDLE,
 	MOUSE_4,
 	MOUSE_5,
-	MOUSE_WHEEL_UP,		// A fake button which is 'pressed' and 'released' when the wheel is moved up 
+	MOUSE_WHEEL_UP,		// A fake button which is 'pressed' and 'released' when the wheel is moved up
 	MOUSE_WHEEL_DOWN,	// A fake button which is 'pressed' and 'released' when the wheel is moved down
 
 	MOUSE_LAST = MOUSE_WHEEL_DOWN,
@@ -179,7 +179,7 @@ enum ButtonCode_t
 
 #if !defined ( _X360 )
 	NOVINT_FIRST = JOYSTICK_LAST + 2, // plus 1 missing key. +1 seems to cause issues on the first button.
-	
+
 	NOVINT_LOGO_0 = NOVINT_FIRST,
 	NOVINT_TRIANGLE_0,
 	NOVINT_BOLT_0,
@@ -188,7 +188,7 @@ enum ButtonCode_t
 	NOVINT_TRIANGLE_1,
 	NOVINT_BOLT_1,
 	NOVINT_PLUS_1,
-	
+
 	NOVINT_LAST = NOVINT_PLUS_1,
 #endif
 
@@ -241,7 +241,7 @@ inline bool IsSpace( ButtonCode_t code )
 
 inline bool IsKeypad( ButtonCode_t code )
 {
-	return ( code >= MOUSE_FIRST ) && ( code <= KEY_PAD_DECIMAL );
+	return ( code >= KEY_PAD_0 ) && ( code <= KEY_PAD_DECIMAL );
 }
 
 inline bool IsPunctuation( ButtonCode_t code )

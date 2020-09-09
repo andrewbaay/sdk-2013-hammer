@@ -379,20 +379,6 @@ inline void VectorNegate(vec_t *a)
 	a[2]=-a[2];
 }
 
-
-//#define VectorMaximum(a)		( max( (a)[0], max( (a)[1], (a)[2] ) ) )
-#define Vector2Clear(x)			{(x)[0]=(x)[1]=0;}
-#define Vector2Negate(x)		{(x)[0]=-((x)[0]);(x)[1]=-((x)[1]);}
-#define Vector2Copy(a,b)		{(b)[0]=(a)[0];(b)[1]=(a)[1];}
-#define Vector2Subtract(a,b,c)	{(c)[0]=(a)[0]-(b)[0];(c)[1]=(a)[1]-(b)[1];}
-#define Vector2Add(a,b,c)		{(c)[0]=(a)[0]+(b)[0];(c)[1]=(a)[1]+(b)[1];}
-#define Vector2Scale(a,b,c)		{(c)[0]=(b)*(a)[0];(c)[1]=(b)*(a)[1];}
-
-// NJS: Some functions in VBSP still need to use these for dealing with mixing vec4's and shorts with vec_t's.
-// remove when no longer needed.
-#define VECTOR_COPY( A, B ) do { (B)[0] = (A)[0]; (B)[1] = (A)[1]; (B)[2]=(A)[2]; } while(0)
-#define DOT_PRODUCT( A, B ) ( (A)[0]*(B)[0] + (A)[1]*(B)[1] + (A)[2]*(B)[2] )
-
 FORCEINLINE void VectorMAInline( const float* start, float scale, const float* direction, float* dest )
 {
 	dest[0]=start[0]+direction[0]*scale;
@@ -427,7 +413,7 @@ inline float VectorLength(const float *v)
 
 void CrossProduct (const float *v1, const float *v2, float *cross);
 
-qboolean VectorsEqual( const float *v1, const float *v2 );
+bool VectorsEqual( const float *v1, const float *v2 );
 
 inline vec_t RoundInt (vec_t in)
 {
@@ -658,12 +644,13 @@ inline float RemapValClamped( float val, float A, float B, float C, float D)
 // Returns A + (B-A)*flPercent.
 // float Lerp( float flPercent, float A, float B );
 template <class T>
-FORCEINLINE T Lerp( float flPercent, T const &A, T const &B )
+FORCEINLINE constexpr T Lerp( float flPercent, T const &A, T const &B )
 {
 	return A + (B - A) * flPercent;
 }
 
-FORCEINLINE float Sqr( float f )
+template <typename T>
+FORCEINLINE constexpr auto Sqr( const T& f )
 {
 	return f*f;
 }
@@ -682,9 +669,6 @@ static inline float FLerp(float f1, float f2, float i1, float i2, float x)
 {
   return f1+(f2-f1)*(x-i1)/(i2-i1);
 }
-
-
-#ifndef VECTOR_NO_SLOW_OPERATIONS
 
 // YWB:  Specialization for interpolating euler angles via quaternions...
 template<> FORCEINLINE QAngle Lerp<QAngle>( float flPercent, const QAngle& q1, const QAngle& q2 )
@@ -709,37 +693,6 @@ template<> FORCEINLINE QAngle Lerp<QAngle>( float flPercent, const QAngle& q1, c
 	QuaternionAngles( result, output );
 	return output;
 }
-
-#else
-
-#pragma error
-
-// NOTE NOTE: I haven't tested this!! It may not work! Check out interpolatedvar.cpp in the client dll to try it
-template<> FORCEINLINE QAngleByValue Lerp<QAngleByValue>( float flPercent, const QAngleByValue& q1, const QAngleByValue& q2 )
-{
-	// Avoid precision errors
-	if ( q1 == q2 )
-		return q1;
-
-	Quaternion src, dest;
-
-	// Convert to quaternions
-	AngleQuaternion( q1, src );
-	AngleQuaternion( q2, dest );
-
-	Quaternion result;
-
-	// Slerp
-	QuaternionSlerp( src, dest, flPercent, result );
-
-	// Convert to euler
-	QAngleByValue output;
-	QuaternionAngles( result, output );
-	return output;
-}
-
-#endif // VECTOR_NO_SLOW_OPERATIONS
-
 
 /// Same as swap(), but won't cause problems with std::swap
 template <class T> 

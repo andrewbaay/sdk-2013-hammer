@@ -1,6 +1,6 @@
 //====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 #include "movieobjects/dmelog.h"
@@ -15,7 +15,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-LayerSelectionData_t::DataLayer_t::DataLayer_t( float frac, CDmeLogLayer *layer ) : 
+LayerSelectionData_t::DataLayer_t::DataLayer_t( float frac, CDmeLogLayer *layer ) :
 	m_flStartFraction( frac )
 {
 	m_hData = layer;
@@ -51,11 +51,11 @@ inline bool IsInterpolableType( DmAttributeType_t type )
 		( type == AT_COLOR ) ||
 		( type == AT_VECTOR2 ) ||
 		( type == AT_VECTOR3 ) ||
-		( type == AT_QANGLE ) ||											  
+		( type == AT_QANGLE ) ||
 		( type == AT_QUATERNION );
 }
 
-static Vector s_pInterolationPoints[ 4 ] = 
+static Vector s_pInterolationPoints[ 4 ] =
 {
 	Vector( 0.0f, 0.0f, 0.0f ),
 	Vector( 0.0f, 0.0f, 0.0f ),
@@ -67,14 +67,14 @@ static inline float ComputeInterpolationFactor( float flFactor, int nInterpolato
 {
 	Vector out;
 	Interpolator_CurveInterpolate
-	( 
-		nInterpolatorType, 
+	(
+		nInterpolatorType,
 		s_pInterolationPoints[ 0 ], // unused
-		s_pInterolationPoints[ 1 ], 
-		s_pInterolationPoints[ 2 ], 
+		s_pInterolationPoints[ 1 ],
+		s_pInterolationPoints[ 2 ],
 		s_pInterolationPoints[ 3 ], // unused
-		flFactor, 
-		out 
+		flFactor,
+		out
 	);
 	return out.y; // clamp( out.y, 0.0f, 1.0f );
 }
@@ -136,18 +136,18 @@ float DmeLog_TimeSelection_t::GetAmountForTime( DmeTime_t dmetime ) const
 		Vector out;
 
 		Interpolator_CurveInterpolate
-		( 
-			m_nFalloffInterpolatorTypes[ 0 ], 
+		(
+			m_nFalloffInterpolatorTypes[ 0 ],
 				s_pInterolationPoints[ 0 ], // unused
-				s_pInterolationPoints[ 1 ], 
-				s_pInterolationPoints[ 2 ], 
+				s_pInterolationPoints[ 1 ],
+				s_pInterolationPoints[ 2 ],
 				s_pInterolationPoints[ 3 ], // unused
-			f, 
-			out 
+			f,
+			out
 		);
 		return clamp( out.y, minfrac, 1.0f );
 	}
-	
+
 	if ( t >= times[ 1 ] && t <= times[ 2 ] )
 		return 1.0f;
 
@@ -158,14 +158,14 @@ float DmeLog_TimeSelection_t::GetAmountForTime( DmeTime_t dmetime ) const
 		Vector out;
 
 		Interpolator_CurveInterpolate
-		( 
-			m_nFalloffInterpolatorTypes[ 1 ], 
+		(
+			m_nFalloffInterpolatorTypes[ 1 ],
 				s_pInterolationPoints[ 0 ], // unused
-				s_pInterolationPoints[ 1 ], 
-				s_pInterolationPoints[ 2 ], 
+				s_pInterolationPoints[ 1 ],
+				s_pInterolationPoints[ 2 ],
 				s_pInterolationPoints[ 3 ], // unused
-			f, 
-			out 
+			f,
+			out
 		);
 		return clamp( out.y, minfrac, 1.0f );
 	}
@@ -759,17 +759,17 @@ Quaternion Add( const Quaternion& v1, const Quaternion& v2 )
 
 IMPLEMENT_ABSTRACT_ELEMENT( DmeLogLayer,			CDmeLogLayer );
 
-IMPLEMENT_ELEMENT_FACTORY( DmeIntLogLayer,			CDmeIntLogLayer );
-IMPLEMENT_ELEMENT_FACTORY( DmeFloatLogLayer,		CDmeFloatLogLayer );
-IMPLEMENT_ELEMENT_FACTORY( DmeBoolLogLayer,			CDmeBoolLogLayer );
-IMPLEMENT_ELEMENT_FACTORY( DmeColorLogLayer,		CDmeColorLogLayer );
-IMPLEMENT_ELEMENT_FACTORY( DmeVector2LogLayer,		CDmeVector2LogLayer );
-IMPLEMENT_ELEMENT_FACTORY( DmeVector3LogLayer,		CDmeVector3LogLayer );
-IMPLEMENT_ELEMENT_FACTORY( DmeVector4LogLayer,		CDmeVector4LogLayer );
-IMPLEMENT_ELEMENT_FACTORY( DmeQAngleLogLayer,		CDmeQAngleLogLayer );
-IMPLEMENT_ELEMENT_FACTORY( DmeQuaternionLogLayer,	CDmeQuaternionLogLayer );
-IMPLEMENT_ELEMENT_FACTORY( DmeVMatrixLogLayer,		CDmeVMatrixLogLayer );
-IMPLEMENT_ELEMENT_FACTORY( DmeStringLogLayer,		CDmeStringLogLayer );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeIntLogLayer,			CDmeIntLogLayer );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeFloatLogLayer,		CDmeFloatLogLayer );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeBoolLogLayer,			CDmeBoolLogLayer );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeColorLogLayer,		CDmeColorLogLayer );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeVector2LogLayer,		CDmeVector2LogLayer );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeVector3LogLayer,		CDmeVector3LogLayer );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeVector4LogLayer,		CDmeVector4LogLayer );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeQAngleLogLayer,		CDmeQAngleLogLayer );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeQuaternionLogLayer,	CDmeQuaternionLogLayer );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeVMatrixLogLayer,		CDmeVMatrixLogLayer );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeStringLogLayer,		CDmeStringLogLayer );
 
 //-----------------------------------------------------------------------------
 // explicit template instantiation
@@ -789,17 +789,17 @@ template class CDmeTypedLogLayer<CUtlString>;
 
 IMPLEMENT_ABSTRACT_ELEMENT( DmeCurveInfo,			CDmeCurveInfo );
 
-IMPLEMENT_ELEMENT_FACTORY( DmeIntCurveInfo,			CDmeIntCurveInfo );
-IMPLEMENT_ELEMENT_FACTORY( DmeFloatCurveInfo,		CDmeFloatCurveInfo );
-IMPLEMENT_ELEMENT_FACTORY( DmeBoolCurveInfo,		CDmeBoolCurveInfo );
-IMPLEMENT_ELEMENT_FACTORY( DmeColorCurveInfo,		CDmeColorCurveInfo );
-IMPLEMENT_ELEMENT_FACTORY( DmeVector2CurveInfo,		CDmeVector2CurveInfo );
-IMPLEMENT_ELEMENT_FACTORY( DmeVector3CurveInfo,		CDmeVector3CurveInfo );
-IMPLEMENT_ELEMENT_FACTORY( DmeVector4CurveInfo,		CDmeVector4CurveInfo );
-IMPLEMENT_ELEMENT_FACTORY( DmeQAngleCurveInfo,		CDmeQAngleCurveInfo );
-IMPLEMENT_ELEMENT_FACTORY( DmeQuaternionCurveInfo,	CDmeQuaternionCurveInfo );
-IMPLEMENT_ELEMENT_FACTORY( DmeVMatrixCurveInfo,		CDmeVMatrixCurveInfo );
-IMPLEMENT_ELEMENT_FACTORY( DmeStringCurveInfo,		CDmeStringCurveInfo );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeIntCurveInfo,			CDmeIntCurveInfo );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeFloatCurveInfo,		CDmeFloatCurveInfo );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeBoolCurveInfo,		CDmeBoolCurveInfo );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeColorCurveInfo,		CDmeColorCurveInfo );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeVector2CurveInfo,		CDmeVector2CurveInfo );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeVector3CurveInfo,		CDmeVector3CurveInfo );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeVector4CurveInfo,		CDmeVector4CurveInfo );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeQAngleCurveInfo,		CDmeQAngleCurveInfo );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeQuaternionCurveInfo,	CDmeQuaternionCurveInfo );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeVMatrixCurveInfo,		CDmeVMatrixCurveInfo );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeStringCurveInfo,		CDmeStringCurveInfo );
 
 //-----------------------------------------------------------------------------
 // explicit template instantiation
@@ -818,21 +818,21 @@ template class CDmeTypedCurveInfo<CUtlString>;
 
 
 //-----------------------------------------------------------------------------
-// Class factory 
+// Class factory
 //-----------------------------------------------------------------------------
 IMPLEMENT_ABSTRACT_ELEMENT( DmeLog,				CDmeLog );
 
-IMPLEMENT_ELEMENT_FACTORY( DmeIntLog,			CDmeIntLog );
-IMPLEMENT_ELEMENT_FACTORY( DmeFloatLog,			CDmeFloatLog );
-IMPLEMENT_ELEMENT_FACTORY( DmeBoolLog,			CDmeBoolLog );
-IMPLEMENT_ELEMENT_FACTORY( DmeColorLog,			CDmeColorLog );
-IMPLEMENT_ELEMENT_FACTORY( DmeVector2Log,		CDmeVector2Log );
-IMPLEMENT_ELEMENT_FACTORY( DmeVector3Log,		CDmeVector3Log );
-IMPLEMENT_ELEMENT_FACTORY( DmeVector4Log,		CDmeVector4Log );
-IMPLEMENT_ELEMENT_FACTORY( DmeQAngleLog,		CDmeQAngleLog );
-IMPLEMENT_ELEMENT_FACTORY( DmeQuaternionLog,	CDmeQuaternionLog );
-IMPLEMENT_ELEMENT_FACTORY( DmeVMatrixLog,		CDmeVMatrixLog );
-IMPLEMENT_ELEMENT_FACTORY( DmeStringLog,		CDmeStringLog );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeIntLog,			CDmeIntLog );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeFloatLog,			CDmeFloatLog );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeBoolLog,			CDmeBoolLog );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeColorLog,			CDmeColorLog );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeVector2Log,		CDmeVector2Log );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeVector3Log,		CDmeVector3Log );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeVector4Log,		CDmeVector4Log );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeQAngleLog,		CDmeQAngleLog );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeQuaternionLog,	CDmeQuaternionLog );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeVMatrixLog,		CDmeVMatrixLog );
+template <> IMPLEMENT_ELEMENT_FACTORY( DmeStringLog,		CDmeStringLog );
 
 
 //-----------------------------------------------------------------------------
@@ -854,17 +854,17 @@ template class CDmeTypedLog<CUtlString>;
 //-----------------------------------------------------------------------------
 // instantiate and initialize static vars
 //-----------------------------------------------------------------------------
-float CDmeIntLog::s_defaultThreshold = 0.0f;
-float CDmeFloatLog::s_defaultThreshold = 0.0f;
-float CDmeBoolLog::s_defaultThreshold = 0.0f;
-float CDmeColorLog::s_defaultThreshold = 0.0f;
-float CDmeVector2Log::s_defaultThreshold = 0.0f;
-float CDmeVector3Log::s_defaultThreshold = 0.0f;
-float CDmeVector4Log::s_defaultThreshold = 0.0f;
-float CDmeQAngleLog::s_defaultThreshold = 0.0f;
-float CDmeQuaternionLog::s_defaultThreshold = 0.0f;
-float CDmeVMatrixLog::s_defaultThreshold = 0.0f;
-float CDmeStringLog::s_defaultThreshold = 0.0f;
+template <> float CDmeIntLog::s_defaultThreshold = 0.0f;
+template <> float CDmeFloatLog::s_defaultThreshold = 0.0f;
+template <> float CDmeBoolLog::s_defaultThreshold = 0.0f;
+template <> float CDmeColorLog::s_defaultThreshold = 0.0f;
+template <> float CDmeVector2Log::s_defaultThreshold = 0.0f;
+template <> float CDmeVector3Log::s_defaultThreshold = 0.0f;
+template <> float CDmeVector4Log::s_defaultThreshold = 0.0f;
+template <> float CDmeQAngleLog::s_defaultThreshold = 0.0f;
+template <> float CDmeQuaternionLog::s_defaultThreshold = 0.0f;
+template <> float CDmeVMatrixLog::s_defaultThreshold = 0.0f;
+template <> float CDmeStringLog::s_defaultThreshold = 0.0f;
 
 
 void CDmeLogLayer::OnConstruction()
@@ -968,9 +968,9 @@ int CDmeLogLayer::GetKeyCount() const
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : nKeyIndex - 
-//			keyTime - 
+// Purpose:
+// Input  : nKeyIndex -
+//			keyTime -
 //-----------------------------------------------------------------------------
 void CDmeLogLayer::SetKeyTime( int nKeyIndex, DmeTime_t keyTime )
 {
@@ -1403,8 +1403,8 @@ void CDmeTypedLogLayer< T >::SetKey( DmeTime_t time, const T& value, int curveTy
 	}
 
 	int nKeys = m_values.Count();
-	if ( ( nKeys < 3 ) || 
-		 ( IsUsingCurveTypes() && ( curveType != m_CurveTypes[ nKeys -1 ] || ( curveType != m_CurveTypes[ nKeys - 2 ] ) ) ) 
+	if ( ( nKeys < 3 ) ||
+		 ( IsUsingCurveTypes() && ( curveType != m_CurveTypes[ nKeys -1 ] || ( curveType != m_CurveTypes[ nKeys - 2 ] ) ) )
 		 )
 	{
 		return;
@@ -1417,7 +1417,7 @@ void CDmeTypedLogLayer< T >::SetKey( DmeTime_t time, const T& value, int curveTy
 	{
 		return;
 	}
-	
+
 	// Remove penultimate, it's not needed
 	m_times.Remove( nKeys - 2 );
 	m_values.Remove( nKeys - 2 );
@@ -1527,7 +1527,7 @@ template< class T >
 const T& CDmeTypedLogLayer< T >::GetValue( DmeTime_t time ) const
 {
 	// Curve Interpolation only for 1-D float data right now!!!
-	if ( IsUsingCurveTypes() && 
+	if ( IsUsingCurveTypes() &&
 		CanInterpolateType( GetDataType() ) )
 	{
 		static T out;
@@ -1604,20 +1604,6 @@ bool CDmeTypedLogLayer< T >::SetDuplicateKeyAtTime( DmeTime_t time )
 	SetKey( time, value );
 	return true;
 }
-
-
-//-----------------------------------------------------------------------------
-// Returns a specific key's value
-//-----------------------------------------------------------------------------
-template< class T >
-const T& CDmeTypedLogLayer< T >::GetKeyValue( int nKeyIndex ) const
-{
-	Assert( m_values.Count() == m_times.Count() );
-	Assert( !IsUsingCurveTypes() || ( m_CurveTypes.Count() == m_times.Count() ) );
-
-	return m_values[ nKeyIndex ];
-}
-
 
 template< class T >
 void CDmeTypedLogLayer< T >::GetValue( DmeTime_t time, CDmAttribute *pAttr, uint index ) const
@@ -1832,7 +1818,7 @@ void CDmeTypedLogLayer<T>::RemoveRedundantKeys( float threshold )
 		CDisableUndoScopeGuard sg;
 		GetTypedOwnerLog()->SetValueThreshold( saveThreshold );
 	}
-	
+
 }
 
 // Implementation of Douglas-Peucker curve simplification routine (hacked to only care about error against original curve (sort of 1D)
@@ -1871,11 +1857,11 @@ void CDmeTypedLogLayer< T >::CurveSimplify_R( float thresholdSqr, int startPoint
 	}
 }
 
-void CDmeTypedLogLayer< bool >::CurveSimplify_R( float thresholdSqr, int startPoint, int endPoint, CDmeTypedLogLayer< bool > *output ) {};
-void CDmeTypedLogLayer< int >::CurveSimplify_R( float thresholdSqr, int startPoint, int endPoint, CDmeTypedLogLayer< int > *output ) {};
-void CDmeTypedLogLayer< Color >::CurveSimplify_R( float thresholdSqr, int startPoint, int endPoint, CDmeTypedLogLayer< Color > *output ) {};
-void CDmeTypedLogLayer< Quaternion >::CurveSimplify_R( float thresholdSqr, int startPoint, int endPoint, CDmeTypedLogLayer< Quaternion > *output ) {};
-void CDmeTypedLogLayer< VMatrix >::CurveSimplify_R( float thresholdSqr, int startPoint, int endPoint, CDmeTypedLogLayer< VMatrix > *output ) {};
+template <> void CDmeTypedLogLayer< bool >::CurveSimplify_R( float thresholdSqr, int startPoint, int endPoint, CDmeTypedLogLayer< bool > *output ) {};
+template <> void CDmeTypedLogLayer< int >::CurveSimplify_R( float thresholdSqr, int startPoint, int endPoint, CDmeTypedLogLayer< int > *output ) {};
+template <> void CDmeTypedLogLayer< Color >::CurveSimplify_R( float thresholdSqr, int startPoint, int endPoint, CDmeTypedLogLayer< Color > *output ) {};
+template <> void CDmeTypedLogLayer< Quaternion >::CurveSimplify_R( float thresholdSqr, int startPoint, int endPoint, CDmeTypedLogLayer< Quaternion > *output ) {};
+template <> void CDmeTypedLogLayer< VMatrix >::CurveSimplify_R( float thresholdSqr, int startPoint, int endPoint, CDmeTypedLogLayer< VMatrix > *output ) {};
 
 // We can't just walk the keys linearly since it'll accumulate too much error and give us a bad curve after simplification.  We do a recursive subdivide which has a worst case of O(n^2) but
 //  probably is better than that in most cases.
@@ -1944,7 +1930,7 @@ void CDmeTypedLogLayer<T>::RemoveRedundantKeys()
 				for ( int i = nFirstKey + 1; i < nLastKey; ++i )
 				{
 					// prev is from the saved log to allow deleting runs of same-valued keys
-					const T &prev = save->GetKeyValue( save->GetKeyCount() - 1 ); 
+					const T &prev = save->GetKeyValue( save->GetKeyCount() - 1 );
 					const T &curr = GetKeyValue( i );
 					const T &next = GetKeyValue( i + 1  );
 					if ( pOwner->ValuesDiffer( prev, curr ) || pOwner->ValuesDiffer( curr, next ) )
@@ -1960,7 +1946,7 @@ void CDmeTypedLogLayer<T>::RemoveRedundantKeys()
 
 	// This operation is undoable
 	CopyLayer( save );
-	
+
 	{
 		CDisableUndoScopeGuard guard;
 		g_pDataModel->DestroyElement( save->GetHandle() );
@@ -2063,6 +2049,7 @@ void CDmeTypedLogLayer< T >::GetBoundedSample( int keyindex, DmeTime_t& time, T&
 	}
 }
 
+template <>
 void CDmeTypedLogLayer< float >::GetValueUsingCurveInfoSkippingKey( int nKeyToSkip, float& out ) const
 {
 	Assert( GetOwnerLog() );
@@ -2130,6 +2117,7 @@ void CDmeTypedLogLayer< float >::GetValueUsingCurveInfoSkippingKey( int nKeyToSk
 	out = Curve_Interpolate( frac, t, v, curvetypes, GetOwnerLog()->GetMinValue(), GetOwnerLog()->GetMaxValue() );
 }
 
+template <>
 void CDmeTypedLogLayer< Vector >::GetValueUsingCurveInfoSkippingKey( int nKeyToSkip, Vector& out ) const
 {
 	Assert( GetOwnerLog() );
@@ -2197,6 +2185,7 @@ void CDmeTypedLogLayer< Vector >::GetValueUsingCurveInfoSkippingKey( int nKeyToS
 	out = Curve_Interpolate( frac, t, v, curvetypes, GetOwnerLog()->GetMinValue(), GetOwnerLog()->GetMaxValue() );
 }
 
+template <>
 void CDmeTypedLogLayer< Quaternion >::GetValueUsingCurveInfoSkippingKey( int nKeyToSkip, Quaternion& out ) const
 {
 	Assert( GetOwnerLog() );
@@ -2264,6 +2253,7 @@ void CDmeTypedLogLayer< Quaternion >::GetValueUsingCurveInfoSkippingKey( int nKe
 	out = Curve_Interpolate( frac, t, v, curvetypes, GetOwnerLog()->GetMinValue(), GetOwnerLog()->GetMaxValue() );
 }
 
+template <>
 void CDmeTypedLogLayer< float >::GetValueUsingCurveInfo( DmeTime_t time, float& out ) const
 {
 	Assert( GetOwnerLog() );
@@ -2329,6 +2319,7 @@ void CDmeTypedLogLayer< float >::GetValueUsingCurveInfo( DmeTime_t time, float& 
 	out = Curve_Interpolate( frac, t, v, curvetypes, GetOwnerLog()->GetMinValue(), GetOwnerLog()->GetMaxValue() );
 }
 
+template <>
 void CDmeTypedLogLayer< Vector >::GetValueUsingCurveInfo( DmeTime_t time, Vector& out ) const
 {
 	Assert( GetOwnerLog() );
@@ -2394,6 +2385,7 @@ void CDmeTypedLogLayer< Vector >::GetValueUsingCurveInfo( DmeTime_t time, Vector
 	out = Curve_Interpolate( frac, t, v, curvetypes, GetOwnerLog()->GetMinValue(), GetOwnerLog()->GetMaxValue() );
 }
 
+template <>
 void CDmeTypedLogLayer< Quaternion >::GetValueUsingCurveInfo( DmeTime_t time, Quaternion& out ) const
 {
 	Assert( GetOwnerLog() );
@@ -2558,7 +2550,7 @@ void CDmeTypedLogLayer< T >::CopyPartialLayer( const CDmeLogLayer *src, DmeTime_
 // Creates a log of a specific type
 //-----------------------------------------------------------------------------
 template< class T >
-CDmeLogLayer *CreateLayer< T >( CDmeTypedLog< T > *pOwnerLog )
+CDmeLogLayer *CreateLayer( CDmeTypedLog< T > *pOwnerLog )
 {
 	DmFileId_t fileid = pOwnerLog ? pOwnerLog->GetFileId() : DMFILEID_INVALID;
 	CDmeLogLayer *layer = NULL;
@@ -2778,6 +2770,7 @@ int CDmeTypedCurveInfo< T >::GetEdgeCurveType( int edge ) const
 	return m_EdgeCurveType[ edge ];
 }
 
+template <>
 void CDmeTypedCurveInfo<float>::GetZeroValue( int side, float& val ) const
 {
 	if ( !m_bUseEdgeInfo )
@@ -2795,16 +2788,19 @@ void CDmeTypedCurveInfo<float>::GetZeroValue( int side, float& val ) const
 	val = m_DefaultEdgeValue;
 }
 
+template <>
 bool CDmeTypedCurveInfo<float>::IsEdgeActive( int edge ) const
 {
 	return m_bEdgeActive[ edge ];
 }
 
+template <>
 void CDmeTypedCurveInfo<float>::GetEdgeValue( int edge, float& value ) const
 {
 	value = m_EdgeValue[ edge ];
 }
 
+template <>
 void CDmeTypedCurveInfo<Vector>::GetZeroValue( int side, Vector& val ) const
 {
 	if ( !m_bUseEdgeInfo )
@@ -2822,6 +2818,7 @@ void CDmeTypedCurveInfo<Vector>::GetZeroValue( int side, Vector& val ) const
 	val = m_DefaultEdgeValue;
 }
 
+template <>
 void CDmeTypedCurveInfo<Quaternion>::GetZeroValue( int side, Quaternion& val ) const
 {
 	if ( !m_bUseEdgeInfo )
@@ -3455,15 +3452,15 @@ static void SpewKey( const Quaternion& val )
 template< class T >
 static void SpewFlattenedKey( CDmeTypedLogLayer< T > *pLogLayer, ActiveLayer_t< T > *pActiveLayer, DmeTime_t t, const T& val )
 {
-	Msg( "Layer %d:  adding key at time %f [%d -> %d], value ", 
+	Msg( "Layer %d:  adding key at time %f [%d -> %d], value ",
 		pActiveLayer->priority, t.GetSeconds(), pActiveLayer->firstTime, pActiveLayer->lastTime );
 	SpewKey( val );
 	Msg( "\n" );
 }
 
 template< class T >
-static void ComputeLayerEvents( CDmeTypedLog< T >* pLog, 
-	CUtlVector< ActiveLayer_t< T > > &layerlist, 
+static void ComputeLayerEvents( CDmeTypedLog< T >* pLog,
+	CUtlVector< ActiveLayer_t< T > > &layerlist,
 	CUtlRBTree< LayerEvent_t< T > > &events )
 {
 	// Build a list of all known layers and a sorted list of layer "transitions"
@@ -3545,13 +3542,13 @@ static void AddDiscontinitySample( CDmeTypedLogLayer< T > *pTargetLayer, CDmeTyp
 
 
 template< class T >
-static DmeTime_t ProcessStartLayerStartEvent( 
+static DmeTime_t ProcessStartLayerStartEvent(
 	bool bSpew,
 	bool bFixupDiscontinuities,
-	CDmeTypedLog< T > *pLog, 
-	LayerEvent_t< T > *pEvent, 
-	CUtlVector< ActiveLayer_t< T > > &layerlist, 
-	CUtlRBTree< ActiveLayer_t< T > * > &active, 
+	CDmeTypedLog< T > *pLog,
+	LayerEvent_t< T > *pEvent,
+	CUtlVector< ActiveLayer_t< T > > &layerlist,
+	CUtlRBTree< ActiveLayer_t< T > * > &active,
 	CDmeTypedLogLayer< T > *flattenedlayer )
 {
 	Assert( pEvent->m_Type == LayerEvent_t< T >::LE_START );
@@ -3576,20 +3573,20 @@ static DmeTime_t ProcessStartLayerStartEvent(
 	if ( nActiveCount >= 2 )
 	{
 		DmeTime_t tKeyTime = pEvent->m_Time - DmeTime_t( 1 );
-		AddDiscontinitySample( flattenedlayer, pLog, tKeyTime, pEvent->m_NeighborValue, bSpew ? "start" : NULL ); 
+		AddDiscontinitySample( flattenedlayer, pLog, tKeyTime, pEvent->m_NeighborValue, bSpew ? "start" : NULL );
 	}
 	AddDiscontinitySample( flattenedlayer, pLog, pEvent->m_Time, GetActiveLayerValue( layerlist, pEvent->m_Time, pEvent->m_nLayer ), bSpew ? "start" : NULL );
 	return pEvent->m_Time;
 }
 
 template< class T >
-static DmeTime_t ProcessStartLayerEndEvent( 
+static DmeTime_t ProcessStartLayerEndEvent(
 	bool bSpew,
 	bool bFixupDiscontinuities,
-	CDmeTypedLog< T > *pLog, 
-	LayerEvent_t< T > *pEvent, 
-	CUtlVector< ActiveLayer_t< T > > &layerlist, 
-	CUtlRBTree< ActiveLayer_t< T > * > &active, 
+	CDmeTypedLog< T > *pLog,
+	LayerEvent_t< T > *pEvent,
+	CUtlVector< ActiveLayer_t< T > > &layerlist,
+	CUtlRBTree< ActiveLayer_t< T > * > &active,
 	CDmeTypedLogLayer< T > *pBaseLayer )
 {
 	Assert( pEvent->m_Type == LayerEvent_t< T >::LE_END );
@@ -3600,9 +3597,9 @@ static DmeTime_t ProcessStartLayerEndEvent(
 		Msg( "removing layer %d from stack\n", layerlist[ pEvent->m_nLayer ].priority );
 	}
 
-	// We'll need to add a "discontinuity" fixup sample from the 
+	// We'll need to add a "discontinuity" fixup sample from the
 	// 1) A sample from the ending layer @ start time
-	// 2) A sample from the new layer @ start time + .1 msec 
+	// 2) A sample from the new layer @ start time + .1 msec
 	// NOTE: This will cause problems if there are non-default value keys at max time
 	Assert( active.Count() >= 1 );
 	if ( bFixupDiscontinuities && ( pEvent->m_Time != DMETIME_MAXTIME ) )
@@ -3611,7 +3608,7 @@ static DmeTime_t ProcessStartLayerEndEvent(
 		if ( active.Count() >= 2 )
 		{
 			DmeTime_t keyTime = pEvent->m_Time + DmeTime_t( 1 );
-			AddDiscontinitySample( pBaseLayer, pLog, keyTime, pEvent->m_NeighborValue, bSpew ? "end" : NULL ); 
+			AddDiscontinitySample( pBaseLayer, pLog, keyTime, pEvent->m_NeighborValue, bSpew ? "end" : NULL );
 		}
 	}
 
@@ -3713,7 +3710,7 @@ void CDmeTypedLog< T >::FlattenLayers( float threshold, int flags )
 			if ( keyTime < iCurrentKeyTime )
 				continue;
 
-			// Done with this layer, set time exactly equal to end time so next layer can take over 
+			// Done with this layer, set time exactly equal to end time so next layer can take over
 			//  at the correct spot
 			if ( keyTime >= layerFinishTime )
 			{
@@ -3749,7 +3746,7 @@ void CDmeTypedLog< T >::FlattenLayers( float threshold, int flags )
 
 	// Compress the flattened layer
 	flattenedlayer->RemoveRedundantKeys( threshold );
-	
+
 	// Copy the flattened layer over the existing base layer
 	GetLayer( 0 )->CopyLayer( flattenedlayer );
 
@@ -3806,9 +3803,10 @@ void CDmeTypedLog< T >::FinishTimeSelection( DmeTime_t tHeadPosition, DmeLog_Tim
 
 	// The head is considered to be at the "last" value
  	T headValue = pWriteLayer->GetKeyValue( nKeyCount - 1 );
-	_StampKeyAtHeadResample( tHeadPosition, params, headValue, true, false ); 
+	_StampKeyAtHeadResample( tHeadPosition, params, headValue, true, false );
 }
 
+template <>
 float CDmeTypedLog< float >::ClampValue( const float& value )
 {
 	float retval;
@@ -3994,14 +3992,14 @@ const T& CLogFalloffBlend< T >::GetDelta( ) const
 // Insert points where clamping begins or ends
 //-----------------------------------------------------------------------------
 template< class T >
-void CLogFalloffBlend< T >::InsertClampTransitionPoints( CDmeTypedLogLayer<T>* pWriteLayer, 
+void CLogFalloffBlend< T >::InsertClampTransitionPoints( CDmeTypedLogLayer<T>* pWriteLayer,
 	DmeTime_t t, LogClampHelper_t<T> &clampHelper, const T& val, bool bSpew )
 {
 	// NOTE: By default, nothing clamps, so no transition points are needed
 }
 
 template<>
-void CLogFalloffBlend< float >::InsertClampTransitionPoints( CDmeTypedLogLayer<float>* pWriteLayer, 
+void CLogFalloffBlend< float >::InsertClampTransitionPoints( CDmeTypedLogLayer<float>* pWriteLayer,
 	DmeTime_t t, LogClampHelper_t<float> &clampHelper, const float& val, bool bSpew )
 {
 	bool bLastLess, bLastGreater, bCurrLess, bCurrGreater;
@@ -4012,9 +4010,9 @@ void CLogFalloffBlend< float >::InsertClampTransitionPoints( CDmeTypedLogLayer<f
 	if ( clampHelper.m_tLastTime == DMETIME_MINTIME )
 		goto cacheLastValues;
 
-	bLastLess = clampHelper.m_LastUnclampedValue < m_MinValue; 
-	bLastGreater = clampHelper.m_LastUnclampedValue > m_MaxValue; 
-	bCurrLess = val < m_MinValue; 
+	bLastLess = clampHelper.m_LastUnclampedValue < m_MinValue;
+	bLastGreater = clampHelper.m_LastUnclampedValue > m_MaxValue;
+	bCurrLess = val < m_MinValue;
 	bCurrGreater = val > m_MaxValue;
 	if ( bLastLess == bCurrLess && bLastGreater == bCurrGreater )
 		goto cacheLastValues;
@@ -4091,7 +4089,7 @@ cacheLastValues:
 // Stamp the key at the specified time
 //-----------------------------------------------------------------------------
 template< class T >
-void CLogFalloffBlend< T >::StampKey( CDmeTypedLogLayer<T>* pWriteLayer, DmeTime_t t, 
+void CLogFalloffBlend< T >::StampKey( CDmeTypedLogLayer<T>* pWriteLayer, DmeTime_t t,
 	const CDmeTypedLogLayer<T>* pReadLayer, float flIntensity, LogClampHelper_t<T> &clampHelper, bool bSpew, const T* pInterpTarget )
 {
 	// Stamp the key at the current time
@@ -4134,7 +4132,7 @@ void CLogFalloffBlend< T >::StampKey( CDmeTypedLogLayer<T>* pWriteLayer, DmeTime
 // Stamp the key at the specified time
 //-----------------------------------------------------------------------------
 template< class T >
-void CLogFalloffBlend< T >::UpdateClampHelper( DmeTime_t t, const CDmeTypedLogLayer<T>* pReadLayer, 
+void CLogFalloffBlend< T >::UpdateClampHelper( DmeTime_t t, const CDmeTypedLogLayer<T>* pReadLayer,
 	float flIntensity, LogClampHelper_t<T> &clampHelper, const T* pInterpTarget )
 {
 	// Stamp the key at the current time
@@ -4220,7 +4218,7 @@ void CDmeTypedLog< T >::_StampKeyAtHeadResample( DmeTime_t tHeadPosition, const 
 	// When dragging preset fader, eveything get's blended in by the amount of the preset being applied
 	bool bUsePresetRules = ( RECORD_PRESET == params.GetRecordingMode() );
 	bool bIsStampingQuaternions = ( CDmAttributeInfo<T>::ATTRIBUTE_TYPE == AT_QUATERNION );
-	bool bPerformInterpolation = bUsePresetRules || bIsStampingQuaternions; 
+	bool bPerformInterpolation = bUsePresetRules || bIsStampingQuaternions;
 
 	// FIXME: Preset value should never be NULL. We need to grab it from the attribute
 	bool bUsePresetValue = bUsePresetRules && params.m_pPresetValue && params.m_pPresetValue->GetType() == CDmAttributeInfo<T>::ATTRIBUTE_TYPE;
@@ -4261,7 +4259,7 @@ void CDmeTypedLog< T >::_StampKeyAtHeadResample( DmeTime_t tHeadPosition, const 
 	tResampleStartTime[TS_RIGHT_HOLD] = DMETIME_MAXTIME;
 	tResampleStartTime[TS_RIGHT_FALLOFF] = ComputeResampleStartTime( params, 1 );
 
-	// Finally, figure out which layer we're reading from, 
+	// Finally, figure out which layer we're reading from,
 	// where the next key is, and when we must stop reading from it
 	int nReadLayer = FindLayerForTimeSkippingTopmost( tStartTime );
 	CDmeTypedLogLayer< T > *pReadLayer = GetLayer( nReadLayer );
@@ -4328,16 +4326,16 @@ void CDmeTypedLog< T >::_StampKeyAtHeadResample( DmeTime_t tHeadPosition, const 
 				tNextSampleTime = tLayerEndTime;
 			}
 		}
-					    
+
 		// Update the transition time
 		if ( tCurrent == tTransitionTimes[nNextTransition] )
 		{
 			// NOTE: This is necessary because each blend region has different 'deltas'
 			// to avoid overdriving in the falloff regions. Therefore, the 'previous value'
-			// used in the clamping operation will be different 
+			// used in the clamping operation will be different
 			blend[nNextTransition].UpdateClampHelper( tCurrent, pReadLayer, params.m_flIntensity, clampHelper, pInterpTarget );
 
-			// Also need to update the 'previous' value stored in the 
+			// Also need to update the 'previous' value stored in the
 			++nNextTransition;
 
 			// Update the first resample time
@@ -4368,11 +4366,11 @@ void CDmeTypedLog< T >::_StampKeyAtHeadResample( DmeTime_t tHeadPosition, const 
 	}
 }
 
-						  
+
 //-----------------------------------------------------------------------------
 // In this case, we actually stamp a key right at the head position unlike the above method
 //-----------------------------------------------------------------------------
-template< class T > 
+template< class T >
 void CDmeTypedLog< T >::_StampKeyFilteredByTimeSelection( CDmeTypedLogLayer< T > *pWriteLayer, DmeTime_t t, const DmeLog_TimeSelection_t &params, const T& value, bool bForce )
 {
 	// Found a key which needs to be modulated upward
@@ -4388,14 +4386,14 @@ void CDmeTypedLog< T >::_StampKeyFilteredByTimeSelection( CDmeTypedLogLayer< T >
 	T oldVal = GetValueSkippingTopmostLayer( t );
 	T newVal = Interpolate( flFraction, oldVal, interpTarget );
 	T writeVal = ClampValue( newVal );
-	pWriteLayer->InsertKey( t, writeVal, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT ); 
+	pWriteLayer->InsertKey( t, writeVal, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT );
 }
 
 
 //-----------------------------------------------------------------------------
 // In this case, we actually stamp a key right at the head position unlike the above method
 //-----------------------------------------------------------------------------
-template< class T > 
+template< class T >
 void CDmeTypedLog< T >::_StampKeyAtHeadFilteredByTimeSelection( DmeTime_t tHeadPosition, DmeTime_t tPreviousHeadPosition, const DmeLog_TimeSelection_t &params, const T& value )
 {
 	// Should be in "layer recording" mode!!!
@@ -4435,7 +4433,7 @@ void CDmeTypedLog< T >::_StampKeyAtHeadFilteredByTimeSelection( DmeTime_t tHeadP
 	{
 		_StampKeyFilteredByTimeSelection( pWriteLayer, tempParams.m_nTimes[i], params, value, true );
 	}
-	
+
 	_StampKeyFilteredByTimeSelection( pWriteLayer, tHeadPosition, params, value );
 }
 
@@ -4506,21 +4504,25 @@ int CDmeTypedLog< T >::FindKeyWithinTolerance( DmeTime_t nTime, DmeTime_t nToler
 //-----------------------------------------------------------------------------
 // tests whether two values differ by more than the threshold
 //-----------------------------------------------------------------------------
+template <>
 bool CDmeTypedLog< Vector >::ValuesDiffer( const Vector& a, const Vector& b ) const
 {
 	return a.DistToSqr( b ) > m_threshold * m_threshold;
 }
 
+template <>
 bool CDmeTypedLog< QAngle >::ValuesDiffer( const QAngle& a, const QAngle& b ) const
 {
 	return ( a - b ).LengthSqr() > m_threshold * m_threshold;
 }
 
+template <>
 bool CDmeTypedLog< Quaternion >::ValuesDiffer( const Quaternion& a, const Quaternion& b ) const
 {
 	return QuaternionAngleDiff( a, b ) > m_threshold;
 }
 
+template <>
 bool CDmeTypedLog< float >::ValuesDiffer( const float& a, const float& b ) const
 {
 	return fabs( a - b ) > m_threshold;
@@ -4677,7 +4679,7 @@ void CDmeTypedLog< T >::GetValue( DmeTime_t time, CDmAttribute *pAttr, uint inde
 }
 
 template< class T >
-void CDmeTypedLog< T >::GetValueSkippingTopmostLayer( DmeTime_t time, CDmAttribute *pAttr, uint index ) const 
+void CDmeTypedLog< T >::GetValueSkippingTopmostLayer( DmeTime_t time, CDmAttribute *pAttr, uint index ) const
 {
 	CUtlVector< int > layers;
 	FindLayersForTime( time, layers );
@@ -4834,7 +4836,7 @@ void CDmeTypedLog< T >::GetEdgeValue( int edge, T& val ) const
 	GetTypedCurveInfo()->GetEdgeValue( edge, val );
 }
 
-template< class T > 
+template< class T >
 void CDmeTypedLog< T >::BlendTimesUsingTimeSelection( const CDmeLogLayer *firstLayer, const CDmeLogLayer *secondLayer, CDmeLogLayer *outputLayer, const DmeLog_TimeSelection_t &params, DmeTime_t tStartOffset )
 {
 	const CDmeTypedLogLayer< T > *topLayer = static_cast< const CDmeTypedLogLayer< T > * >( secondLayer );
@@ -4879,7 +4881,7 @@ void CDmeTypedLog< T >::BlendTimesUsingTimeSelection( const CDmeLogLayer *firstL
 	}
 }
 
-template< class T > 
+template< class T >
 void CDmeTypedLog< T >::BlendLayersUsingTimeSelection( const CDmeLogLayer *firstLayer, const CDmeLogLayer *secondLayer, CDmeLogLayer *outputLayer, const DmeLog_TimeSelection_t &params, bool bUseBaseLayerSamples, DmeTime_t tStartOffset )
 {
 	const CDmeTypedLogLayer< T > *topLayer = static_cast< const CDmeTypedLogLayer< T > * >( secondLayer );
@@ -4943,7 +4945,7 @@ void CDmeTypedLog< T >::BlendLayersUsingTimeSelection( const CDmeLogLayer *first
 	}
 }
 
-template< class T > 
+template< class T >
 void CDmeTypedLog< T >::BlendLayersUsingTimeSelection( const DmeLog_TimeSelection_t &params )
 {
 	Assert( GetNumLayers() >= 2 );
@@ -4976,7 +4978,7 @@ void CDmeTypedLog< T >::BlendLayersUsingTimeSelection( const DmeLog_TimeSelectio
 	g_pDataModel->DestroyElement( newLayer->GetHandle() );
 }
 
-template< class T > 
+template< class T >
 void CDmeTypedLog< T >::RevealUsingTimeSelection( const DmeLog_TimeSelection_t &params, CDmeLogLayer *savedLayer )
 {
 	CDmeTypedLogLayer< T > *saved = static_cast< CDmeTypedLogLayer< T > * >( savedLayer );
@@ -4987,7 +4989,7 @@ void CDmeTypedLog< T >::RevealUsingTimeSelection( const DmeLog_TimeSelection_t &
 	int bestLayer = GetTopmostLayer(); // Topmost should be at least layer # 1 (0 is the base layer)
 	if ( bestLayer <= 0 )
 		return;
-	
+
 	Assert( params.m_nResampleInterval > DmeTime_t( 0 ) );
 	if ( params.m_nResampleInterval < DmeTime_t( 0 ) )
 		return;
@@ -5023,7 +5025,7 @@ void CDmeTypedLog< T >::RevealUsingTimeSelection( const DmeLog_TimeSelection_t &
 		T newValue = Interpolate( frac, curValue, revealValue );
 
 		// Overwrite key
-		writeLayer->InsertKey( curtime, newValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT ); 
+		writeLayer->InsertKey( curtime, newValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT );
 	}
 
 	if ( g_pDmElementFramework->GetPhase() == PH_EDIT )
@@ -5032,7 +5034,7 @@ void CDmeTypedLog< T >::RevealUsingTimeSelection( const DmeLog_TimeSelection_t &
 	}
 }
 
-template< class T > 
+template< class T >
 void RandomValue( const T& average, const T& oldValue, T& newValue )
 {
 	newValue = oldValue;
@@ -5041,7 +5043,7 @@ void RandomValue( const T& average, const T& oldValue, T& newValue )
 template<> void RandomValue( const Vector& average, const Vector& oldValue, Vector& newValue )
 {
 	newValue = oldValue;
-	
+
 	for ( int i = 0; i < 3; ++i )
 	{
 		newValue[ i ] += RandomFloat( -fabs( average[ i ] ), fabs( average[ i ] ) );
@@ -5051,7 +5053,7 @@ template<> void RandomValue( const Vector& average, const Vector& oldValue, Vect
 template<> void RandomValue( const Quaternion& average, const Quaternion& oldValue, Quaternion& newValue )
 {
 	newValue = oldValue;
-	
+
 	for ( int i = 0; i < 4; ++i )
 	{
 		newValue[ i ] += RandomFloat( -fabs( average[ i ] ), fabs( average[ i ] ) );
@@ -5061,7 +5063,7 @@ template<> void RandomValue( const Quaternion& average, const Quaternion& oldVal
 template<> void RandomValue( const Vector4D& average, const Vector4D& oldValue, Vector4D& newValue )
 {
 	newValue = oldValue;
-	
+
 	for ( int i = 0; i < 4; ++i )
 	{
 		newValue[ i ] += RandomFloat( -fabs( average[ i ] ), fabs( average[ i ] ) );
@@ -5071,7 +5073,7 @@ template<> void RandomValue( const Vector4D& average, const Vector4D& oldValue, 
 template<> void RandomValue( const Vector2D& average, const Vector2D& oldValue, Vector2D& newValue )
 {
 	newValue = oldValue;
-	
+
 	for ( int i = 0; i < 2; ++i )
 	{
 		newValue[ i ] += RandomFloat( -fabs( average[ i ] ), fabs( average[ i ] ) );
@@ -5168,7 +5170,7 @@ void CDmeTypedLog< T >::StaggerUsingTimeSelection( const DmeLog_TimeSelection_t&
 			curtime += tStaggerAmount;
 		}
 
-		writeLayer->InsertKey( curtime, oldValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT ); 
+		writeLayer->InsertKey( curtime, oldValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT );
 	}
 }
 
@@ -5225,9 +5227,9 @@ void CDmeTypedLog< T >::FilterUsingTimeSelection( IUniformRandomStream *random, 
 					DmeTime_t curtime = DmeTime_t( t );
 					if ( curtime > params.m_nTimes[ TS_RIGHT_FALLOFF ] )
 						curtime = params.m_nTimes[ TS_RIGHT_FALLOFF ];
-	
+
 					T curValue = baseLayer->GetValue( curtime );
-					writeLayer->SetKey( curtime, curValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT ); 
+					writeLayer->SetKey( curtime, curValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT );
 				}
 			}
 			else
@@ -5274,7 +5276,7 @@ void CDmeTypedLog< T >::FilterUsingTimeSelection( IUniformRandomStream *random, 
 						newValue = Interpolate( frac, oldValue, newValue );
 
 						// Overwrite key
-						writeLayer->InsertKey( curtime, newValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT ); 
+						writeLayer->InsertKey( curtime, newValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT );
 					}
 				}
 				else
@@ -5303,7 +5305,7 @@ void CDmeTypedLog< T >::FilterUsingTimeSelection( IUniformRandomStream *random, 
 						newValue = Interpolate( frac, oldValue, newValue );
 
 						// Overwrite key
-						writeLayer->InsertKey( curtime, newValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT ); 
+						writeLayer->InsertKey( curtime, newValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT );
 					}
 				}
 			}
@@ -5317,7 +5319,7 @@ void CDmeTypedLog< T >::FilterUsingTimeSelection( IUniformRandomStream *random, 
 	case FILTER_JITTER:
 		{
 			// Compute average value in entire log
-			
+
 			T average = Average( baseLayer->m_values.Base(), baseLayer->m_values.Count() );
 			average = ScaleValue( average, 0.05f * flScale );
 
@@ -5339,9 +5341,9 @@ void CDmeTypedLog< T >::FilterUsingTimeSelection( IUniformRandomStream *random, 
 
 					newValue = Interpolate( frac, oldValue, newValue );
 
-					writeLayer->SetKey( curtime, newValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT ); 
+					writeLayer->SetKey( curtime, newValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT );
 				}
-				
+
 			}
 			else
 			{
@@ -5364,7 +5366,7 @@ void CDmeTypedLog< T >::FilterUsingTimeSelection( IUniformRandomStream *random, 
 
 					newValue = Interpolate( frac, oldValue, newValue );
 
-					writeLayer->InsertKey( curtime, newValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT ); 
+					writeLayer->InsertKey( curtime, newValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT );
 				}
 			}
 		}
@@ -5422,14 +5424,14 @@ void CDmeTypedLog< T >::FilterUsingTimeSelection( IUniformRandomStream *random, 
 					Vector out;
 
 					Interpolator_CurveInterpolate
-						( 
-						iType, 
+						(
+						iType,
 						points[ 0 ], // unused
-						points[ 1 ], 
-						points[ 2 ], 
+						points[ 1 ],
+						points[ 2 ],
 						points[ 3 ], // unused
-						frac, 
-						out 
+						frac,
+						out
 						);
 
 					float flBias = clamp( out.y, 0.0f, 1.0f );
@@ -5438,7 +5440,7 @@ void CDmeTypedLog< T >::FilterUsingTimeSelection( IUniformRandomStream *random, 
 					newValue = Add( oldValue, ScaleValue( dynamicRange, dFrac ) );
 				}
 
-				writeLayer->InsertKey( curtime, newValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT ); 
+				writeLayer->InsertKey( curtime, newValue, IsUsingCurveTypes() ? GetDefaultCurveType() : CURVE_DEFAULT );
 			}
 		}
 		break;
@@ -5491,7 +5493,7 @@ static inline bool ShouldSkipTransition( int nTransition, int nZeroField )
 	//  0     1     2     3
 	//  |  A  |  B  |  C  |
 	//
-	//  nZeroField bits		
+	//  nZeroField bits
 	//  C B A				Skip transitions
 	//	0 0 0				none
 	//	0 0 1				2
@@ -5511,12 +5513,12 @@ static inline bool ShouldSkipTransition( int nTransition, int nZeroField )
 }
 
 template< class T >
-void CDmeTypedLog< T >::PasteAndRescaleSamples( 
-	const CDmeLogLayer *pBase, 
-	const CDmeLogLayer *pDataLayer, 
-	CDmeLogLayer *pOutputLayer, 
-	const DmeLog_TimeSelection_t& srcParams, 
-	const DmeLog_TimeSelection_t& destParams, 
+void CDmeTypedLog< T >::PasteAndRescaleSamples(
+	const CDmeLogLayer *pBase,
+	const CDmeLogLayer *pDataLayer,
+	CDmeLogLayer *pOutputLayer,
+	const DmeLog_TimeSelection_t& srcParams,
+	const DmeLog_TimeSelection_t& destParams,
 	bool bBlendAreaInFalloffRegion )
 {
 	Assert( GetNumLayers() >= 2 );
@@ -5536,8 +5538,8 @@ void CDmeTypedLog< T >::PasteAndRescaleSamples(
 	Assert( pWriteLayer );
 
 	// NOTE: Array index 0 is src (pClipboard), index 1 is dest (pWriteLayer)
-	DmeTime_t tStartTime[ PASTE_STATE_COUNT+1 ][ 2 ] =	
-	{ 
+	DmeTime_t tStartTime[ PASTE_STATE_COUNT+1 ][ 2 ] =
+	{
 		{ DmeTime_t( srcParams.m_nTimes[ 0 ] ),	DmeTime_t( destParams.m_nTimes[ 0 ] ) },
 		{ DmeTime_t( srcParams.m_nTimes[ 1 ] ),	DmeTime_t( destParams.m_nTimes[ 1 ] ) },
 		{ DmeTime_t( srcParams.m_nTimes[ 2 ] ),	DmeTime_t( destParams.m_nTimes[ 2 ] ) },
@@ -5575,7 +5577,7 @@ void CDmeTypedLog< T >::PasteAndRescaleSamples(
 		bBlendAreaInFalloffRegion ? pBaseLayer->GetValue( tStartTime[ PASTE_STATE_RAMP_IN ][ 1 ] ) : pClipboard->GetValue( tStartTime[ PASTE_STATE_RAMP_IN ][ 0 ] ),
 		pClipboard->GetValue( tStartTime[ PASTE_STATE_HOLD ][ 0 ] ),
 		pClipboard->GetValue( tStartTime[ PASTE_STATE_RAMP_OUT ][ 0 ] ),
-		bBlendAreaInFalloffRegion ? pBaseLayer->GetValue( tStartTime[ PASTE_STATE_AFTER ][ 1 ] ) : pClipboard->GetValue( tStartTime[ PASTE_STATE_AFTER ][ 0 ] ) 
+		bBlendAreaInFalloffRegion ? pBaseLayer->GetValue( tStartTime[ PASTE_STATE_AFTER ][ 1 ] ) : pClipboard->GetValue( tStartTime[ PASTE_STATE_AFTER ][ 0 ] )
 	};
 
 	// Compute state necessary to blend in the ramp in + ramp out regions
@@ -5615,7 +5617,7 @@ void CDmeTypedLog< T >::PasteAndRescaleSamples(
 		T val = pClipboard->GetKeyValue( j );
 
 		// Determine which state we're in
-		// NOTE: Don't use ComputeRegionForTime here because it includes 
+		// NOTE: Don't use ComputeRegionForTime here because it includes
 		// the endpoint of the hold region into the hold region.
 		int nState;
 		for ( nState = nPrevState; nState < PASTE_STATE_COUNT; ++nState )
@@ -5630,7 +5632,7 @@ void CDmeTypedLog< T >::PasteAndRescaleSamples(
 		{
 			nState = ++nPrevState;
 
-			// This logic will prevent samples at the hold start + end if 
+			// This logic will prevent samples at the hold start + end if
 			// the source + dest regions are 0 width and will only do the first and last
 			// if we're squeezing the entire time selection down to a single point.
 			bForceKey = true;
@@ -5737,7 +5739,7 @@ void CDmeTypedLog< T >::PasteAndRescaleSamples(
 }
 
 template< class T >
-void CDmeTypedLog< T >::PasteAndRescaleSamples( 
+void CDmeTypedLog< T >::PasteAndRescaleSamples(
 	const CDmeLogLayer *src,   // clipboard data
 	const DmeLog_TimeSelection_t& srcParams,   // clipboard time selection
 	const DmeLog_TimeSelection_t& destParams,   // current time selection
@@ -5748,6 +5750,7 @@ void CDmeTypedLog< T >::PasteAndRescaleSamples(
 	PasteAndRescaleSamples( pBaseLayer, src, pWriteLayer, srcParams, destParams, bBlendAreaInFalloffRegion );
 }
 
+template <>
 void CDmeTypedLog< Vector >::BuildNormalizedLayer( CDmeTypedLogLayer< float > *target )
 {
 	Assert( target );
@@ -5792,6 +5795,7 @@ void CDmeTypedLog< Vector >::BuildNormalizedLayer( CDmeTypedLogLayer< float > *t
 	}
 }
 
+template <>
 void CDmeTypedLog< Vector2D >::BuildNormalizedLayer( CDmeTypedLogLayer< float > *target )
 {
 	Assert( target );
@@ -5837,6 +5841,7 @@ void CDmeTypedLog< Vector2D >::BuildNormalizedLayer( CDmeTypedLogLayer< float > 
 	}
 }
 
+template <>
 void CDmeTypedLog< Vector4D >::BuildNormalizedLayer( CDmeTypedLogLayer< float > *target )
 {
 	Assert( target );
@@ -5882,6 +5887,7 @@ void CDmeTypedLog< Vector4D >::BuildNormalizedLayer( CDmeTypedLogLayer< float > 
 	}
 }
 
+template <>
 void CDmeTypedLog< int >::BuildNormalizedLayer( CDmeTypedLogLayer< float > *target )
 {
 	Assert( target );
@@ -5927,6 +5933,7 @@ void CDmeTypedLog< int >::BuildNormalizedLayer( CDmeTypedLogLayer< float > *targ
 	}
 }
 
+template <>
 void CDmeTypedLog< float >::BuildNormalizedLayer( CDmeTypedLogLayer< float > *target )
 {
 	Assert( target );
@@ -6079,7 +6086,7 @@ void GenerateRotationLog( CDmeQuaternionLogLayer *pLayer, const Vector &vecAxis,
 	QuaternionMatrix( q, initial );
 
 	// Find the max rps, and compute the total rotation in degrees
-	// by the time we reach the transition points. The total rotation = 
+	// by the time we reach the transition points. The total rotation =
 	// integral from 0 to t of 360 * ( rate[i] - rate[i-1] ) t / tl + rate[i-1] )
 	// == 360 * ( ( rate[i] - rate[i-1] ) t^2 / 2 + rate[i-1] t )
 	float pTotalRotation[4];

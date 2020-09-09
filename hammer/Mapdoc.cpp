@@ -10,58 +10,58 @@
 #include <io.h>
 #include <direct.h>
 #include <mmsystem.h>
-#include "BuildNum.h"
-#include "CustomMessages.h"
-#include "EntityReportDlg.h"
-#include "FaceEditSheet.h"
-#include "GlobalFunctions.h"
-#include "GotoBrushDlg.h"
-#include "History.h"
-#include "MainFrm.h"
-#include "MapAnimator.h"
-#include "MapCheckDlg.h"
-#include "MapDefs.h"		// dvs: For COORD_NOTINIT
-#include "MapDisp.h"
-#include "MapDoc.h"
-#include "MapEntity.h"
-#include "MapGroup.h"
-#include "MapInfoDlg.h"
+#include "buildnum.h"
+#include "custommessages.h"
+#include "entityreportdlg.h"
+#include "faceeditsheet.h"
+#include "globalfunctions.h"
+#include "gotobrushdlg.h"
+#include "history.h"
+#include "mainfrm.h"
+#include "mapanimator.h"
+#include "mapcheckdlg.h"
+#include "mapdefs.h"		// dvs: For COORD_NOTINIT
+#include "mapdisp.h"
+#include "mapdoc.h"
+#include "mapentity.h"
+#include "mapgroup.h"
+#include "mapinfodlg.h"
 #include "MapInstance.h"
-#include "MapSolid.h"
-#include "MapView2D.h"
-#include "MapViewLogical.h"
-#include "MapView3D.h"
-#include "MapWorld.h"
+#include "mapsolid.h"
+#include "mapview2d.h"
+#include "mapviewlogical.h"
+#include "mapview3d.h"
+#include "mapworld.h"
 #include "NewVisGroupDlg.h"
-#include "ObjectProperties.h"
-#include "OptionProperties.h"
-#include "Options.h"
-#include "PasteSpecialDlg.h"
-#include "Prefabs.h"
-#include "Prefab3D.h"
+#include "objectproperties.h"
+#include "optionproperties.h"
+#include "options.h"
+#include "pastespecialdlg.h"
+#include "prefabs.h"
+#include "prefab3d.h"
 #include "progdlg.h"
-#include "ReplaceTexDlg.h"
-#include "RunMap.h"
-#include "RunMapExpertDlg.h"
-#include "SaveInfo.h"
-#include "Manifest.h"
-#include "ManifestDialog.h"
+#include "replacetexdlg.h"
+#include "runmap.h"
+#include "runmapexpertdlg.h"
+#include "saveinfo.h"
+#include "manifest.h"
+#include "manifestdialog.h"
 
 #include "ToolManager.h"
 #include "ToolCamera.h"
 #include "ToolEntity.h"
 
-#include "SelectEntityDlg.h"
-#include "Shell.h"
-#include "StatusBarIDs.h"
-#include "StrDlg.h"
-#include "TextureSystem.h"
-#include "TransformDlg.h"
-#include "VisGroup.h"
+#include "selectentitydlg.h"
+#include "shell.h"
+#include "statusbarids.h"
+#include "strdlg.h"
+#include "texturesystem.h"
+#include "transformdlg.h"
+#include "visgroup.h"
 #include "hammer.h"
 #include "camera.h"
 #include "MapDiffDlg.h"
-#include "StockSolids.h"
+#include "stocksolids.h"
 #include "ToolMorph.h"
 #include "ToolBlock.h"
 #include "mapdoc.h"
@@ -108,178 +108,178 @@ IMPLEMENT_DYNCREATE(CMapDoc, CDocument)
 
 BEGIN_MESSAGE_MAP(CMapDoc, CDocument)
 	//{{AFX_MSG_MAP(CMapDoc)
-	ON_COMMAND(ID_EDIT_DELETE, OnEditDelete)
-	ON_COMMAND(ID_MAP_SNAPTOGRID, OnMapSnaptogrid)
-	ON_UPDATE_COMMAND_UI(ID_MAP_SNAPTOGRID, OnUpdateMapSnaptogrid)
-	ON_COMMAND(ID_MAP_ENTITY_GALLERY, OnMapEntityGallery)
-	ON_COMMAND(ID_EDIT_APPLYTEXTURE, OnEditApplytexture)
-	ON_COMMAND(ID_TOOLS_SUBTRACTSELECTION, OnToolsSubtractselection)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_SUBTRACTSELECTION, OnUpdateEditSelection)
-	ON_COMMAND(ID_EDIT_COPYWC, OnEditCopy)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_COPYWC, OnUpdateEditSelection)
-	ON_COMMAND(ID_EDIT_PASTEWC, OnEditPaste)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTEWC, OnUpdateEditPaste)
-	ON_COMMAND(ID_EDIT_CUTWC, OnEditCut)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_CUTWC, OnUpdateEditSelection)
-	ON_COMMAND(ID_TOOLS_GROUP, OnToolsGroup)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_GROUP, OnUpdateEditSelection)
-	ON_COMMAND(ID_TOOLS_UNGROUP, OnToolsUngroup)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_UNGROUP, OnUpdateEditSelection)
-	ON_COMMAND(ID_VIEW_GRID, OnViewGrid)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_GRID, OnUpdateViewGrid)
-	ON_COMMAND(ID_VIEW_LOGICAL_GRID, OnViewLogicalGrid)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_LOGICAL_GRID, OnUpdateViewLogicalGrid)
-	ON_COMMAND(ID_EDIT_SELECTALL, OnEditSelectall)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECTALL, OnUpdateEditFunction)
-	ON_COMMAND(ID_EDIT_REPLACE, OnEditReplace)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_REPLACE, OnUpdateEditFunction)
-	ON_COMMAND(ID_FILE_SAVE_AS, OnFileSaveAs)
-	ON_COMMAND(ID_FILE_SAVE, OnFileSave)
-	ON_COMMAND(ID_MAP_GRIDLOWER, OnMapGridlower)
-	ON_COMMAND(ID_MAP_GRIDHIGHER, OnMapGridhigher)
-	ON_COMMAND(ID_EDIT_TOWORLD, OnEditToWorld)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_TOWORLD, OnUpdateEditSelection)
-	ON_COMMAND(ID_FILE_EXPORT, OnFileExport)
-	ON_COMMAND(ID_FILE_EXPORTAGAIN, OnFileExportAgain)
-	ON_COMMAND(ID_EDIT_MAPPROPERTIES, OnEditMapproperties)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_MAPPROPERTIES, OnUpdateEditFunction)
-	ON_COMMAND(ID_FILE_RUNMAP, OnFileRunmap)
-	ON_COMMAND(ID_TOOLS_HIDEITEMS, OnToolsHideitems)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_HIDEITEMS, OnUpdateToolsHideitems)
-	ON_COMMAND(ID_VIEW_HIDEUNCONNECTED, OnViewHideUnconnectedEntities)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_HIDEUNCONNECTED, OnUpdateViewHideUnconnectedEntities)
-	ON_COMMAND(ID_TOOLS_HIDE_ENTITY_NAMES, OnToolsHideEntityNames)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_HIDE_ENTITY_NAMES, OnUpdateToolsHideEntityNames)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, OnUpdateEditSelection)
-	ON_COMMAND(ID_MAP_INFORMATION, OnMapInformation)
-	ON_COMMAND(ID_VIEW_CENTERONSELECTION, OnViewCenterOnSelection)
-	ON_COMMAND(ID_VIEW_CENTER3DVIEWSONSELECTION, OnViewCenter3DViewsOnSelection)
-	ON_COMMAND(ID_EDIT_PASTESPECIAL, OnEditPastespecial)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTESPECIAL, OnUpdateEditPastespecial)
-	ON_COMMAND(ID_EDIT_SELNEXT, OnEditSelnext)
-	ON_COMMAND(ID_EDIT_SELPREV, OnEditSelprev)
-	ON_COMMAND(ID_EDIT_SELNEXT_CASCADING, OnEditSelnextCascading)
-	ON_COMMAND(ID_EDIT_SELPREV_CASCADING, OnEditSelprevCascading)
-	ON_COMMAND(ID_LOGICALOBJECT_MOVETOGETHER, OnLogicalMoveBlock)
-	ON_COMMAND(ID_LOGICALOBJECT_SELECTALLCASCADING, OnLogicalSelectAllCascading)
-	ON_COMMAND(ID_LOGICALOBJECT_SELECTALLCONNECTED, OnLogicalSelectAllConnected)
-	ON_COMMAND_EX(ID_VIEW_HIDESELECTEDOBJECTS, OnViewHideObjects)
-	ON_COMMAND(ID_MAP_CHECK, OnMapCheck)
-	ON_COMMAND(ID_VIEW_SHOWCONNECTIONS, OnViewShowconnections)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOWCONNECTIONS, OnUpdateViewShowconnections)
-	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE, OnUpdateFileSave)
-	ON_COMMAND(ID_TOOLS_CREATEPREFAB, OnToolsCreateprefab)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_CREATEPREFAB, OnUpdateEditSelection)
-	ON_COMMAND(ID_INSERTPREFAB_ORIGINAL, OnInsertprefabOriginal)
-	ON_COMMAND(ID_EDIT_REPLACETEX, OnEditReplacetex)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_REPLACETEX, OnUpdateEditFunction)
-	ON_COMMAND(ID_TOOLS_HOLLOW, OnToolsHollow)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_HOLLOW, OnUpdateEditSelection)
-	ON_COMMAND(ID_TOOLS_SNAPSELECTEDTOGRID, OnToolsSnapselectedtogrid)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_SNAPSELECTEDTOGRID, OnUpdateEditSelection)
-	ON_COMMAND(ID_TOOLS_SNAP_SELECTED_TO_GRID_INDIVIDUALLY, OnToolsSnapSelectedToGridIndividually)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_SNAP_SELECTED_TO_GRID_INDIVIDUALLY, OnUpdateEditSelection)
-	ON_COMMAND(ID_TOOLS_SPLITFACE, OnToolsSplitface)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_SPLITFACE, OnUpdateToolsSplitface)
-	ON_COMMAND(ID_TOOLS_TRANSFORM, OnToolsTransform)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_TRANSFORM, OnUpdateEditSelection)
-	ON_COMMAND(ID_TOOLS_TOGGLETEXLOCK, OnToolsToggletexlock)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_TOGGLETEXLOCK, OnUpdateToolsToggletexlock)
-	ON_COMMAND(ID_TOOLS_TOGGLETEXLOCKSCALE, OnToolsToggletexlockScale)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_TOGGLETEXLOCKSCALE, OnUpdateToolsToggletexlockScale)
-	ON_COMMAND(ID_TOOLS_TEXTUREALIGN, OnToolsTextureAlignment)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_TEXTUREALIGN, OnUpdateToolsTextureAlignment)
-	ON_COMMAND(ID_TOGGLE_CORDON, OnToggleCordon)
-	ON_UPDATE_COMMAND_UI(ID_TOGGLE_CORDON, OnUpdateToggleCordon)
-	ON_COMMAND_EX(ID_VIEW_HIDENONSELECTEDOBJECTS, OnViewHideObjects)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_HIDENONSELECTEDOBJECTS, OnUpdateViewHideUnselectedObjects)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_HELPERS, OnUpdateViewShowHelpers)
-	ON_COMMAND(ID_VIEW_SHOW_HELPERS, OnViewShowHelpers)
-	ON_COMMAND(ID_VIEW_SHOWMODELSIN2D, OnViewShowModelsIn2D)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOWMODELSIN2D, OnUpdateViewShowModelsIn2D)
-	ON_COMMAND(ID_VIEW_PREVIEW_MODEL_FADE, OnViewPreviewModelFade)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_PREVIEW_MODEL_FADE, OnUpdateViewPreviewModelFade)
-	ON_COMMAND(ID_COLLISION_WIREFRAME, OnCollisionWireframe)
-	ON_UPDATE_COMMAND_UI(ID_COLLISION_WIREFRAME, OnUpdateCollisionWireframe)
-	ON_COMMAND(ID_SHOW_DETAIL_OBJECTS, OnShowDetailObjects)
-	ON_UPDATE_COMMAND_UI(ID_SHOW_DETAIL_OBJECTS, OnUpdateShowDetailObjects)
-	ON_COMMAND(ID_SHOW_NODRAW_BRUSHES, OnShowNoDrawBrushes)
-	ON_UPDATE_COMMAND_UI(ID_SHOW_NODRAW_BRUSHES, OnUpdateShowNoDrawBrushes)
-	ON_COMMAND(ID_TOGGLE_GROUPIGNORE, OnToggleGroupignore)
-	ON_UPDATE_COMMAND_UI(ID_TOGGLE_GROUPIGNORE, OnUpdateToggleGroupignore)
-	ON_COMMAND(ID_VSCALE_TOGGLE, OnVscaleToggle)
-	ON_COMMAND(ID_MAP_ENTITYREPORT, OnMapEntityreport)
-	ON_COMMAND(ID_TOGGLE_SELECTBYHANDLE, OnToggleSelectbyhandle)
-	ON_UPDATE_COMMAND_UI(ID_TOGGLE_SELECTBYHANDLE, OnUpdateToggleSelectbyhandle)
-	ON_COMMAND(ID_TOGGLE_INFINITESELECT, OnToggleInfiniteselect)
-	ON_UPDATE_COMMAND_UI(ID_TOGGLE_INFINITESELECT, OnUpdateToggleInfiniteselect)
-	ON_COMMAND(ID_FILE_EXPORTTODXF, OnFileExporttodxf)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_APPLYTEXTURE, OnUpdateEditApplytexture)
-	ON_COMMAND(ID_EDIT_CLEARSELECTION, OnEditClearselection)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_CLEARSELECTION, OnUpdateEditSelection)
-	ON_COMMAND(ID_TOOLS_CENTER_ORIGINS, OnToolsCenterOrigins)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_CENTER_ORIGINS, OnUpdateEditSelection)
-	ON_COMMAND(ID_MAP_LOADPOINTFILE, OnMapLoadpointfile)
-	ON_COMMAND(ID_MAP_UNLOADPOINTFILE, OnMapUnloadpointfile)
-	ON_COMMAND(ID_MAP_LOADPORTALFILE, OnMapLoadportalfile)
-	ON_COMMAND(ID_MAP_UNLOADPORTALFILE, OnMapUnloadportalfile)
-	ON_COMMAND(ID_TOGGLE_3D_GRID, OnToggle3DGrid)
-	ON_UPDATE_COMMAND_UI(ID_TOGGLE_3D_GRID, OnUpdateToggle3DGrid)
-	ON_COMMAND(ID_EDIT_TOENTITY, OnEditToEntity)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_TOENTITY, OnUpdateEditSelection)
-	ON_COMMAND_EX(ID_EDIT_UNDO, OnUndoRedo)
-	ON_COMMAND_EX(ID_EDIT_REDO, OnUndoRedo)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, OnUpdateUndoRedo)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, OnUpdateUndoRedo)
-	ON_COMMAND(ID_VSCALE_CHANGED, OnChangeVertexscale)
-	ON_COMMAND(ID_GOTO_BRUSH, OnViewGotoBrush)
-	ON_COMMAND(ID_GOTO_COORDS, OnViewGotoCoords)
-	ON_COMMAND(ID_SHOW_SELECTED_BRUSH_NUMBER, OnMapShowSelectedBrushNumber)
-	ON_COMMAND(ID_EDIT_FINDENTITIES, OnEditFindEntities)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_FINDENTITIES, OnUpdateEditFunction)
-	ON_COMMAND( ID_TOOLS_DISP_SOLIDDRAW, OnToggleDispSolidMask )
-	ON_UPDATE_COMMAND_UI( ID_TOOLS_DISP_SOLIDDRAW, OnUpdateToggleSolidMask )
-	ON_COMMAND( ID_TOOLS_DISP_DRAWWALKABLE, OnToggleDispDrawWalkable )
-	ON_UPDATE_COMMAND_UI( ID_TOOLS_DISP_DRAWWALKABLE, OnUpdateToggleDispDrawWalkable )
-	ON_COMMAND( ID_TOOLS_DISP_DRAW3D, OnToggleDispDraw3D )
-	ON_UPDATE_COMMAND_UI( ID_TOOLS_DISP_DRAW3D, OnUpdateToggleDispDraw3D )
-	ON_COMMAND( ID_TOOLS_DISP_DRAWBUILDABLE, OnToggleDispDrawBuildable )
-	ON_UPDATE_COMMAND_UI( ID_TOOLS_DISP_DRAWBUILDABLE, OnUpdateToggleDispDrawBuildable )
-	ON_COMMAND( ID_TOOLS_DISP_DRAWREMOVEDVERTS, OnToggleDispDrawRemovedVerts )
-	ON_UPDATE_COMMAND_UI( ID_TOOLS_DISP_DRAWREMOVEDVERTS, OnUpdateToggleDispDrawRemovedVerts )
-    ON_COMMAND(ID_MAP_DIFFMAPFILE, OnMapDiff)
-	ON_COMMAND(ID_LOGICALOBJECT_LAYOUTGEOMETRIC, OnLogicalobjectLayoutgeometric)
-	ON_COMMAND(ID_LOGICALOBJECT_LAYOUTDEFAULT, OnLogicalobjectLayoutdefault)
-	ON_COMMAND(ID_LOGICALOBJECT_LAYOUTLOGICAL, OnLogicalobjectLayoutlogical)
-	ON_COMMAND(ID_TOOLS_INSTANCES_HIDE, OnToolsInstancesHide)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_INSTANCES_HIDE, OnUpdateToolsInstancesHide)
-	ON_COMMAND(ID_TOOLS_INSTANCES_SHOWTINTED, OnToolsInstancesShowTinted)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_INSTANCES_SHOWTINTED, OnUpdateToolsInstancesShowTinted)
-	ON_COMMAND(ID_TOOLS_INSTANCES_SHOWNORMAL, OnToolsInstancesShowNormal)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_INSTANCES_SHOWNORMAL, OnUpdateToolsInstancesShowNormal)
-	ON_COMMAND(ID_INSTANCES_HIDEALL, OnInstancesHideAll)
-	ON_COMMAND(ID_INSTANCES_SHOWALL, OnInstancesShowAll)
-	ON_COMMAND(ID_TOOLS_NEWCORDON, OnNewCordon)
+	ON_COMMAND(ID_EDIT_DELETE, &ThisClass::OnEditDelete)
+	ON_COMMAND(ID_MAP_SNAPTOGRID, &ThisClass::OnMapSnaptogrid)
+	ON_UPDATE_COMMAND_UI(ID_MAP_SNAPTOGRID, &ThisClass::OnUpdateMapSnaptogrid)
+	ON_COMMAND(ID_MAP_ENTITY_GALLERY, &ThisClass::OnMapEntityGallery)
+	ON_COMMAND(ID_EDIT_APPLYTEXTURE, &ThisClass::OnEditApplytexture)
+	ON_COMMAND(ID_TOOLS_SUBTRACTSELECTION, &ThisClass::OnToolsSubtractselection)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_SUBTRACTSELECTION, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND(ID_EDIT_COPYWC, &ThisClass::OnEditCopy)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_COPYWC, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND(ID_EDIT_PASTEWC, &ThisClass::OnEditPaste)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTEWC, &ThisClass::OnUpdateEditPaste)
+	ON_COMMAND(ID_EDIT_CUTWC, &ThisClass::OnEditCut)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_CUTWC, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND(ID_TOOLS_GROUP, &ThisClass::OnToolsGroup)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_GROUP, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND(ID_TOOLS_UNGROUP, &ThisClass::OnToolsUngroup)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_UNGROUP, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND(ID_VIEW_GRID, &ThisClass::OnViewGrid)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_GRID, &ThisClass::OnUpdateViewGrid)
+	ON_COMMAND(ID_VIEW_LOGICAL_GRID, &ThisClass::OnViewLogicalGrid)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_LOGICAL_GRID, &ThisClass::OnUpdateViewLogicalGrid)
+	ON_COMMAND(ID_EDIT_SELECTALL, &ThisClass::OnEditSelectall)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECTALL, &ThisClass::OnUpdateEditFunction)
+	ON_COMMAND(ID_EDIT_REPLACE, &ThisClass::OnEditReplace)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_REPLACE, &ThisClass::OnUpdateEditFunction)
+	ON_COMMAND(ID_FILE_SAVE_AS, &ThisClass::OnFileSaveAs)
+	ON_COMMAND(ID_FILE_SAVE, &ThisClass::OnFileSave)
+	ON_COMMAND(ID_MAP_GRIDLOWER, &ThisClass::OnMapGridlower)
+	ON_COMMAND(ID_MAP_GRIDHIGHER, &ThisClass::OnMapGridhigher)
+	ON_COMMAND(ID_EDIT_TOWORLD, &ThisClass::OnEditToWorld)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_TOWORLD, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND(ID_FILE_EXPORT, &ThisClass::OnFileExport)
+	ON_COMMAND(ID_FILE_EXPORTAGAIN, &ThisClass::OnFileExportAgain)
+	ON_COMMAND(ID_EDIT_MAPPROPERTIES, &ThisClass::OnEditMapproperties)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_MAPPROPERTIES, &ThisClass::OnUpdateEditFunction)
+	ON_COMMAND(ID_FILE_RUNMAP, &ThisClass::OnFileRunmap)
+	ON_COMMAND(ID_TOOLS_HIDEITEMS, &ThisClass::OnToolsHideitems)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_HIDEITEMS, &ThisClass::OnUpdateToolsHideitems)
+	ON_COMMAND(ID_VIEW_HIDEUNCONNECTED, &ThisClass::OnViewHideUnconnectedEntities)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_HIDEUNCONNECTED, &ThisClass::OnUpdateViewHideUnconnectedEntities)
+	ON_COMMAND(ID_TOOLS_HIDE_ENTITY_NAMES, &ThisClass::OnToolsHideEntityNames)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_HIDE_ENTITY_NAMES, &ThisClass::OnUpdateToolsHideEntityNames)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND(ID_MAP_INFORMATION, &ThisClass::OnMapInformation)
+	ON_COMMAND(ID_VIEW_CENTERONSELECTION, &ThisClass::OnViewCenterOnSelection)
+	ON_COMMAND(ID_VIEW_CENTER3DVIEWSONSELECTION, &ThisClass::OnViewCenter3DViewsOnSelection)
+	ON_COMMAND(ID_EDIT_PASTESPECIAL, &ThisClass::OnEditPastespecial)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTESPECIAL, &ThisClass::OnUpdateEditPastespecial)
+	ON_COMMAND(ID_EDIT_SELNEXT, &ThisClass::OnEditSelnext)
+	ON_COMMAND(ID_EDIT_SELPREV, &ThisClass::OnEditSelprev)
+	ON_COMMAND(ID_EDIT_SELNEXT_CASCADING, &ThisClass::OnEditSelnextCascading)
+	ON_COMMAND(ID_EDIT_SELPREV_CASCADING, &ThisClass::OnEditSelprevCascading)
+	ON_COMMAND(ID_LOGICALOBJECT_MOVETOGETHER, &ThisClass::OnLogicalMoveBlock)
+	ON_COMMAND(ID_LOGICALOBJECT_SELECTALLCASCADING, &ThisClass::OnLogicalSelectAllCascading)
+	ON_COMMAND(ID_LOGICALOBJECT_SELECTALLCONNECTED, &ThisClass::OnLogicalSelectAllConnected)
+	ON_COMMAND_EX(ID_VIEW_HIDESELECTEDOBJECTS, &ThisClass::OnViewHideObjects)
+	ON_COMMAND(ID_MAP_CHECK, &ThisClass::OnMapCheck)
+	ON_COMMAND(ID_VIEW_SHOWCONNECTIONS, &ThisClass::OnViewShowconnections)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOWCONNECTIONS, &ThisClass::OnUpdateViewShowconnections)
+	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE, &ThisClass::OnUpdateFileSave)
+	ON_COMMAND(ID_TOOLS_CREATEPREFAB, &ThisClass::OnToolsCreateprefab)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_CREATEPREFAB, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND(ID_INSERTPREFAB_ORIGINAL, &ThisClass::OnInsertprefabOriginal)
+	ON_COMMAND(ID_EDIT_REPLACETEX, &ThisClass::OnEditReplacetex)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_REPLACETEX, &ThisClass::OnUpdateEditFunction)
+	ON_COMMAND(ID_TOOLS_HOLLOW, &ThisClass::OnToolsHollow)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_HOLLOW, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND(ID_TOOLS_SNAPSELECTEDTOGRID, &ThisClass::OnToolsSnapselectedtogrid)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_SNAPSELECTEDTOGRID, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND(ID_TOOLS_SNAP_SELECTED_TO_GRID_INDIVIDUALLY, &ThisClass::OnToolsSnapSelectedToGridIndividually)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_SNAP_SELECTED_TO_GRID_INDIVIDUALLY, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND(ID_TOOLS_SPLITFACE, &ThisClass::OnToolsSplitface)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_SPLITFACE, &ThisClass::OnUpdateToolsSplitface)
+	ON_COMMAND(ID_TOOLS_TRANSFORM, &ThisClass::OnToolsTransform)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_TRANSFORM, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND(ID_TOOLS_TOGGLETEXLOCK, &ThisClass::OnToolsToggletexlock)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_TOGGLETEXLOCK, &ThisClass::OnUpdateToolsToggletexlock)
+	ON_COMMAND(ID_TOOLS_TOGGLETEXLOCKSCALE, &ThisClass::OnToolsToggletexlockScale)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_TOGGLETEXLOCKSCALE, &ThisClass::OnUpdateToolsToggletexlockScale)
+	ON_COMMAND(ID_TOOLS_TEXTUREALIGN, &ThisClass::OnToolsTextureAlignment)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_TEXTUREALIGN, &ThisClass::OnUpdateToolsTextureAlignment)
+	ON_COMMAND(ID_TOGGLE_CORDON, &ThisClass::OnToggleCordon)
+	ON_UPDATE_COMMAND_UI(ID_TOGGLE_CORDON, &ThisClass::OnUpdateToggleCordon)
+	ON_COMMAND_EX(ID_VIEW_HIDENONSELECTEDOBJECTS, &ThisClass::OnViewHideObjects)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_HIDENONSELECTEDOBJECTS, &ThisClass::OnUpdateViewHideUnselectedObjects)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_HELPERS, &ThisClass::OnUpdateViewShowHelpers)
+	ON_COMMAND(ID_VIEW_SHOW_HELPERS, &ThisClass::OnViewShowHelpers)
+	ON_COMMAND(ID_VIEW_SHOWMODELSIN2D, &ThisClass::OnViewShowModelsIn2D)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOWMODELSIN2D, &ThisClass::OnUpdateViewShowModelsIn2D)
+	ON_COMMAND(ID_VIEW_PREVIEW_MODEL_FADE, &ThisClass::OnViewPreviewModelFade)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_PREVIEW_MODEL_FADE, &ThisClass::OnUpdateViewPreviewModelFade)
+	ON_COMMAND(ID_COLLISION_WIREFRAME, &ThisClass::OnCollisionWireframe)
+	ON_UPDATE_COMMAND_UI(ID_COLLISION_WIREFRAME, &ThisClass::OnUpdateCollisionWireframe)
+	ON_COMMAND(ID_SHOW_DETAIL_OBJECTS, &ThisClass::OnShowDetailObjects)
+	ON_UPDATE_COMMAND_UI(ID_SHOW_DETAIL_OBJECTS, &ThisClass::OnUpdateShowDetailObjects)
+	ON_COMMAND(ID_SHOW_NODRAW_BRUSHES, &ThisClass::OnShowNoDrawBrushes)
+	ON_UPDATE_COMMAND_UI(ID_SHOW_NODRAW_BRUSHES, &ThisClass::OnUpdateShowNoDrawBrushes)
+	ON_COMMAND(ID_TOGGLE_GROUPIGNORE, &ThisClass::OnToggleGroupignore)
+	ON_UPDATE_COMMAND_UI(ID_TOGGLE_GROUPIGNORE, &ThisClass::OnUpdateToggleGroupignore)
+	ON_COMMAND(ID_VSCALE_TOGGLE, &ThisClass::OnVscaleToggle)
+	ON_COMMAND(ID_MAP_ENTITYREPORT, &ThisClass::OnMapEntityreport)
+	ON_COMMAND(ID_TOGGLE_SELECTBYHANDLE, &ThisClass::OnToggleSelectbyhandle)
+	ON_UPDATE_COMMAND_UI(ID_TOGGLE_SELECTBYHANDLE, &ThisClass::OnUpdateToggleSelectbyhandle)
+	ON_COMMAND(ID_TOGGLE_INFINITESELECT, &ThisClass::OnToggleInfiniteselect)
+	ON_UPDATE_COMMAND_UI(ID_TOGGLE_INFINITESELECT, &ThisClass::OnUpdateToggleInfiniteselect)
+	ON_COMMAND(ID_FILE_EXPORTTODXF, &ThisClass::OnFileExporttodxf)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_APPLYTEXTURE, &ThisClass::OnUpdateEditApplytexture)
+	ON_COMMAND(ID_EDIT_CLEARSELECTION, &ThisClass::OnEditClearselection)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_CLEARSELECTION, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND(ID_TOOLS_CENTER_ORIGINS, &ThisClass::OnToolsCenterOrigins)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_CENTER_ORIGINS, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND(ID_MAP_LOADPOINTFILE, &ThisClass::OnMapLoadpointfile)
+	ON_COMMAND(ID_MAP_UNLOADPOINTFILE, &ThisClass::OnMapUnloadpointfile)
+	ON_COMMAND(ID_MAP_LOADPORTALFILE, &ThisClass::OnMapLoadportalfile)
+	ON_COMMAND(ID_MAP_UNLOADPORTALFILE, &ThisClass::OnMapUnloadportalfile)
+	ON_COMMAND(ID_TOGGLE_3D_GRID, &ThisClass::OnToggle3DGrid)
+	ON_UPDATE_COMMAND_UI(ID_TOGGLE_3D_GRID, &ThisClass::OnUpdateToggle3DGrid)
+	ON_COMMAND(ID_EDIT_TOENTITY, &ThisClass::OnEditToEntity)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_TOENTITY, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND_EX(ID_EDIT_UNDO, &ThisClass::OnUndoRedo)
+	ON_COMMAND_EX(ID_EDIT_REDO, &ThisClass::OnUndoRedo)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, &ThisClass::OnUpdateUndoRedo)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, &ThisClass::OnUpdateUndoRedo)
+	ON_COMMAND(ID_VSCALE_CHANGED, &ThisClass::OnChangeVertexscale)
+	ON_COMMAND(ID_GOTO_BRUSH, &ThisClass::OnViewGotoBrush)
+	ON_COMMAND(ID_GOTO_COORDS, &ThisClass::OnViewGotoCoords)
+	ON_COMMAND(ID_SHOW_SELECTED_BRUSH_NUMBER, &ThisClass::OnMapShowSelectedBrushNumber)
+	ON_COMMAND(ID_EDIT_FINDENTITIES, &ThisClass::OnEditFindEntities)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_FINDENTITIES, &ThisClass::OnUpdateEditFunction)
+	ON_COMMAND( ID_TOOLS_DISP_SOLIDDRAW, &ThisClass::OnToggleDispSolidMask )
+	ON_UPDATE_COMMAND_UI( ID_TOOLS_DISP_SOLIDDRAW, &ThisClass::OnUpdateToggleSolidMask )
+	ON_COMMAND( ID_TOOLS_DISP_DRAWWALKABLE, &ThisClass::OnToggleDispDrawWalkable )
+	ON_UPDATE_COMMAND_UI( ID_TOOLS_DISP_DRAWWALKABLE, &ThisClass::OnUpdateToggleDispDrawWalkable )
+	ON_COMMAND( ID_TOOLS_DISP_DRAW3D, &ThisClass::OnToggleDispDraw3D )
+	ON_UPDATE_COMMAND_UI( ID_TOOLS_DISP_DRAW3D, &ThisClass::OnUpdateToggleDispDraw3D )
+	ON_COMMAND( ID_TOOLS_DISP_DRAWBUILDABLE, &ThisClass::OnToggleDispDrawBuildable )
+	ON_UPDATE_COMMAND_UI( ID_TOOLS_DISP_DRAWBUILDABLE, &ThisClass::OnUpdateToggleDispDrawBuildable )
+	ON_COMMAND( ID_TOOLS_DISP_DRAWREMOVEDVERTS, &ThisClass::OnToggleDispDrawRemovedVerts )
+	ON_UPDATE_COMMAND_UI( ID_TOOLS_DISP_DRAWREMOVEDVERTS, &ThisClass::OnUpdateToggleDispDrawRemovedVerts )
+    ON_COMMAND(ID_MAP_DIFFMAPFILE, &ThisClass::OnMapDiff)
+	ON_COMMAND(ID_LOGICALOBJECT_LAYOUTGEOMETRIC, &ThisClass::OnLogicalobjectLayoutgeometric)
+	ON_COMMAND(ID_LOGICALOBJECT_LAYOUTDEFAULT, &ThisClass::OnLogicalobjectLayoutdefault)
+	ON_COMMAND(ID_LOGICALOBJECT_LAYOUTLOGICAL, &ThisClass::OnLogicalobjectLayoutlogical)
+	ON_COMMAND(ID_TOOLS_INSTANCES_HIDE, &ThisClass::OnToolsInstancesHide)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_INSTANCES_HIDE, &ThisClass::OnUpdateToolsInstancesHide)
+	ON_COMMAND(ID_TOOLS_INSTANCES_SHOWTINTED, &ThisClass::OnToolsInstancesShowTinted)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_INSTANCES_SHOWTINTED, &ThisClass::OnUpdateToolsInstancesShowTinted)
+	ON_COMMAND(ID_TOOLS_INSTANCES_SHOWNORMAL, &ThisClass::OnToolsInstancesShowNormal)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_INSTANCES_SHOWNORMAL, &ThisClass::OnUpdateToolsInstancesShowNormal)
+	ON_COMMAND(ID_INSTANCES_HIDEALL, &ThisClass::OnInstancesHideAll)
+	ON_COMMAND(ID_INSTANCES_SHOWALL, &ThisClass::OnInstancesShowAll)
+	ON_COMMAND(ID_TOOLS_NEWCORDON, &ThisClass::OnNewCordon)
+	ON_COMMAND(ID_INSTANCING_CREATEMANIFEST, &ThisClass::OnInstancingCreatemanifest)
+	ON_UPDATE_COMMAND_UI(ID_INSTANCING_CREATEMANIFEST, &ThisClass::OnUpdateInstancingCreatemanifest)
+	ON_COMMAND(ID_INSTANCES_COLLAPSEALL, &ThisClass::OnInstancesCollapseAll)
+	ON_COMMAND(ID_INSTANCES_COLLAPSESELECTION, &ThisClass::OnInstancesCollapseSelection)
+	ON_COMMAND(ID_INSTANCES_COLLAPSEALLRECURSIVE, &ThisClass::OnInstancesCollapseAllRecursive)
+	ON_COMMAND(ID_INSTANCES_COLLAPSESELECTIONRECURSIVE, &ThisClass::OnInstancesCollapseSelectionRecursive)
+	ON_COMMAND(ID_TOOLS_SPRINKLE, &ThisClass::OnToolsSprinkle)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_SPRINKLE, &ThisClass::OnUpdateToolsSprinkle)
+	ON_COMMAND( ID_VIEW_QUICKHIDE, &ThisClass::OnQuickHide_HideObjects )
+	ON_UPDATE_COMMAND_UI(ID_VIEW_QUICKHIDE, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND( ID_VIEW_QUICKHIDEUNSELECTED, &ThisClass::OnQuickHide_HideUnselectedObjects )
+	ON_UPDATE_COMMAND_UI(ID_VIEW_QUICKHIDEUNSELECTED, &ThisClass::OnUpdateEditSelection)
+	ON_COMMAND( ID_VIEW_QUICKUNHIDE, &ThisClass::OnQuickHide_Unhide )
+	ON_UPDATE_COMMAND_UI(ID_VIEW_QUICKUNHIDE, &ThisClass::OnQuickHide_UpdateUnHide)
+	ON_COMMAND( ID_TOGGLE_RADIUSCULLING, &ThisClass::OnRadiusCulling )
+	ON_UPDATE_COMMAND_UI(ID_TOGGLE_RADIUSCULLING, &ThisClass::OnUpdateRadiusCulling )
+	ON_COMMAND( ID_VIEW_QUICKHIDEVISGROUP, &ThisClass::OnQuickHide_CreateVisGroupFromHidden )
+	ON_UPDATE_COMMAND_UI(ID_VIEW_QUICKHIDEVISGROUP, &ThisClass::OnQuickHide_UpdateCreateVisGroupFromHidden)
 	//}}AFX_MSG_MAP
-	ON_COMMAND(ID_INSTANCING_CREATEMANIFEST, &CMapDoc::OnInstancingCreatemanifest)
-	ON_UPDATE_COMMAND_UI(ID_INSTANCING_CREATEMANIFEST, &CMapDoc::OnUpdateInstancingCreatemanifest)
-	ON_COMMAND(ID_INSTANCES_COLLAPSEALL, &CMapDoc::OnInstancesCollapseAll)
-	ON_COMMAND(ID_INSTANCES_COLLAPSESELECTION, &CMapDoc::OnInstancesCollapseSelection)
-	ON_COMMAND(ID_INSTANCES_COLLAPSEALLRECURSIVE, &CMapDoc::OnInstancesCollapseAllRecursive)
-	ON_COMMAND(ID_INSTANCES_COLLAPSESELECTIONRECURSIVE, &CMapDoc::OnInstancesCollapseSelectionRecursive)
-	ON_COMMAND(ID_TOOLS_SPRINKLE, &CMapDoc::OnToolsSprinkle)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_SPRINKLE, &CMapDoc::OnUpdateToolsSprinkle)
-	ON_COMMAND( ID_VIEW_QUICKHIDE, OnQuickHide_HideObjects )
-	ON_UPDATE_COMMAND_UI(ID_VIEW_QUICKHIDE, OnUpdateEditSelection)
-	ON_COMMAND( ID_VIEW_QUICKHIDEUNSELECTED, OnQuickHide_HideUnselectedObjects )
-	ON_UPDATE_COMMAND_UI(ID_VIEW_QUICKHIDEUNSELECTED, OnUpdateEditSelection)
-	ON_COMMAND( ID_VIEW_QUICKUNHIDE, OnQuickHide_Unhide )
-	ON_UPDATE_COMMAND_UI(ID_VIEW_QUICKUNHIDE, OnQuickHide_UpdateUnHide)
-	ON_COMMAND( ID_TOGGLE_RADIUSCULLING, OnRadiusCulling )
-	ON_UPDATE_COMMAND_UI(ID_TOGGLE_RADIUSCULLING, OnUpdateRadiusCulling )
-	ON_COMMAND( ID_VIEW_QUICKHIDEVISGROUP, OnQuickHide_CreateVisGroupFromHidden )
-	ON_UPDATE_COMMAND_UI(ID_VIEW_QUICKHIDEVISGROUP, OnQuickHide_UpdateCreateVisGroupFromHidden)
-	END_MESSAGE_MAP()
+END_MESSAGE_MAP()
 
 
 static CUtlVector<CMapDoc*> s_ActiveDocs;
@@ -4251,7 +4251,7 @@ void CMapDoc::OnEditApplytexture(void)
 	GetHistory()->MarkUndoPosition( pSelList, "Apply Texture");
 
 	// texturebar.cpp:
-	LPCTSTR GetDefaultTextureName();
+	extern LPCTSTR GetDefaultTextureName();
 
 	for (int i = 0; i < pSelList->Count(); i++)
 	{
@@ -5768,7 +5768,7 @@ public:
 };
 
 BEGIN_MESSAGE_MAP(CExportDlg, CFileDialog)
-	ON_BN_CLICKED(IDC_SAVEVISIBLES, OnToggleVisibles)
+	ON_BN_CLICKED(IDC_SAVEVISIBLES, &ThisClass::OnToggleVisibles)
 END_MESSAGE_MAP()
 
 static BOOL bLastVis;
@@ -5798,8 +5798,8 @@ void CMapDoc::OnFileExport(void)
 	//
 	int iIndex = strFile.Find('.');
     strFile.SetAt(iIndex, '\0');
-	char *pszFilter = "Valve Map Files (*.vmf)|*.vmf||";
-	char *pszExtension = "vmf";
+	const char *pszFilter = "Valve Map Files (*.vmf)|*.vmf||";
+	const char *pszExtension = "vmf";
 
 	//
 	// Bring up a dialog to allow them to name the exported file.
@@ -6074,8 +6074,8 @@ void CMapDoc::UpdateTitle(CView *pView)
 		}
 	}
 
-	char *pViewType = NULL;
-	CMapView2D *pView2D = dynamic_cast <CMapView2D *> (pView);
+	const char *pViewType = NULL;
+	CMapView2D *pView2D = dynamic_cast<CMapView2D*> (pView);
 	if (pView2D != NULL)
 	{
 		switch (pView2D->GetDrawType())
@@ -6100,13 +6100,13 @@ void CMapDoc::UpdateTitle(CView *pView)
 		}
 	}
 
-	CMapViewLogical *pViewLogical = dynamic_cast <CMapViewLogical *> (pView);
+	CMapViewLogical *pViewLogical = dynamic_cast<CMapViewLogical*> (pView);
 	if (pViewLogical != NULL)
 	{
 		pViewType = "Logical";
 	}
 
-	CMapView3D *pView3D = dynamic_cast <CMapView3D *> (pView);
+	CMapView3D *pView3D = dynamic_cast<CMapView3D*> (pView);
 	if (pView3D != NULL)
 	{
 		switch (pView3D->GetDrawType())
@@ -6888,7 +6888,7 @@ void CMapDoc::OnEditPastespecial(void)
 	Options.SetLockingTextures(TRUE);
 
 	bool bMakeNamesUnique = (dlg.m_bMakeEntityNamesUnique == TRUE);
-	const char *pszPrefix = (dlg.m_bAddPrefix == TRUE) ? dlg.m_strPrefix : "";
+	const char *pszPrefix = (dlg.m_bAddPrefix == TRUE) ? (LPCSTR)dlg.m_strPrefix : "";
 
 	for (int i = 0; i < dlg.m_iCopies; i++)
 	{
@@ -6986,8 +6986,8 @@ BOOL CMapDoc::OnUndoRedo(UINT nID)
 void CMapDoc::OnUpdateUndoRedo(CCmdUI *pCmdUI)
 {
 	CHistory *pHistory = (pCmdUI->m_nID == ID_EDIT_UNDO) ? m_pUndo : m_pRedo;
-	char *pszAction = (pCmdUI->m_nID == ID_EDIT_UNDO) ? "Undo" : "Redo";
-	char *pszHotkey = (pCmdUI->m_nID == ID_EDIT_UNDO) ? "Ctrl+Z" : "Ctrl+Y";
+	const char *pszAction = (pCmdUI->m_nID == ID_EDIT_UNDO) ? "Undo" : "Redo";
+	const char *pszHotkey = (pCmdUI->m_nID == ID_EDIT_UNDO) ? "Ctrl+Z" : "Ctrl+Y";
 
 	if (pHistory->IsUndoable())
 	{

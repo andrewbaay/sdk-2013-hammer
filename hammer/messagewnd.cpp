@@ -7,9 +7,9 @@
 #include "stdafx.h"
 #include <afxtempl.h>
 #include "hammer.h"
-#include "MessageWnd.h"
+#include "messagewnd.h"
 #include "mainfrm.h"
-#include "GlobalFunctions.h"
+#include "globalfunctions.h"
 #include "fmtstr.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -65,7 +65,7 @@ CMessageWnd::~CMessageWnd()
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void CMessageWnd::CreateMessageWindow( CMDIFrameWnd *pwndParent, CRect &rect )
+void CMessageWnd::CreateMessageWindow( CMDIFrameWnd *pwndParent, const CRect &rect )
 {
 	Create( NULL, "Messages", WS_OVERLAPPEDWINDOW | WS_CHILD, rect, pwndParent );
 
@@ -131,7 +131,7 @@ void CMessageWnd::AddMsg( const Color& color, const TCHAR* msg )
 		MWMSGSTRUCT mws;
 		mws.MsgLen = length;
 		mws.color  = color;
-		Assert( mws.MsgLen <= ( sizeof( mws.szMsg ) / sizeof( TCHAR ) ) );
+		Assert( mws.MsgLen <= int( ARRAYSIZE( mws.szMsg ) ) );
 		mws.MsgLen = Min<int>( mws.MsgLen, sizeof( mws.szMsg ) );
 		mws.repeatCount = 0U;
 		_tcsncpy( mws.szMsg, message, mws.MsgLen );
@@ -140,7 +140,7 @@ void CMessageWnd::AddMsg( const Color& color, const TCHAR* msg )
 		MsgArray.SetAtGrow( iAddAt, mws );
 	};
 
-	const auto& atEnd = [last = &msg[len - 1], &msg, len]
+	const auto& atEnd = [last = &msg[len - 1], &msg]
 	{
 		auto endL = strchr( msg, '\n' );
 		return endL == nullptr || endL == last ? nullptr : endL;
@@ -219,7 +219,7 @@ bool CMessageWnd::IsVisible()
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void CMessageWnd::Resize( CRect &rect )
+void CMessageWnd::Resize( const CRect &rect )
 {
 	if ( m_hWnd == NULL )
 		return;

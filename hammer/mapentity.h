@@ -8,9 +8,9 @@
 #define MAPENTITY_H
 #pragma once
 
-#include "MapClass.h"
-#include "MapFace.h"			// FIXME: For PLANE definition.
-#include "EditGameClass.h"
+#include "mapclass.h"
+#include "mapface.h"			// FIXME: For PLANE definition.
+#include "editgameclass.h"
 #include "tier1/utlobjectreference.h"
 
 #undef GetClassName
@@ -132,7 +132,7 @@ public:
 
 	virtual bool ShouldSnapToHalfGrid();
 
-	virtual void SetOrigin(Vector& o);
+	virtual void SetOrigin(const Vector& o);
 	virtual void CalcBounds(BOOL bFullUpdate = FALSE);
 	inline void SetClass(GDclass *pClass) { CEditGameClass::SetClass(pClass); } // Works around a namespace issue.
 	virtual void SetClass(LPCTSTR pszClassname, bool bLoading = false);

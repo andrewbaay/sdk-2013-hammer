@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -12,11 +12,11 @@
 #endif
 
 
-#include "MapClass.h"		// For CMapObjectList
-#include "Tool3D.h"
-#include "ToolInterface.h"
-#include "Render2D.h"
-#include "MapFace.h"
+#include "mapclass.h"		// For CMapObjectList
+#include "tool3d.h"
+#include "toolinterface.h"
+#include "render2d.h"
+#include "mapface.h"
 
 
 class CMapSolid;
@@ -30,9 +30,9 @@ class CMapSolid;
 class CClipGroup
 {
 public:
-    
+
     enum { FRONT = 0, BACK };
-    
+
     inline CClipGroup();
     ~CClipGroup();
 
@@ -98,7 +98,7 @@ class Clipper3D : public Tool3D
 public:
 
     enum { FRONT = 0, BACK, BOTH };
-    
+
     Clipper3D();
 	~Clipper3D();
 
@@ -129,8 +129,8 @@ public:
 	virtual bool OnLMouseUp2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoint);
 	virtual bool OnMouseMove2D(CMapView2D *pView, UINT nFlags, const Vector2D &vPoint);
 
-	
-	
+
+
 protected:
 
     //
@@ -158,7 +158,7 @@ private:
     void DrawBrushExtents(CRender2D *pRender, CMapSolid *pSolid, int nFlags);
 
     int             m_Mode;                 // current clipping mode { back, front, both }
-    
+
     PLANE           m_ClipPlane;            // the clipping plane -- front/back is uneccesary
     Vector          m_ClipPoints[2];        // 2D clipping points -- used to create the clip plane
     int             m_ClipPointHit;         // the clipping that was "hit" {0, 1, -1}

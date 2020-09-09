@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $Workfile:     $
 // $Date:         $
@@ -33,7 +33,7 @@ struct CoreDispBBox_t
 
 //=========================================================================
 //
-// Surface Class - interfacing class (fill in with MapFace, dface_t, and 
+// Surface Class - interfacing class (fill in with MapFace, dface_t, and
 //                                    msurface_t)
 //
 class CCoreDispSurface
@@ -119,17 +119,17 @@ public:
 	int		GenerateSurfPointStartIndex( void );
 	int		FindSurfPointStartIndex( void );
 	void	AdjustSurfPointData( void );
-	
+
 	// Indexed by CORNER_ defines.
-	CDispCornerNeighbors*		GetCornerNeighbors( int iCorner )		{ Assert( iCorner >= 0 && iCorner < ARRAYSIZE( m_CornerNeighbors ) ); return &m_CornerNeighbors[iCorner]; }
-	const CDispCornerNeighbors*	GetCornerNeighbors( int iCorner ) const { Assert( iCorner >= 0 && iCorner < ARRAYSIZE( m_CornerNeighbors ) ); return &m_CornerNeighbors[iCorner]; }
-	
+	CDispCornerNeighbors*		GetCornerNeighbors( int iCorner )		{ Assert( iCorner >= 0 && iCorner < (int)ARRAYSIZE( m_CornerNeighbors ) ); return &m_CornerNeighbors[iCorner]; }
+	const CDispCornerNeighbors*	GetCornerNeighbors( int iCorner ) const { Assert( iCorner >= 0 && iCorner < (int)ARRAYSIZE( m_CornerNeighbors ) ); return &m_CornerNeighbors[iCorner]; }
+
 	// Indexed by CORNER_ defines.
 	int							GetCornerNeighborCount( int iCorner ) const				{ return GetCornerNeighbors( iCorner )->m_nNeighbors; }
 	int							GetCornerNeighbor( int iCorner, int iNeighbor ) const	{ Assert( iNeighbor >= 0 && iNeighbor < GetCornerNeighbors(iCorner)->m_nNeighbors ); return GetCornerNeighbors( iCorner )->m_Neighbors[iNeighbor]; }
-	
-	CDispNeighbor*			GetEdgeNeighbor( int iEdge )		{ Assert( iEdge >= 0 && iEdge < ARRAYSIZE( m_EdgeNeighbors ) ); return &m_EdgeNeighbors[iEdge]; }
-	const CDispNeighbor*	GetEdgeNeighbor( int iEdge ) const	{ Assert( iEdge >= 0 && iEdge < ARRAYSIZE( m_EdgeNeighbors ) ); return &m_EdgeNeighbors[iEdge]; }
+
+	CDispNeighbor*			GetEdgeNeighbor( int iEdge )		{ Assert( iEdge >= 0 && iEdge < (int)ARRAYSIZE( m_EdgeNeighbors ) ); return &m_EdgeNeighbors[iEdge]; }
+	const CDispNeighbor*	GetEdgeNeighbor( int iEdge ) const	{ Assert( iEdge >= 0 && iEdge < (int)ARRAYSIZE( m_EdgeNeighbors ) ); return &m_EdgeNeighbors[iEdge]; }
 
 
 protected:
@@ -139,7 +139,7 @@ protected:
 
 
 	int			m_Index;																// parent face (CMapFace, dface_t, msurface_t) index "handle"
-	
+
 	int			m_PointCount;															// number of points in the face (should be 4!)
 	Vector		m_Points[QUAD_POINT_COUNT];												// points
 	Vector		m_Normals[QUAD_POINT_COUNT];											// normals at points
@@ -151,7 +151,7 @@ protected:
 	int					m_nLuxelU;
 	int					m_nLuxelV;
 
-	// Straight from the BSP file.	
+	// Straight from the BSP file.
 	CDispNeighbor			m_EdgeNeighbors[4];
 	CDispCornerNeighbors	m_CornerNeighbors[4];
 
@@ -343,7 +343,7 @@ inline void CCoreDispSurface::SetFlags( int flag )
 	m_Flags = flag;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline int CCoreDispSurface::GetFlags( void )
@@ -351,7 +351,7 @@ inline int CCoreDispSurface::GetFlags( void )
 	return m_Flags;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline void CCoreDispSurface::SetContents( int contents )
@@ -359,7 +359,7 @@ inline void CCoreDispSurface::SetContents( int contents )
 	m_Contents = contents;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline int CCoreDispSurface::GetContents( void )
@@ -510,8 +510,8 @@ public:
 	friend void GetComponentsFromNodeIndex( int index, int *x, int *y );
 	friend int GetNodeIndexFromComponents( int x, int y );
 
-protected:	
-		
+protected:
+
 	Vector		m_BBox[2];											// displacement node bounding box (take into account size of children)
 	float		m_ErrorTerm;										// LOD error term (the "precision" of the representation of the surface at this node's level)
 	int			m_VertIndex;										// the node's vertex index (center vertex of node)
@@ -548,7 +548,7 @@ inline void CCoreDispNode::SetErrorTerm( float errorTerm )
 	m_ErrorTerm = errorTerm;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline float CCoreDispNode::GetErrorTerm( void )
@@ -564,7 +564,7 @@ inline void CCoreDispNode::SetCenterVertIndex( int index )
 	m_VertIndex = index;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline int CCoreDispNode::GetCenterVertIndex( void )
@@ -572,7 +572,7 @@ inline int CCoreDispNode::GetCenterVertIndex( void )
 	return m_VertIndex;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline void CCoreDispNode::SetNeighborVertIndex( int dir, int index )
@@ -582,7 +582,7 @@ inline void CCoreDispNode::SetNeighborVertIndex( int dir, int index )
 	m_NeighborVertIndices[dir] = index;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline int CCoreDispNode::GetNeighborVertIndex( int dir )
@@ -625,7 +625,7 @@ inline void CCoreDispNode::SetTriPlane( int index, Vector const &normal, float d
 	m_SurfPlanes[index].dist = dist;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline void CCoreDispNode::GetTriPlane( int index, cplane_t *plane )
@@ -647,7 +647,7 @@ inline void CCoreDispNode::SetRayBoundingBox( int index, Vector const &bMin, Vec
 	VectorCopy( bMax, m_RayBBoxes[index][1] );
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline void CCoreDispNode::GetRayBoundingBox( int index, Vector& bMin, Vector& bMax )
@@ -658,7 +658,7 @@ inline void CCoreDispNode::GetRayBoundingBox( int index, Vector& bMin, Vector& b
 	VectorCopy( m_RayBBoxes[index][1], bMax );
 }
 
-	
+
 //=============================================================================
 //
 // CCoreInfoBuilder - the primary data necessay to derive a displacement surface
@@ -733,7 +733,7 @@ public:
 	//
 	// surface info flags
 	//
-	enum { SURF_BUMPED				= 0x1,  
+	enum { SURF_BUMPED				= 0x1,
 		   SURF_NOPHYSICS_COLL		= 0x2,
 		   SURF_NOHULL_COLL			= 0x4,
 		   SURF_NORAY_COLL			= 0x8 };
@@ -745,7 +745,7 @@ public:
 
 // Convert from a CDispUtilsHelper.
 public:
-	
+
 	static CCoreDispInfo*			FromDispUtils( CDispUtilsHelper *p )	{ return (CCoreDispInfo*)p; }
 
 
@@ -769,15 +769,15 @@ public:
 
 	void InitSurf( int parentIndex, Vector points[4], Vector normals[4],
 		           Vector2D texCoords[4], Vector2D lightCoords[4][4], int contents, int flags,
-				   bool bGenerateSurfPointStart, Vector& startPoint, 
+				   bool bGenerateSurfPointStart, Vector& startPoint,
 				   bool bHasMappingAxes, Vector& uAxis, Vector& vAxis );
 
-	void InitDispInfo( int power, int minTess, float smoothingAngle, 
+	void InitDispInfo( int power, int minTess, float smoothingAngle,
 		               float *alphas, Vector *dispVectorField, float *dispDistances );
 
 	// This just unpacks the contents of the verts into arrays and calls InitDispInfo.
 	void InitDispInfo( int power, int minTess, float smoothingAngle, const CDispVert *pVerts, const CDispTri *pTris );
-					   
+
 //	bool Create( int creationFlags );
 	bool Create( void );
 	bool CreateWithoutLOD( void );
@@ -788,7 +788,7 @@ public:
 	//
 	CCoreDispSurface*		GetSurface()		{ return &m_Surf; }
 	const CCoreDispSurface*	GetSurface() const	{ return &m_Surf; }
-	
+
 	inline CCoreDispNode *GetNode( int index );
 
 	inline void SetPower( int power );
@@ -809,19 +809,19 @@ public:
 
 	inline void SetVert( int index, Vector const& vert );
 	inline void GetVert( int index, Vector& vert ) const;
-	
+
 	inline const Vector& GetVert( int index ) const;
 	inline const Vector& GetVert( const CVertIndex &index ) const;
 
 	inline void GetFlatVert( int index, Vector& vert ) const;
 	inline void SetFlatVert( int index, const Vector &vert );
-	
+
 	inline void GetNormal( int index, Vector& normal ) const;
 	inline const Vector& GetNormal( int index ) const;
 	inline const Vector& GetNormal( const CVertIndex &index ) const;
 	inline void SetNormal( int index, Vector const& normal );
 	inline void SetNormal( const CVertIndex &index, Vector const& normal );
-	
+
 	inline void GetTangentS( int index, Vector& tangentS ) const;
 	inline const Vector &GetTangentS( int index ) const;
 	inline const Vector &GetTangentS( const CVertIndex &index ) const { return GetTangentS(VertIndexToInt(index)); }
@@ -831,7 +831,7 @@ public:
 
 	inline void SetTexCoord( int index, Vector2D const& texCoord );
 	inline void GetTexCoord( int index, Vector2D& texCoord ) const;
-	
+
 	inline void SetLuxelCoord( int bumpIndex, int index, Vector2D const& luxelCoord );
 	inline void GetLuxelCoord( int bumpIndex, int index, Vector2D& luxelCoord ) const;
 
@@ -893,7 +893,7 @@ public:
 	const CDispCornerNeighbors*	GetCornerNeighbors( int iCorner ) const	{ return GetSurface()->GetCornerNeighbors( iCorner ); }
 	const CDispNeighbor*	GetEdgeNeighbor( int iEdge ) const	{ return GetSurface()->GetEdgeNeighbor( iEdge ); }
 
-	void SetListIndex( int nIndex )		{ m_nListIndex = nIndex; } 
+	void SetListIndex( int nIndex )		{ m_nListIndex = nIndex; }
 	int GetListIndex( void )			{ return m_nListIndex; }
 
 	CBitVec<MAX_DISPVERTS>&			GetAllowedVerts()		{ return m_AllowedVerts; }
@@ -1103,13 +1103,13 @@ inline void CCoreDispInfo::SetNormal( int index, Vector const &normal )
 	VectorCopy( normal, m_pVerts[index].m_Normal );
 }
 
-	
+
 inline void CCoreDispInfo::SetNormal( const CVertIndex &index, Vector const &normal )
 {
 	SetNormal( VertIndexToInt( index ), normal );
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline void CCoreDispInfo::GetNormal( int index, Vector& normal ) const
@@ -1172,7 +1172,7 @@ inline void CCoreDispInfo::SetTexCoord( int index, Vector2D const& texCoord )
 	Vector2DCopy( texCoord, m_pVerts[index].m_TexCoord );
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline void CCoreDispInfo::GetTexCoord( int index, Vector2D& texCoord ) const
@@ -1182,7 +1182,7 @@ inline void CCoreDispInfo::GetTexCoord( int index, Vector2D& texCoord ) const
 	Vector2DCopy( m_pVerts[index].m_TexCoord, texCoord );
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline void CCoreDispInfo::SetLuxelCoord( int bumpIndex, int index, Vector2D const& luxelCoord )
@@ -1197,7 +1197,7 @@ inline void CCoreDispInfo::SetLuxelCoord( int bumpIndex, int index, Vector2D con
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-inline void CCoreDispInfo::GetLuxelCoord( int bumpIndex, int index, Vector2D& luxelCoord ) const 
+inline void CCoreDispInfo::GetLuxelCoord( int bumpIndex, int index, Vector2D& luxelCoord ) const
 {
 	Assert( index >= 0 );
 	Assert( index < MAX_VERT_COUNT );
@@ -1234,7 +1234,7 @@ inline void CCoreDispInfo::SetElevation( float elevation )
 	m_Elevation = elevation;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline float CCoreDispInfo::GetElevation( void )
@@ -1265,17 +1265,17 @@ inline void CCoreDispInfo::SetFieldVector( int index, Vector const &v )
 {
 	Assert( index >= 0 );
 	Assert( index < MAX_VERT_COUNT );
-	VectorCopy( v, m_pVerts[index].m_FieldVector ); 
+	VectorCopy( v, m_pVerts[index].m_FieldVector );
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline void CCoreDispInfo::GetFieldVector( int index, Vector& v )
 {
 	Assert( index >= 0 );
 	Assert( index < MAX_VERT_COUNT );
-	VectorCopy( m_pVerts[index].m_FieldVector, v ); 
+	VectorCopy( m_pVerts[index].m_FieldVector, v );
 }
 
 
@@ -1367,7 +1367,7 @@ inline void CCoreDispInfo::SetFieldDistance( int index, float dist )
 	m_pVerts[index].m_FieldDistance = dist;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline float CCoreDispInfo::GetFieldDistance( int index )
@@ -1436,7 +1436,7 @@ inline void CCoreDispInfo::SetTouched( bool touched )
 	m_bTouched = touched;
 }
 
-	
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 inline bool CCoreDispInfo::IsTouched( void )

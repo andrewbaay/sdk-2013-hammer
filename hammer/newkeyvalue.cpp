@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -10,7 +10,7 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "NewKeyValue.h"
+#include "newkeyvalue.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -41,11 +41,19 @@ void CNewKeyValue::DoDataExchange(CDataExchange* pDX)
 }
 
 
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunused-local-typedef"
+#endif
+
 BEGIN_MESSAGE_MAP(CNewKeyValue, CDialog)
 	//{{AFX_MSG_MAP(CNewKeyValue)
 		// NOTE: the ClassWizard will add message map macros here
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 /////////////////////////////////////////////////////////////////////////////
 // CNewKeyValue message handlers

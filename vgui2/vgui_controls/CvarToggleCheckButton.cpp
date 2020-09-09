@@ -9,7 +9,7 @@
 
 #include <vgui/ISurface.h>
 #include <vgui/IScheme.h>
-#include <vgui_controls/CvarToggleCheckButton.h>
+#include <vgui_controls/cvartogglecheckbutton.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>

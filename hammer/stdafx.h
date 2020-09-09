@@ -18,6 +18,11 @@
 #endif // _MSC_VER > 1000
 
 #define NO_THREAD_LOCAL 1
+#define _d3d9TYPES_H_		// HACK: why does 'afxrendertarget.h' include 'd3d9types.h'?
+
+// use Windows 7 version
+#define WINVER 0x0601
+#define _WIN32_WINNT 0x0601
 
 #include "tier0/wchartypes.h"
 #include "tier0/vprof.h"

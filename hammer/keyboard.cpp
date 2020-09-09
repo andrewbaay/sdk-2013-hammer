@@ -6,7 +6,7 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "Keyboard.h"
+#include "keyboard.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -77,12 +77,10 @@ void CKeyboard::AddKeyMap(KeyMap_t& map)
 //-----------------------------------------------------------------------------
 void CKeyboard::ClearImpulseFlags(void)
 {
-	int nKey;
-
 	//
 	// Clear the impulse flags for all the physical keys.
 	//
-	for (nKey = 0; nKey < sizeof(g_uPhysicalKeyState) / sizeof(g_uPhysicalKeyState[0]); nKey++)
+	for (uint nKey = 0; nKey < ARRAYSIZE(g_uPhysicalKeyState); nKey++)
 	{
 		g_uPhysicalKeyState[nKey] &= ~(KEYSTATE_IMPULSE_DOWN | KEYSTATE_IMPULSE_UP);
 	}
@@ -90,7 +88,7 @@ void CKeyboard::ClearImpulseFlags(void)
 	//
 	// Clear the impulse flags for all the logical keys.
 	//
-	for (nKey = 0; nKey < sizeof(g_uLogicalKeyState) / sizeof(g_uLogicalKeyState[0]); nKey++)
+	for (uint nKey = 0; nKey < ARRAYSIZE(g_uLogicalKeyState); nKey++)
 	{
 		g_uLogicalKeyState[nKey] &= ~(KEYSTATE_IMPULSE_DOWN | KEYSTATE_IMPULSE_UP);
 	}
@@ -103,12 +101,10 @@ void CKeyboard::ClearImpulseFlags(void)
 //-----------------------------------------------------------------------------
 void CKeyboard::ClearKeyStates(void)
 {
-	int nKey;
-
 	//
 	// Clear the physical key states.
 	//
-	for (nKey = 0; nKey < sizeof(g_uPhysicalKeyState) / sizeof(g_uPhysicalKeyState[0]); nKey++)
+	for (uint nKey = 0; nKey < ARRAYSIZE(g_uPhysicalKeyState); nKey++)
 	{
 		g_uPhysicalKeyState[nKey] = 0;
 	}
@@ -116,7 +112,7 @@ void CKeyboard::ClearKeyStates(void)
 	//
 	// Clear the logical key states.
 	//
-	for (nKey = 0; nKey < sizeof(g_uLogicalKeyState) / sizeof(g_uLogicalKeyState[0]); nKey++)
+	for (uint nKey = 0; nKey < ARRAYSIZE(g_uLogicalKeyState); nKey++)
 	{
 		g_uLogicalKeyState[nKey] = 0;
 	}

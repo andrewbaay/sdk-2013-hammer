@@ -239,9 +239,10 @@ public:
 		const T &Element( int i ) const { return reinterpret_cast<const ThisType*>( this )->Element( i ); }
 		int IteratorNext( int i ) const
 		{
+			using MemIterator = typename ThisMemory::Iterator_t;
 			const ThisType* pVec = reinterpret_cast<const ThisType*>( this );
 			if ( pVec->IsValidIndex( i + 1 ) )
-				return pVec->m_Memory.Next( ThisMemory::Iterator_t( i ) ).index;
+				return pVec->m_Memory.Next( MemIterator( i ) ).index;
 			return ThisType::InvalidIndex();
 		}
 

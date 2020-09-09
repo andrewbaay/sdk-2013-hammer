@@ -8,27 +8,26 @@
 #include <io.h>
 #include <stdlib.h>
 #include <direct.h>
-#include "BuildNum.h"
-#include "EditGameConfigs.h"
-#include "Splash.h"
-#include "Options.h"
+#include "buildnum.h"
+#include "editgameconfigs.h"
+#include "splash.h"
+#include "options.h"
 #include "custommessages.h"
-#include "MainFrm.h"
-#include "MessageWnd.h"
-#include "ChildFrm.h"
-#include "MapDoc.h"
-#include "Manifest.h"
-#include "MapView3D.h"
-#include "MapView2D.h"
-#include "Prefabs.h"
-#include "GlobalFunctions.h"
-#include "Shell.h"
-#include "ShellMessageWnd.h"
-#include "Options.h"
-#include "TextureSystem.h"
+#include "mainfrm.h"
+#include "messagewnd.h"
+#include "childfrm.h"
+#include "mapdoc.h"
+#include "manifest.h"
+#include "mapview3d.h"
+#include "mapview2d.h"
+#include "prefabs.h"
+#include "globalfunctions.h"
+#include "shell.h"
+#include "shellmessagewnd.h"
+#include "texturesystem.h"
 #include "ToolManager.h"
-#include "Hammer.h"
-#include "StudioModel.h"
+#include "hammer.h"
+#include "studiomodel.h"
 #include "statusbarids.h"
 #include "tier0/icommandline.h"
 #include "soundsystem.h"
@@ -36,11 +35,11 @@
 #include "op_entity.h"
 #include "tier0/dbg.h"
 #include "istudiorender.h"
-#include "FileSystem.h"
+#include "filesystem.h"
 #include "filesystem_init.h"
 #include "utlmap.h"
 #include "progdlg.h"
-#include "MapWorld.h"
+#include "mapworld.h"
 #include "HammerVGui.h"
 #include "vgui_controls/Controls.h"
 #include "lpreview_thread.h"
@@ -146,13 +145,13 @@ int WrapFunctionWithMinidumpHandler( int ( *pfn )( void* pParam ), void* pParam,
 //-----------------------------------------------------------------------------
 void DBG(const char *fmt, ...)
 {
-    char ach[128];
-    va_list va;
+	char ach[128];
+	va_list va;
 
-    va_start(va, fmt);
-    vsprintf(ach, fmt, va);
-    va_end(va);
-    OutputDebugString(ach);
+	va_start(va, fmt);
+	vsprintf(ach, fmt, va);
+	va_end(va);
+	OutputDebugString(ach);
 }
 
 
@@ -377,7 +376,7 @@ class CHammerCmdLine : public CCommandLineInfo
 			{
 				m_bShowLogo = false;
 			}
-		    else if ((!m_bConfigDir) && (bFlag && !stricmp(lpszParam, "configdir")))
+			else if ((!m_bConfigDir) && (bFlag && !stricmp(lpszParam, "configdir")))
 			{
 				m_bConfigDir = true;
 			}
@@ -386,8 +385,8 @@ class CHammerCmdLine : public CCommandLineInfo
 				if ( !bFlag )
 				{
 					Options.configs.m_strConfigDir = lpszParam;
-                    g_pFullFileSystem->AddSearchPath(lpszParam, "hammer_cfg", PATH_ADD_TO_HEAD);
-                    m_bSetCustomConfigDir = true;
+					g_pFullFileSystem->AddSearchPath(lpszParam, "hammer_cfg", PATH_ADD_TO_HEAD);
+					m_bSetCustomConfigDir = true;
 				}
 				m_bConfigDir = false;
 			}
@@ -408,11 +407,11 @@ class CHammerCmdLine : public CCommandLineInfo
 
 BEGIN_MESSAGE_MAP(CHammer, CWinApp)
 	//{{AFX_MSG_MAP(CHammer)
-	ON_COMMAND(ID_APP_ABOUT, OnAppAbout)
-	ON_COMMAND(ID_FILE_OPEN, OnFileOpen)
-	ON_COMMAND(ID_FILE_NEW, OnFileNew)
-	ON_COMMAND(ID_FILE_OPEN, CWinApp::OnFileOpen)
-	ON_COMMAND(ID_FILE_PRINT_SETUP, CWinApp::OnFilePrintSetup)
+	ON_COMMAND(ID_APP_ABOUT, &ThisClass::OnAppAbout)
+	ON_COMMAND(ID_FILE_OPEN, &ThisClass::OnFileOpen)
+	ON_COMMAND(ID_FILE_NEW, &ThisClass::OnFileNew)
+	ON_COMMAND(ID_FILE_OPEN, &ThisClass::OnFileOpen)
+	ON_COMMAND(ID_FILE_PRINT_SETUP, &ThisClass::OnFilePrintSetup)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -436,9 +435,9 @@ CHammer::CHammer(void)
 //-----------------------------------------------------------------------------
 CHammer::~CHammer(void)
 {
-    if (m_CmdLineInfo)
-        delete m_CmdLineInfo;
-    m_CmdLineInfo = nullptr;
+	if ( m_CmdLineInfo )
+		delete m_CmdLineInfo;
+	m_CmdLineInfo = nullptr;
 }
 
 
@@ -456,28 +455,28 @@ bool CHammer::Connect( CreateInterfaceFn factory )
 	g_pStudioRender = ( IStudioRender* )factory( STUDIO_RENDER_INTERFACE_VERSION, NULL );
 	g_pStudioDataCache = ( IStudioDataCache* )factory( STUDIO_DATA_CACHE_INTERFACE_VERSION, NULL );
 	g_pMDLCache = ( IMDLCache* )factory( MDLCACHE_INTERFACE_VERSION, NULL );
-    g_Factory = factory;
+	g_Factory = factory;
 
 	if ( !g_pMDLCache || !g_pFileSystem || !g_pFullFileSystem || !materials || !g_pMaterialSystemHardwareConfig || !g_pStudioRender || !g_pStudioDataCache )
 		return false;
 
-    InstallDmElementFactories();
+	InstallDmElementFactories();
 
 	// ensure we're in the same directory as the .EXE
 	char module[MAX_PATH];
 	GetModuleFileName(NULL, module, MAX_PATH);
-    V_ExtractFilePath(module, m_szAppDir, MAX_PATH);
-    V_StripTrailingSlash(m_szAppDir);
+	V_ExtractFilePath(module, m_szAppDir, MAX_PATH);
+	V_StripTrailingSlash(m_szAppDir);
 
-    // Build hammer paths
-    char hammerDir[MAX_PATH];
-    V_ComposeFileName(m_szAppDir, "hammer", hammerDir, MAX_PATH);
-    g_pFullFileSystem->AddSearchPath(hammerDir, "hammer", PATH_ADD_TO_HEAD);
-    g_pFullFileSystem->AddSearchPath(hammerDir, "SKIN", PATH_ADD_TO_HEAD);
-    char hammerPrefabs[MAX_PATH];
-    V_ComposeFileName(hammerDir, "prefabs", hammerPrefabs, MAX_PATH);
-    g_pFullFileSystem->CreateDirHierarchy("prefabs", "hammer"); // Create the prefabs folder if it doesn't already exist
-    g_pFullFileSystem->AddSearchPath(hammerPrefabs, "hammer_prefabs", PATH_ADD_TO_HEAD);
+	// Build hammer paths
+	char hammerDir[MAX_PATH];
+	V_ComposeFileName(m_szAppDir, "hammer", hammerDir, MAX_PATH);
+	g_pFullFileSystem->AddSearchPath(hammerDir, "hammer", PATH_ADD_TO_HEAD);
+	g_pFullFileSystem->AddSearchPath(hammerDir, "SKIN", PATH_ADD_TO_HEAD);
+	char hammerPrefabs[MAX_PATH];
+	V_ComposeFileName(hammerDir, "prefabs", hammerPrefabs, MAX_PATH);
+	g_pFullFileSystem->CreateDirHierarchy("prefabs", "hammer"); // Create the prefabs folder if it doesn't already exist
+	g_pFullFileSystem->AddSearchPath(hammerPrefabs, "hammer_prefabs", PATH_ADD_TO_HEAD);
 
 	// g_pVGuiLocalize->AddFile("resource/hammer_english.txt", "hammer");
 
@@ -634,8 +633,8 @@ void CHammer::GetDirectory(DirIndex_t dir, char *p) const
 
 		case DIR_PREFABS:
 		{
-                g_pFullFileSystem->GetSearchPath("hammer_prefabs", false, p, MAX_PATH);
-                break;
+			g_pFullFileSystem->GetSearchPath("hammer_prefabs", false, p, MAX_PATH);
+			break;
 		}
 
 		//
@@ -674,12 +673,12 @@ void CHammer::GetDirectory(DirIndex_t dir, char *p) const
 
 		case DIR_AUTOSAVE:
 		{
-            strcpy( p, m_szAutosaveDir );
+			strcpy( p, m_szAutosaveDir );
 			EnsureTrailingBackslash(p);
 			break;
 		}
-        default:
-        break;
+		default:
+			break;
 	}
 }
 
@@ -1005,19 +1004,19 @@ InitReturnVal_t CHammer::HammerInternalInit()
 	//
 	WNDCLASS wndcls;
 	memset(&wndcls, 0, sizeof(WNDCLASS));
-    wndcls.style         = CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
-    wndcls.lpfnWndProc   = AfxWndProc;
-    wndcls.hInstance     = AfxGetInstanceHandle();
-    wndcls.hIcon         = LoadIcon(IDR_MAINFRAME);
-    wndcls.hCursor       = LoadCursor( IDC_ARROW );
-    wndcls.hbrBackground = (HBRUSH) 0; //  (COLOR_WINDOW + 1);
-    wndcls.lpszMenuName  = "IDR_MAINFRAME";
-	wndcls.cbWndExtra    = 0;
+	wndcls.style			= CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
+	wndcls.lpfnWndProc		= AfxWndProc;
+	wndcls.hInstance		= AfxGetInstanceHandle();
+	wndcls.hIcon			= LoadIcon(IDR_MAINFRAME);
+	wndcls.hCursor			= LoadCursor( IDC_ARROW );
+	wndcls.hbrBackground	= (HBRUSH) 0; //  (COLOR_WINDOW + 1);
+	wndcls.lpszMenuName		= "IDR_MAINFRAME";
+	wndcls.cbWndExtra		= 0;
 
 	// HL Shell class name
-    wndcls.lpszClassName = "VALVEWORLDCRAFT";
+	wndcls.lpszClassName = "VALVEWORLDCRAFT";
 
-    // Register it, exit if it fails
+	// Register it, exit if it fails
 	if(!AfxRegisterClass(&wndcls))
 	{
 		AfxMessageBox("Could not register Hammer's main window class");
@@ -1131,17 +1130,17 @@ InitReturnVal_t CHammer::HammerInternalInit()
 	materials->ModInit();
 
 	// Initialize Keybinds
-    if (!g_pKeyBinds->Init())
-        Error("Unable to load keybinds!");
+	if (!g_pKeyBinds->Init())
+		Error("Unable to load keybinds!");
 
-    if (!g_pKeyBinds->GetAccelTableFor("IDR_MAINFRAME", pMainFrame->m_hAccelTable))
-        Error("Failed to load custom keybinds for IDR_MAINFRAME!");
+	if (!g_pKeyBinds->GetAccelTableFor("IDR_MAINFRAME", pMainFrame->m_hAccelTable))
+		Error("Failed to load custom keybinds for IDR_MAINFRAME!");
 
-    if (!g_pKeyBinds->GetAccelTableFor("IDR_MAPDOC", pMapDocTemplate->m_hAccelTable))
-        Error("Failed to load custom keybinds for the IDR_MAPDOC!");
+	if (!g_pKeyBinds->GetAccelTableFor("IDR_MAPDOC", pMapDocTemplate->m_hAccelTable))
+		Error("Failed to load custom keybinds for the IDR_MAPDOC!");
 
-    if (!g_pKeyBinds->GetAccelTableFor("IDR_MAPDOC", pManifestDocTemplate->m_hAccelTable))
-        Error("Failed to load custom keybinds for the IDR_MAPDOC!");
+	if (!g_pKeyBinds->GetAccelTableFor("IDR_MAPDOC", pManifestDocTemplate->m_hAccelTable))
+		Error("Failed to load custom keybinds for the IDR_MAPDOC!");
 
 	//
 	// Initialize the texture manager and load all textures.
@@ -1583,7 +1582,7 @@ public:
 // Implementation
 protected:
 	//{{AFX_MSG(CAboutDlg)
-    afx_msg void OnBnClickedReportIssue();
+	afx_msg void OnBnClickedReportIssue();
 	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
@@ -1615,16 +1614,7 @@ BOOL CAboutDlg::OnInitDialog(void)
 	{
 		char szTemp2[MAX_PATH];
 		constexpr int nBuild = build_number();
-		sprintf(szTemp2, "Build %d%s", nBuild,
-	//
-	// For SDK builds, append "SDK" to the version number.
-	//
-#ifdef SDK_BUILD
-        " SDK"
-#else
-        ""
-#endif
-        );
+		sprintf(szTemp2, "Build %d", nBuild);
 		pWnd->SetWindowText(szTemp2);
 	}
 
@@ -1633,13 +1623,13 @@ BOOL CAboutDlg::OnInitDialog(void)
 
 void CAboutDlg::OnBnClickedReportIssue()
 {
-    APP()->OpenURL("https://github.com/Gocnak/sdk-2013-hammer/issues", m_hWnd);
+	APP()->OpenURL("https://github.com/Gocnak/sdk-2013-hammer/issues", m_hWnd);
 }
 
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
 	//{{AFX_MSG_MAP(CAboutDlg)
-    ON_BN_CLICKED(IDC_REPORT_ISSUE, &CAboutDlg::OnBnClickedReportIssue)
+	ON_BN_CLICKED(IDC_REPORT_ISSUE, &ThisClass::OnBnClickedReportIssue)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -1868,42 +1858,42 @@ BOOL CHammer::PreTranslateMessage(MSG* pMsg)
 //-----------------------------------------------------------------------------
 void CHammer::LoadSequences(void)
 {
-    KeyValues *pKvSequences = new KeyValues("Command Sequences");
+	KeyValues *pKvSequences = new KeyValues("Command Sequences");
 
-    int bLoaded = 0;
+	int bLoaded = 0;
 
-    if (pKvSequences->LoadFromFile(g_pFullFileSystem, "CmdSeq.wc", "hammer_cfg"))
+	if (pKvSequences->LoadFromFile(g_pFullFileSystem, "CmdSeq.wc", "hammer_cfg"))
 	{
-        bLoaded = 1;
-    }
-    else if (pKvSequences->LoadFromFile(g_pFullFileSystem, "CmdSeq_default.wc", "hammer_cfg"))
-    {
-        bLoaded = 2;
-    }
-
-    if (bLoaded)
+		bLoaded = 1;
+	}
+	else if (pKvSequences->LoadFromFile(g_pFullFileSystem, "CmdSeq_default.wc", "hammer_cfg"))
 	{
-        FOR_EACH_TRUE_SUBKEY(pKvSequences, pKvSequence)
+		bLoaded = 2;
+	}
+
+	if (bLoaded)
+	{
+		FOR_EACH_TRUE_SUBKEY(pKvSequences, pKvSequence)
 		{
-            CCommandSequence *pSeq = new CCommandSequence;
-            Q_strncpy(pSeq->m_szName, pKvSequence->GetName(), 128);
-            FOR_EACH_TRUE_SUBKEY(pKvSequence, pKvCmd)
+			CCommandSequence *pSeq = new CCommandSequence;
+			Q_strncpy(pSeq->m_szName, pKvSequence->GetName(), 128);
+			FOR_EACH_TRUE_SUBKEY(pKvSequence, pKvCmd)
 			{
-                CCOMMAND cmd;
-                Q_memset(&cmd, 0, sizeof(CCOMMAND));
-                cmd.Load(pKvCmd);
+				CCOMMAND cmd;
+				Q_memset(&cmd, 0, sizeof(CCOMMAND));
+				cmd.Load(pKvCmd);
 				pSeq->m_Commands.Add(cmd);
 			}
 
 			m_CmdSequences.Add(pSeq);
 		}
 
-        // Save em out if defaults were loaded
-        if (bLoaded == 2)
-            pKvSequences->SaveToFile(g_pFullFileSystem, "CmdSeq.wc", "hammer_cfg", true);
+		// Save em out if defaults were loaded
+		if (bLoaded == 2)
+			pKvSequences->SaveToFile(g_pFullFileSystem, "CmdSeq.wc", "hammer_cfg", true);
 	}
 
-    pKvSequences->deleteThis();
+	pKvSequences->deleteThis();
 }
 
 
@@ -1912,23 +1902,23 @@ void CHammer::LoadSequences(void)
 //-----------------------------------------------------------------------------
 void CHammer::SaveSequences(void)
 {
-    KeyValues *pKvSequences = new KeyValues("Command Sequences");
+	KeyValues *pKvSequences = new KeyValues("Command Sequences");
 
-    int numSeq = m_CmdSequences.GetSize();
-    for (int i = 0; i < numSeq; i++)
+	int numSeq = m_CmdSequences.GetSize();
+	for (int i = 0; i < numSeq; i++)
 	{
 		CCommandSequence *pSeq = m_CmdSequences[i];
-        KeyValues *pKvSequence = new KeyValues(pSeq->m_szName);
-        int numCmds = pSeq->m_Commands.GetSize();
-        for (int j = 0; j < numCmds; j++)
-        {
-            pSeq->m_Commands[j].Save( pKvSequence->CreateNewKey() );
+		KeyValues *pKvSequence = new KeyValues(pSeq->m_szName);
+		int numCmds = pSeq->m_Commands.GetSize();
+		for (int j = 0; j < numCmds; j++)
+		{
+			pSeq->m_Commands[j].Save( pKvSequence->CreateNewKey() );
 		}
-        pKvSequences->AddSubKey(pKvSequence);
+		pKvSequences->AddSubKey(pKvSequence);
 	}
 
-    pKvSequences->SaveToFile(g_pFullFileSystem, "CmdSeq.wc", "hammer_cfg", true);
-    pKvSequences->deleteThis();
+	pKvSequences->SaveToFile(g_pFullFileSystem, "CmdSeq.wc", "hammer_cfg", true);
+	pKvSequences->deleteThis();
 }
 
 
@@ -1982,7 +1972,7 @@ void CHammer::RunFrame(void)
 
 	HammerVGui()->Simulate();
 
-	if ( CMapDoc::GetActiveMapDoc() && !IsClosing() || m_bForceRenderNextFrame )
+	if ( ( CMapDoc::GetActiveMapDoc() && !IsClosing() ) || m_bForceRenderNextFrame )
 		HandleLightingPreview();
 
 	// never render without document or when closing down
@@ -2056,21 +2046,21 @@ void CHammer::OnActivateApp(bool bActive)
 //-----------------------------------------------------------------------------
 void CHammer::ReleaseVideoMemory()
 {
-   POSITION pos = GetFirstDocTemplatePosition();
+	POSITION pos = GetFirstDocTemplatePosition();
 
-   while (pos)
-   {
-      CDocTemplate* pTemplate = (CDocTemplate*)GetNextDocTemplate(pos);
-      POSITION pos2 = pTemplate->GetFirstDocPosition();
-      while (pos2)
-      {
-         CDocument * pDocument;
-         if ((pDocument=pTemplate->GetNextDoc(pos2)) != NULL)
-		 {
-			 static_cast<CMapDoc*>(pDocument)->ReleaseVideoMemory();
-		 }
-      }
-   }
+	while (pos)
+	{
+		CDocTemplate* pTemplate = (CDocTemplate*)GetNextDocTemplate(pos);
+		POSITION pos2 = pTemplate->GetFirstDocPosition();
+		while (pos2)
+		{
+			CDocument* pDocument;
+			if ( ( pDocument = pTemplate->GetNextDoc( pos2 ) ) != NULL )
+			{
+				static_cast<CMapDoc*>( pDocument )->ReleaseVideoMemory();
+			}
+		}
+	}
 }
 
 void CHammer::SuppressVideoAllocation( bool bSuppress )
@@ -2110,7 +2100,7 @@ int CHammer::GetNextAutosaveNumber( const CString& autoSaveDir, CUtlMap<FILETIME
 
 	hFile = FindFirstFile( autoSaveDir + "*.vmf_autosave", &fileData );
 
-    if ( hFile != INVALID_HANDLE_VALUE )
+	if ( hFile != INVALID_HANDLE_VALUE )
 	{
 		//go through and for each file check to see if it is an autosave for this map; also keep track of total file size
 		//for directory.
@@ -2165,7 +2155,7 @@ int CHammer::GetNextAutosaveNumber( const CString& autoSaveDir, CUtlMap<FILETIME
 		FindClose(hFile);
 	}
 
-    if ( nNumberActualAutosaves < nMaxAutosavesPerMap )
+	if ( nNumberActualAutosaves < nMaxAutosavesPerMap )
 	{
 		//there are less autosaves than wanted for the map; use the larger
 		//of the next expected or the last found hole as the number.
@@ -2231,7 +2221,7 @@ unsigned CHammer::DoAutosave( void* _data )
 
 	//creating the proper suffix for the autosave file
 	char szNumberChars[4];
-    CString strAutosaveString = itoa( nCurrentAutosaveNumber, szNumberChars, 10 );
+	CString strAutosaveString = itoa( nCurrentAutosaveNumber, szNumberChars, 10 );
 	CString strAutosaveNumber = "000";
 	strAutosaveNumber += strAutosaveString;
 	strAutosaveNumber = strAutosaveNumber.Right( 3 );

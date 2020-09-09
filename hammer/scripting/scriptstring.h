@@ -185,6 +185,7 @@ private:
 	Storage m_pString;
 };
 
+extern uint32 MurmurHash3_32( const void* key, size_t len, uint32 seed, bool bCaselessStringVariant = false );
 namespace robin_hood
 {
 	template <>
@@ -192,8 +193,7 @@ namespace robin_hood
 	{
 		size_t operator()( ScriptString const& str ) const noexcept
 		{
-			extern uint32 MurmurHash3_32( const void* key, size_t len, uint32 seed, bool bCaselessStringVariant = false );
-			return MurmurHash3_32( str.Get(), str.Length(), 1047 /*anything will do for a seed*/, false );
+			return ::MurmurHash3_32( str.Get(), str.Length(), 1047 /*anything will do for a seed*/, false );
 		}
 	};
 } // namespace robin_hood

@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -9,7 +9,7 @@
 #pragma once
 
 
-#include "AutoSelCombo.h"
+#include "autoselcombo.h"
 
 
 class COPTConfigs : public CPropertyPage
@@ -67,7 +67,7 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 
-	BOOL BrowseForFolder(char *pszTitle, char *pszDirectory);
+	BOOL BrowseForFolder(const char *pszTitle, char *pszDirectory);
 	void SaveInfo(CGameConfig*);
 	void UpdateConfigList();
 	void UpdateEntityLists();

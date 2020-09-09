@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -10,7 +10,7 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "StrDlg.h"
+#include "strdlg.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -18,7 +18,7 @@
 /////////////////////////////////////////////////////////////////////////////
 // CStrDlg dialog
 
-CStrDlg::CStrDlg(DWORD dwFlags, LPCTSTR pszString, LPCTSTR pszPrompt, 
+CStrDlg::CStrDlg(DWORD dwFlags, LPCTSTR pszString, LPCTSTR pszPrompt,
 				 LPCTSTR pszTitle)
 	: CDialog(CStrDlg::IDD, NULL)
 {
@@ -47,10 +47,19 @@ void CStrDlg::DoDataExchange(CDataExchange* pDX)
 	//}}AFX_DATA_MAP
 }
 
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunused-local-typedef"
+#endif
+
 BEGIN_MESSAGE_MAP(CStrDlg, CDialog)
 	//{{AFX_MSG_MAP(CStrDlg)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
+
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // CStrDlg message handlers
@@ -62,7 +71,7 @@ void CStrDlg::SetRange(int iLow, int iHigh, int iIncrement)
 	this->iIncrement = 1;
 }
 
-BOOL CStrDlg::OnInitDialog() 
+BOOL CStrDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 

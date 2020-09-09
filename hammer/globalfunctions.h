@@ -11,7 +11,7 @@
 #pragma once
 #endif
 
-#include "MapClass.h"	// For CMapObjectList
+#include "mapclass.h"	// For CMapObjectList
 
 
 class CMapSolid;
@@ -39,7 +39,7 @@ bool IsWorldObject(CMapAtom *pObject);
 
 BOOL AddLeavesToListCallback(CMapClass *pObject, CMapObjectList *pList);
 
-void WriteDebug(char *pszStr);
+void WriteDebug(const char *pszStr);
 LPCTSTR GetDefaultTextureName();
 void SetDefaultTextureName( const char *szTexName );
 LPCTSTR GetNullTextureName();

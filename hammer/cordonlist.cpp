@@ -7,7 +7,7 @@
 //=============================================================================
 
 #include "stdafx.h"
-#include "GroupList.h"
+#include "grouplist.h"
 #include "cordon.h"
 #include "cordonlist.h"
 
@@ -32,7 +32,7 @@ CCordonList::~CCordonList()
 //-----------------------------------------------------------------------------
 // Called when the user finishes editing the label of a tree item.
 //-----------------------------------------------------------------------------
-void CCordonList::OnRenameItem(void *pItem, const char *pszText) 
+void CCordonList::OnRenameItem(void *pItem, const char *pszText)
 {
 	Assert(pItem);
 	Assert(pszText);
@@ -41,7 +41,7 @@ void CCordonList::OnRenameItem(void *pItem, const char *pszText)
 		return;
 
 	CordonListItem_t *pCordon = (CordonListItem_t *)pItem;
-	
+
 	// Can't rename cordon boxes
 	if ( !pCordon->m_pBox )
 	{

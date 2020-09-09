@@ -1,17 +1,17 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
 //=============================================================================//
 
-#include "dme_controls/AttributeAssetPickerPanel.h"
+#include "dme_controls/attributeassetpickerpanel.h"
 #include "dme_controls/AttributeTextEntry.h"
-#include "matsys_controls/AssetPicker.h"
-#include "matsys_controls/VtfPicker.h"
-#include "matsys_controls/VMTPicker.h"
-#include "tier1/keyvalues.h"
+#include "matsys_controls/assetpicker.h"
+#include "matsys_controls/vtfpicker.h"
+#include "matsys_controls/vmtpicker.h"
+#include "tier1/KeyValues.h"
 
 
 using namespace vgui;

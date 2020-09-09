@@ -6,14 +6,14 @@
 //=============================================================================//
 
 #include "stdafx.h"
-#include "Box3D.h"
-#include "fgdlib/HelperInfo.h"
-#include "MapQuadBounds.h"
-#include "mathlib/MathLib.h"
-#include "Render3D.h"
+#include "box3d.h"
+#include "fgdlib/helperinfo.h"
+#include "mapquadbounds.h"
+#include "mathlib/mathlib.h"
+#include "render3d.h"
 #include "material.h"
 #include "materialsystem/imaterialsystem.h"
-#include "materialsystem/IMesh.h"
+#include "materialsystem/imesh.h"
 #include "mapsolid.h"
 #include "mapentity.h"
 
@@ -67,7 +67,7 @@ CMapQuadBounds::~CMapQuadBounds(void)
 // Purpose: Before saving, fill in my parent entity's keys with the bounds of
 //			a non-nodraw face from a sibling solid.
 //------------------------------------------------------------------------------
-void CMapQuadBounds::PresaveWorld(void) 
+void CMapQuadBounds::PresaveWorld(void)
 {
 
 	CMapEntity *pMapEntity = dynamic_cast<CMapEntity*>(GetParent());
@@ -115,7 +115,7 @@ void CMapQuadBounds::PresaveWorld(void)
 					m_nError = QUAD_ERR_NONE;
 				}
 			}
-		} 
+		}
 
 		static char buf[64];
 		sprintf( buf, "%g %g %g", (double)m_vLowerLeft[0], (double)m_vLowerLeft[1], (double)m_vLowerLeft[2] );

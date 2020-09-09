@@ -100,7 +100,7 @@ public:
 	void MoveDataFrom( CUtlHashtableEntry &src )
 	{
 		storage_t * RESTRICT srcData = &src.data[0];
-		for ( int i = 0; i < ARRAYSIZE( data ); ++i ) { data[i] = srcData[i]; }
+		for ( uint i = 0; i < ARRAYSIZE( data ); ++i ) { data[i] = srcData[i]; }
 	}
 };
 
@@ -147,7 +147,7 @@ protected:
 	template <typename KeyParamT> handle_t DoLookup( KeyParamT x, unsigned int h, handle_t *pPreviousInChain ) const;
 
 	// Remove single element by key + hash. Returns the index of the new hole
-	// that was created. Returns InvalidHandle() if element was not found. 
+	// that was created. Returns InvalidHandle() if element was not found.
 	template <typename KeyParamT> int DoRemove( KeyParamT x, unsigned int h );
 
 	// Friend CUtlStableHashtable so that it can call our Do* functions directly
@@ -199,7 +199,7 @@ public:
 	// True if the key is in the table
 	bool HasElement( KeyArg_t k ) const { return InvalidHandle() != Find( k ); }
 	bool HasElement( KeyAlt_t k ) const { return InvalidHandle() != Find( k ); }
-	
+
 	// Key insertion or lookup, always returns a valid handle
 	handle_t Insert( KeyArg_t k ) { return DoInsert<KeyArg_t>( k, m_hash(k) ); }
 	handle_t Insert( KeyArg_t k, ValueArg_t v, bool *pDidInsert = NULL ) { return DoInsert<KeyArg_t>( k, v, m_hash(k), pDidInsert ); }
@@ -296,7 +296,7 @@ void CUtlHashtable<KeyT, ValueT, KeyHashT, KeyIsEqualT, AltKeyT>::SetExternalBuf
 template <typename KeyT, typename ValueT, typename KeyHashT, typename KeyIsEqualT, typename AltKeyT>
 void CUtlHashtable<KeyT, ValueT, KeyHashT, KeyIsEqualT, AltKeyT>::DoRealloc( int size )
 {
-	Assert( !m_bSizeLocked ); 
+	Assert( !m_bSizeLocked );
 
 	size = SmallestPowerOfTwoGreaterOrEqual( MAX( m_nMinSize, size ) );
 	Assert( size > 0 && (uint)size <= entry_t::IdealIndex( ~0, 0x1FFFFFFF ) ); // reasonable power of 2
@@ -650,7 +650,7 @@ void CUtlHashtable<KeyT, ValueT, KeyHashT, KeyIsEqualT, AltKeyT>::RemoveAll()
 	int used = m_nUsed;
 	if ( used != 0 )
 	{
-		entry_t* table = m_table.Base(); 
+		entry_t* table = m_table.Base();
 		for ( int i = m_table.Count() - 1; i >= 0; --i )
 		{
 			if ( table[i].IsValid() )
@@ -831,7 +831,7 @@ protected:
 		IndexStorage_t m_index;
 	};
 
-	struct HashProxy 
+	struct HashProxy
 	{
 		KeyHashT m_hash;
 		unsigned int operator()( IndirectIndex idx ) const

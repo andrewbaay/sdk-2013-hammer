@@ -18,7 +18,7 @@
 class Axes2
 {
 public:
-	Axes2() 
+	Axes2()
 	{
 		bInvertHorz = bInvertVert = false;
 		axHorz = AXIS_X;
@@ -27,7 +27,7 @@ public:
 	}
 
 	void SetAxes(int h, bool bInvertH, int v, bool bInvertV);
-	void SetAxes(Axes2 &axes);
+	void SetAxes(const Axes2 &axes);
 
 	bool bInvertHorz;	// Whether the horizontal axis is inverted.
 	bool bInvertVert;	// Whether the vertical axis is inverted.

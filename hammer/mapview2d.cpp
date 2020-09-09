@@ -6,21 +6,21 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "MapView2D.h"
-#include "MapView3D.h"
-#include "MapDoc.h"
-#include "Render2D.h"
+#include "mapview2d.h"
+#include "mapview3d.h"
+#include "mapdoc.h"
+#include "render2d.h"
 #include "ToolManager.h"
-#include "History.h"
-#include "TitleWnd.h"
+#include "history.h"
+#include "titlewnd.h"
 #include "mainfrm.h"
-#include "MapSolid.h"
+#include "mapsolid.h"
 #include "ToolMorph.h"		// FIXME: remove
-#include "MapWorld.h"
+#include "mapworld.h"
 #include "camera.h"
-#include "Manifest.h"
+#include "manifest.h"
 #include "MapInstance.h"
-#include "Options.h"
+#include "options.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -37,21 +37,21 @@ IMPLEMENT_DYNCREATE(CMapView2D, CMapView2DBase)
 BEGIN_MESSAGE_MAP(CMapView2D, CMapView2DBase)
 	//{{AFX_MSG_MAP(CMapView2D)
 	ON_WM_KEYDOWN()
-	ON_COMMAND(ID_VIEW_2DXY, OnView2dxy)
-	ON_COMMAND(ID_VIEW_2DYZ, OnView2dyz)
-	ON_COMMAND(ID_VIEW_2DXZ, OnView2dxz)
-	ON_COMMAND_EX(ID_TOOLS_ALIGNTOP, OnToolsAlign)
-	ON_COMMAND_EX(ID_TOOLS_ALIGNBOTTOM, OnToolsAlign)
-	ON_COMMAND_EX(ID_TOOLS_ALIGNLEFT, OnToolsAlign)
-	ON_COMMAND_EX(ID_TOOLS_ALIGNRIGHT, OnToolsAlign)
-	ON_COMMAND_EX(ID_FLIP_HORIZONTAL, OnFlip)
-	ON_COMMAND_EX(ID_FLIP_VERTICAL, OnFlip)
-	ON_UPDATE_COMMAND_UI(ID_FLIP_HORIZONTAL, OnUpdateEditSelection)
-	ON_UPDATE_COMMAND_UI(ID_FLIP_VERTICAL, OnUpdateEditSelection)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_ALIGNTOP, OnUpdateEditSelection)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_ALIGNBOTTOM, OnUpdateEditSelection)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_ALIGNLEFT, OnUpdateEditSelection)
-	ON_UPDATE_COMMAND_UI(ID_TOOLS_ALIGNRIGHT, OnUpdateEditSelection)
+	ON_COMMAND(ID_VIEW_2DXY, &ThisClass::OnView2dxy)
+	ON_COMMAND(ID_VIEW_2DYZ, &ThisClass::OnView2dyz)
+	ON_COMMAND(ID_VIEW_2DXZ, &ThisClass::OnView2dxz)
+	ON_COMMAND_EX(ID_TOOLS_ALIGNTOP, &ThisClass::OnToolsAlign)
+	ON_COMMAND_EX(ID_TOOLS_ALIGNBOTTOM, &ThisClass::OnToolsAlign)
+	ON_COMMAND_EX(ID_TOOLS_ALIGNLEFT, &ThisClass::OnToolsAlign)
+	ON_COMMAND_EX(ID_TOOLS_ALIGNRIGHT, &ThisClass::OnToolsAlign)
+	ON_COMMAND_EX(ID_FLIP_HORIZONTAL, &ThisClass::OnFlip)
+	ON_COMMAND_EX(ID_FLIP_VERTICAL, &ThisClass::OnFlip)
+	ON_UPDATE_COMMAND_UI(ID_FLIP_HORIZONTAL, &ThisClass::OnUpdateEditSelection)
+	ON_UPDATE_COMMAND_UI(ID_FLIP_VERTICAL, &ThisClass::OnUpdateEditSelection)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_ALIGNTOP, &ThisClass::OnUpdateEditSelection)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_ALIGNBOTTOM, &ThisClass::OnUpdateEditSelection)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_ALIGNLEFT, &ThisClass::OnUpdateEditSelection)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_ALIGNRIGHT, &ThisClass::OnUpdateEditSelection)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -350,7 +350,7 @@ void CMapView2D::Render()
 //			InstanceAngles - the axis rotation
 // Output : none
 //-----------------------------------------------------------------------------
-void CMapView2D::RenderInstance( CMapInstance *pInstanceClass, CMapClass *pMapClass, Vector &InstanceOrigin, QAngle &InstanceAngles )
+void CMapView2D::RenderInstance( CMapInstance *pInstanceClass, CMapClass *pMapClass, const Vector &InstanceOrigin, const QAngle &InstanceAngles )
 {
 	if ( !pInstanceClass->IsInstanceVisible() )
 	{

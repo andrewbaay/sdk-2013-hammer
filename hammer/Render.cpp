@@ -9,25 +9,25 @@
 #include <VGuiMatSurface/IMatSystemSurface.h>
 #include "mathlib/vmatrix.h"
 #include "Render.h"
-#include "Camera.h"
-#include "Material.h"
+#include "camera.h"
+#include "material.h"
 #include "materialsystem/imesh.h"
-#include "datacache\imdlcache.h"
+#include "datacache/imdlcache.h"
 #include "hammer.h"
 #include "hammer_mathlib.h"
 #include "vgui_controls/Controls.h"
 #include "vgui/IScheme.h"
 #include "texturesystem.h"
-#include "IStudioRender.h"
+#include "istudiorender.h"
 #include "builddisp.h"
 #include "mapview.h"
 #include "material.h"
 #include <renderparm.h>
-#include "materialsystem/IMaterialSystemHardwareConfig.h"
+#include "materialsystem/imaterialsystemhardwareconfig.h"
 #include "vphysics_interface.h"
-#include "materialsystem/MaterialSystem_Config.h"
+#include "materialsystem/materialsystem_config.h"
 #include "VGuiWnd.h"
-#include "Box3D.h"
+#include "box3d.h"
 #include "MapInstance.h"
 
 extern IMatSystemSurface *g_pMatSystemSurface;
@@ -111,7 +111,7 @@ CRender::~CRender(void)
 //			InstanceAngles - the rotation of the instance
 // Output : none
 //-----------------------------------------------------------------------------
-void CRender::PushInstanceData( CMapInstance *pInstanceClass, Vector &InstanceOrigin, QAngle &InstanceAngles )
+void CRender::PushInstanceData( CMapInstance *pInstanceClass, const Vector &InstanceOrigin, const QAngle &InstanceAngles )
 {
 	TInstanceState	InstanceState;
 	matrix3x4_t		Instance3x4Matrix;
@@ -951,7 +951,7 @@ void CRender::DrawPlane( const Vector &p0, const Vector &p1, const Vector &p2, c
 	m_pMesh->Draw();
 }
 
-void CRender::DrawFilledRect( Vector2D& ul, Vector2D& lr, unsigned char *pColor, bool bBorder )
+void CRender::DrawFilledRect( Vector2D ul, Vector2D lr, unsigned char *pColor, bool bBorder )
 {
 	static Color black(0,0,0,255);
 

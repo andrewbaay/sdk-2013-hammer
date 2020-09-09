@@ -10,9 +10,9 @@
 #pragma once
 #endif
 
-#include "wndTex.h"
-#include "MapFace.h"
-#include "TextureBox.h"
+#include "wndtex.h"
+#include "mapface.h"
+#include "texturebox.h"
 #include "materialdlg.h"
 
 

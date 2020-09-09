@@ -4,30 +4,30 @@
 
 #include <stdafx.h>
 #include "hammer.h"
-#include "CollisionUtils.h"
+#include "collisionutils.h"
 #include "resource.h"
-#include "ToolDisplace.h"
-#include "MainFrm.h"
-#include "FaceEditSheet.h"
-#include "GlobalFunctions.h"
-#include "MapAtom.h"
-#include "MapSolid.h"
-#include "MapView3D.h"
-#include "History.h"
-#include "Camera.h"
-#include "MapDoc.h"
-#include "ChunkFile.h"
+#include "tooldisplace.h"
+#include "mainfrm.h"
+#include "faceeditsheet.h"
+#include "globalfunctions.h"
+#include "mapatom.h"
+#include "mapsolid.h"
+#include "mapview3d.h"
+#include "history.h"
+#include "camera.h"
+#include "mapdoc.h"
+#include "chunkfile.h"
 #include "ToolManager.h"
 #include "tier1/utlbuffer.h"
-#include "Material.h"
+#include "material.h"
 #include "materialsystem/imaterial.h"
 #include "materialsystem/imaterialvar.h"
 #include "materialsystem/imaterialsystem.h"
 #include "materialsystem/MaterialSystemUtil.h"
 #include "materialsystem/itexture.h"
 #include "pixelwriter.h"
-#include "TextureSystem.h"
-#include "SculptOptions.h"
+#include "texturesystem.h"
+#include "sculptoptions.h"
 #include "tier1/KeyValues.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -1156,14 +1156,14 @@ void CSculptPushOptions::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CSculptPushOptions, CDialog)
-	ON_CBN_SELCHANGE(IDC_IDC_SCULPT_PUSH_OPTION_NORMAL_MODE, &CSculptPushOptions::OnCbnSelchangeIdcSculptPushOptionNormalMode)
-	ON_CBN_SELCHANGE(IDC_SCULPT_PUSH_OPTION_OFFSET_MODE, &CSculptPushOptions::OnCbnSelchangeSculptPushOptionOffsetMode)
-	ON_EN_CHANGE(IDC_SCULPT_PUSH_OPTION_OFFSET_DISTANCE, &CSculptPushOptions::OnEnChangeSculptPushOptionOffsetDistance)
-	ON_CBN_SELCHANGE(IDC_SCULPT_PUSH_OPTION_DENSITY_MODE, &CSculptPushOptions::OnCbnSelchangeSculptPushOptionDensityMode)
-	ON_EN_KILLFOCUS(IDC_SCULPT_PUSH_OPTION_SMOOTH_AMOUNT, &CSculptPushOptions::OnEnKillfocusSculptPushOptionSmoothAmount)
-	ON_EN_KILLFOCUS(IDC_SCULPT_PUSH_OPTION_OFFSET_AMOUNT, &CSculptPushOptions::OnEnKillfocusSculptPushOptionOffsetAmount)
-	ON_EN_KILLFOCUS(IDC_SCULPT_PUSH_OPTION_FALLOFF_POSITION, &CSculptPushOptions::OnEnKillfocusSculptPushOptionFalloffPosition)
-	ON_EN_KILLFOCUS(IDC_SCULPT_PUSH_OPTION_FALLOFF_FINAL, &CSculptPushOptions::OnEnKillfocusSculptPushOptionFalloffFinal)
+	ON_CBN_SELCHANGE(IDC_IDC_SCULPT_PUSH_OPTION_NORMAL_MODE, &ThisClass::OnCbnSelchangeIdcSculptPushOptionNormalMode)
+	ON_CBN_SELCHANGE(IDC_SCULPT_PUSH_OPTION_OFFSET_MODE, &ThisClass::OnCbnSelchangeSculptPushOptionOffsetMode)
+	ON_EN_CHANGE(IDC_SCULPT_PUSH_OPTION_OFFSET_DISTANCE, &ThisClass::OnEnChangeSculptPushOptionOffsetDistance)
+	ON_CBN_SELCHANGE(IDC_SCULPT_PUSH_OPTION_DENSITY_MODE, &ThisClass::OnCbnSelchangeSculptPushOptionDensityMode)
+	ON_EN_KILLFOCUS(IDC_SCULPT_PUSH_OPTION_SMOOTH_AMOUNT, &ThisClass::OnEnKillfocusSculptPushOptionSmoothAmount)
+	ON_EN_KILLFOCUS(IDC_SCULPT_PUSH_OPTION_OFFSET_AMOUNT, &ThisClass::OnEnKillfocusSculptPushOptionOffsetAmount)
+	ON_EN_KILLFOCUS(IDC_SCULPT_PUSH_OPTION_FALLOFF_POSITION, &ThisClass::OnEnKillfocusSculptPushOptionFalloffPosition)
+	ON_EN_KILLFOCUS(IDC_SCULPT_PUSH_OPTION_FALLOFF_FINAL, &ThisClass::OnEnKillfocusSculptPushOptionFalloffFinal)
 END_MESSAGE_MAP()
 
 
@@ -2381,12 +2381,12 @@ void CSculptCarveOptions::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CSculptCarveOptions, CDialog)
-	ON_CBN_SELCHANGE(IDC_IDC_SCULPT_PUSH_OPTION_NORMAL_MODE, &CSculptCarveOptions::OnCbnSelchangeIdcSculptPushOptionNormalMode)
-	ON_CBN_SELCHANGE(IDC_SCULPT_PUSH_OPTION_OFFSET_MODE, &CSculptCarveOptions::OnCbnSelchangeSculptPushOptionOffsetMode)
-	ON_EN_CHANGE(IDC_SCULPT_PUSH_OPTION_OFFSET_DISTANCE, &CSculptCarveOptions::OnEnChangeSculptPushOptionOffsetDistance)
-	ON_CBN_SELCHANGE(IDC_SCULPT_PUSH_OPTION_DENSITY_MODE, &CSculptCarveOptions::OnCbnSelchangeSculptPushOptionDensityMode)
-	ON_EN_KILLFOCUS(IDC_SCULPT_PUSH_OPTION_SMOOTH_AMOUNT, &CSculptCarveOptions::OnEnKillfocusSculptPushOptionSmoothAmount)
-	ON_EN_KILLFOCUS(IDC_SCULPT_PUSH_OPTION_OFFSET_AMOUNT, &CSculptCarveOptions::OnEnKillfocusSculptPushOptionOffsetAmount)
+	ON_CBN_SELCHANGE(IDC_IDC_SCULPT_PUSH_OPTION_NORMAL_MODE, &ThisClass::OnCbnSelchangeIdcSculptPushOptionNormalMode)
+	ON_CBN_SELCHANGE(IDC_SCULPT_PUSH_OPTION_OFFSET_MODE, &ThisClass::OnCbnSelchangeSculptPushOptionOffsetMode)
+	ON_EN_CHANGE(IDC_SCULPT_PUSH_OPTION_OFFSET_DISTANCE, &ThisClass::OnEnChangeSculptPushOptionOffsetDistance)
+	ON_CBN_SELCHANGE(IDC_SCULPT_PUSH_OPTION_DENSITY_MODE, &ThisClass::OnCbnSelchangeSculptPushOptionDensityMode)
+	ON_EN_KILLFOCUS(IDC_SCULPT_PUSH_OPTION_SMOOTH_AMOUNT, &ThisClass::OnEnKillfocusSculptPushOptionSmoothAmount)
+	ON_EN_KILLFOCUS(IDC_SCULPT_PUSH_OPTION_OFFSET_AMOUNT, &ThisClass::OnEnKillfocusSculptPushOptionOffsetAmount)
 
 	ON_WM_PAINT()
 	ON_WM_LBUTTONDOWN()
@@ -3512,8 +3512,8 @@ void CSculptProjectOptions::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CSculptProjectOptions, CDialog)
-	ON_BN_CLICKED(IDC_LOAD_IMAGE, &CSculptProjectOptions::OnBnClickedLoadImage)
-	ON_NOTIFY(NM_CUSTOMDRAW, IDC_PROJECT_SIZE, &CSculptProjectOptions::OnNMCustomdrawProjectSize)
+	ON_BN_CLICKED(IDC_LOAD_IMAGE, &ThisClass::OnBnClickedLoadImage)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_PROJECT_SIZE, &ThisClass::OnNMCustomdrawProjectSize)
 END_MESSAGE_MAP()
 
 bool CSculptProjectOptions::Paint( CMapView3D *pView, const Vector2D &vPoint, SpatialPaintData_t &spatialData )

@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================
 
@@ -21,8 +21,8 @@ extern "C"
 
 BOOL WINAPI DllMain (HANDLE hInst, ULONG ulInit, LPVOID lpReserved)
 {
-	lpReserved = lpReserved;
-	ulInit = ulInit;
+	(void)lpReserved;
+	(void)ulInit;
 
 	g_hDLLInst = hInst;
 	return true;
@@ -59,7 +59,7 @@ CRC32_t CShaderDLLVerification::Function1( unsigned char *pData )
 	g_pLastInputData = (unsigned char*)pData;
 
 	void *pVerifyPtr1 = &g_Blah;
-	
+
 	CRC32_t testCRC;
 	CRC32_Init( &testCRC );
 	CRC32_ProcessBuffer( &testCRC, pData, SHADER_DLL_VERIFY_DATA_LEN1 );
@@ -72,7 +72,9 @@ CRC32_t CShaderDLLVerification::Function1( unsigned char *pData )
 
 void CShaderDLLVerification::Function2( int a, int b, int c )
 {
-	a=b=c;
+	(void)a;
+	(void)b;
+	(void)c;
 	MD5Context_t md5Context;
 	MD5Init( &md5Context );
 	MD5Update( &md5Context, g_pLastInputData + SHADER_DLL_VERIFY_DATA_PTR_OFFSET, SHADER_DLL_VERIFY_DATA_LEN1 - SHADER_DLL_VERIFY_DATA_PTR_OFFSET );
@@ -81,12 +83,16 @@ void CShaderDLLVerification::Function2( int a, int b, int c )
 
 void CShaderDLLVerification::Function3( int a, int b, int c )
 {
-	a=b=c;
+	(void)a;
+	(void)b;
+	(void)c;
 }
 
 void CShaderDLLVerification::Function4( int a, int b, int c )
 {
-	a=b=c;
+	(void)a;
+	(void)b;
+	(void)c;
 }
 
 

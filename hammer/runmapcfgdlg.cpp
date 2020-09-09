@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -10,8 +10,8 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "RunMapCfgDlg.h"
-#include "StrDlg.h"
+#include "runmapcfgdlg.h"
+#include "strdlg.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -42,10 +42,10 @@ void CRunMapCfgDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CRunMapCfgDlg, CDialog)
 	//{{AFX_MSG_MAP(CRunMapCfgDlg)
-	ON_BN_CLICKED(IDC_NEW, OnNew)
-	ON_BN_CLICKED(IDC_REMOVE, OnRemove)
-	ON_BN_CLICKED(IDC_RENAME, OnRename)
-	ON_BN_CLICKED(IDC_COPY, OnCopy)
+	ON_BN_CLICKED(IDC_NEW, &ThisClass::OnNew)
+	ON_BN_CLICKED(IDC_REMOVE, &ThisClass::OnRemove)
+	ON_BN_CLICKED(IDC_RENAME, &ThisClass::OnRename)
+	ON_BN_CLICKED(IDC_COPY, &ThisClass::OnCopy)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -59,7 +59,7 @@ void CRunMapCfgDlg::AddSequenceToList(int iIndex, CCommandSequence *pSeq)
 	m_cConfigurations.SetCurSel(iIndex);
 }
 
-void CRunMapCfgDlg::OnNew() 
+void CRunMapCfgDlg::OnNew()
 {
 	// add a new sequence
 	CStrDlg dlg(0, "", "Name:", "New Configuration");
@@ -74,7 +74,7 @@ void CRunMapCfgDlg::OnNew()
 	AddSequenceToList(-1, pSeq);
 }
 
-void CRunMapCfgDlg::OnRemove() 
+void CRunMapCfgDlg::OnRemove()
 {
 	int iSel = m_cConfigurations.GetCurSel();
 	if(iSel == LB_ERR)
@@ -82,7 +82,7 @@ void CRunMapCfgDlg::OnRemove()
 	if(AfxMessageBox("Do you want to remove this configuration?",
 		MB_YESNO) == IDNO)
 		return;	// don't want to
-	CCommandSequence *pSeq = (CCommandSequence*) 
+	CCommandSequence *pSeq = (CCommandSequence*)
 		m_cConfigurations.GetItemDataPtr(iSel);
 
 	// find it in the app's array
@@ -101,12 +101,12 @@ void CRunMapCfgDlg::OnRemove()
 	Assert(0);
 }
 
-void CRunMapCfgDlg::OnRename() 
+void CRunMapCfgDlg::OnRename()
 {
 	int iSel = m_cConfigurations.GetCurSel();
 	if(iSel == LB_ERR)
 		return;	// nothing selected
-	CCommandSequence *pSeq = (CCommandSequence*) 
+	CCommandSequence *pSeq = (CCommandSequence*)
 		m_cConfigurations.GetItemDataPtr(iSel);
 
 	CStrDlg dlg(0, pSeq->m_szName, "Name:", "Rename Configuration");
@@ -119,7 +119,7 @@ void CRunMapCfgDlg::OnRename()
 	AddSequenceToList(iSel, pSeq);
 }
 
-BOOL CRunMapCfgDlg::OnInitDialog() 
+BOOL CRunMapCfgDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
@@ -135,7 +135,7 @@ BOOL CRunMapCfgDlg::OnInitDialog()
 	return TRUE;
 }
 
-void CRunMapCfgDlg::OnCopy() 
+void CRunMapCfgDlg::OnCopy()
 {
 	int iSel = m_cConfigurations.GetCurSel();
 	if(iSel == LB_ERR)
@@ -151,7 +151,7 @@ void CRunMapCfgDlg::OnCopy()
 	strcpy(pSeq->m_szName, dlg.m_string);
 	m_pApp->m_CmdSequences.Add(pSeq);
 
-	CCommandSequence *pSrcSeq = (CCommandSequence*) 
+	CCommandSequence *pSrcSeq = (CCommandSequence*)
 		m_cConfigurations.GetItemDataPtr(iSel);
 
 	pSeq->m_Commands.Append(pSrcSeq->m_Commands);

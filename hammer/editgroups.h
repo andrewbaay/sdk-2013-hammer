@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 //=============================================================================//
 
@@ -10,7 +10,7 @@
 #pragma once
 #endif
 
-#include "GroupList.h"
+#include "grouplist.h"
 #include "mapdoc.h"
 
 
@@ -22,7 +22,7 @@ class CColorBox : public CStatic
 	public:
 		void SetColor(COLORREF, BOOL);
 		COLORREF GetColor() { return m_c; }
-		
+
 		afx_msg void OnPaint();
 
 	private:

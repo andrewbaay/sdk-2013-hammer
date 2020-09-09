@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -10,7 +10,7 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "TransformDlg.h"
+#include "transformdlg.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -43,10 +43,19 @@ void CTransformDlg::DoDataExchange(CDataExchange* pDX)
 }
 
 
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunused-local-typedef"
+#endif
+
 BEGIN_MESSAGE_MAP(CTransformDlg, CDialog)
 	//{{AFX_MSG_MAP(CTransformDlg)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
+
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // CTransformDlg message handlers

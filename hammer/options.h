@@ -12,7 +12,7 @@
 
 class CGameConfig;
 class KeyValues;
-enum TextureAlignment_t;
+enum TextureAlignment_t : unsigned char;
 
 
 struct COptionsGeneral

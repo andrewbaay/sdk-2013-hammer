@@ -16,14 +16,14 @@
 #define WM_INITIALUPDATE    0x0364  // (params unused) - sent to children
 #endif
 #include "hammer.h"
-#include "Options.h"
-#include "MainFrm.h"
-#include "ChildFrm.h"
-#include "MapDoc.h"
-#include "MapView2D.h"
-#include "MapViewLogical.h"
-#include "MapView3D.h"
-#include "GlobalFunctions.h"
+#include "options.h"
+#include "mainfrm.h"
+#include "childfrm.h"
+#include "mapdoc.h"
+#include "mapview2d.h"
+#include "mapviewlogical.h"
+#include "mapview3d.h"
+#include "globalfunctions.h"
 #include "materialdlg.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -40,25 +40,25 @@ BEGIN_MESSAGE_MAP(CChildFrame, CMDIChildWnd)
 	ON_WM_CREATE()
 	ON_WM_PAINT()
 	ON_WM_CLOSE()
-	ON_COMMAND(ID_VIEW_2DXY, OnView2dxy)
-	ON_COMMAND(ID_VIEW_2DYZ, OnView2dyz)
-	ON_COMMAND(ID_VIEW_2DXZ, OnView2dxz)
-	ON_COMMAND(ID_VIEW_2DLOGICAL, OnViewLogical)
-	ON_COMMAND(ID_VIEW_3DPOLYGON, OnView3dPolygon)
-	ON_COMMAND(ID_VIEW_3DTEXTURED, OnView3dTextured)
-	ON_COMMAND(ID_VIEW_3DTEXTURED_SHADED, OnView3dTexturedShaded)
-	ON_COMMAND(ID_VIEW_LIGHTINGPREVIEW, OnView3dLightingPreview)
-	ON_COMMAND(ID_VIEW_LIGHTINGPREVIEW_RAYTRACED, OnView3dLightingPreviewRayTraced)
-	ON_COMMAND(ID_VIEW_3DLIGHTMAP_GRID, OnView3dLightmapGrid)
-	ON_COMMAND(ID_VIEW_3DWIREFRAME, OnView3dWireframe)
-	ON_COMMAND(ID_VIEW_3DSMOOTH, OnView3dSmooth)
+	ON_COMMAND(ID_VIEW_2DXY, &ThisClass::OnView2dxy)
+	ON_COMMAND(ID_VIEW_2DYZ, &ThisClass::OnView2dyz)
+	ON_COMMAND(ID_VIEW_2DXZ, &ThisClass::OnView2dxz)
+	ON_COMMAND(ID_VIEW_2DLOGICAL, &ThisClass::OnViewLogical)
+	ON_COMMAND(ID_VIEW_3DPOLYGON, &ThisClass::OnView3dPolygon)
+	ON_COMMAND(ID_VIEW_3DTEXTURED, &ThisClass::OnView3dTextured)
+	ON_COMMAND(ID_VIEW_3DTEXTURED_SHADED, &ThisClass::OnView3dTexturedShaded)
+	ON_COMMAND(ID_VIEW_LIGHTINGPREVIEW, &ThisClass::OnView3dLightingPreview)
+	ON_COMMAND(ID_VIEW_LIGHTINGPREVIEW_RAYTRACED, &ThisClass::OnView3dLightingPreviewRayTraced)
+	ON_COMMAND(ID_VIEW_3DLIGHTMAP_GRID, &ThisClass::OnView3dLightmapGrid)
+	ON_COMMAND(ID_VIEW_3DWIREFRAME, &ThisClass::OnView3dWireframe)
+	ON_COMMAND(ID_VIEW_3DSMOOTH, &ThisClass::OnView3dSmooth)
 	//ON_COMMAND(ID_VIEW_3DENGINE, OnView3dEngine)
-	ON_COMMAND(ID_VIEW_AUTOSIZE4, OnViewAutosize4)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_AUTOSIZE4, OnUpdateViewAutosize4)
-	ON_COMMAND(ID_VIEW_MAXIMIZEPANE, OnViewMaximizepane)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_MAXIMIZERESTOREACTIVEVIEW, OnUpdateViewMaximizepane)
-	ON_COMMAND(ID_WINDOW_TOGGLE, OnWindowToggle)
-	ON_COMMAND(ID_VIEW_MAXIMIZERESTOREACTIVEVIEW, OnViewMaximizepane)
+	ON_COMMAND(ID_VIEW_AUTOSIZE4, &ThisClass::OnViewAutosize4)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_AUTOSIZE4, &ThisClass::OnUpdateViewAutosize4)
+	ON_COMMAND(ID_VIEW_MAXIMIZEPANE, &ThisClass::OnViewMaximizepane)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_MAXIMIZERESTOREACTIVEVIEW, &ThisClass::OnUpdateViewMaximizepane)
+	ON_COMMAND(ID_WINDOW_TOGGLE, &ThisClass::OnWindowToggle)
+	ON_COMMAND(ID_VIEW_MAXIMIZERESTOREACTIVEVIEW, &ThisClass::OnViewMaximizepane)
 	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
@@ -392,7 +392,7 @@ void CChildFrame::SaveOptions(void)
 		GetWindowPlacement(&wp);
 
 		char szPlacement[100];
-		sprintf(szPlacement, "(%d %d) (%d %d) (%d %d %d %d) %d", wp.ptMaxPosition.x, wp.ptMaxPosition.y, wp.ptMinPosition.x, wp.ptMinPosition.y, wp.rcNormalPosition.bottom, wp.rcNormalPosition.left, wp.rcNormalPosition.right, wp.rcNormalPosition.top, wp.showCmd);
+		sprintf(szPlacement, "(%ld %ld) (%ld %ld) (%ld %ld %ld %ld) %d", wp.ptMaxPosition.x, wp.ptMaxPosition.y, wp.ptMinPosition.x, wp.ptMinPosition.y, wp.rcNormalPosition.bottom, wp.rcNormalPosition.left, wp.rcNormalPosition.right, wp.rcNormalPosition.top, wp.showCmd);
 		APP()->WriteProfileString("Splitter", "WindowPlacement", szPlacement);
 	}
 }
@@ -759,7 +759,7 @@ int CChildFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof(wp);
 			wp.flags = 0;
-			sscanf(str, "(%d %d) (%d %d) (%d %d %d %d) %d", &wp.ptMaxPosition.x, &wp.ptMaxPosition.y, &wp.ptMinPosition.x, &wp.ptMinPosition.y, &wp.rcNormalPosition.bottom, &wp.rcNormalPosition.left, &wp.rcNormalPosition.right, &wp.rcNormalPosition.top, &wp.showCmd);
+			sscanf(str, "(%ld %ld) (%ld %ld) (%ld %ld %ld %ld) %d", &wp.ptMaxPosition.x, &wp.ptMaxPosition.y, &wp.ptMinPosition.x, &wp.ptMinPosition.y, &wp.rcNormalPosition.bottom, &wp.rcNormalPosition.left, &wp.rcNormalPosition.right, &wp.rcNormalPosition.top, &wp.showCmd);
 
 			if (wp.showCmd == SW_SHOWMAXIMIZED)
 			{

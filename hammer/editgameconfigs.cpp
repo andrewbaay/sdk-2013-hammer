@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -10,9 +10,9 @@
 
 #include "stdafx.h"
 #include "hammer.h"
-#include "EditGameConfigs.h"
-#include "StrDlg.h"
-#include "MapDoc.h"
+#include "editgameconfigs.h"
+#include "strdlg.h"
+#include "mapdoc.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -21,7 +21,7 @@
 // CEditGameConfigs dialog
 
 
-CEditGameConfigs::CEditGameConfigs(BOOL bSelectOnly, 
+CEditGameConfigs::CEditGameConfigs(BOOL bSelectOnly,
 								   CWnd* pParent /*=NULL*/)
 	: CDialog(CEditGameConfigs::IDD, pParent)
 {
@@ -44,18 +44,18 @@ void CEditGameConfigs::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CEditGameConfigs, CDialog)
 	//{{AFX_MSG_MAP(CEditGameConfigs)
-	ON_BN_CLICKED(IDC_ADD, OnAdd)
-	ON_BN_CLICKED(IDC_COPY, OnCopy)
-	ON_BN_CLICKED(IDC_REMOVE, OnRemove)
-	ON_LBN_SELCHANGE(IDC_CONFIGS, OnSelchangeConfigs)
-	ON_LBN_DBLCLK(IDC_CONFIGS, OnDblclkConfigs)
+	ON_BN_CLICKED(IDC_ADD, &ThisClass::OnAdd)
+	ON_BN_CLICKED(IDC_COPY, &ThisClass::OnCopy)
+	ON_BN_CLICKED(IDC_REMOVE, &ThisClass::OnRemove)
+	ON_LBN_SELCHANGE(IDC_CONFIGS, &ThisClass::OnSelchangeConfigs)
+	ON_LBN_DBLCLK(IDC_CONFIGS, &ThisClass::OnDblclkConfigs)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CEditGameConfigs message handlers
 
-void CEditGameConfigs::OnAdd() 
+void CEditGameConfigs::OnAdd()
 {
 	char szName[128];
 	szName[0] = 0;
@@ -70,7 +70,7 @@ void CEditGameConfigs::OnAdd()
 	FillConfigList(pConfig->dwID);
 }
 
-void CEditGameConfigs::OnCopy() 
+void CEditGameConfigs::OnCopy()
 {
 	int iCurSel = m_cConfigs.GetCurSel();
 	if(iCurSel == CB_ERR)
@@ -85,7 +85,7 @@ void CEditGameConfigs::OnCopy()
 	FillConfigList(pNewConfig->dwID);
 }
 
-void CEditGameConfigs::OnRemove() 
+void CEditGameConfigs::OnRemove()
 {
 	int iCurSel = m_cConfigs.GetCurSel();
 	if(iCurSel == CB_ERR)
@@ -149,7 +149,7 @@ void CEditGameConfigs::FillConfigList(DWORD dwSelectID)
 	// get current selection so we can keep it
 	DWORD dwCurID = dwSelectID;
 	int iNewIndex = -1;
-	
+
 	if(m_cConfigs.GetCurSel() != LB_ERR && dwCurID == 0xFFFFFFFF)
 	{
 		dwCurID = m_cConfigs.GetItemData(m_cConfigs.GetCurSel());
@@ -181,7 +181,7 @@ void CEditGameConfigs::FillConfigList(DWORD dwSelectID)
 		OnOK();
 }
 
-void CEditGameConfigs::OnSelchangeConfigs() 
+void CEditGameConfigs::OnSelchangeConfigs()
 {
 	int iCurSel = m_cConfigs.GetCurSel();
 	if(iCurSel == LB_ERR)
@@ -191,7 +191,7 @@ void CEditGameConfigs::OnSelchangeConfigs()
 		m_cConfigs.GetItemData(iCurSel));
 }
 
-BOOL CEditGameConfigs::OnInitDialog() 
+BOOL CEditGameConfigs::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
@@ -210,8 +210,8 @@ BOOL CEditGameConfigs::OnInitDialog()
 	return TRUE;
 }
 
-void CEditGameConfigs::OnDblclkConfigs() 
+void CEditGameConfigs::OnDblclkConfigs()
 {
 	OnOK();
-	
+
 }

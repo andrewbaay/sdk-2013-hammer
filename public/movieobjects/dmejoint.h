@@ -12,7 +12,7 @@
 #endif
 
 #include "movieobjects/dmedag.h"
-#include "materialsystem/materialsystemutil.h"
+#include "materialsystem/MaterialSystemUtil.h"
 
 class CDmeDrawSettings;
 
