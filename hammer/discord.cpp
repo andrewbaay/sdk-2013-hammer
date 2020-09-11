@@ -70,10 +70,6 @@ static void OnDiscordErrored( int errCode, const char* msg )
 	ConColorMsg( discordColor, "DISCORD: Error code: %d, message: %s!\n", errCode, msg );
 }
 
-static void OnDiscordJoinJame( const char* secret )
-{
-}
-
 static void OnDiscordJoinRequest( const Discord::User& request )
 {
 	Discord::Respond( request.userId, Discord::Response::No );
@@ -87,11 +83,10 @@ static void DiscordStartup()
 		return;
 	discordEnabled = true;
 
-	Discord::EventHandlers handlers;
+	Discord::EventHandlers handlers{};
 	handlers.ready = OnDiscordReady;
 	handlers.disconnected = OnDiscordDisconnected;
 	handlers.errored = OnDiscordErrored;
-	handlers.joinGame = OnDiscordJoinJame;
 	handlers.joinRequest = OnDiscordJoinRequest;
 
 	Discord::Initialize( CNumStr( discordAppID ), handlers );
