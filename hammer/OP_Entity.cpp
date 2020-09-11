@@ -1928,15 +1928,6 @@ void COP_Entity::CreateSmartControls_Angle( GDinputvariable *pVar, CRect &ctrlre
 	{
 		*bShowSmartAngles = true;
 
-		CRect rectAngleBox;
-		m_SmartAngle.GetWindowRect(&rectAngleBox);
-
-		CRect rectAngleEdit;
-		m_SmartAngleEdit.GetWindowRect(&rectAngleEdit);
-
-		m_SmartAngle.SetWindowPos(NULL, ctrlrect.left + rectAngleEdit.Width() + 4, ctrlrect.bottom + 10, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-		m_SmartAngleEdit.SetWindowPos(NULL, ctrlrect.left, (ctrlrect.bottom + rectAngleBox.Height() + 10) - rectAngleEdit.Height(), 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-
 		// Update the smart control with the current value
 		LPCTSTR pszValue = m_kv.GetValue(pVar->GetName());
 		if (pszValue != NULL)
@@ -1957,26 +1948,9 @@ void COP_Entity::CreateSmartControls_Angle( GDinputvariable *pVar, CRect &ctrlre
 	// Create an eyedropper button for picking target angles.
 	//
 	CRect ButtonRect;
-	if (*bShowSmartAngles)
-	{
-		CRect rectAngleBox;
-		m_SmartAngle.GetWindowRect(&rectAngleBox);
-		ScreenToClient(&rectAngleBox);
-
-		CRect rectAngleEdit;
-		m_SmartAngleEdit.GetWindowRect(&rectAngleEdit);
-		ScreenToClient(&rectAngleEdit);
-
-		ButtonRect.left = rectAngleBox.right + 8;
-		ButtonRect.top = rectAngleEdit.top;
-		ButtonRect.bottom = rectAngleEdit.bottom;
-	}
-	else
-	{
-		ButtonRect.left = ctrlrect.left;
-		ButtonRect.top = ctrlrect.bottom + 4;
-		ButtonRect.bottom = ButtonRect.top + ctrlrect.Height();
-	}
+	ButtonRect.left = ctrlrect.left - 1;
+	ButtonRect.top = ctrlrect.bottom + 4;
+	ButtonRect.bottom = ButtonRect.top + ctrlrect.Height();
 
 	CButton *pButton = new CButton;
 	pButton->CreateEx(0, "Button", "Point At...", WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_PUSHLIKE,
