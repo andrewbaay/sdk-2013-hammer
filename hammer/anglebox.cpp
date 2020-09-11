@@ -63,9 +63,11 @@ void CAngleBox::OnMouseMove(UINT nFlags, CPoint point)
 		//
 		// Calculate new yaw.
 		//
-		int nNewYaw = fixang(180 - (int)lineangle(point.x, point.y, m_ptClientCenter.x, m_ptClientCenter.y));
+		int nNewYaw = 180 - (int)lineangle(point.x, point.y, m_ptClientCenter.x, m_ptClientCenter.y);
+		if ( ( GetAsyncKeyState( VK_MENU ) & 0x8000 ) == 0 )
+			nNewYaw = rint( nNewYaw / 15.f ) * 15;
 		m_vecAngles.Init();
-		m_vecAngles[YAW] = nNewYaw;
+		m_vecAngles[YAW] = fixang( nNewYaw );
 
 		//
 		// Draw the new angle line.
@@ -143,7 +145,7 @@ void CAngleBox::DrawAngleLine(CDC *pDC)
 	GetClientRect(r);
 	m_ptClientCenter = r.CenterPoint();
 
-	double rad = r.Width() / 2 - 3;
+	double rad = r.Width() / 2.f - 3;
 
 	CPoint pt;
 	pt.x = m_ptClientCenter.x + sin(DEG2RAD((double)(m_vecAngles[YAW] + 90))) * rad + 0.5;
