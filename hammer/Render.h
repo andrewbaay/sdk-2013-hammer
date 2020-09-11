@@ -199,7 +199,7 @@ public:
 			void DrawText( const char *text, const Vector2D &vPos, int nOffsetX, int nOffsetY, int nFlags );	// Uses "world" coordinates
 			void DrawHandle( const Vector &vPoint, const Vector2D *vOffset = NULL );
 			void DrawHandles( int nPoints, const Vector *Points );
-			void DrawArrow( Vector const &vStart, Vector const &vEnd );
+	virtual void DrawArrow( const Vector& vStart, const Vector& vDir, float flLengthBase = 16.0f, float flLengthTip = 8.0f, float flRadiusBase = 1.2f, float flRadiusTip = 4.0f );
 			void DrawPlane( const Vector &p0, const Vector &p1, const Vector &p2, const Vector &p3, bool bFill = false );
 
 	// client space helper functions:

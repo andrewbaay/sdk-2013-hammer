@@ -1117,9 +1117,131 @@ void CRender::SetHandleStyle( int size, HandleStyle_t type  )
 	m_nHandleSize = size;
 }
 
-void CRender::DrawArrow( Vector const &vStart, Vector const &vEnd )
+void CRender::DrawArrow( const Vector& vStart, const Vector& vDir, float flLengthBase, float flLengthTip, float flRadiusBase, float flRadiusTip )
 {
-	Assert(0);
+	constexpr int iSubDiv = 16;
+	constexpr float flAngleStep = 360.0f / iSubDiv;
+	const Vector fwd{ 1.f, 0.f, 0.f };
+
+	{
+		QAngle dir;
+		VectorAngles( vDir, dir );
+		VMatrix mat;
+		mat.SetupMatrixOrgAngles( vStart, dir );
+		BeginLocalTransfrom( mat, true );
+	}
+
+	meshBuilder.Begin( m_pMesh, MATERIAL_TRIANGLES, 5 * iSubDiv );
+
+	QAngle ang( 0.f, 0.f, 0.f );
+	Vector cUp, nUp;
+	Vector pos, tmp0, tmp1, tmp2;
+
+	const Vector colHigh( m_DrawColor.r() / 255.f, m_DrawColor.g() / 255.f, m_DrawColor.b() / 255.f );
+	const Vector colLow = colHigh * 0.4f;
+
+	for ( int iStep = 0; iStep < iSubDiv; iStep++ )
+	{
+		QAngle angNext( ang );
+		angNext.z += flAngleStep;
+
+		AngleVectors( ang, NULL, NULL, &cUp );
+		AngleVectors( angNext, NULL, NULL, &nUp );
+
+		// disc end
+		pos.Init();
+		meshBuilder.Position3fv( pos.Base() );
+		meshBuilder.TexCoord2f( 0, 0, 0 );
+		meshBuilder.Color3fv( colLow.Base() );
+		meshBuilder.AdvanceVertex();
+
+		tmp0 = pos + cUp * flRadiusBase;
+		meshBuilder.Position3fv( tmp0.Base() );
+		meshBuilder.TexCoord2f( 0, 0, 0 );
+		meshBuilder.Color3fv( colLow.Base() );
+		meshBuilder.AdvanceVertex();
+
+		tmp1 = pos + nUp * flRadiusBase;
+		meshBuilder.Position3fv( tmp1.Base() );
+		meshBuilder.TexCoord2f( 0, 0, 0 );
+		meshBuilder.Color3fv( colLow.Base() );
+		meshBuilder.AdvanceVertex();
+
+		// base cylinder
+		meshBuilder.Position3fv( tmp1.Base() );
+		meshBuilder.TexCoord2f( 0, 0, 0 );
+		meshBuilder.Color3fv( colHigh.Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Position3fv( tmp0.Base() );
+		meshBuilder.TexCoord2f( 0, 0, 0 );
+		meshBuilder.Color3fv( colHigh.Base() );
+		meshBuilder.AdvanceVertex();
+
+		tmp2 = tmp0 + fwd * flLengthBase;
+		meshBuilder.Position3fv( tmp2.Base() );
+		meshBuilder.TexCoord2f( 0, 0, 0 );
+		meshBuilder.Color3fv( colHigh.Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Position3fv( tmp1.Base() );
+		meshBuilder.TexCoord2f( 0, 0, 0 );
+		meshBuilder.Color3fv( colHigh.Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Position3fv( tmp2.Base() );
+		meshBuilder.TexCoord2f( 0, 0, 0 );
+		meshBuilder.Color3fv( colHigh.Base() );
+		meshBuilder.AdvanceVertex();
+
+		tmp1 += fwd * flLengthBase;
+		meshBuilder.Position3fv( tmp1.Base() );
+		meshBuilder.TexCoord2f( 0, 0, 0 );
+		meshBuilder.Color3fv( colHigh.Base() );
+		meshBuilder.AdvanceVertex();
+
+		// disc mid
+		pos += fwd * flLengthBase;
+		meshBuilder.Position3fv( pos.Base() );
+		meshBuilder.TexCoord2f( 0, 0, 0 );
+		meshBuilder.Color3fv( colLow.Base() );
+		meshBuilder.AdvanceVertex();
+
+		tmp0 = pos + cUp * flRadiusTip;
+		meshBuilder.Position3fv( tmp0.Base() );
+		meshBuilder.TexCoord2f( 0, 0, 0 );
+		meshBuilder.Color3fv( colLow.Base() );
+		meshBuilder.AdvanceVertex();
+
+		tmp1 = pos + nUp * flRadiusTip;
+		meshBuilder.Position3fv( tmp1.Base() );
+		meshBuilder.TexCoord2f( 0, 0, 0 );
+		meshBuilder.Color3fv( colLow.Base() );
+		meshBuilder.AdvanceVertex();
+
+		// tip
+		meshBuilder.Position3fv( tmp1.Base() );
+		meshBuilder.TexCoord2f( 0, 0, 0 );
+		meshBuilder.Color3fv( colHigh.Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Position3fv( tmp0.Base() );
+		meshBuilder.TexCoord2f( 0, 0, 0 );
+		meshBuilder.Color3fv( colHigh.Base() );
+		meshBuilder.AdvanceVertex();
+
+		pos += fwd * flLengthTip;
+		meshBuilder.Position3fv( pos.Base() );
+		meshBuilder.TexCoord2f( 0, 0, 0 );
+		meshBuilder.Color3fv( colHigh.Base() );
+		meshBuilder.AdvanceVertex();
+
+		ang = angNext;
+	}
+
+	meshBuilder.End( false, true );
+
+	EndLocalTransfrom();
 }
 
 void CRender::DrawPolyLine( int nPoints, const Vector *Points )

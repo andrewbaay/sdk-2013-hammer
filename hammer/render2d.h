@@ -13,28 +13,34 @@
 
 #include "Render.h"
 
+class CMapView2DBase;
+
 class CRender2D : public CRender
 {
 public:
-    //
-    // construction/deconstruction
-    //
-    CRender2D();
-    ~CRender2D();
+	//
+	// construction/deconstruction
+	//
+	CRender2D();
+	~CRender2D();
 
-    //
-    // setup (view) data
-    //
+	bool SetView( CMapView *pView ) override;
 
-    void MoveTo( const Vector &vPoint );
+	//
+	// setup (view) data
+	//
+
+	void MoveTo( const Vector &vPoint );
 	void DrawLineTo( const Vector &vPoint );
 	void DrawRectangle( const Vector &vMins, const Vector &vMaxs, bool bFill = false, int extent = 0 );
 	void DrawBox( const Vector &vMins, const Vector &vMaxs, bool bFill = false );
 	void DrawCircle( const Vector &vCenter, float fRadius );
+	void DrawArrow( const Vector& vStart, const Vector& vDir, float flLengthBase = 16.0f, float flLengthTip = 8.0f, float flRadiusBase = 1.2f, float flRadiusTip = 4.0f );
 
 protected:
 
 	Vector m_vCurLine;
+	CMapView2DBase* m_pView;
 };
 
 

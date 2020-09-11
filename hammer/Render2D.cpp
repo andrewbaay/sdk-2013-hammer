@@ -36,13 +36,18 @@ CRender2D::~CRender2D()
 {
 }
 
+bool CRender2D::SetView(CMapView* pView)
+{
+	m_pView = dynamic_cast<CMapView2DBase*>( pView );
+	return CRender::SetView( pView );
+}
 
-void CRender2D::MoveTo( const Vector	&vPoint	)
+void CRender2D::MoveTo( const Vector &vPoint )
 {
 	m_vCurLine = vPoint;
 }
 
-void CRender2D::DrawLineTo( const Vector	&vPoint )
+void CRender2D::DrawLineTo( const Vector &vPoint )
 {
 	DrawLine( m_vCurLine, vPoint );
 	m_vCurLine = vPoint;
@@ -136,5 +141,25 @@ void CRender2D::DrawBox( const Vector &vMins, const Vector &vMaxs, bool bFill)
 	m_pMesh->Draw();
 }
 
+void CRender2D::DrawArrow( const Vector& vStart, const Vector& vDir, float flLengthBase, float flLengthTip, float flRadiusBase, float flRadiusTip )
+{
+	QAngle ang;
+	VectorAngles( vDir, -m_pView->GetViewAxis(), ang );
+	Vector fwd, right;
+	AngleVectors( ang, &fwd, &right, nullptr );
 
+	const float flHalfBase = flRadiusBase / 2.f;
+	const float flHalfTip = flRadiusTip / 2.f;
 
+	const Vector pos[] = {
+		vStart - right * flHalfBase,
+		vStart + right * flHalfBase,
+		vStart + right * flHalfBase + fwd * flLengthBase,
+		vStart + right * flHalfTip + fwd * flLengthBase,
+		vStart + fwd * ( flLengthBase + flLengthTip ),
+		vStart - right * flHalfTip + fwd * flLengthBase,
+		vStart - right * flHalfBase + fwd * flLengthBase,
+	};
+
+	DrawPolyLine( ARRAYSIZE( pos ), pos );
+}
