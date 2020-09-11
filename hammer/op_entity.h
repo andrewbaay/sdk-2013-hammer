@@ -66,14 +66,16 @@ private:
 //-----------------------------------------------------------------------------
 class CPickAnglesTarget : public IPickAnglesTarget
 {
-	public:
+public:
 
-		void AttachEntityDlg(COP_Entity *pDlg) { m_pDlg = pDlg; }
-		void OnNotifyPickAngles(const Vector &vecPos);
+	void AttachEntityDlg( COP_Entity* pDlg ) { m_pDlg = pDlg; }
+	void SetVar( GDinputvariable* pVar ) { m_pVar = pVar; }
+	void OnNotifyPickAngles(const Vector& vecPos);
 
-	private:
+private:
 
-		COP_Entity *m_pDlg;
+	COP_Entity* m_pDlg;
+	GDinputvariable* m_pVar;
 };
 
 

@@ -277,18 +277,17 @@ void CPickAnglesTarget::OnNotifyPickAngles(const Vector &vecPos)
 			VectorAngles(vecForward, angFace);
 
 			// HACK: lights negate pitch
-			if (pEntity->GetClassName() && (!strnicmp(pEntity->GetClassName(), "light_", 6)))
-			{
+			const bool lightHack = pEntity->GetClassName() && !strnicmp( pEntity->GetClassName(), "light_", 6 ) && !stricmp( m_pVar->GetName(), "angles" );
+			if ( lightHack )
 				angFace[PITCH] *= -1;
-			}
 
 			// Update the edit control with the calculated angles.
 			char szAngles[80];
 			sprintf(szAngles, "%.0f %.0f %.0f", angFace[PITCH], angFace[YAW], angFace[ROLL]);
-			pEntity->SetKeyValue("angles", szAngles);
+			pEntity->SetKeyValue(m_pVar->GetName(), szAngles);
 
 			// HACK: lights have a separate "pitch" key
-			if (pEntity->GetClassName() && (!strnicmp(pEntity->GetClassName(), "light_", 6)))
+			if ( lightHack )
 			{
 				char szPitch[20];
 				sprintf(szPitch, "%.0f", angFace[PITCH]);
@@ -4310,6 +4309,7 @@ void COP_Entity::OnPickAngles(void)
 					//
 					CToolPickAngles *pTool = (CToolPickAngles *)ToolManager()->GetToolForID(TOOL_PICK_ANGLES);
 					m_PickAnglesTarget.AttachEntityDlg(this);
+					m_PickAnglesTarget.SetVar( pVar );
 					pTool->Attach(&m_PickAnglesTarget);
 
 					ToolManager()->SetTool(TOOL_PICK_ANGLES);
