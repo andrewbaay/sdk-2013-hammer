@@ -49,6 +49,7 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CEditGameConfigs)
 	afx_msg void OnAdd();
+	afx_msg void OnEdit();
 	afx_msg void OnCopy();
 	afx_msg void OnRemove();
 	afx_msg void OnSelchangeConfigs();

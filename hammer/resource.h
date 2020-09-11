@@ -620,6 +620,7 @@
 #define IDC_ACTION                      1260
 #define IDC_VISIBLEONLY                 1261
 #define IDC_COPY                        1263
+#define IDC_EDITNAME                    1264
 #define IDC_SIZEPROMPT                  1265
 #define IDC_FILTERPROMPT                1266
 #define IDC_CURNAME                     1267
@@ -1387,7 +1388,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        360
+#define _APS_NEXT_RESOURCE_VALUE        361
 #define _APS_NEXT_COMMAND_VALUE         33290
 #define _APS_NEXT_CONTROL_VALUE         1701
 #define _APS_NEXT_SYMED_VALUE           116

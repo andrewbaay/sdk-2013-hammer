@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -45,6 +45,7 @@ void CEditGameConfigs::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CEditGameConfigs, CDialog)
 	//{{AFX_MSG_MAP(CEditGameConfigs)
 	ON_BN_CLICKED(IDC_ADD, &ThisClass::OnAdd)
+	ON_BN_CLICKED(IDC_EDITNAME, &ThisClass::OnEdit)
 	ON_BN_CLICKED(IDC_COPY, &ThisClass::OnCopy)
 	ON_BN_CLICKED(IDC_REMOVE, &ThisClass::OnRemove)
 	ON_LBN_SELCHANGE(IDC_CONFIGS, &ThisClass::OnSelchangeConfigs)
@@ -66,6 +67,22 @@ void CEditGameConfigs::OnAdd()
 	// add a new game config
 	CGameConfig *pConfig = Options.configs.AddConfig();
 	strcpy(pConfig->szName, dlg.m_string);
+
+	FillConfigList(pConfig->dwID);
+}
+
+void CEditGameConfigs::OnEdit()
+{
+	int iCurSel = m_cConfigs.GetCurSel();
+	if (iCurSel == CB_ERR)
+		return;
+
+	CGameConfig* pConfig = Options.configs.FindConfig(m_cConfigs.GetItemData(iCurSel));
+	CStrDlg dlg(0, pConfig->szName, "Enter the new game's name:", "Edit the game");
+	if (dlg.DoModal() != IDOK)
+		return;
+
+	V_strcpy_safe(pConfig->szName, dlg.m_string);
 
 	FillConfigList(pConfig->dwID);
 }
@@ -202,6 +219,7 @@ BOOL CEditGameConfigs::OnInitDialog()
 		GetDlgItem(IDOK)->SetWindowText("OK");
 		GetDlgItem(IDC_REMOVE)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_ADD)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_EDITNAME)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_COPY)->ShowWindow(SW_HIDE);
 	}
 
