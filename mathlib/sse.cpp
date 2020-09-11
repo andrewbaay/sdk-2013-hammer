@@ -10,6 +10,7 @@
 #include "mathlib/mathlib.h"
 #include "mathlib/ssemath.h"
 #include "mathlib/vector.h"
+#include "mathlib/vector4d.h"
 #include "sse.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -314,7 +315,8 @@ float FASTCALL _SSE_VectorNormalize( Vector& vec )
 #ifdef ALIGNED_VECTOR
 		FLTX4 _v = _mm_load_ps( &vec.x );
 #else
-		FLTX4 _v = _mm_loadu_ps( &vec.x );
+		const Vector4D val( vec ); // prevents reading outside of vec
+		FLTX4 _v = _mm_loadu_ps( &val.x );
 #endif
 		fltx4 res = _mm_mul_ps( _v, _v );
 		FLTX4 v2 = _mm_shuffle_ps( res, res, 1 );
