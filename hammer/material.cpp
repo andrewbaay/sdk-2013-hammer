@@ -587,15 +587,18 @@ void CMaterial::DrawBitmap( CDC* pDC, const RECT& srcRect, const RECT& dstRect )
 		CDC hdc;
 		hdc.CreateCompatibleDC( pDC );
 
+		bmih.biWidth = dest_width;
+		bmih.biHeight = -dest_height;
+
 		auto bitmap = CreateDIBSection( hdc, &bmi, DIB_RGB_COLORS, &data, NULL, 0x0 );
 		CPixelWriter writer;
-		writer.SetPixelMemory( IMAGE_FORMAT_BGRA8888, data, m_nWidth * 4 );
+		writer.SetPixelMemory( IMAGE_FORMAT_BGRA8888, data, dest_width * 4 );
 
 		constexpr int boxSize = 8;
-		for ( int y = 0; y < m_nHeight; ++y )
+		for ( int y = 0; y < dest_height; ++y )
 		{
 			writer.Seek( 0, y );
-			for ( int x = 0; x < m_nWidth; ++x )
+			for ( int x = 0; x < dest_width; ++x )
 			{
 				if ( ( x & boxSize ) ^ ( y & boxSize ) )
 					writer.WritePixel( 102, 102, 102, 255 );
