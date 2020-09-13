@@ -148,17 +148,14 @@ void CRender2D::DrawArrow( const Vector& vStart, const Vector& vDir, float flLen
 	Vector fwd, right;
 	AngleVectors( ang, &fwd, &right, nullptr );
 
-	const float flHalfBase = flRadiusBase / 2.f;
-	const float flHalfTip = flRadiusTip / 2.f;
-
 	const Vector pos[] = {
-		vStart - right * flHalfBase,
-		vStart + right * flHalfBase,
-		vStart + right * flHalfBase + fwd * flLengthBase,
-		vStart + right * flHalfTip + fwd * flLengthBase,
+		vStart + right * flRadiusBase,
+		vStart + right * flRadiusBase + fwd * flLengthBase,
+		vStart + right * flRadiusTip + fwd * flLengthBase,
 		vStart + fwd * ( flLengthBase + flLengthTip ),
-		vStart - right * flHalfTip + fwd * flLengthBase,
-		vStart - right * flHalfBase + fwd * flLengthBase,
+		vStart - right * flRadiusTip + fwd * flLengthBase,
+		vStart - right * flRadiusBase + fwd * flLengthBase,
+		vStart - right * flRadiusBase,
 	};
 
 	DrawPolyLine( ARRAYSIZE( pos ), pos );
