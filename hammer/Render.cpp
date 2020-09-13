@@ -29,6 +29,7 @@
 #include "VGuiWnd.h"
 #include "box3d.h"
 #include "MapInstance.h"
+#include "options.h"
 
 extern IMatSystemSurface *g_pMatSystemSurface;
 
@@ -1272,9 +1273,9 @@ void CRender::DrawDisplacement( CCoreDispInfo *pMapDisp )
 	Color color = m_DrawColor;
 
 	CoreDispVert_t *pVert = pMapDisp->GetDispVertList();
-	for (int i = 0; i < numVerts; ++i )
+	if ( bWireFrame )
 	{
-		if ( bWireFrame )
+		for (int i = 0; i < numVerts; ++i )
 		{
 			meshBuilder.Position3fv( pVert[i].m_Vert.Base() );
 			meshBuilder.Color4ubv( (byte*)&color );
@@ -1282,7 +1283,24 @@ void CRender::DrawDisplacement( CCoreDispInfo *pMapDisp )
 			meshBuilder.TexCoord2fv( 1, pVert[i].m_LuxelCoords[0].Base() );
 			meshBuilder.AdvanceVertex();
 		}
-		else
+	}
+	else if ( !Options.view3d.bInvertDisplacementAlpha )
+	{
+		for (int i = 0; i < numVerts; ++i )
+		{
+			meshBuilder.Position3fv( pVert[i].m_Vert.Base() );
+			meshBuilder.Color4ub( color[0], color[1], color[2], ( unsigned char )( pVert[i].m_Alpha ) );
+			meshBuilder.Normal3fv( pVert[i].m_Normal.Base() );
+			meshBuilder.TangentS3fv( pVert[i].m_TangentS.Base() );
+			meshBuilder.TangentT3fv( pVert[i].m_TangentT.Base() );
+			meshBuilder.TexCoord2fv( 0, pVert[i].m_TexCoord.Base() );
+			meshBuilder.TexCoord2fv( 1, pVert[i].m_LuxelCoords[0].Base() );
+			meshBuilder.AdvanceVertex();
+		}
+	}
+	else
+	{
+		for (int i = 0; i < numVerts; ++i )
 		{
 			meshBuilder.Position3fv( pVert[i].m_Vert.Base() );
 			meshBuilder.Color4ub( color[0], color[1], color[2], 255 - ( unsigned char )( pVert[i].m_Alpha ) );
