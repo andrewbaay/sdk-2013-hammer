@@ -26,7 +26,7 @@ static IThreadPool* s_pThreadPool = nullptr;
 //-----------------------------------------------------------------------------
 // Globals
 //-----------------------------------------------------------------------------
-static size_t s_DataTypeByteSize[]=
+static constexpr const size_t s_DataTypeByteSize[]=
 {
 	sizeof( float ),
 	3 * sizeof( float ),
@@ -115,7 +115,7 @@ void CSOAContainer::AllocateData( int nNCols, int nNRows, int nSlices )
 			m_nStrideInBytes[i] = s_DataTypeByteSize[m_nDataType[i]];
 			m_nRowStrideInBytes[i] = m_nPaddedColumns * m_nStrideInBytes[i];
 			m_nSliceStrideInBytes[i] = m_nRowStrideInBytes[i] * m_nRows;
-			pBasePtr += AttributeMemorySize( i );
+			pBasePtr += AlignValue( AttributeMemorySize( i ), 16 );
 		}
 		else
 		{
@@ -123,7 +123,7 @@ void CSOAContainer::AllocateData( int nNCols, int nNRows, int nSlices )
 			m_nStrideInBytes[i] = 0;
 			m_nRowStrideInBytes[i] = 0;
 			m_nSliceStrideInBytes[i] = 0;
-			pConstantDataPtr += AttributeMemorySize( i );
+			pConstantDataPtr += AlignValue( AttributeMemorySize( i ), 16 );
 		}
 	}
 	SetThreadMode( SOATHREADMODE_AUTO );
@@ -224,7 +224,7 @@ size_t CSOAContainer::DataMemorySize( void ) const
 	{
 		if ( !( m_nFieldPresentMask & ( 1 << i ) ) )
 			continue;
-		nDataMemorySize += AttributeMemorySize( i );
+		nDataMemorySize += AlignValue( AttributeMemorySize( i ), 16 );
 	}
 	return nDataMemorySize;
 }
@@ -246,7 +246,7 @@ size_t CSOAContainer::ConstantMemorySize( void ) const
 	{
 		if ( ( m_nDataType[i] == ATTRDATATYPE_NONE ) || ( m_nFieldPresentMask & ( 1 << i ) ) )
 			continue;
-		nConstantDataSize += AttributeMemorySize( i );
+		nConstantDataSize += AlignValue( AttributeMemorySize( i ), 16 );
 	}
 	return nConstantDataSize;
 }
@@ -532,6 +532,25 @@ void CSOAContainer::FillAttrWithInterpolatedValues( int nAttr, Vector vecValue00
 
 }
 
+void CSOAContainer::FillVecAttrPartial( int nStartRow, int nNumRows, int nStartSlice, int nEndSlice, int nAttr, FourVectors fl4Value )
+{
+	for ( int z = nStartSlice; z < nEndSlice; z++ )
+	{
+		FourVectors* pOut = RowPtr<FourVectors>( nAttr, nStartRow, z );
+		size_t nRowToRowStride = RowToRowStep( nAttr ) / sizeof( FourVectors );
+		int nRowCtr = nNumRows;
+		do
+		{
+			int nColCtr = NumQuadsPerRow();
+			do
+			{
+				*( pOut++ ) = fl4Value;
+			} while ( --nColCtr );
+			pOut += nRowToRowStride;
+		} while ( --nRowCtr );
+	}
+}
+
 void CSOAContainer::FillAttr( int nAttr, const Vector &vecValue )
 {
 	FourVectors v4Fill;
@@ -544,18 +563,7 @@ void CSOAContainer::FillAttr( int nAttr, const Vector &vecValue )
 	}
 
 	AssertDataType( nAttr, ATTRDATATYPE_4V );
-	FourVectors *pOut = RowPtr<FourVectors>( nAttr, 0 );
-	size_t nRowToRowStride = RowToRowStep( nAttr ) / sizeof( FourVectors );
-	int nRowCtr = NumRows() * NumSlices();
-	do
-	{
-		int nColCtr = NumQuadsPerRow();
-		do
-		{
-			*(pOut++) = v4Fill;
-		} while ( --nColCtr );
-		pOut += nRowToRowStride;
-	} while ( --nRowCtr );
+	PARALLEL_DISPATCH( FillVecAttrPartial, nAttr, v4Fill );
 }
 
 void CSOAContainer::FillAttrPartial( int nStartRow, int nNumRows, int nStartSlice, int nEndSlice, int nAttr, fltx4 fl4Value )

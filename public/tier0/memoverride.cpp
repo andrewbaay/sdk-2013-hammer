@@ -458,6 +458,65 @@ void __cdecl operator delete[]( void *pMem ) noexcept
 {
 	g_pMemAlloc->Free( pMem );
 }
+
+#ifndef OSX
+void __cdecl operator delete[]( void* pMem, int, char const* pFileName, int nLine ) noexcept
+{
+	g_pMemAlloc->Free( pMem, pFileName, nLine );
+}
+#endif
+
+#ifdef __cpp_aligned_new
+void* __cdecl operator new( std::size_t size, std::align_val_t align )
+{
+	return MemAlloc_AllocAligned( size, static_cast<size_t>( align ) );
+}
+
+void* __cdecl operator new( std::size_t size, std::align_val_t align, std::nothrow_t const& ) noexcept
+{
+	return MemAlloc_AllocAligned( size, static_cast<size_t>( align ) );
+}
+
+void* __cdecl operator new[]( std::size_t size, std::align_val_t align )
+{
+	return MemAlloc_AllocAligned( size, static_cast<size_t>( align ) );
+}
+
+void* __cdecl operator new[]( std::size_t size, std::align_val_t align, std::nothrow_t const& ) noexcept
+{
+	return MemAlloc_AllocAligned( size, static_cast<size_t>( align ) );
+}
+
+void __cdecl operator delete( void* pMem, std::align_val_t ) noexcept
+{
+	MemAlloc_FreeAligned( pMem );
+}
+
+void __cdecl operator delete( void* pMem, size_t, std::align_val_t ) noexcept
+{
+	MemAlloc_FreeAligned( pMem );
+}
+
+void __cdecl operator delete( void* pMem, std::align_val_t, std::nothrow_t const& ) noexcept
+{
+	MemAlloc_FreeAligned( pMem );
+}
+
+void __cdecl operator delete[]( void* pMem, std::align_val_t ) noexcept
+{
+	MemAlloc_FreeAligned( pMem );
+}
+
+void __cdecl operator delete[]( void* pMem, size_t, std::align_val_t ) noexcept
+{
+	MemAlloc_FreeAligned( pMem );
+}
+
+void __cdecl operator delete[]( void* pMem, std::align_val_t, std::nothrow_t const& ) noexcept
+{
+	MemAlloc_FreeAligned( pMem );
+}
+#endif
 #endif
 
 

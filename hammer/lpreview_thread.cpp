@@ -46,17 +46,17 @@ enum IncrementalLightState
 
 class CLightingPreviewThread;
 
-#define MAX_IMAGE_HEIGHT 1024
+constexpr int MAX_IMAGE_HEIGHT = 1024;
 
 // attributes for result soa containers
 
-#define RSLT_ATTR_DIFFUSE_RGB 0
+constexpr int RSLT_ATTR_DIFFUSE_RGB = 0;
 
-#define RSLT_BUFFER_RSLT_RGB 3
+constexpr int RSLT_BUFFER_RSLT_RGB = 3;
 
-#define GBUFFER_ATTR_POSITION 0
-#define GBUFFER_ATTR_ALBEDO 1
-#define GBUFFER_ATTR_NORMAL 2
+constexpr int GBUFFER_ATTR_POSITION = 0;
+constexpr int GBUFFER_ATTR_ALBEDO = 1;
+constexpr int GBUFFER_ATTR_NORMAL = 2;
 
 class CIncrementalLightInfo
 {
@@ -111,6 +111,7 @@ public:
 			{
 				m_CalculatedContribution.SetAttributeType( RSLT_ATTR_DIFFUSE_RGB, ATTRDATATYPE_4V );
 				m_CalculatedContribution.AllocateData( nWidth, nHeight );
+				m_CalculatedContribution.FillAttr( RSLT_ATTR_DIFFUSE_RGB, vec3_origin );
 			}
 		}
 
@@ -201,7 +202,7 @@ public:
 	}
 
 	// check if the master has new work for us to do, meaning we should abort rendering
-	bool ShouldAbort()
+	bool ShouldAbort() const
 	{
 		return g_HammerToLPreviewMsgQueue.MessageWaiting();
 	}
@@ -265,7 +266,7 @@ public:
 	// do some work, like a rendering for one light
 	void DoWork();
 
-	Vector EstimatedUnshotAmbient()
+	Vector EstimatedUnshotAmbient() const
 	{
 		const float sum_weights = 0.0001f;
 		Vector sum_colors( sum_weights, sum_weights, sum_weights );
@@ -285,7 +286,7 @@ public:
 		sum_colors *= 0.05;
 		return sum_colors;
 	}
-	void AccumulateOuput( int nLineMask, CSOAContainer* pResult, CSOAContainer* pLowresResule );
+	void AccumulateOuput( int nLineMask, CSOAContainer* pResult, CSOAContainer* pLowresResule ) const;
 
 	void AddLowresResultToHires( CSOAContainer& lowres, CSOAContainer& hires );
 };
@@ -644,6 +645,7 @@ void CLightingPreviewThread::DoWork()
 
 void CLightingPreviewThread::HandleGBuffersMessage( MessageToLPreview& msg_in )
 {
+	//FPExceptionEnabler e;
 	m_GBuffer.Purge();
 	m_GBuffer.SetAttributeType( GBUFFER_ATTR_POSITION, ATTRDATATYPE_4V );
 	m_GBuffer.SetAttributeType( GBUFFER_ATTR_ALBEDO, ATTRDATATYPE_4V );
@@ -651,12 +653,48 @@ void CLightingPreviewThread::HandleGBuffersMessage( MessageToLPreview& msg_in )
 	m_GBuffer.AllocateData( msg_in.m_pDefferedRenderingBMs[0]->NumCols(),
 							msg_in.m_pDefferedRenderingBMs[0]->NumRows() );
 
+#ifdef _DEBUG
+	m_GBuffer.FillAttr( GBUFFER_ATTR_POSITION, vec3_origin );
+	m_GBuffer.FillAttr( GBUFFER_ATTR_ALBEDO, vec3_origin );
+	m_GBuffer.FillAttr( GBUFFER_ATTR_NORMAL, Vector( 1, 0, 0 ) );
+#endif
+
 	m_GBuffer.PackScalarAttributesToVectorAttribute( msg_in.m_pDefferedRenderingBMs[0], GBUFFER_ATTR_ALBEDO,
 													 FBM_ATTR_RED, FBM_ATTR_GREEN, FBM_ATTR_BLUE );
 	m_GBuffer.PackScalarAttributesToVectorAttribute( msg_in.m_pDefferedRenderingBMs[1], GBUFFER_ATTR_NORMAL,
 													 FBM_ATTR_RED, FBM_ATTR_GREEN, FBM_ATTR_BLUE );
 	m_GBuffer.PackScalarAttributesToVectorAttribute( msg_in.m_pDefferedRenderingBMs[2], GBUFFER_ATTR_POSITION,
 													 FBM_ATTR_RED, FBM_ATTR_GREEN, FBM_ATTR_BLUE );
+
+#ifdef _DEBUG
+	for ( int y = 0; y < m_GBuffer.NumRows(); y++ )
+	{
+		float const* pPos = m_GBuffer.RowPtr<float>( GBUFFER_ATTR_POSITION, y );
+		float const* pAlbedo = m_GBuffer.RowPtr<float>( GBUFFER_ATTR_ALBEDO, y );
+		float const* pNormal = m_GBuffer.RowPtr<float>( GBUFFER_ATTR_NORMAL, y );
+		for ( int x = 0; x < m_GBuffer.NumCols(); x++ )
+		{
+			Assert( !isnan( pPos[0] ) );
+			Assert( !isnan( pPos[4] ) );
+			Assert( !isnan( pPos[8] ) );
+			Assert( !isnan( pAlbedo[0] ) );
+			Assert( !isnan( pAlbedo[4] ) );
+			Assert( !isnan( pAlbedo[8] ) );
+			Assert( !isnan( pNormal[0] ) );
+			Assert( !isnan( pNormal[4] ) );
+			Assert( !isnan( pNormal[8] ) );
+			pPos++;
+			pAlbedo++;
+			pNormal++;
+			if ( ( x & 3 ) == 3 )
+			{
+				pPos += 8;
+				pAlbedo += 8;
+				pNormal += 8;
+			}
+		}
+	}
+#endif
 
 	m_GBufferLowRes.Purge();
 	m_GBufferLowRes.SetAttributeType( GBUFFER_ATTR_POSITION, ATTRDATATYPE_4V );
@@ -679,27 +717,30 @@ void CLightingPreviewThread::HandleGBuffersMessage( MessageToLPreview& msg_in )
 	CalculateSceneBounds();
 }
 
-#ifdef __clang__
-__attribute__((optnone))
-#else
-#pragma optimize( "", off )
-#endif
-void CLightingPreviewThread::AccumulateOuput( int nLineMask, CSOAContainer* rslt, CSOAContainer* rslt1 )
+#ifdef _DEBUG
+static FORCEINLINE bool isnan( fltx4 n )
 {
-	for ( CLightingPreviewLightDescription* l = m_LightList.Head(); l; l = l->m_pNext )
+	return isnan( SubFloat( n, 0 ) ) || isnan( SubFloat( n, 1 ) ) || isnan( SubFloat( n, 2 ) ) || isnan( SubFloat( n, 3 ) );
+}
+#endif
+
+void CLightingPreviewThread::AccumulateOuput( int nLineMask, CSOAContainer* rslt, CSOAContainer* rslt1 ) const
+{
+	//FPExceptionEnabler e;
+	for ( const CLightingPreviewLightDescription* l = m_LightList.Head(); l; l = l->m_pNext )
 	{
 		CSOAContainer* pRslt = rslt;
-		CSOAContainer* pGB = &m_GBuffer;
+		const CSOAContainer* pGB = &m_GBuffer;
 		if ( l->m_bLowRes )
 		{
 			pGB = &m_GBufferLowRes;
 			pRslt = rslt1;
 		}
-		CIncrementalLightInfo* l_info = l->m_pIncrementalInfo;
+		const CIncrementalLightInfo* l_info = l->m_pIncrementalInfo;
 		if ( l_info->m_fTotalContribution > 0.0f && l_info->m_eIncrState >= INCR_STATE_PARTIAL_RESULTS )
 		{
 			// need to add partials, replicated to handle undone lines
-			CSOAContainer& src = l_info->m_CalculatedContribution;
+			const CSOAContainer& src = l_info->m_CalculatedContribution;
 			int nY0 = l_info->m_nFirstCalculatedLine;
 			int nY1 = nY0;
 			// scan forward to find the next calculated line, if any
@@ -710,7 +751,7 @@ void CLightingPreviewThread::AccumulateOuput( int nLineMask, CSOAContainer* rslt
 					break;
 			}
 			fltx4 fl4NormalFactorScale = ReplicateX4( 4.0f );
-			fltx4 fl4NormalBias = ReplicateX4( 0.01f ); //1.01 );		// prevent 0.
+			fltx4 fl4NormalBias = ReplicateX4( 0.0f ); //1.01 );		// prevent 0.
 			for ( int y = 0; y < pGB->NumRows(); y++ )
 			{
 				if ( nLineMask & ( 1 << ( y & 31 ) ) )
@@ -744,32 +785,47 @@ void CLightingPreviewThread::AccumulateOuput( int nLineMask, CSOAContainer* rslt
 					for ( int x = 0; x < pGB->NumQuadsPerRow(); x++ )
 					{
 						FourVectors l1 = *pRslts[1]++;
+						Assert( !isnan( l1.x ) );
+						Assert( !isnan( l1.y ) );
+						Assert( !isnan( l1.z ) );
 						fltx4 fl4Dot = *pRsltNormals[1]++ * *pNormal;
+						Assert( !isnan( fl4Dot ) );
 						fl4Dot = MaxSIMD( Four_Epsilons, MulSIMD( fl4NormalFactorScale, AddSIMD( fl4NormalBias, fl4Dot ) ) );
 
 						FourVectors fl4Delta = *pCoords[1]++;
+						Assert( !isnan( fl4Delta.x ) );
+						Assert( !isnan( fl4Delta.y ) );
+						Assert( !isnan( fl4Delta.z ) );
 						fl4Delta -= *pCoord;
 						fltx4 fl4Distance = fl4Delta.length();
-						fl4Distance = ReciprocalEstSIMD( AddSIMD( Four_Ones, MulSIMD( fl4Distance, fl4DistanceScale ) ) );
+						Assert( !isnan( fl4Distance ) );
+						fl4Distance = ReciprocalSIMD( AddSIMD( Four_Ones, MulSIMD( fl4Distance, fl4DistanceScale ) ) );
 
 						fltx4 fl4SumWeights = MulSIMD( fl4Distance, MulSIMD( fl4Weights[1], fl4Dot ) );
+						Assert( !isnan( fl4SumWeights ) );
 						l1 *= fl4SumWeights;
 
 						fl4Dot = *pRsltNormals[0]++ * *pNormal++;
-						fl4Dot = MaxSIMD( Four_Epsilons,
-										  MulSIMD( fl4NormalFactorScale, AddSIMD( fl4NormalBias, fl4Dot ) ) );
+						Assert( !isnan( fl4Dot ) );
+						fl4Dot = MaxSIMD( Four_Epsilons, MulSIMD( fl4NormalFactorScale, AddSIMD( fl4NormalBias, fl4Dot ) ) );
 						fl4Delta = *pCoords[0]++;
 						fl4Delta -= *pCoord;
+						Assert( !isnan( fl4Delta.x ) );
+						Assert( !isnan( fl4Delta.y ) );
+						Assert( !isnan( fl4Delta.z ) );
 						fl4Distance = fl4Delta.length();
+						Assert( !isnan( fl4Distance ) );
 						pCoord++;
 
-						fl4Distance = ReciprocalEstSIMD( AddSIMD( Four_Ones, MulSIMD( fl4Distance, fl4DistanceScale ) ) );
+						fl4Distance = ReciprocalSIMD( AddSIMD( Four_Ones, MulSIMD( fl4Distance, fl4DistanceScale ) ) );
 						FourVectors l2 = *pRslts[0]++;
 						fltx4 w0 = MulSIMD( fl4Distance, MulSIMD( fl4Dot, fl4Weights[0] ) );
+						Assert( !isnan( w0 ) );
 						l2 *= w0;
 						l1 += l2;
 
 						fl4SumWeights = AddSIMD( fl4SumWeights, w0 );
+						Assert( !isnan( fl4SumWeights ) );
 						l1 *= ReciprocalSIMD( fl4SumWeights );
 
 						*dest++ += l1;
@@ -894,19 +950,19 @@ void CLightingPreviewThread::AddLowresResultToHires( CSOAContainer& lores, CSOAC
 			const FourVectors& fl4Pos = *pDestPos++;
 			FourVectors v4Delta = posAAAA;
 			v4Delta -= fl4Pos;
-			fltx4 fl4WA = MulSIMD( fl4ADot, ReciprocalEstSIMD( AddSIMD( Four_Ones, MulSIMD( v4Delta.length(), fl4DistanceScale ) ) ) );
+			fltx4 fl4WA = MulSIMD( fl4ADot, ReciprocalSIMD( AddSIMD( Four_Ones, MulSIMD( v4Delta.length(), fl4DistanceScale ) ) ) );
 
 			v4Delta = posBBBB;
 			v4Delta -= fl4Pos;
-			fltx4 fl4WB = MulSIMD( fl4BDot, ReciprocalEstSIMD( AddSIMD( Four_Ones, MulSIMD( v4Delta.length(), fl4DistanceScale ) ) ) );
+			fltx4 fl4WB = MulSIMD( fl4BDot, ReciprocalSIMD( AddSIMD( Four_Ones, MulSIMD( v4Delta.length(), fl4DistanceScale ) ) ) );
 
 			v4Delta = posEEEE;
 			v4Delta -= fl4Pos;
-			fltx4 fl4WE = MulSIMD( fl4EDot, ReciprocalEstSIMD( AddSIMD( Four_Ones, MulSIMD( v4Delta.length(), fl4DistanceScale ) ) ) );
+			fltx4 fl4WE = MulSIMD( fl4EDot, ReciprocalSIMD( AddSIMD( Four_Ones, MulSIMD( v4Delta.length(), fl4DistanceScale ) ) ) );
 
 			v4Delta = posFFFF;
 			v4Delta -= fl4Pos;
-			fltx4 fl4WF = MulSIMD( fl4FDot, ReciprocalEstSIMD( AddSIMD( Four_Ones, MulSIMD( v4Delta.length(), fl4DistanceScale ) ) ) );
+			fltx4 fl4WF = MulSIMD( fl4FDot, ReciprocalSIMD( AddSIMD( Four_Ones, MulSIMD( v4Delta.length(), fl4DistanceScale ) ) ) );
 
 			fltx4 fl4OOSumWeights = ReciprocalSIMD( AddSIMD( AddSIMD( fl4WA, fl4WB ), AddSIMD( fl4WE, fl4WF ) ) );
 
@@ -937,7 +993,8 @@ void CLightingPreviewThread::SendResult()
 {
 	if ( m_GBuffer.NumRows() && m_GBuffer.NumCols() )
 	{
-//		Warning("send\n");
+		//FPExceptionEnabler e;
+		//		Warning("send\n");
 		CSOAContainer rsltBuffer;
 		rsltBuffer.SetAttributeType( RSLT_BUFFER_RSLT_RGB, ATTRDATATYPE_4V );
 		rsltBuffer.AllocateData( m_GBuffer.NumCols(), m_GBuffer.NumRows() );
@@ -949,10 +1006,12 @@ void CLightingPreviewThread::SendResult()
 				bDidLoRes = true;
 
 		CSOAContainer rsltBuffer1;
-		rsltBuffer1.SetAttributeType( RSLT_BUFFER_RSLT_RGB, ATTRDATATYPE_4V );
-		rsltBuffer1.AllocateData( m_GBufferLowRes.NumCols(), m_GBufferLowRes.NumRows() );
 		if ( bDidLoRes )
+		{
+			rsltBuffer1.SetAttributeType( RSLT_BUFFER_RSLT_RGB, ATTRDATATYPE_4V );
+			rsltBuffer1.AllocateData( m_GBufferLowRes.NumCols(), m_GBufferLowRes.NumRows() );
 			rsltBuffer1.FillAttr( RSLT_BUFFER_RSLT_RGB, vec3_origin );
+		}
 
 		{
 			CJobSetN<32> jobs;
@@ -993,12 +1052,10 @@ int InsideOut( int nTotal, int nCounter )
 	return b;
 }
 
+static const FourVectors zero_vector( vec3_origin, vec3_origin, vec3_origin, vec3_origin );
 void CLightingPreviewThread::CalculateForLightTask( int nLineStart, int nLineEnd, CLightingPreviewLightDescription* l, float* fContributionOut, CIncrementalLightInfo* pLInfo )
 {
-	FourVectors zero_vector;
-	zero_vector.x = Four_Zeros;
-	zero_vector.y = Four_Zeros;
-	zero_vector.z = Four_Zeros;
+	//FPExceptionEnabler e;
 
 	FourVectors total_light = zero_vector;
 
@@ -1027,11 +1084,20 @@ void CLightingPreviewThread::CalculateForLightTask( int nLineStart, int nLineEnd
 			// shadow check
 			FourVectors pos = *pPos++;
 			FourVectors normal = *pNormal++;
+			Assert( !isnan( pos.x ) );
+			Assert( !isnan( pos.y ) );
+			Assert( !isnan( pos.z ) );
+			Assert( !isnan( normal.x ) );
+			Assert( !isnan( normal.y ) );
+			Assert( !isnan( normal.z ) );
 
 			FourVectors l_add = zero_vector;
 			l->ComputeLightAtPoints( pos, normal, l_add, false );
-			fltx4 v_or = OrSIMD( l_add.x, OrSIMD( l_add.y, l_add.z ) );
-			if ( !IsAllZeros( v_or ) )
+			Assert( !isnan( l_add.x ) );
+			Assert( !isnan( l_add.y ) );
+			Assert( !isnan( l_add.z ) );
+			fltx4 v_or = AndSIMD( CmpEqSIMD( l_add.x, _mm_setzero_ps() ), AndSIMD( CmpEqSIMD( l_add.y, _mm_setzero_ps() ), CmpEqSIMD( l_add.z, _mm_setzero_ps() ) ) );
+			if ( TestSignSIMD( v_or ) != 0xF )
 			{
 				FourVectors lpos;
 				lpos.DuplicateVector( l->m_Position );
@@ -1042,17 +1108,26 @@ void CLightingPreviewThread::CalculateForLightTask( int nLineStart, int nLineEnd
 					lpos.y = AddSIMD( lpos.y, MulSIMD( fl4RandRange, SubSIMD( MulSIMD( Four_Twos, RandSIMD( nCtx ) ), Four_Ones ) ) );
 					lpos.z = AddSIMD( lpos.z, MulSIMD( fl4RandRange, SubSIMD( MulSIMD( Four_Twos, RandSIMD( nCtx ) ), Four_Ones ) ) );
 				}
+				Assert( !isnan( lpos.x ) );
+				Assert( !isnan( lpos.y ) );
+				Assert( !isnan( lpos.z ) );
 
 				FourRays myray;
 				myray.direction = lpos;
 				myray.direction -= pos;
 				fltx4 len = myray.direction.length();
 				myray.direction *= ReciprocalSIMD( len );
+				Assert( !isnan( myray.direction.x ) );
+				Assert( !isnan( myray.direction.y ) );
+				Assert( !isnan( myray.direction.z ) );
 
 				// slide towards light to avoid self-intersection
 				myray.origin = myray.direction;
 				myray.origin *= 0.02f;
 				myray.origin += pos;
+				Assert( !isnan( myray.origin.x ) );
+				Assert( !isnan( myray.origin.y ) );
+				Assert( !isnan( myray.origin.z ) );
 
 				RayTracingResult r_rslt;
 				m_pRtEnv->Trace4Rays( myray, Four_Zeros, ReplicateX4( 1.0e9f ), &r_rslt, -1, nullptr );
@@ -1063,29 +1138,51 @@ void CLightingPreviewThread::CalculateForLightTask( int nLineStart, int nLineEnd
 				l_add.x = AndNotSIMD( mask, l_add.x );
 				l_add.y = AndNotSIMD( mask, l_add.y );
 				l_add.z = AndNotSIMD( mask, l_add.z );
+				Assert( !isnan( l_add.x ) );
+				Assert( !isnan( l_add.y ) );
+				Assert( !isnan( l_add.z ) );
 
 				*pDataOut = l_add;
 				l_add *= *pAlbedo;
+				Assert( !isnan( l_add.x ) );
+				Assert( !isnan( l_add.y ) );
+				Assert( !isnan( l_add.z ) );
 				// now, supress brightness < threshold so as to not falsely think
 				// far away lights are interesting
 				l_add.x = AndSIMD( l_add.x, CmpGtSIMD( l_add.x, ThresholdBrightness ) );
 				l_add.y = AndSIMD( l_add.y, CmpGtSIMD( l_add.y, ThresholdBrightness ) );
 				l_add.z = AndSIMD( l_add.z, CmpGtSIMD( l_add.z, ThresholdBrightness ) );
-				ThisLinesTotalLight += l_add;
+				Assert( !isnan( l_add.x ) );
+				Assert( !isnan( l_add.y ) );
+				Assert( !isnan( l_add.z ) );
+				total_light += l_add;
+				Assert( !isnan( total_light.x ) );
+				Assert( !isnan( total_light.y ) );
+				Assert( !isnan( total_light.z ) );
 			}
 			else
-				*pDataOut = l_add;
+				*pDataOut = zero_vector;
+			Assert( !isnan( pDataOut->x ) );
+			Assert( !isnan( pDataOut->y ) );
+			Assert( !isnan( pDataOut->z ) );
 			pDataOut++;
 			pAlbedo++;
 		}
 		pLInfo->m_nCalculationLevel[y] = 1;
 		pLInfo->m_nMaxCalculatedLine = max( y, pLInfo->m_nMaxCalculatedLine );
 		pLInfo->m_nFirstCalculatedLine = min( y, pLInfo->m_nFirstCalculatedLine );
-		total_light += ThisLinesTotalLight;
 	}
 	ReleaseSIMDRandContext( nCtx );
-	fltx4 lmag = total_light.length();
-	*fContributionOut = SubFloat(lmag, 0) + SubFloat(lmag, 1) + SubFloat(lmag, 2) + SubFloat(lmag, 3);
+	Assert( !isnan( total_light.x ) );
+	Assert( !isnan( total_light.y ) );
+	Assert( !isnan( total_light.z ) );
+	if ( IsAllZeros( total_light.x ) && IsAllZeros( total_light.y ) && IsAllZeros( total_light.z ) )
+		*fContributionOut = 0.f;
+	else
+	{
+		fltx4 lmag = total_light.length();
+		*fContributionOut = SubFloat( lmag, 0 ) + SubFloat( lmag, 1 ) + SubFloat( lmag, 2 ) + SubFloat( lmag, 3 );
+	}
 }
 
 #define N_FAKE_LIGHTS_FOR_INDIRECT 50
@@ -1176,10 +1273,6 @@ void CLightingPreviewThread::CalculateForLight( CLightingPreviewLightDescription
 		l_info->m_eIncrState = INCR_STATE_PARTIAL_RESULTS;
 }
 
-#ifndef __clang__
-#pragma optimize( "", on )
-#endif
-
 void CLightingPreviewThread::SendResultRendering( CSOAContainer& rsltBuffer )
 {
 	Bitmap_t* ret_bm = new Bitmap_t;
@@ -1188,7 +1281,9 @@ void CLightingPreviewThread::SendResultRendering( CSOAContainer& rsltBuffer )
 	for ( int y = 0; y < ret_bm->Height(); y++ )
 	{
 		float const* pRGBData = rsltBuffer.RowPtr<float>( RSLT_BUFFER_RSLT_RGB, y );
+#ifdef _DEBUG
 		OutputDebugStringA( CFmtStr( "%g %g %g\n", pRGBData[0], pRGBData[4], pRGBData[8] ) );
+#endif
 		for ( int x = 0; x < ret_bm->Width(); x++ )
 		{
 			Vector color( pRGBData[0], pRGBData[4], pRGBData[8] );

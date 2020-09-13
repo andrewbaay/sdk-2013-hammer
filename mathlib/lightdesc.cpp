@@ -55,7 +55,7 @@ void LightDesc_t::ComputeLightAtPointsForDirectional(
 {
 	FourVectors delta;
 	delta.DuplicateVector(m_Direction);
-//	delta.VectorNormalizeFast();
+//	delta.VectorNormalize();
 	fltx4 strength=delta*normal;
 	if (DoHalfLambert)
 	{
@@ -140,7 +140,7 @@ void LightDesc_t::ComputeLightAtPoints( const FourVectors &pos, const FourVector
 		falloff=AddSIMD(falloff,MulSIMD(ReplicateX4(m_Attenuation2),dist2));
 	}
 
-	falloff=ReciprocalEstSIMD(falloff);
+	falloff=ReciprocalSIMD(falloff);
 	// Cull out light beyond this radius
 	// now, zero out elements for which dist2 was > range^2. !!speed!! lights should store dist^2 in sse format
 	if (m_Range != 0.f)
@@ -149,7 +149,7 @@ void LightDesc_t::ComputeLightAtPoints( const FourVectors &pos, const FourVector
 		falloff=AndSIMD(falloff,CmpLtSIMD(dist2,RangeSquared));
 	}
 
-	delta.VectorNormalizeFast();
+	delta.VectorNormalize();
 	fltx4 strength=delta*normal;
 	if (DoHalfLambert)
 	{
@@ -236,7 +236,7 @@ void LightDesc_t::ComputeNonincidenceLightAtPoints( const FourVectors &pos, Four
 		falloff=AddSIMD(falloff,MulSIMD(ReplicateX4(m_Attenuation2),dist2));
 	}
 
-	falloff=ReciprocalEstSIMD(falloff);
+	falloff=ReciprocalSIMD(falloff);
 	// Cull out light beyond this radius
 	// now, zero out elements for which dist2 was > range^2. !!speed!! lights should store dist^2 in sse format
 	if (m_Range != 0.f)
@@ -245,7 +245,7 @@ void LightDesc_t::ComputeNonincidenceLightAtPoints( const FourVectors &pos, Four
 		falloff=AndSIMD(falloff,CmpLtSIMD(dist2,RangeSquared));
 	}
 
-	delta.VectorNormalizeFast();
+	delta.VectorNormalize();
 	fltx4 strength = Four_Ones;
 	//fltx4 strength=delta;
 	//fltx4 strength = MaxSIMD(Four_Zeros,delta);

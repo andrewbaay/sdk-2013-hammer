@@ -1459,7 +1459,7 @@ public:
 	}
 
 	// check for a message. not 100% reliable - someone could grab the message first
-	bool MessageWaiting( void )
+	bool MessageWaiting( void ) const
 	{
 		return ( Head != NULL );
 	}

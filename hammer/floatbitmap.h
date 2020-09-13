@@ -447,6 +447,7 @@ protected:
 	// parallel helper functions. These do the work, and all take a row/column range as their first arguments.
 	void CopyAttrFromPartial( int nStartRow, int nNumRows, int nStartSlice, int nEndSlice, CSOAContainer const *pOther, int nDestAttributeIndex, int nSrcAttributeIndex );
 	void FillAttrPartial( int nStartRow, int nNumRows, int nStartSlice, int nEndSlice, int nAttr, fltx4 fl4Value );
+	void FillVecAttrPartial( int nStartRow, int nNumRows, int nStartSlice, int nEndSlice, int nAttr, FourVectors fl4Value );
 
 	// Allocation utility funcs (NOTE: all allocs are multiples of 16, and are aligned allocs)
 	size_t DataMemorySize( void ) const;					// total bytes of data memory to allocate at m_pDataMemory (if all attributes were allocated in a single block)

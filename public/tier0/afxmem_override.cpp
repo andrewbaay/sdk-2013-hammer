@@ -18,6 +18,7 @@
 // Microsoft Foundation Classes product.
 
 #include "stdafx.h"
+#include "memalloc.h"
 
 #ifdef AFX_CORE1_SEG
 #pragma code_seg(AFX_CORE1_SEG)
@@ -93,6 +94,58 @@ void __cdecl operator delete[](void* pData, LPCSTR /* lpszFileName */,
 	int /* nLine */)
 {
 	::operator delete(pData);
+}
+#endif
+
+#ifdef __cpp_aligned_new
+void* __cdecl operator new( std::size_t size, std::align_val_t align )
+{
+	return MemAlloc_AllocAligned( size, static_cast<size_t>( align ) );
+}
+
+void* __cdecl operator new( std::size_t size, std::align_val_t align, std::nothrow_t const& ) noexcept
+{
+	return MemAlloc_AllocAligned( size, static_cast<size_t>( align ) );
+}
+
+void* __cdecl operator new[]( std::size_t size, std::align_val_t align )
+{
+	return MemAlloc_AllocAligned( size, static_cast<size_t>( align ) );
+}
+
+void* __cdecl operator new[]( std::size_t size, std::align_val_t align, std::nothrow_t const& ) noexcept
+{
+	return MemAlloc_AllocAligned( size, static_cast<size_t>( align ) );
+}
+
+void __cdecl operator delete( void* pMem, std::align_val_t ) noexcept
+{
+	MemAlloc_FreeAligned( pMem );
+}
+
+void __cdecl operator delete( void* pMem, size_t, std::align_val_t ) noexcept
+{
+	MemAlloc_FreeAligned( pMem );
+}
+
+void __cdecl operator delete( void* pMem, std::align_val_t, std::nothrow_t const& ) noexcept
+{
+	MemAlloc_FreeAligned( pMem );
+}
+
+void __cdecl operator delete[]( void* pMem, std::align_val_t ) noexcept
+{
+	MemAlloc_FreeAligned( pMem );
+}
+
+void __cdecl operator delete[]( void* pMem, size_t, std::align_val_t ) noexcept
+{
+	MemAlloc_FreeAligned( pMem );
+}
+
+void __cdecl operator delete[]( void* pMem, std::align_val_t, std::nothrow_t const& ) noexcept
+{
+	MemAlloc_FreeAligned( pMem );
 }
 #endif
 

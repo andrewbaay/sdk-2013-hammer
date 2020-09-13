@@ -136,20 +136,23 @@ public:
 //
 //-----------------------------------------------------------------------------
 
-#include "tier0/memdbgon.h"
-#pragma push_macro( "_malloc_dbg" )
-#undef _malloc_dbg
 #include <tuple>
-#pragma pop_macro( "_malloc_dbg" )
 
-typedef CRefCounted1<CFunctor, CRefCountServiceMT> CFunctorBase;
+typedef CRefCounted1<CFunctor, CRefCountServiceNoDelete> CFunctorBase;
 
 template <typename FUNC_TYPE, class FUNCTOR_BASE = CFunctorBase, typename... Args>
-class CFunctorI : public FUNCTOR_BASE
+class alignas( 16 ) CFunctorI : public FUNCTOR_BASE
 {
 public:
 	CFunctorI( FUNC_TYPE pfnProxied, Args&&... args ) : m_pfnProxied( pfnProxied ), m_params( std::forward<Args>( args )... ) {}
-	~CFunctorI() = default;
+	~CFunctorI() override = default;
+
+	bool OnFinalRelease() override
+	{
+		delete this;
+		return false;
+	}
+
 	void operator()() override { apply( std::make_index_sequence<sizeof...( Args )>() ); }
 
 private:
@@ -164,11 +167,18 @@ private:
 };
 
 template <class OBJECT_TYPE_PTR, typename FUNCTION_TYPE, class FUNCTOR_BASE = CFunctorBase, class MEM_POLICY = CFuncMemPolicyNone, typename... Args>
-class CMemberFunctorI : public FUNCTOR_BASE
+class alignas( 16 ) CMemberFunctorI : public FUNCTOR_BASE
 {
 public:
 	CMemberFunctorI( OBJECT_TYPE_PTR pObject, FUNCTION_TYPE pfnProxied, Args&&... args ) : m_Proxy( pObject, pfnProxied ), m_params( std::forward<Args>( args )... ) {}
-	~CMemberFunctorI() = default;
+	~CMemberFunctorI() override = default;
+
+	bool OnFinalRelease() override
+	{
+		delete this;
+		return false;
+	}
+
 	void operator()() override { apply( std::make_index_sequence<sizeof...( Args )>() ); }
 
 private:
@@ -312,8 +322,6 @@ public:
 		return new CMemberFunctorI<OBJECT_TYPE_PTR, Func_t, CFunctorBase, CFuncMemPolicyRefCount<OBJECT_TYPE_PTR>, Args...>( pObject, pfnProxied, std::forward<Args>( args )... );
 	}
 };
-
-#include "tier0/memdbgoff.h"
 
 template <class CAllocator, class CCustomFunctorBase = CFunctorBase>
 class CCustomizedFunctorFactory

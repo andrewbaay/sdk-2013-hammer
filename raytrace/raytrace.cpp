@@ -489,6 +489,7 @@ void RayTracingEnvironment::Trace4Rays(const FourRays &rays, fltx4 TMin, fltx4 T
 
 					fltx4 numerator=SubSIMD( ReplicateX4( tri->m_flD ), rays.origin * N );
 
+					DDotN = MaskedAssign( did_hit, DDotN, Four_Ones );
 					fltx4 isect_t=DivSIMD( numerator,DDotN );
 					// now, we have the distance to the plane. lets update our mask
 					did_hit = AndSIMD( did_hit, CmpGtSIMD( isect_t, FourZeros ) );
